@@ -1,0 +1,65 @@
+name: bf_stay
+description: BF Stay - Guest & Staff Management App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_bloc: ^9.0.0
+  equatable: ^2.0.7
+
+  # Navigation
+  go_router: ^14.8.0
+
+  # Backend
+  supabase_flutter: ^2.8.0
+
+  # Dependency Injection
+  get_it: ^8.0.3
+
+  # Environment
+  flutter_dotenv: ^5.2.1
+
+  # UI
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.17
+  cached_network_image: ^3.4.1
+
+  # Utils
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  logger: ^2.5.0
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.14
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/images/
+    - assets/icons/
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
