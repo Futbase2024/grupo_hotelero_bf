@@ -1,0 +1,167 @@
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#d4af37",
+            "accent-gold": "#d4af37",
+            "accent-gold-light": "#f1e5ac",
+            "accent-silver": "#c0c0c0",
+            "background-light": "#ffffff",
+            "background-dark": "#121212",
+            "surface-light": "#f8f9fa",
+            "surface-dark": "#1e1e1e",
+          },
+          fontFamily: {
+            "display": ["Manrope", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style type="text/tailwindcss">
+    :root {
+      --gold-gradient: linear-gradient(135deg, #d4af37 0%, #f1e5ac 50%, #d4af37 100%);
+    }
+    .gold-metallic {
+      background: var(--gold-gradient);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex h-screen w-full flex-col overflow-hidden">
+<header class="flex items-center justify-between px-4 pt-12 pb-4 bg-white dark:bg-background-dark border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-slate-100">arrow_back_ios_new</span>
+</button>
+</div>
+<div class="flex flex-col items-center">
+<h2 class="text-slate-900 dark:text-slate-100 text-base font-bold leading-tight">Soporte Directo</h2>
+<div class="flex items-center gap-1">
+<span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">En línea</span>
+</div>
+</div>
+<div class="flex items-center">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-slate-100">contact_support</span>
+</button>
+</div>
+</header>
+<div class="bg-white dark:bg-background-dark border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center px-4 pt-3">
+<span class="material-symbols-outlined text-accent-gold text-sm mr-2">stars</span>
+<h4 class="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest">Preguntas Frecuentes</h4>
+</div>
+<div class="flex gap-2 p-3 overflow-x-auto no-scrollbar">
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-dark px-4 border border-slate-200 dark:border-slate-700 hover:border-accent-gold transition-all">
+<p class="text-slate-700 dark:text-slate-200 text-xs font-semibold">Ayuda Check-in</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-dark px-4 border border-slate-200 dark:border-slate-700 hover:border-accent-gold transition-all">
+<p class="text-slate-700 dark:text-slate-200 text-xs font-semibold">Clave WiFi</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-dark px-4 border border-slate-200 dark:border-slate-700 hover:border-accent-gold transition-all">
+<p class="text-slate-700 dark:text-slate-200 text-xs font-semibold">Toallas Extras</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-dark px-4 border border-slate-200 dark:border-slate-700 hover:border-accent-gold transition-all">
+<p class="text-slate-700 dark:text-slate-200 text-xs font-semibold">Salida / Checkout</p>
+</button>
+</div>
+</div>
+<main class="flex-1 overflow-y-auto p-4 space-y-6 bg-surface-light dark:bg-background-dark/50">
+<div class="flex justify-center">
+<span class="px-3 py-1 bg-white dark:bg-surface-dark shadow-sm rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100 dark:border-slate-800">Hoy</span>
+</div>
+<div class="flex items-end gap-3 max-w-[88%]">
+<div class="bg-accent-silver aspect-square bg-cover rounded-full size-8 shrink-0 overflow-hidden ring-2 ring-white dark:ring-slate-800 shadow-sm" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA_7qJvmgiAmSiVl5LjBJieg1oeRi0S-65D_wIZshe58EYSBMS4FdVtG6E7vQfFOksVVXw3jAEZKoUgg8A35MmP5QBaAJj3hOlNhl91i3hYgKNf6Mg1kw_niVrAyctwhX3t9ZT0GLtgIAnHE9hIOM841DIZkDfdDMxoimx1pNj3Oq85Y8ZrWcrOQ1hnyR7xrPg0ar76kEtN4ZURYLoL1cEDgx4F7jrV18gYSb_hU9nR_onfu7-nQhA088txEanO-W7KIoznYFdD1LzW");'>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-slate-400 dark:text-slate-500 text-[10px] font-bold ml-1 uppercase">Conserje</p>
+<div class="rounded-2xl rounded-bl-none px-4 py-3 bg-white dark:bg-surface-dark text-slate-800 dark:text-slate-200 shadow-sm border border-slate-100 dark:border-slate-800">
+<p class="text-sm leading-relaxed">
+              ¡Bienvenidos a Grand Plaza Apartments! Soy Sara, su conserje personal. ¿Hay algo en lo que pueda asistirle en este momento?
+            </p>
+</div>
+<p class="text-[9px] text-slate-400 ml-1">10:45 AM</p>
+</div>
+</div>
+<div class="flex items-end gap-3 justify-end ml-auto max-w-[88%]">
+<div class="flex flex-col gap-1 items-end">
+<p class="text-slate-400 dark:text-slate-500 text-[10px] font-bold mr-1 uppercase">Tú</p>
+<div class="gold-metallic rounded-2xl rounded-br-none px-4 py-3 text-slate-900 shadow-lg font-semibold ring-1 ring-accent-gold/50">
+<p class="text-sm leading-relaxed">
+              Hola Sara, ¡gracias! ¿Podrías decirme dónde se encuentra el gimnasio y cuáles son sus horarios?
+            </p>
+</div>
+<div class="flex items-center gap-1 mr-1">
+<p class="text-[9px] text-slate-400">10:48 AM</p>
+<span class="material-symbols-outlined text-[14px] text-accent-gold font-bold">done_all</span>
+</div>
+</div>
+<div class="bg-accent-gold-light aspect-square bg-cover rounded-full size-8 shrink-0 overflow-hidden ring-2 ring-white dark:ring-slate-800 shadow-sm" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCof6AMqCOZiNbFYxq97lGZ-ruOP5w_77mMOiqYCumcdkt8is8hVmh9gSSUB-yp3KPZMYPuD9CX_AB5Y4zlOckGT-kzwGwiH5Zl10GLbB01CLgDe-fYGpJsJ2St82XyFB2MeyL3ZIrmsVW6QxtIoCLXp3Q7IxUoiqIaDLgQUZOfhfs-DcCAV3XvoSDefGjUc34gVVKUoWjxL6Zmj0zGYnXwDj8t13KTcr6nzhi8nNX2lxfeBAE0k5P33h-8EAxWUcrMOQcp-SIk0zJ1");'>
+</div>
+</div>
+<div class="flex items-end gap-3 max-w-[88%]">
+<div class="bg-accent-silver aspect-square bg-cover rounded-full size-8 shrink-0 overflow-hidden ring-2 ring-white dark:ring-slate-800 shadow-sm" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAyBq7Wv6QMxh_W-3qkXI4hlfdfFndyVFunbgf0eH4U0ZfkXfX1MEs2Vo9aljOIlFWSAkEQxbUH2jXJGMaj0uGdgMvyAtfG-1v3DLo8AEhVrIoB4fYloViPWackzMnbBMZYj-V4jsUwjoP74XgUQjD-6A_M0wibYRGlXUjm3lEGZ8ctdGJRandMqtZGN1KS2YwddR2wmcJZsEdo8Y9srnuDu-yPZ7J8LIb_KT7MAV5v4cJ1xMFp6z3_CPUBxQJFSXS21o1gtTUY6InZ");'>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-slate-400 dark:text-slate-500 text-[10px] font-bold ml-1 uppercase">Conserje</p>
+<div class="rounded-2xl rounded-bl-none px-4 py-3 bg-white dark:bg-surface-dark text-slate-800 dark:text-slate-200 shadow-sm border border-slate-100 dark:border-slate-800">
+<p class="text-sm leading-relaxed">
+              ¡Por supuesto! El centro de fitness se encuentra en la 4ª planta, al final del pasillo a la derecha de los ascensores. 
+              <br/><br/>
+              Está abierto las 24 horas del día para todos nuestros huéspedes. ¡Su tarjeta de habitación le dará acceso!
+            </p>
+</div>
+<p class="text-[9px] text-slate-400 ml-1">10:50 AM</p>
+</div>
+</div>
+<div class="flex items-end gap-3 max-w-[88%]">
+<div class="size-8 shrink-0"></div>
+<div class="flex flex-col gap-1">
+<div class="rounded-2xl rounded-bl-none overflow-hidden bg-white dark:bg-surface-dark shadow-md border border-slate-100 dark:border-slate-800">
+<div class="h-44 w-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAn5DoiTNJtVrp0OLtBQpPfxSPNVUi49Y-1U_U6-B2ydo3G5pX30IaWPCh3U9kLC1ddR650knLITXYIx_Ju7USlo70mjM3mW1qC5FVGrSPGLkVdtSg_BIZyi6Mn_e_xeT83zDbMjfVb8eLM0Rds1VgixaZXRtB0JgfKzb_B3uZ9vbf5ieCJDtChtdGllAVG8yvWqK8nTDtMZ960AH4acac2OLnhIbJJwU6cRQb1YcWrW9fwjFlVrUcil1tTxeouwHGktoZoUWpUSo5x');">
+</div>
+<div class="px-4 py-3">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vista previa del Gimnasio</p>
+</div>
+</div>
+<p class="text-[9px] text-slate-400 ml-1">10:51 AM</p>
+</div>
+</div>
+</main>
+<footer class="p-4 bg-white dark:bg-background-dark border-t border-slate-100 dark:border-slate-800 pb-10">
+<div class="flex items-center gap-3 bg-slate-50 dark:bg-surface-dark rounded-full px-4 py-2 border border-slate-200 dark:border-slate-700 focus-within:ring-1 focus-within:ring-accent-gold transition-all">
+<button class="flex items-center justify-center text-slate-400 hover:text-accent-gold">
+<span class="material-symbols-outlined">add_circle</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 py-2" placeholder="Escribe un mensaje..." type="text"/>
+<button class="flex items-center justify-center size-9 gold-metallic rounded-full text-slate-900 shadow-md hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px] font-bold">send</span>
+</button>
+</div>
+</footer>
+</div>
+
+</body></html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f9d406",
+                        "background-light": "#f8f8f5",
+                        "background-dark": "#0a0a0a", // Deeper black for luxury feel
+                        "surface-dark": "#1a1a1a",
+                        "gold-muted": "#c5a059",
+                        "silver": "#e2e8f0"
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .gold-gradient {
+            background: linear-gradient(135deg, #f9d406 0%, #c5a059 100%);
+        }
+        .silver-text {
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1a1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display">
+<!-- Header -->
+<header class="sticky top-0 z-50 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-slate-200 dark:border-slate-800">
+<div class="flex size-10 shrink-0 items-center overflow-hidden rounded-full border border-primary/30">
+<img alt="Foto de perfil del huésped" class="w-full h-full object-cover" data-alt="Retrato de primer plano de un hombre sonriendo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPcnK-m5XjF4i9haGIcRD--4wknvG9sGD541nasrLUpxufxylagq1PqR--341Y1wAhCYEyLDLrqwqdqdtSkk1T-ZpAae185U5TOxu_BdxFqS56VwKKU1Ie0tqNRC5K5jozHMO3zddTx_ZnMOpXj19B3ZiGekMQ5222W2BelvM1bmo31skEacw0wW2O0xUpNFp94yVUdn_j8FYUngspF4PLg25Vkf2S0TyYShmLdaLLT9USDWLREXOLL5pUltfkWhh-fQKO5bpvDcxM"/>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-[10px] uppercase tracking-[0.2em] text-gold-muted font-bold">The Grand Reserve</span>
+<h2 class="text-slate-900 dark:text-slate-100 text-sm font-bold leading-tight tracking-tight">Panel de Control</h2>
+</div>
+<div class="flex w-10 items-center justify-end">
+<button class="relative flex items-center justify-center text-slate-900 dark:text-slate-100">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-background-dark"></span>
+</button>
+</div>
+</header>
+<main class="pb-24">
+<!-- Hero Welcome -->
+<section class="px-5 pt-8 pb-4">
+<h1 class="text-slate-900 dark:text-slate-100 tracking-tight text-3xl font-extrabold leading-tight">
+                Bienvenido, <span class="silver-text">Juan</span>
+</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Es un placer tenerte con nosotros hoy.</p>
+</section>
+<!-- Current Booking Card -->
+<section class="p-4 @container">
+<div class="relative overflow-hidden flex flex-col items-stretch justify-start rounded-xl shadow-2xl bg-surface-dark border border-white/5">
+<!-- Status Badge -->
+<div class="absolute top-4 right-4 z-10 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30">
+<span class="text-primary text-[10px] font-bold uppercase tracking-wider">Estancia Activa</span>
+</div>
+<div class="w-full bg-center bg-no-repeat aspect-[16/9] bg-cover" data-alt="Suite de hotel de lujo con cama king size y vistas" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD9mT2vUjQMktX-Waw2J9afbiH3Tj7_V_D9ieOs8KBRmkRD8d1aXoXA9TFlAP61rxuG7aPeq0Wspt0EYTExyOnPPwr-Mde77JolOLl9fZL8JsJs6AMCDcVWj7vcNDg-ieHHFwplHFTkiHYEYXa1OEv4KKchCI3SikAxjES51N77QGhuYVIzwqnV1xkGvnAQvzr5_HVhAlgv5y-ilIKvLLrw_t2hH8eRmk-_gcAsESntBUNHEZuusYp4DA5JgY0GVM1T8JoxIMdYzb21");'>
+</div>
+<div class="flex w-full grow flex-col items-stretch justify-center gap-4 p-5">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-white text-xl font-bold leading-tight tracking-tight">Suite Ejecutiva</p>
+<p class="text-gold-muted text-sm font-medium mt-1">Habitación 402 • 4ª Planta</p>
+</div>
+</div>
+<div class="h-px bg-white/10 w-full"></div>
+<div class="flex items-center gap-3">
+<div class="flex-1">
+<p class="text-slate-400 text-xs uppercase tracking-widest font-semibold">Llave Digital</p>
+<p class="text-white text-sm">Estado: Lista para usar</p>
+</div>
+<button class="flex items-center justify-center gap-2 gold-gradient text-background-dark px-6 py-3 rounded-xl font-bold transition-transform active:scale-95 shadow-[0_4px_20px_rgba(249,212,6,0.3)]">
+<span class="material-symbols-outlined text-xl">key</span>
+<span class="text-sm">Abrir Puerta</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Access Grid -->
+<section class="px-4 py-6">
+<h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight mb-4 flex items-center gap-2">
+<span class="w-1 h-5 bg-primary rounded-full"></span>
+                Servicios del Huésped
+            </h3>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-dark p-4 rounded-xl border border-white/5 flex flex-col gap-3">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">wifi</span>
+</div>
+<div>
+<p class="text-white text-sm font-semibold">WiFi Premium</p>
+<p class="text-slate-500 text-xs mt-1">Contraseña: VIP2024</p>
+</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-xl border border-white/5 flex flex-col gap-3">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">hot_tub</span>
+</div>
+<div>
+<p class="text-white text-sm font-semibold">Manual Jacuzzi</p>
+<p class="text-slate-500 text-xs mt-1">Guía de usuario</p>
+</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-xl border border-white/5 flex flex-col gap-3">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">chat_bubble</span>
+</div>
+<div>
+<p class="text-white text-sm font-semibold">Recepción</p>
+<p class="text-slate-500 text-xs mt-1">Chat 24/7 activo</p>
+</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-xl border border-white/5 flex flex-col gap-3">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">logout</span>
+</div>
+<div>
+<p class="text-white text-sm font-semibold">Check-out</p>
+<p class="text-slate-500 text-xs mt-1">Gestión rápida</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Extra Info Sections -->
+<section class="px-4 py-2 space-y-6">
+<!-- Parking -->
+<div class="bg-surface-dark/50 p-4 rounded-xl border border-white/5 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-slate-800 flex items-center justify-center text-silver">
+<span class="material-symbols-outlined">local_parking</span>
+</div>
+<div>
+<p class="text-white font-bold text-sm">Aparcamiento</p>
+<p class="text-slate-400 text-xs">Plaza reservada: P-12</p>
+</div>
+</div>
+<button class="text-primary">
+<span class="material-symbols-outlined">arrow_forward_ios</span>
+</button>
+</div>
+<!-- Exclusive Offers -->
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight flex items-center gap-2">
+<span class="w-1 h-5 bg-primary rounded-full"></span>
+                        Ofertas Exclusivas
+                    </h3>
+<button class="text-primary text-xs font-bold uppercase tracking-wider">Ver Todas</button>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+<div class="min-w-[280px] bg-surface-dark rounded-xl overflow-hidden border border-white/5">
+<div class="h-32 bg-cover bg-center" data-alt="Persona recibiendo un masaje en un spa de lujo" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBW2369Dl1CxDDxCTLhQDVKICdkigSS-nJ5jieAeen0i4tbr7vkmhxxvfqYdb8ZWvZPOP1JvVMokCdYZQ76_VUiuqn8ICHVibjUp6yyqKME7xJbuppwm4K_EZe9LxHbbQKQmuqsf9lzX4xLfOGJ6f38-RYpXMBHbNxx--VnUfkUHcH3dqAqB7s3ihCrh-8Gy25dvblFTjvkZpZMVu0nbu3vD14saDIj07_6TitvU4dCqiRcrt7NpUA_7SxzT_VIITAeYuUjtkoyoDIt');"></div>
+<div class="p-4">
+<span class="text-[10px] text-primary font-bold uppercase tracking-widest">Bienestar</span>
+<p class="text-white font-bold mt-1">20% Descuento en Spa &amp; Masajes</p>
+<p class="text-slate-400 text-xs mt-2 italic">Válido durante tu estancia</p>
+</div>
+</div>
+<div class="min-w-[280px] bg-surface-dark rounded-xl overflow-hidden border border-white/5">
+<div class="h-32 bg-cover bg-center" data-alt="Cócteles elegantes en una barra de bar oscura" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCX8HmBcsHGJjVVmHv5NrF3EZcCI0iZuvKOIXFxYYK1ohzvRARRxjozPnd8vdEaHHJMePL86Y7e8u-zAJONKqhbtoAOxXQ1e7vmaypqxAgk3RfpzywYPcdR0YVZlDmyS75ZW6I_lhOmgnfOApJ1JfdFP_DW2Ti-agEIG6K0G8xCaOr4SUsixe12lLzf8a09sb1XLGKiswmmi5f9VGPA3xgmmLqJMpEXKVp6HdJMJYElLpXaMyn6fAZgS7mQdk4FXqY4xSnsenQ2TMMC');"></div>
+<div class="p-4">
+<span class="text-[10px] text-primary font-bold uppercase tracking-widest">Gastronomía</span>
+<p class="text-white font-bold mt-1">Cata de Vinos en el Rooftop</p>
+<p class="text-slate-400 text-xs mt-2 italic">Reserva mesa ahora</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Nav Bar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-background-light/90 dark:bg-background-dark/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-6 pb-6 pt-3">
+<div class="flex items-center justify-between max-w-md mx-auto">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined fill-1">home</span>
+<span class="text-[10px] font-bold">Inicio</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">concierge</span>
+<span class="text-[10px] font-medium">Servicios</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span class="text-[10px] font-medium">Mensajes</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Perfil</span>
+</a>
+</div>
+</nav>
+<style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fill-1 { font-variation-settings: 'FILL' 1; }
+    </style>
+</body></html>

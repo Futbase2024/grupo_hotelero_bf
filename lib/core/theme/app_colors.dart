@@ -147,4 +147,76 @@ class AppColors {
     final luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? textPrimary : textOnDark;
   }
+
+  // ============== COLORES DINÁMICOS SEGÚN TEMA ==============
+
+  /// Retorna el color de fondo principal según el tema
+  static Color getSurfaceColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? black : white;
+  }
+
+  /// Retorna el color de fondo secundario según el tema
+  static Color getSurfaceSecondaryColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? blackLight : gray50;
+  }
+
+  /// Retorna el color de fondo para cards según el tema
+  static Color getCardColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? blackLight : white;
+  }
+
+  /// Retorna el color de texto primario según el tema
+  static Color getTextPrimaryColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? white : gray900;
+  }
+
+  /// Retorna el color de texto secundario según el tema
+  static Color getTextSecondaryColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? gray300 : gray600;
+  }
+
+  /// Retorna el color de borde según el tema
+  static Color getBorderColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? gray700 : gray200;
+  }
+
+  /// Retorna el color del hero overlay según el tema
+  static Color getHeroOverlayColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? black.withValues(alpha: 0.5)
+        : white.withValues(alpha: 0.7);
+  }
+
+  /// Retorna el color del gradiente hero según el tema
+  static Color getHeroGradientStart(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.transparent
+        : white.withValues(alpha: 0.3);
+  }
+
+  /// Retorna el color del gradiente hero final según el tema
+  static Color getHeroGradientEnd(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? gray900.withValues(alpha: 0.9)
+        : white.withValues(alpha: 0.95);
+  }
+
+  /// Retorna el color de fondo del contenedor de servicios según el tema
+  static Color getServicesContainerColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? gray800.withValues(alpha: 0.4)
+        : gray100.withValues(alpha: 0.8);
+  }
+
+  /// Retorna el color de fondo del card de servicio según el tema
+  static Color getServiceCardColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? gray800.withValues(alpha: 0.3)
+        : white.withValues(alpha: 0.9);
+  }
+
+  /// Retorna true si el tema actual es oscuro
+  static bool isDarkMode(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark;
+  }
 }

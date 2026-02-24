@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/domain/bloc/auth_bloc.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/public/home/presentation/screens/public_home_screen.dart';
+import '../../features/public/home/presentation/screens/public_home_light_screen.dart';
 import '../../features/auth/presentation/screens/booking_access_screen.dart';
 import '../../features/guest/home/presentation/screens/guest_home_screen.dart';
 import '../../features/guest/checkin/presentation/screens/checkin_screen.dart';
@@ -18,6 +20,10 @@ import '../../features/staff/checkins/presentation/screens/staff_checkins_screen
 /// Rutas de la aplicación
 class AppRoutes {
   AppRoutes._();
+
+  // Public routes
+  static const String publicHome = '/';
+  static const String publicHomeLight = '/home-light';
 
   // Auth routes
   static const String login = '/login';
@@ -42,7 +48,7 @@ class AppRouter {
   /// Crea el router con el AuthBloc para redirecciones
   static GoRouter createRouter(AuthBloc authBloc) {
     return GoRouter(
-      initialLocation: AppRoutes.login,
+      initialLocation: AppRoutes.publicHome,
       debugLogDiagnostics: true,
       refreshListenable: GoRouterRefreshStream(authBloc.stream),
       redirect: (context, state) {
@@ -51,7 +57,7 @@ class AppRouter {
         final isAuthenticating = authState is AuthLoading;
 
         // Rutas públicas que no requieren autenticación
-        const publicRoutes = [AppRoutes.login, AppRoutes.bookingAccess];
+        const publicRoutes = [AppRoutes.publicHome, AppRoutes.publicHomeLight, AppRoutes.login, AppRoutes.bookingAccess];
         final isPublicRoute = publicRoutes.contains(state.matchedLocation);
 
         // Si está cargando, no redirigir
@@ -59,11 +65,11 @@ class AppRouter {
 
         // Si no está autenticado y trata de acceder a ruta protegida
         if (!isAuthenticated && !isPublicRoute) {
-          return AppRoutes.login;
+          return AppRoutes.publicHome;
         }
 
-        // Si está autenticado y trata de acceder a login
-        if (isAuthenticated && state.matchedLocation == AppRoutes.login) {
+        // Si está autenticado y trata de acceder a la home pública o login
+        if (isAuthenticated && (state.matchedLocation == AppRoutes.publicHome || state.matchedLocation == AppRoutes.login)) {
           final user = authState.user;
           return _getHomeRouteForRole(user.role);
         }
@@ -84,6 +90,17 @@ class AppRouter {
         return null;
       },
       routes: [
+        // Public Routes
+        GoRoute(
+          path: AppRoutes.publicHome,
+          name: 'public-home',
+          builder: (context, state) => const PublicHomeScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.publicHomeLight,
+          name: 'public-home-light',
+          builder: (context, state) => const PublicHomeLightScreen(),
+        ),
         // Auth Routes
         GoRoute(
           path: AppRoutes.login,
@@ -153,7 +170,7 @@ class AppRouter {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => context.go(AppRoutes.login),
+                onPressed: () => context.go(AppRoutes.publicHome),
                 child: const Text('Volver al inicio'),
               ),
             ],

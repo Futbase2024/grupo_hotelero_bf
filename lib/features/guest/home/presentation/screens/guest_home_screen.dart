@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
+import 'package:bf_stay/core/theme/responsive.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 
 /// Pantalla principal del huésped
@@ -18,32 +19,36 @@ class GuestHomeScreen extends StatelessWidget {
 
         return Scaffold(
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppTheme.spacing24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header con saludo
-                  _buildHeader(context, user),
-                  const SizedBox(height: AppTheme.spacing32),
+            child: ResponsiveContent(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  vertical: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header con saludo
+                    _buildHeader(context, user),
+                    SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
 
-                  // Quick actions
-                  _buildSectionTitle(context, 'Acciones Rápidas'),
-                  const SizedBox(height: AppTheme.spacing16),
-                  _buildQuickActions(context),
-                  const SizedBox(height: AppTheme.spacing32),
+                    // Quick actions
+                    _buildSectionTitle(context, 'Acciones Rápidas'),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _buildQuickActions(context),
+                    SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
 
-                  // Stay info
-                  _buildSectionTitle(context, 'Tu Estadía'),
-                  const SizedBox(height: AppTheme.spacing16),
-                  _buildStayInfoCard(context),
-                  const SizedBox(height: AppTheme.spacing32),
+                    // Stay info
+                    _buildSectionTitle(context, 'Tu Estadía'),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _buildStayInfoCard(context),
+                    SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
 
-                  // Services
-                  _buildSectionTitle(context, 'Servicios'),
-                  const SizedBox(height: AppTheme.spacing16),
-                  _buildServicesGrid(context),
-                ],
+                    // Services
+                    _buildSectionTitle(context, 'Servicios'),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _buildServicesGrid(context),
+                  ],
+                ),
               ),
             ),
           ),
@@ -53,12 +58,15 @@ class GuestHomeScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, user) {
+    final avatarSize = context.responsive<double>(mobile: 48.0, tablet: 56.0);
+    final fontSize = context.responsive<double>(mobile: 16.0, tablet: 20.0);
+
     return Row(
       children: [
         // Avatar
         Container(
-          width: 56,
-          height: 56,
+          width: avatarSize,
+          height: avatarSize,
           decoration: BoxDecoration(
             gradient: AppColors.goldGradient,
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -66,8 +74,8 @@ class GuestHomeScreen extends StatelessWidget {
           child: Center(
             child: Text(
               user?.initials ?? 'G',
-              style: const TextStyle(
-                fontSize: 20,
+              style: TextStyle(
+                fontSize: fontSize,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -81,16 +89,18 @@ class GuestHomeScreen extends StatelessWidget {
             children: [
               Text(
                 '¡Hola, ${user?.displayName ?? "Huésped"}!',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(
+                  fontSize: ResponsiveFontSize.titleLarge(context),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Bienvenido a tu estadía',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                style: TextStyle(
+                  fontSize: ResponsiveFontSize.bodyMedium(context),
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -110,13 +120,60 @@ class GuestHomeScreen extends StatelessWidget {
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+      style: TextStyle(
+        fontSize: ResponsiveFontSize.titleMedium(context),
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    // En tablet/desktop, mostrar más acciones en fila
+    final isWide = context.isTablet || context.isDesktop;
+
+    if (isWide) {
+      return Row(
+        children: [
+          Expanded(
+            child: _QuickActionCard(
+              icon: Icons.fact_check_outlined,
+              title: 'Check-in',
+              color: AppColors.success,
+              onTap: () => context.go('/guest/checkin'),
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing16),
+          Expanded(
+            child: _QuickActionCard(
+              icon: Icons.lock_open_outlined,
+              title: 'Access Box',
+              color: AppColors.gold,
+              onTap: () => context.go('/guest/access-box'),
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing16),
+          Expanded(
+            child: _QuickActionCard(
+              icon: Icons.book_outlined,
+              title: 'Guía',
+              color: AppColors.info,
+              onTap: () => context.go('/guest/guide'),
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing16),
+          Expanded(
+            child: _QuickActionCard(
+              icon: Icons.chat_bubble_outline,
+              title: 'Chat',
+              color: AppColors.info,
+              onTap: () => context.go('/guest/chat'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // En móvil, mostrar en 2 columnas
     return Row(
       children: [
         Expanded(
@@ -142,19 +199,29 @@ class GuestHomeScreen extends StatelessWidget {
 
   Widget _buildStayInfoCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing20),
+      padding: EdgeInsets.all(context.responsive(mobile: AppTheme.spacing16, tablet: AppTheme.spacing24)),
       decoration: BoxDecoration(
         color: AppColors.backgroundCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         border: Border.all(color: AppColors.border),
+        boxShadow: context.isDesktop
+            ? [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.home_outlined,
                 color: AppColors.gold,
+                size: context.responsive(mobile: 24.0, tablet: 28.0),
               ),
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
@@ -163,19 +230,26 @@ class GuestHomeScreen extends StatelessWidget {
                   children: [
                     Text(
                       'Suite Premium',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      style: TextStyle(
+                        fontSize: ResponsiveFontSize.titleMedium(context),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Text(
                       'Propiedad BF Stay',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                      style: TextStyle(
+                        fontSize: ResponsiveFontSize.bodySmall(context),
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
+              if (context.isDesktop)
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('Ver detalles'),
+                ),
             ],
           ),
           const Divider(height: AppTheme.spacing24),
@@ -224,28 +298,33 @@ class GuestHomeScreen extends StatelessWidget {
         const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: TextStyle(
+            fontSize: ResponsiveFontSize.titleSmall(context),
+            fontWeight: FontWeight.w600,
+          ),
         ),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+          style: TextStyle(
+            fontSize: ResponsiveFontSize.bodySmall(context),
+            color: AppColors.textSecondary,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildServicesGrid(BuildContext context) {
+    final crossAxisCount = context.responsive(mobile: 2, tablet: 3, desktop: 4);
+    final childAspectRatio = context.responsive(mobile: 1.5, tablet: 1.3, desktop: 1.2);
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
+      crossAxisCount: crossAxisCount,
       mainAxisSpacing: AppTheme.spacing12,
       crossAxisSpacing: AppTheme.spacing12,
-      childAspectRatio: 1.5,
+      childAspectRatio: childAspectRatio,
       children: [
         _ServiceCard(
           icon: Icons.book_outlined,
@@ -256,6 +335,16 @@ class GuestHomeScreen extends StatelessWidget {
           icon: Icons.chat_bubble_outline,
           title: 'Chat',
           onTap: () => context.go('/guest/chat'),
+        ),
+        _ServiceCard(
+          icon: Icons.room_service_outlined,
+          title: 'Servicios',
+          onTap: () {},
+        ),
+        _ServiceCard(
+          icon: Icons.report_problem_outlined,
+          title: 'Incidencias',
+          onTap: () {},
         ),
       ],
     );
@@ -277,11 +366,17 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final padding = context.responsive(
+      mobile: AppTheme.spacing16,
+      tablet: AppTheme.spacing20,
+    );
+    final iconSize = context.responsive(mobile: 28.0, tablet: 32.0);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
+        padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -289,14 +384,15 @@ class _QuickActionCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
+            Icon(icon, color: color, size: iconSize),
             const SizedBox(height: AppTheme.spacing8),
             Text(
               title,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: TextStyle(
+                fontSize: ResponsiveFontSize.labelLarge(context),
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -318,6 +414,8 @@ class _ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconSize = context.responsive(mobile: 28.0, tablet: 32.0);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -330,11 +428,13 @@ class _ServiceCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppColors.gold, size: 28),
+            Icon(icon, color: AppColors.gold, size: iconSize),
             const SizedBox(height: AppTheme.spacing8),
             Text(
               title,
-              style: Theme.of(context).textTheme.labelLarge,
+              style: TextStyle(
+                fontSize: ResponsiveFontSize.labelLarge(context),
+              ),
             ),
           ],
         ),
