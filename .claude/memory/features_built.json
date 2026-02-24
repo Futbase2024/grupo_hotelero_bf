@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "lastUpdated": "2026-01-14",
+    "project": "FutManager Web",
+    "backend": "Supabase (PostgreSQL + Real-Time)"
+  },
+  "features": [
+    {
+      "name": "auth",
+      "description": "Autenticación y registro de usuarios",
+      "status": "implemented",
+      "pages": ["login", "register", "forgot_password"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": false,
+      "notes": "Usa Supabase Auth + SupabaseFutManagerAuthRepository"
+    },
+    {
+      "name": "app_config",
+      "description": "Configuración de la aplicación (tema, idioma)",
+      "status": "implemented",
+      "pages": ["app_config_button"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": false,
+      "notes": "Excepción válida: usa carpeta data/ con SharedPreferences",
+      "exception": "data/ permitido - SharedPreferences local"
+    },
+    {
+      "name": "home",
+      "description": "Página principal y navegación",
+      "status": "implemented",
+      "pages": ["home_page", "landing_page"],
+      "hasRepository": false,
+      "hasBloCs": false,
+      "hasLayouts": true,
+      "subFeatures": ["legal", "contact"]
+    },
+    {
+      "name": "home/legal",
+      "description": "Documentos legales (términos, privacidad)",
+      "status": "implemented",
+      "pages": ["legal_page"],
+      "hasRepository": false,
+      "hasBloCs": false,
+      "hasLayouts": false,
+      "notes": "Excepción válida: usa carpeta data/ solo para models de Markdown",
+      "exception": "data/ permitido - Assets markdown"
+    },
+    {
+      "name": "coach_career",
+      "description": "Funcionalidades del entrenador (dashboard principal)",
+      "status": "implemented",
+      "pages": ["coach_career_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "my_team",
+      "description": "Gestión del equipo del entrenador",
+      "status": "implemented",
+      "pages": ["my_team_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "players",
+      "description": "Gestión de jugadores del equipo",
+      "status": "implemented",
+      "pages": ["players_list_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "my_opponents",
+      "description": "Rivales del universo del entrenador",
+      "status": "implemented",
+      "pages": ["my_opponents_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "opponent_analyses",
+      "description": "Análisis/informes de rivales",
+      "status": "implemented",
+      "pages": ["opponent_analyses_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "staff_management",
+      "description": "Gestión de miembros del staff",
+      "status": "implemented",
+      "pages": ["staff_management_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "profile",
+      "description": "Perfil del usuario/entrenador",
+      "status": "implemented",
+      "pages": ["profile_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "subscription",
+      "description": "Gestión de suscripción premium",
+      "status": "implemented",
+      "pages": ["subscription_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "onboarding",
+      "description": "Flujo de onboarding para nuevos usuarios",
+      "status": "implemented",
+      "pages": ["onboarding_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "join_team",
+      "description": "Unirse a un equipo existente",
+      "status": "implemented",
+      "pages": ["join_team_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "leave_team",
+      "description": "Abandonar un equipo",
+      "status": "implemented",
+      "pages": ["leave_team_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "team_access",
+      "description": "Control de acceso a equipos",
+      "status": "implemented",
+      "pages": ["team_access_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "dashboard",
+      "description": "Dashboard principal del equipo",
+      "status": "implemented",
+      "pages": ["dashboard_page"],
+      "hasRepository": true,
+      "hasBloCs": true,
+      "hasLayouts": true
+    },
+    {
+      "name": "dev_tools",
+      "description": "Herramientas de desarrollo (solo debug)",
+      "status": "implemented",
+      "pages": ["dev_tools_modal"],
+      "hasRepository": false,
+      "hasBloCs": false,
+      "hasLayouts": false,
+      "notes": "Modal de acciones de desarrollo, accede a DataSources via getIt"
+    }
+  ],
+  "datasourceEntities": [
+    {
+      "name": "UserEntity",
+      "datasource": "UsersDataSource",
+      "version": "2.0.0",
+      "table": "users",
+      "fields": ["id", "email", "name", "avatarUrl", "createdAt", "updatedAt"],
+      "rls": "auth.uid()"
+    },
+    {
+      "name": "TeamEntity",
+      "datasource": "TeamsDataSource",
+      "version": "2.0.0",
+      "table": "teams",
+      "fields": ["id", "coachId", "name", "category", "season", "shieldUrl", "primaryColor", "secondaryColor", "createdAt", "updatedAt"],
+      "rls": "coach_id = auth.uid()"
+    },
+    {
+      "name": "PlayerEntity",
+      "datasource": "PlayersDataSource",
+      "version": "2.0.0",
+      "table": "players",
+      "fields": ["id", "teamId", "nickname", "positionId", "number", "status", "birthDate", "email", "phone", "photoUrl", "notes", "createdAt", "updatedAt"],
+      "rls": "via team.coach_id"
+    },
+    {
+      "name": "PlayerPositionEntity",
+      "datasource": "PlayerPositionsDataSource",
+      "version": "2.0.0",
+      "table": "player_positions",
+      "fields": ["id", "code", "name", "category"],
+      "rls": "public (lookup)"
+    },
+    {
+      "name": "ActivityEntity",
+      "datasource": "ActivitiesDataSource",
+      "version": "2.0.0",
+      "table": "activities",
+      "fields": ["id", "teamId", "activityTypeId", "startTime", "endTime", "location", "notes", "status", "createdAt", "updatedAt"],
+      "rls": "via team.coach_id"
+    },
+    {
+      "name": "ActivityTypeEntity",
+      "datasource": "ActivityTypesDataSource",
+      "version": "2.0.0",
+      "table": "activity_types",
+      "fields": ["id", "type", "subtype", "name", "icon"],
+      "rls": "public (lookup)"
+    },
+    {
+      "name": "AttendanceEntity",
+      "datasource": "AttendanceDataSource",
+      "version": "2.0.0",
+      "table": "attendance",
+      "fields": ["id", "activityId", "playerId", "status", "justification", "createdAt"],
+      "rls": "via activity.team.coach_id"
+    },
+    {
+      "name": "ConvocatoriaEntity",
+      "datasource": "ConvocatoriasDataSource",
+      "version": "2.0.0",
+      "table": "convocatorias",
+      "fields": ["id", "activityId", "playerId", "status", "createdAt"],
+      "rls": "via activity.team.coach_id"
+    },
+    {
+      "name": "RivalEntity",
+      "datasource": "RivalsDataSource",
+      "version": "2.0.0",
+      "table": "rivals",
+      "fields": ["id", "userId", "name", "shieldUrl", "notes", "createdAt", "updatedAt"],
+      "rls": "user_id = auth.uid()"
+    },
+    {
+      "name": "ReportEntity",
+      "datasource": "ReportsDataSource",
+      "version": "2.0.0",
+      "table": "reports",
+      "fields": ["id", "userId", "rivalId", "title", "content", "createdAt", "updatedAt"],
+      "rls": "user_id = auth.uid()"
+    },
+    {
+      "name": "MatchResultEntity",
+      "datasource": "MatchResultsDataSource",
+      "version": "2.0.0",
+      "table": "match_results",
+      "fields": ["id", "activityId", "goalsFor", "goalsAgainst", "result", "notes", "createdAt"],
+      "rls": "via activity.team.coach_id"
+    },
+    {
+      "name": "ChatMessageEntity",
+      "datasource": "ChatMessagesDataSource",
+      "version": "2.0.0",
+      "table": "chat_messages",
+      "fields": ["id", "teamId", "userId", "content", "createdAt"],
+      "rls": "via team membership"
+    },
+    {
+      "name": "InvitationEntity",
+      "datasource": "InvitationsDataSource",
+      "version": "2.0.0",
+      "table": "invitations",
+      "fields": ["id", "teamId", "email", "status", "expiresAt", "createdAt"],
+      "rls": "via team.coach_id"
+    },
+    {
+      "name": "StaffMemberEntity",
+      "datasource": "StaffMembersDataSource",
+      "version": "2.0.0",
+      "table": "staff_members",
+      "fields": ["id", "teamId", "userId", "role", "permissions", "createdAt"],
+      "rls": "via team.coach_id"
+    }
+  ],
+  "pendingMigrations": [],
+  "conventions": {
+    "backend": "Supabase (PostgreSQL + Real-Time) - NO Firebase",
+    "datasourceAccess": "SIEMPRE via getIt<XxxDataSource>(), NUNCA acceso directo",
+    "stateLoadingMessage": "State.loading DEBE tener parámetro message con @Default",
+    "loadingOverlay": "Usar LoadingOverlay, NO CircularProgressIndicator",
+    "translations": "Usar context.lang, NO strings hardcodeados",
+    "designSystem": "Cupertino-first, NO Material",
+    "widgets": "Extraer widgets, NO métodos _buildXxx",
+    "responsive": "AppLayoutBuilder con 3 layouts en archivos separados",
+    "architecture": "NO carpeta data/ (excepto app_config, legal)",
+    "plans": "Guardar en doc/plans/, NUNCA en .claude/"
+  }
+}

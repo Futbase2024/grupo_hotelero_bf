@@ -90,6 +90,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
   /// Hero Section con imagen de fondo
   Widget _buildHeroSection(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
+    final borderColor = isDark ? AppColors.gold.withValues(alpha: 0.5) : AppColors.black.withValues(alpha: 0.3);
 
     return Stack(
       children: [
@@ -100,31 +101,36 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusXXLarge),
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 1.5),
+            border: Border.all(color: borderColor, width: 1.5),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppTheme.radiusXXLarge - 1),
             child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: isDark
-                      ? [
+                gradient: isDark
+                    ? LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
                           AppColors.black.withValues(alpha: 0.4),
                           AppColors.black.withValues(alpha: 0.8),
-                        ]
-                      : [
-                          AppColors.white.withValues(alpha: 0.6),
-                          AppColors.white.withValues(alpha: 0.9),
                         ],
-                ),
+                      )
+                    : const LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          AppColors.silver,
+                          AppColors.silverLight,
+                          Color(0xFFE8E8E8),
+                        ],
+                      ),
                 image: DecorationImage(
                   image: const AssetImage('assets/images/hero_background.jpg'),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    isDark ? AppColors.black.withValues(alpha: 0.5) : AppColors.white.withValues(alpha: 0.3),
-                    isDark ? BlendMode.darken : BlendMode.lighten,
+                    isDark ? AppColors.black.withValues(alpha: 0.5) : AppColors.silverLight.withValues(alpha: 0.7),
+                    isDark ? BlendMode.darken : BlendMode.srcATop,
                   ),
                   onError: (exception, stackTrace) {
                     // Si no hay imagen, el gradiente actúa como fallback
@@ -140,7 +146,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                       Colors.transparent,
                       isDark
                           ? AppColors.gray900.withValues(alpha: 0.9)
-                          : AppColors.white.withValues(alpha: 0.95),
+                          : AppColors.silverLight.withValues(alpha: 0.4),
                     ],
                   ),
                 ),
@@ -153,20 +159,20 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
                         decoration: BoxDecoration(
-                          color: AppColors.gold.withValues(alpha: 0.15),
+                          color: isDark ? AppColors.gold.withValues(alpha: 0.15) : AppColors.black.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                          border: Border.all(color: isDark ? AppColors.gold.withValues(alpha: 0.3) : AppColors.black.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.star_rounded, color: AppColors.gold, size: 14),
+                            Icon(Icons.star_rounded, color: isDark ? AppColors.gold : AppColors.black, size: 14),
                             const SizedBox(width: AppTheme.spacing8),
                             Text(
                               'EXCLUSIVIDAD GARANTIZADA',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: AppColors.gold,
+                                color: isDark ? AppColors.gold : AppColors.black,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.15,
                               ),
@@ -180,40 +186,8 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                       _buildLogo(context),
                       const SizedBox(height: AppTheme.spacing24),
 
-                      // Título principal en una línea
-                      RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Tu Estancia, ',
-                              style: TextStyle(
-                                fontSize: context.responsive(
-                                  mobile: ResponsiveFontSize.headlineMedium(context),
-                                  tablet: 42.0,
-                                  desktop: 52.0,
-                                ),
-                                fontWeight: FontWeight.w700,
-                                color: isDark ? AppColors.white : AppColors.gray900,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Elevada',
-                              style: TextStyle(
-                                fontSize: context.responsive(
-                                  mobile: ResponsiveFontSize.headlineMedium(context),
-                                  tablet: 42.0,
-                                  desktop: 52.0,
-                                ),
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.gold,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Título principal en una línea con bordes
+                      _buildStrokedTitle(context, isDark),
                       const SizedBox(height: AppTheme.spacing16),
 
                       // Subtítulo
@@ -279,6 +253,8 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
   /// Sección de Servicios en grid
   Widget _buildServicesSection(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
+    final borderColor = isDark ? AppColors.gold.withValues(alpha: 0.5) : AppColors.black.withValues(alpha: 0.3);
+    final cardBorderColor = isDark ? AppColors.gold.withValues(alpha: 0.5) : AppColors.black.withValues(alpha: 0.2);
 
     final services = [
       _ServiceItem(
@@ -328,7 +304,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.gray800.withValues(alpha: 0.4) : AppColors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(color: borderColor, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +322,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           ),
           const SizedBox(height: AppTheme.spacing16),
 
-          // Grid de servicios - 2 columnas
+          // Grid de servicios - 2 columnas con altura responsiva
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -355,10 +331,10 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
               crossAxisCount: 2,
               mainAxisSpacing: AppTheme.spacing12,
               crossAxisSpacing: AppTheme.spacing12,
-              childAspectRatio: 1.4,
+              mainAxisExtent: context.responsive(mobile: 140.0, tablet: 150.0, desktop: 160.0),
             ),
             itemCount: services.length,
-            itemBuilder: (context, index) => _buildServiceCard(context, services[index]),
+            itemBuilder: (context, index) => _buildServiceCard(context, services[index], cardBorderColor),
           ),
         ],
       ),
@@ -368,13 +344,14 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
   /// Footer compacto
   Widget _buildFooter(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
+    final borderColor = isDark ? AppColors.gold.withValues(alpha: 0.5) : AppColors.black.withValues(alpha: 0.3);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.gray900 : AppColors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(color: borderColor, width: 1.5),
       ),
       child: Column(
         children: [
@@ -406,7 +383,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildFooterContactItem(context, Icons.phone_outlined, '+34 123 456 789'),
+              _buildFooterContactItem(context, Icons.phone_outlined, '+34 674 27 70 16'),
               const SizedBox(width: AppTheme.spacing16),
               _buildFooterContactItem(context, Icons.email_outlined, 'info@bfstay.com'),
             ],
@@ -453,16 +430,100 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
     );
   }
 
+  /// Título con efecto de borde (stroke)
+  Widget _buildStrokedTitle(BuildContext context, bool isDark) {
+    final fontSize = context.responsive(
+      mobile: ResponsiveFontSize.headlineMedium(context),
+      tablet: 42.0,
+      desktop: 52.0,
+    );
+
+    // Colores para tema claro: texto negro con borde plata
+    // Colores para tema oscuro: texto blanco con borde dorado
+    final textColor = isDark ? AppColors.white : AppColors.black;
+    final strokeColor = isDark ? AppColors.gold : AppColors.silver;
+
+    return Stack(
+      children: [
+        // Solo "Tu Estancia," con borde (stroke)
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: 'Tu Estancia, ',
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2.5
+                    ..color = strokeColor,
+                ),
+              ),
+              // Espacio para "Elevada" sin borde
+              TextSpan(
+                text: 'Elevada',
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  color: Colors.transparent,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Texto principal
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: 'Tu Estancia, ',
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  color: textColor,
+                ),
+              ),
+              // "Elevada" con gradiente dorado (sin borde)
+              TextSpan(
+                text: 'Elevada',
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  foreground: Paint()
+                    ..shader = AppColors.goldGradient.createShader(
+                      Rect.fromLTWH(0, 0, 300, fontSize),
+                    ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Card de servicio compacta para grid
-  Widget _buildServiceCard(BuildContext context, _ServiceItem service) {
+  Widget _buildServiceCard(BuildContext context, _ServiceItem service, Color borderColor) {
     final isDark = AppColors.isDarkMode(context);
+    final iconSize = context.responsive(mobile: 32.0, tablet: 36.0, desktop: 40.0);
+    final iconInnerSize = context.responsive(mobile: 18.0, tablet: 20.0, desktop: 22.0);
+    final titleSize = context.responsive(mobile: 13.0, tablet: 14.0, desktop: 15.0);
+    final descSize = context.responsive(mobile: 11.0, tablet: 12.0, desktop: 13.0);
+    final padding = context.responsive(mobile: 12.0, tablet: 14.0, desktop: 16.0);
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing12),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: isDark ? AppColors.gray800.withValues(alpha: 0.3) : AppColors.gray50.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,8 +532,8 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         children: [
           // Icono
           Container(
-            width: 36,
-            height: 36,
+            width: iconSize,
+            height: iconSize,
             decoration: BoxDecoration(
               color: AppColors.gold.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
@@ -480,33 +541,33 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
             child: Icon(
               service.icon,
               color: AppColors.gold,
-              size: 20,
+              size: iconInnerSize,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing8),
+          SizedBox(height: context.responsive(mobile: 8.0, tablet: 10.0, desktop: 12.0)),
           // Título
           Text(
             service.title,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: titleSize,
               fontWeight: FontWeight.w700,
               color: isDark ? AppColors.white : AppColors.gray900,
+              height: 1.2,
             ),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           // Descripción
-          Flexible(
-            child: Text(
-              service.description,
-              style: TextStyle(
-                fontSize: 10,
-                color: isDark ? AppColors.silver.withValues(alpha: 0.6) : AppColors.gray500,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            service.description,
+            style: TextStyle(
+              fontSize: descSize,
+              color: isDark ? AppColors.silver.withValues(alpha: 0.6) : AppColors.gray500,
+              height: 1.3,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
