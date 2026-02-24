@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/config/supabase_config.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 /// Implementación del repositorio de autenticación con Supabase
+/// Usa el schema definido en 0001_bf_stay_init.sql
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({SupabaseClient? supabaseClient})
       : _supabase = supabaseClient ?? Supabase.instance.client;
@@ -18,41 +20,51 @@ class AuthRepositoryImpl implements AuthRepository {
 
     if (user == null) return null;
 
-    // Obtener datos adicionales del usuario desde la tabla users
+    // Obtener el rol del usuario desde user_roles
     try {
-      final response = await _supabase
-          .from('users')
-          .select('''
-            id,
-            email,
-            name,
-            phone,
-            avatar_url,
-            role,
-            booking_id,
-            property_id
-          ''')
-          .eq('id', user.id)
+      final roleResponse = await _supabase
+          .from(SupabaseTables.userRoles)
+          .select('role, property_id')
+          .eq('user_id', user.id)
           .maybeSingle();
 
-      if (response == null) {
-        // Si no existe en la tabla users, crear entity básico
-        return UserEntity(
-          id: user.id,
-          email: user.email ?? '',
-          role: UserRole.guest,
-          name: user.userMetadata?['name'],
-        );
+      final role = roleResponse != null
+          ? UserRole.fromString(roleResponse['role'] as String)
+          : UserRole.guest;
+      final propertyId = roleResponse?['property_id'] as String?;
+
+      // Si es guest, obtener booking activo
+      String? bookingId;
+      if (role == UserRole.guest) {
+        final bookingResponse = await _supabase
+            .from(SupabaseTables.bookings)
+            .select('id')
+            .eq('primary_guest_user_id', user.id)
+            .inFilter('status', ['confirmed', 'checked_in'])
+            .order('checkin_date', ascending: false)
+            .limit(1)
+            .maybeSingle();
+
+        bookingId = bookingResponse?['id'] as String?;
       }
 
-      return _mapToEntity(response);
+      return UserEntity(
+        id: user.id,
+        email: user.email ?? '',
+        role: role,
+        name: user.userMetadata?['full_name'],
+        phone: user.userMetadata?['phone'],
+        avatarUrl: user.userMetadata?['avatar_url'],
+        bookingId: bookingId,
+        propertyId: propertyId,
+      );
     } catch (e) {
       // Si hay error, retornar entity básico
       return UserEntity(
         id: user.id,
         email: user.email ?? '',
         role: UserRole.guest,
-        name: user.userMetadata?['name'],
+        name: user.userMetadata?['full_name'],
       );
     }
   }
@@ -71,7 +83,7 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Error al iniciar sesión');
     }
 
-    // Esperar un momento para que el trigger cree el usuario en la tabla
+    // Esperar un momento para que los datos estén disponibles
     await Future.delayed(const Duration(milliseconds: 500));
 
     return (await getCurrentUser())!;
@@ -82,54 +94,51 @@ class AuthRepositoryImpl implements AuthRepository {
     required String bookingCode,
     required String lastName,
   }) async {
-    // Buscar la reserva por código y apellido
+    // Buscar la reserva por código y apellido (según schema)
     final bookingResponse = await _supabase
-        .from('bookings')
+        .from(SupabaseTables.bookings)
         .select('''
           id,
-          code,
-          guest_id,
           property_id,
-          guests!inner(
-            id,
-            email,
-            name,
-            last_name,
-            phone
-          )
+          unit_id,
+          booking_code,
+          last_name,
+          checkin_date,
+          checkout_date,
+          status
         ''')
-        .eq('code', bookingCode.toUpperCase().trim())
-        .eq('guests.last_name', lastName.toUpperCase().trim())
+        .eq('booking_code', bookingCode.toUpperCase().trim())
+        .eq('last_name', lastName.toUpperCase().trim())
+        .inFilter('status', ['confirmed', 'checked_in'])
         .maybeSingle();
 
     if (bookingResponse == null) {
       throw Exception('booking not found');
     }
 
-    final guest = bookingResponse['guests'] as Map<String, dynamic>;
-
-    // Crear o obtener sesión anónima para el huésped
+    // Crear sesión anónima para el huésped
     final anonSession = await _supabase.auth.signInAnonymously();
 
-    // Actualizar el usuario en la tabla users con el rol de guest
-    await _supabase.from('users').upsert({
-      'id': anonSession.user!.id,
-      'email': guest['email'],
-      'name': '${guest['name']} ${guest['last_name']}',
-      'phone': guest['phone'],
+    final userId = anonSession.user!.id;
+
+    // Asignar rol de guest al usuario
+    await _supabase.from(SupabaseTables.userRoles).upsert({
+      'user_id': userId,
       'role': 'guest',
-      'booking_id': bookingResponse['id'],
       'property_id': bookingResponse['property_id'],
     });
 
+    // Actualizar la reserva con el user_id del huésped
+    await _supabase
+        .from(SupabaseTables.bookings)
+        .update({'primary_guest_user_id': userId}).eq('id', bookingResponse['id']);
+
     return UserEntity(
-      id: anonSession.user!.id,
-      email: guest['email'] ?? '',
+      id: userId,
+      email: anonSession.user?.email ?? '',
       role: UserRole.guest,
-      name: '${guest['name']} ${guest['last_name']}',
-      phone: guest['phone'],
-      bookingId: bookingResponse['id'],
-      propertyId: bookingResponse['property_id'],
+      bookingId: bookingResponse['id'] as String,
+      propertyId: bookingResponse['property_id'] as String?,
     );
   }
 
@@ -156,18 +165,4 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   bool get isAuthenticated => _supabase.auth.currentUser != null;
-
-  /// Mapea la respuesta de Supabase a UserEntity
-  UserEntity _mapToEntity(Map<String, dynamic> json) {
-    return UserEntity(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      role: UserRole.fromString(json['role'] as String? ?? 'guest'),
-      name: json['name'] as String?,
-      phone: json['phone'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
-      bookingId: json['booking_id'] as String?,
-      propertyId: json['property_id'] as String?,
-    );
-  }
 }

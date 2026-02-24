@@ -34,51 +34,51 @@ class SupabaseConfig {
   static Stream<AuthState> get authStateChanges => auth.onAuthStateChange;
 }
 
-/// Nombres de tablas en Supabase
+/// Nombres de tablas en Supabase (según schema 0001_bf_stay_init.sql)
 class SupabaseTables {
   SupabaseTables._();
 
-  // Usuarios y autenticación
-  static const String users = 'users';
-  static const String roles = 'roles';
+  // Roles y autenticación
   static const String userRoles = 'user_roles';
+
+  // Propiedades y unidades
+  static const String properties = 'properties';
+  static const String units = 'units';
 
   // Reservas y huéspedes
   static const String bookings = 'bookings';
   static const String guests = 'guests';
-  static const String rooms = 'rooms';
-  static const String properties = 'properties';
+  static const String bookingGuests = 'booking_guests';
 
   // Check-in
   static const String checkins = 'checkins';
-  static const String documents = 'documents';
-  static const String signatures = 'signatures';
-
-  // Access Box
-  static const String accessCodes = 'access_codes';
-  static const String accessLogs = 'access_logs';
+  static const String guestDocuments = 'guest_documents';
 
   // Stay Guide
-  static const String guides = 'guides';
-  static const String guideSections = 'guide_sections';
-  static const String amenities = 'amenities';
-  static const String faqs = 'faqs';
+  static const String guideItems = 'guide_items';
 
   // Chat
   static const String conversations = 'conversations';
+  static const String conversationParticipants = 'conversation_participants';
   static const String messages = 'messages';
 
-  // Staff
-  static const String staffAssignments = 'staff_assignments';
-  static const String tasks = 'tasks';
+  // Payments
+  static const String payments = 'payments';
+
+  // Reviews
+  static const String reviews = 'reviews';
+
+  // Incidents
+  static const String incidents = 'incidents';
 }
 
 /// Nombres de funciones RPC en Supabase
 class SupabaseFunctions {
   SupabaseFunctions._();
 
-  static const String verifyAccessCode = 'verify_access_code';
-  static const String generateAccessCode = 'generate_access_code';
-  static const String getGuestBookings = 'get_guest_bookings';
-  static const String getStaffDashboard = 'get_staff_dashboard';
+  static const String getAccessForBooking = 'get_access_for_booking';
+  static const String currentRole = 'current_role';
+  static const String currentPropertyId = 'current_property_id';
+  static const String isAdmin = 'is_admin';
+  static const String isStaff = 'is_staff';
 }
