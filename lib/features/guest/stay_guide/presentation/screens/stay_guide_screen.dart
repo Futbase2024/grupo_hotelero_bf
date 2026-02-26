@@ -54,7 +54,7 @@ class StayGuideScreen extends StatelessWidget {
                   ),
                   _GuideItem(
                     title: 'WiFi',
-                    subtitle: 'Red: BF_Stay_Guest | Contraseña: guest2024',
+                    subtitle: 'Red: BF_Stay_Guest | Contraseña: guest2026',
                   ),
                 ],
               ),

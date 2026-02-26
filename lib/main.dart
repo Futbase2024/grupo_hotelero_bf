@@ -9,6 +9,8 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/cubit/theme_cubit.dart';
 import 'features/auth/domain/bloc/auth_bloc.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/guest/alojamientos/domain/bloc/alojamientos_bloc.dart';
+import 'features/guest/alojamientos/domain/repositories/properties_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +41,11 @@ class BFStayApp extends StatelessWidget {
           create: (context) => AuthBloc(
             authRepository: getIt<AuthRepository>(),
           )..add(const AuthCheckRequested()),
+        ),
+        BlocProvider<AlojamientosBloc>(
+          create: (context) => AlojamientosBloc(
+            propertiesRepository: getIt<PropertiesRepository>(),
+          )..add(const AlojamientosStarted()),
         ),
       ],
       child: Builder(

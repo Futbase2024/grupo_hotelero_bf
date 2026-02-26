@@ -48,18 +48,31 @@ class UserEntity extends Equatable {
   final String? propertyId;
 
   /// Nombre para mostrar (nombre completo o email)
-  String get displayName => name ?? email.split('@').first;
+  String get displayName {
+    if (name != null && name!.isNotEmpty) {
+      return name!;
+    }
+    if (email.isNotEmpty) {
+      return email.split('@').first;
+    }
+    return 'Huésped';
+  }
 
   /// Iniciales del usuario para avatar
   String get initials {
     if (name != null && name!.isNotEmpty) {
-      final parts = name!.split(' ');
+      final parts = name!.split(' ').where((p) => p.isNotEmpty).toList();
       if (parts.length >= 2) {
         return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
       }
-      return name![0].toUpperCase();
+      if (parts.isNotEmpty) {
+        return parts[0][0].toUpperCase();
+      }
     }
-    return email[0].toUpperCase();
+    if (email.isNotEmpty) {
+      return email[0].toUpperCase();
+    }
+    return 'G'; // Guest por defecto
   }
 
   /// Verifica si el usuario es huésped

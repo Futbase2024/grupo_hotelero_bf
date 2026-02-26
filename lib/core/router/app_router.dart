@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/bloc/auth_bloc.dart';
@@ -14,8 +15,25 @@ import '../../features/guest/checkin/presentation/screens/checkin_screen.dart';
 import '../../features/guest/access_box/presentation/screens/access_box_screen.dart';
 import '../../features/guest/stay_guide/presentation/screens/stay_guide_screen.dart';
 import '../../features/guest/chat/presentation/screens/chat_screen.dart';
+import '../../features/guest/alojamientos/presentation/screens/alojamientos_screen.dart';
+import '../../features/guest/alojamientos/presentation/screens/alojamiento_detail_screen.dart';
+import '../../features/guest/alojamientos/presentation/screens/unit_detail_screen.dart';
+import '../../features/guest/alojamientos/domain/bloc/alojamientos_bloc.dart';
+import '../../features/guest/alojamientos/domain/repositories/properties_repository.dart';
+import '../../features/guest/house_rules/presentation/screens/house_rules_screen.dart';
+import '../../features/guest/que_ver/presentation/screens/que_ver_screen.dart';
+import '../../features/guest/que_ver/presentation/screens/place_detail_screen.dart';
+import '../../features/guest/que_ver/domain/entities/place_entity.dart';
+import '../../features/guest/parkings/presentation/screens/parkings_screen.dart';
+import '../../features/guest/reviews/domain/bloc/reviews_bloc.dart';
+import '../../features/guest/reviews/domain/entities/review_entity.dart';
+import '../../features/guest/reviews/domain/repositories/reviews_repository.dart';
+import '../../features/guest/reviews/presentation/screens/reviews_screen.dart';
+import '../../features/guest/reviews/presentation/screens/review_form_screen.dart';
 import '../../features/staff/dashboard/presentation/screens/staff_dashboard_screen.dart';
 import '../../features/staff/checkins/presentation/screens/staff_checkins_screen.dart';
+import '../../features/admin/dashboard/presentation/screens/admin_dashboard_screen.dart';
+import '../di/injection.dart';
 
 /// Rutas de la aplicación
 class AppRoutes {
@@ -35,10 +53,28 @@ class AppRoutes {
   static const String accessBox = '/guest/access-box';
   static const String stayGuide = '/guest/guide';
   static const String chat = '/guest/chat';
+  static const String alojamientos = '/guest/alojamientos';
+  static const String alojamientoDetail = '/guest/alojamientos/:id';
+  static const String unitDetail = '/guest/alojamientos/unit/:unitId';
+  static const String houseRulesGeneral = '/guest/house-rules';
+  static const String houseRules = '/guest/house-rules/:propertyId';
+  static const String queVer = '/guest/que-ver';
+  static const String placeDetail = '/guest/que-ver/:id';
+  static const String collection = '/guest/que-ver/collection/:id';
+  static const String parkings = '/guest/parkings';
+  static const String parkingsByUnit = '/guest/parkings/:unitId';
+
+  // Reviews routes
+  static const String reviews = '/guest/reviews/:propertyId';
+  static const String reviewCreate = '/guest/reviews/:propertyId/new';
+  static const String reviewEdit = '/guest/reviews/:reviewId/edit';
 
   // Staff routes
   static const String staffDashboard = '/staff';
   static const String staffCheckins = '/staff/checkins';
+
+  // Admin routes
+  static const String adminDashboard = '/admin';
 }
 
 /// Router principal de la aplicación con redirección basada en roles
@@ -57,8 +93,17 @@ class AppRouter {
         final isAuthenticating = authState is AuthLoading;
 
         // Rutas públicas que no requieren autenticación
-        const publicRoutes = [AppRoutes.publicHome, AppRoutes.publicHomeLight, AppRoutes.login, AppRoutes.bookingAccess];
-        final isPublicRoute = publicRoutes.contains(state.matchedLocation);
+        const publicRoutes = [
+          AppRoutes.publicHome,
+          AppRoutes.publicHomeLight,
+          AppRoutes.login,
+          AppRoutes.bookingAccess,
+          AppRoutes.houseRulesGeneral,
+        ];
+        // Rutas que empiezan con estos prefijos también son públicas
+        const publicRoutePrefixes = ['/guest/alojamientos', '/guest/house-rules/', '/guest/que-ver', '/guest/parkings', '/guest/reviews'];
+        final isPublicRoute = publicRoutes.contains(state.matchedLocation) ||
+            publicRoutePrefixes.any((prefix) => state.matchedLocation.startsWith(prefix));
 
         // Si está cargando, no redirigir
         if (isAuthenticating) return null;
@@ -94,7 +139,12 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.publicHome,
           name: 'public-home',
-          builder: (context, state) => const PublicHomeScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => AlojamientosBloc(
+              propertiesRepository: getIt<PropertiesRepository>(),
+            )..add(const AlojamientosStarted()),
+            child: const PublicHomeScreen(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.publicHomeLight,
@@ -139,6 +189,136 @@ class AppRouter {
           name: 'chat',
           builder: (context, state) => const ChatScreen(),
         ),
+        GoRoute(
+          path: AppRoutes.alojamientos,
+          name: 'alojamientos',
+          builder: (context, state) => BlocProvider(
+            create: (context) => AlojamientosBloc(
+              propertiesRepository: getIt<PropertiesRepository>(),
+            )..add(const AlojamientosStarted()),
+            child: const AlojamientosScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/guest/alojamientos/:id',
+          name: 'alojamiento-detail',
+          builder: (context, state) {
+            final propertyId = state.pathParameters['id']!;
+            return AlojamientoDetailScreen(propertyId: propertyId);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.unitDetail,
+          name: 'unit-detail',
+          builder: (context, state) {
+            final unitId = state.pathParameters['unitId']!;
+            return BlocProvider(
+              create: (context) => AlojamientosBloc(
+                propertiesRepository: getIt<PropertiesRepository>(),
+              )..add(UnitDetailRequested(unitId: unitId)),
+              child: UnitDetailScreen(unitId: unitId),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.houseRulesGeneral,
+          name: 'house-rules-general',
+          builder: (context, state) => const HouseRulesScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.houseRules,
+          name: 'house-rules',
+          builder: (context, state) {
+            final propertyId = state.pathParameters['propertyId']!;
+            return HouseRulesScreen(propertyId: propertyId);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.queVer,
+          name: 'que-ver',
+          builder: (context, state) => const QueVerScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.placeDetail,
+          name: 'place-detail',
+          builder: (context, state) {
+            final placeId = state.pathParameters['id']!;
+            final extra = state.extra as Map<String, dynamic>?;
+            return PlaceDetailScreen(
+              placeId: placeId,
+              place: extra?['place'] as PlaceEntity?,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.parkings,
+          name: 'parkings',
+          builder: (context, state) => const ParkingsScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.parkingsByUnit,
+          name: 'parkings-by-unit',
+          builder: (context, state) {
+            final unitId = state.pathParameters['unitId']!;
+            return ParkingsScreen(unitId: unitId);
+          },
+        ),
+
+        // Reviews Routes
+        GoRoute(
+          path: AppRoutes.reviews,
+          name: 'reviews',
+          builder: (context, state) {
+            final propertyId = state.pathParameters['propertyId']!;
+            final extra = state.extra as Map<String, dynamic>?;
+            return BlocProvider(
+              create: (context) => ReviewsBloc(
+                reviewsRepository: getIt<ReviewsRepository>(),
+              )..add(ReviewsStarted(propertyId: propertyId)),
+              child: ReviewsScreen(
+                propertyId: propertyId,
+                propertyName: extra?['propertyName'] as String?,
+                guestId: extra?['guestId'] as String?,
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.reviewCreate,
+          name: 'review-create',
+          builder: (context, state) {
+            final propertyId = state.pathParameters['propertyId']!;
+            final extra = state.extra as Map<String, dynamic>?;
+            return BlocProvider(
+              create: (context) => ReviewsBloc(
+                reviewsRepository: getIt<ReviewsRepository>(),
+              ),
+              child: ReviewFormScreen(
+                propertyId: propertyId,
+                guestId: extra?['guestId'] as String?,
+                propertyName: extra?['propertyName'] as String?,
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.reviewEdit,
+          name: 'review-edit',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final existingReview = extra?['review'] as ReviewEntity?;
+            return BlocProvider(
+              create: (context) => ReviewsBloc(
+                reviewsRepository: getIt<ReviewsRepository>(),
+              ),
+              child: ReviewFormScreen(
+                propertyId: existingReview?.propertyId ?? '',
+                existingReview: existingReview,
+                propertyName: extra?['propertyName'] as String?,
+              ),
+            );
+          },
+        ),
 
         // Staff Routes
         GoRoute(
@@ -150,6 +330,13 @@ class AppRouter {
           path: AppRoutes.staffCheckins,
           name: 'staff-checkins',
           builder: (context, state) => const StaffCheckinsScreen(),
+        ),
+
+        // Admin Routes
+        GoRoute(
+          path: AppRoutes.adminDashboard,
+          name: 'admin-dashboard',
+          builder: (context, state) => const AdminDashboardScreen(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
@@ -186,8 +373,9 @@ class AppRouter {
       case UserRole.guest:
         return AppRoutes.guestHome;
       case UserRole.staff:
-      case UserRole.admin:
         return AppRoutes.staffDashboard;
+      case UserRole.admin:
+        return AppRoutes.adminDashboard;
     }
   }
 
@@ -199,6 +387,17 @@ class AppRouter {
       AppRoutes.accessBox,
       AppRoutes.stayGuide,
       AppRoutes.chat,
+      AppRoutes.alojamientos,
+      AppRoutes.queVer,
+      AppRoutes.parkings,
+    ];
+
+    // Rutas que empiezan por cierto patrón también son permitidas
+    const guestRoutePrefixes = [
+      '/guest/alojamientos/',
+      '/guest/house-rules/',
+      '/guest/que-ver/',
+      '/guest/parkings/',
     ];
 
     const staffRoutes = [
@@ -208,11 +407,14 @@ class AppRouter {
 
     switch (role) {
       case UserRole.guest:
-        return guestRoutes.contains(route);
+        // Verificar si la ruta está en la lista o empieza con algún prefijo permitido
+        if (guestRoutes.contains(route)) return true;
+        return guestRoutePrefixes.any((prefix) => route.startsWith(prefix));
       case UserRole.staff:
         return staffRoutes.contains(route);
       case UserRole.admin:
-        return true; // Admin tiene acceso a todo
+        // Admin tiene acceso a todo (rutas admin + staff + guest)
+        return true;
     }
   }
 }

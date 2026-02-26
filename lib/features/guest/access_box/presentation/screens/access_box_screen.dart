@@ -200,7 +200,7 @@ class AccessBoxScreen extends StatelessWidget {
           icon: Icons.wifi_outlined,
           title: 'WiFi',
           subtitle: 'Red: BF_Stay_Guest',
-          code: 'guest2024',
+          code: 'guest2026',
         ),
         const SizedBox(height: AppTheme.spacing8),
         _AccessCodeCard(

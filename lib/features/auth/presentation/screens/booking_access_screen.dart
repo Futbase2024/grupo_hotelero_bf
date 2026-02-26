@@ -18,12 +18,10 @@ class BookingAccessScreen extends StatefulWidget {
 class _BookingAccessScreenState extends State<BookingAccessScreen> {
   final _formKey = GlobalKey<FormState>();
   final _bookingCodeController = TextEditingController();
-  final _lastNameController = TextEditingController();
 
   @override
   void dispose() {
     _bookingCodeController.dispose();
-    _lastNameController.dispose();
     super.dispose();
   }
 
@@ -32,7 +30,6 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
 
     context.read<AuthBloc>().add(AuthLoginWithBookingRequested(
           bookingCode: _bookingCodeController.text,
-          lastName: _lastNameController.text,
         ));
   }
 
@@ -84,6 +81,8 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
 
   /// Layout para tablet: dos columnas con panel informativo
   Widget _buildTabletLayout(BuildContext context, bool isLoading) {
+    final isDark = AppColors.isDarkMode(context);
+
     return Row(
       children: [
         // Panel izquierdo - Informativo
@@ -94,10 +93,15 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  AppColors.gold.withValues(alpha: 0.1),
-                  AppColors.gold.withValues(alpha: 0.05),
-                ],
+                colors: isDark
+                    ? [
+                        AppColors.gold.withValues(alpha: 0.15),
+                        AppColors.gold.withValues(alpha: 0.08),
+                      ]
+                    : [
+                        AppColors.gold.withValues(alpha: 0.1),
+                        AppColors.gold.withValues(alpha: 0.05),
+                      ],
               ),
             ),
             child: Center(
@@ -113,28 +117,28 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.headlineMedium(context),
                         fontWeight: FontWeight.bold,
-                        color: AppColors.goldDark,
+                        color: AppColors.gold,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppTheme.spacing24),
                     _buildBenefitItem(context, Icons.confirmation_number_outlined, 'Código de reserva'),
                     const SizedBox(height: AppTheme.spacing16),
-                    _buildBenefitItem(context, Icons.person_outline, 'Tu apellido'),
+                    _buildBenefitItem(context, Icons.person_outline, 'Acceso personalizado'),
                     const SizedBox(height: AppTheme.spacing16),
                     _buildBenefitItem(context, Icons.phone_android_outlined, 'Acceso instantáneo'),
                     const SizedBox(height: AppTheme.spacing32),
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spacing16),
                       decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.8),
+                        color: AppColors.getCardColor(context).withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                       ),
                       child: Text(
                         'El código de reserva lo recibiste en el email de confirmación.',
                         style: TextStyle(
                           fontSize: ResponsiveFontSize.bodySmall(context),
-                          color: AppColors.textSecondary,
+                          color: AppColors.getTextSecondaryColor(context),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -164,6 +168,8 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
 
   /// Layout para desktop: similar a tablet
   Widget _buildDesktopLayout(BuildContext context, bool isLoading) {
+    final isDark = AppColors.isDarkMode(context);
+
     return Row(
       children: [
         // Panel izquierdo - Informativo más grande
@@ -174,10 +180,15 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  AppColors.gold.withValues(alpha: 0.15),
-                  AppColors.gold.withValues(alpha: 0.05),
-                ],
+                colors: isDark
+                    ? [
+                        AppColors.gold.withValues(alpha: 0.2),
+                        AppColors.gold.withValues(alpha: 0.1),
+                      ]
+                    : [
+                        AppColors.gold.withValues(alpha: 0.15),
+                        AppColors.gold.withValues(alpha: 0.05),
+                      ],
               ),
             ),
             child: Center(
@@ -193,7 +204,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.headlineLarge(context),
                         fontWeight: FontWeight.bold,
-                        color: AppColors.goldDark,
+                        color: AppColors.gold,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -202,14 +213,14 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       'Disfruta de tu estancia con acceso digital',
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.titleMedium(context),
-                        color: AppColors.textSecondary,
+                        color: AppColors.getTextSecondaryColor(context),
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppTheme.spacing48),
                     _buildBenefitItem(context, Icons.confirmation_number_outlined, 'Código de reserva'),
                     const SizedBox(height: AppTheme.spacing20),
-                    _buildBenefitItem(context, Icons.person_outline, 'Tu apellido'),
+                    _buildBenefitItem(context, Icons.person_outline, 'Acceso personalizado'),
                     const SizedBox(height: AppTheme.spacing20),
                     _buildBenefitItem(context, Icons.phone_android_outlined, 'Acceso instantáneo'),
                     const SizedBox(height: AppTheme.spacing20),
@@ -218,15 +229,17 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spacing20),
                       decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.9),
+                        color: AppColors.getCardColor(context).withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        boxShadow: isDark
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: AppColors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                       ),
                       child: Column(
                         children: [
@@ -236,7 +249,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                             'El código de reserva lo recibiste en el email de confirmación de tu reserva.',
                             style: TextStyle(
                               fontSize: ResponsiveFontSize.bodyMedium(context),
-                              color: AppColors.textSecondary,
+                              color: AppColors.getTextSecondaryColor(context),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -276,14 +289,14 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
             color: AppColors.gold.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),
-          child: Icon(icon, color: AppColors.goldDark, size: 24),
+          child: Icon(icon, color: AppColors.gold, size: 24),
         ),
         const SizedBox(width: AppTheme.spacing16),
         Text(
           text,
           style: TextStyle(
             fontSize: ResponsiveFontSize.bodyLarge(context),
-            color: AppColors.textPrimary,
+            color: AppColors.getTextPrimaryColor(context),
           ),
         ),
       ],
@@ -301,7 +314,15 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton(
-                onPressed: () => context.go('/login'),
+                onPressed: () {
+                  // Verificar si hay historial para hacer pop
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    // Si no hay historial, ir a la home pública
+                    context.go('/');
+                  }
+                },
                 icon: const Icon(Icons.arrow_back),
               ),
             ),
@@ -320,16 +341,16 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontSize: ResponsiveFontSize.headlineMedium(context),
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimaryColor(context),
                 ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Ingresa tu código de reserva y apellido para acceder',
+            'Ingresa tu código de reserva para acceder a tu alojamiento',
             style: TextStyle(
               fontSize: ResponsiveFontSize.bodyMedium(context),
-              color: AppColors.textSecondary,
+              color: AppColors.getTextSecondaryColor(context),
             ),
             textAlign: TextAlign.center,
           ),
@@ -339,8 +360,9 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
           TextFormField(
             controller: _bookingCodeController,
             textCapitalization: TextCapitalization.characters,
-            textInputAction: TextInputAction.next,
+            textInputAction: TextInputAction.done,
             enabled: !isLoading,
+            onFieldSubmitted: (_) => _handleAccess(),
             decoration: const InputDecoration(
               labelText: 'Código de Reserva',
               prefixIcon: Icon(Icons.confirmation_number_outlined),
@@ -353,28 +375,6 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
               }
               if (value.length < 4) {
                 return 'El código debe tener al menos 4 caracteres';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-
-          // Last name field
-          TextFormField(
-            controller: _lastNameController,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.done,
-            enabled: !isLoading,
-            onFieldSubmitted: (_) => _handleAccess(),
-            decoration: const InputDecoration(
-              labelText: 'Apellido',
-              prefixIcon: Icon(Icons.person_outlined),
-              hintText: 'Tu apellido tal como aparece en la reserva',
-            ),
-            style: TextStyle(fontSize: ResponsiveFontSize.bodyMedium(context)),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor ingresa tu apellido';
               }
               return null;
             },
@@ -412,9 +412,9 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
             Container(
               padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
-                color: AppColors.goldWithAlpha10,
+                color: AppColors.getGoldWithAlpha(context, alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
               ),
               child: Column(
                 children: [
@@ -430,7 +430,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                         '¿Dónde encuentro mi código?',
                         style: TextStyle(
                           fontSize: ResponsiveFontSize.titleSmall(context),
-                          color: AppColors.goldDark,
+                          color: AppColors.gold,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -442,7 +442,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                     'Tiene el formato BF-XXXXX.',
                     style: TextStyle(
                       fontSize: ResponsiveFontSize.bodySmall(context),
-                      color: AppColors.textSecondary,
+                      color: AppColors.getTextSecondaryColor(context),
                     ),
                   ),
                 ],
@@ -453,10 +453,10 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
 
           // Footer
           Text(
-            'BF Stay © 2024',
+            'BF Stay © 2026',
             style: TextStyle(
               fontSize: ResponsiveFontSize.bodySmall(context),
-              color: AppColors.textTertiary,
+              color: AppColors.getTextTertiaryColor(context),
             ),
             textAlign: TextAlign.center,
           ),

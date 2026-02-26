@@ -1,0 +1,9 @@
+File doesn't exist: /Users/lokisoft1/Desktop/Desarrollo/Grupo BF/bf_stay/2
+
+Usage: dart fix [arguments]
+-h, --help                      Print this usage information.
+-n, --dry-run                   Preview the proposed changes but make no changes.
+    --apply                     Apply the proposed changes.
+    --code=<code1,code2,...>    Apply fixes for one (or more) diagnostic codes.
+
+Run "dart help" to see global options.

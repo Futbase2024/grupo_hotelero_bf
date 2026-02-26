@@ -8,23 +8,39 @@ class AppColors {
   // ============== COLORES PRINCIPALES ==============
 
   /// Gold - Color primario de marca
-  static const Color gold = Color(0xFFC6A75E);
+  static const Color gold = Color.fromARGB(255, 255, 201, 22);
 
   /// Silver - Color secundario de marca
   static const Color silver = Color(0xFFC0C0C0);
 
-  /// Black - Color de fondo principal
-  static const Color black = Color(0xFF111111);
+  /// Black - Color de fondo principal (dark theme background)
+  // static const Color black = Color(0xFF1A1A1A);
+  static const Color black = Color(0xFF0D0D0D);
 
   /// White - Color de superficie principal
   static const Color white = Color(0xFFFFFFFF);
 
+  // ============== VARIANTES DE WHITE ==============
+
+  static const Color whiteWithAlpha90 = Color(0xE6FFFFFF);
+  static const Color whiteWithAlpha80 = Color(0xCCFFFFFF);
+  static const Color whiteWithAlpha70 = Color(0xB3FFFFFF);
+  static const Color whiteWithAlpha50 = Color(0x80FFFFFF);
+  static const Color whiteWithAlpha40 = Color(0x66FFFFFF);
+  static const Color whiteWithAlpha30 = Color(0x4DFFFFFF);
+  static const Color whiteWithAlpha20 = Color(0x33FFFFFF);
+  static const Color whiteWithAlpha10 = Color(0x1AFFFFFF);
+  static const Color whiteWithAlpha05 = Color(0x0DFFFFFF);
+
   // ============== VARIANTES DE GOLD ==============
 
-  static const Color goldLight = Color(0xFFD4BC7A);
-  static const Color goldDark = Color(0xFFA88D45);
-  static const Color goldWithAlpha20 = Color(0x33C6A75E);
-  static const Color goldWithAlpha10 = Color(0x1AC6A75E);
+  static const Color goldLight = Color(0xFFE5C962);
+  static const Color goldDark = Color(0xFFB8942D);
+  static const Color goldWithAlpha20 = Color(0x33D4AF37);
+  static const Color goldWithAlpha10 = Color(0x1AD4AF37);
+  static const Color goldWithAlpha30 = Color(0x4DD4AF37);
+  static const Color goldWithAlpha40 = Color(0x66D4AF37);
+  static const Color goldWithAlpha50 = Color(0x80D4AF37);
 
   // ============== VARIANTES DE SILVER ==============
 
@@ -32,12 +48,21 @@ class AppColors {
   static const Color silverDark = Color(0xFF909090);
   static const Color silverWithAlpha20 = Color(0x33C0C0C0);
 
-  // ============== VARIANTES DE BLACK ==============
+  // ============== VARIANTES DE BLACK (DARK THEME) ==============
 
-  static const Color blackLight = Color(0xFF2A2A2A);
-  static const Color blackWithAlpha80 = Color(0xCC111111);
-  static const Color blackWithAlpha50 = Color(0x80111111);
-  static const Color blackWithAlpha20 = Color(0x33111111);
+  /// Surface/Card en dark theme
+  static const Color blackLight = Color(0xFF1A1A1A);
+
+  /// Border en dark theme
+  static const Color blackBorder = Color(0xFF2A2A2A);
+
+  static const Color blackWithAlpha80 = Color(0xCC0D0D0D);
+  static const Color blackWithAlpha50 = Color(0x800D0D0D);
+  static const Color blackWithAlpha20 = Color(0x330D0D0D);
+  static const Color blackWithAlpha40 = Color(0x660D0D0D);
+  static const Color blackWithAlpha30 = Color(0x4D0D0D0D);
+  static const Color blackWithAlpha90 = Color(0xE60D0D0D);
+  static const Color blackWithAlpha05 = Color(0x0D0D0D0D);
 
   // ============== ESCALAS DE GRISES ==============
 
@@ -45,12 +70,46 @@ class AppColors {
   static const Color gray100 = Color(0xFFF5F5F5);
   static const Color gray200 = Color(0xFFE5E5E5);
   static const Color gray300 = Color(0xFFD4D4D4);
-  static const Color gray400 = Color(0xFFA3A3A3);
+  static const Color gray400 = Color(0xFFA0A0A0);
   static const Color gray500 = Color(0xFF737373);
   static const Color gray600 = Color(0xFF525252);
   static const Color gray700 = Color(0xFF404040);
   static const Color gray800 = Color(0xFF262626);
   static const Color gray900 = Color(0xFF171717);
+
+  // ============== DARK THEME ESPECÍFICOS ==============
+
+  /// Fondo principal en dark theme
+  static const Color darkBackground = Color(0xFF0D0D0D);
+
+  /// Superficie/Card en dark theme
+  static const Color darkSurface = Color(0xFF1A1A1A);
+
+  /// Borde en dark theme
+  static const Color darkBorder = Color(0xFF2A2A2A);
+
+  /// Texto primario en dark theme
+  static const Color darkTextPrimary = Color(0xFFFFFFFF);
+
+  /// Texto secundario en dark theme
+  static const Color darkTextSecondary = Color(0xFFA0A0A0);
+
+  // ============== VARIANTES DARK SURFACE ==============
+
+  static const Color darkSurfaceWithAlpha30 = Color(0x4D1A1A1A);
+  static const Color darkSurfaceWithAlpha40 = Color(0x661A1A1A);
+  static const Color darkSurfaceWithAlpha50 = Color(0x801A1A1A);
+  static const Color darkSurfaceWithAlpha60 = Color(0x991A1A1A);
+  static const Color darkSurfaceWithAlpha70 = Color(0xB31A1A1A);
+  static const Color darkSurfaceWithAlpha80 = Color(0xCC1A1A1A);
+
+  // ============== VARIANTES DARK BACKGROUND ==============
+
+  static const Color darkBackgroundWithAlpha40 = Color(0x660D0D0D);
+  static const Color darkBackgroundWithAlpha50 = Color(0x800D0D0D);
+  static const Color darkBackgroundWithAlpha70 = Color(0xB30D0D0D);
+  static const Color darkBackgroundWithAlpha80 = Color(0xCC0D0D0D);
+  static const Color darkBackgroundWithAlpha90 = Color(0xE60D0D0D);
 
   // ============== COLORES DE ESTADO ==============
 
@@ -152,71 +211,131 @@ class AppColors {
 
   /// Retorna el color de fondo principal según el tema
   static Color getSurfaceColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? black : white;
+    return Theme.of(context).brightness == Brightness.dark ? darkBackground : white;
   }
 
   /// Retorna el color de fondo secundario según el tema
   static Color getSurfaceSecondaryColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? blackLight : gray50;
+    return Theme.of(context).brightness == Brightness.dark ? darkSurface : gray50;
   }
 
   /// Retorna el color de fondo para cards según el tema
   static Color getCardColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? blackLight : white;
+    return Theme.of(context).brightness == Brightness.dark ? darkSurface : white;
   }
 
   /// Retorna el color de texto primario según el tema
   static Color getTextPrimaryColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? white : gray900;
+    return Theme.of(context).brightness == Brightness.dark ? darkTextPrimary : gray900;
   }
 
   /// Retorna el color de texto secundario según el tema
   static Color getTextSecondaryColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? gray300 : gray600;
+    return Theme.of(context).brightness == Brightness.dark ? darkTextSecondary : gray600;
   }
 
   /// Retorna el color de borde según el tema
   static Color getBorderColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? gray700 : gray200;
+    return Theme.of(context).brightness == Brightness.dark ? darkBorder : gray200;
   }
 
   /// Retorna el color del hero overlay según el tema
   static Color getHeroOverlayColor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? black.withValues(alpha: 0.5)
-        : white.withValues(alpha: 0.7);
+        ? darkBackgroundWithAlpha50
+        : whiteWithAlpha70;
   }
 
   /// Retorna el color del gradiente hero según el tema
   static Color getHeroGradientStart(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
         ? Colors.transparent
-        : white.withValues(alpha: 0.3);
+        : whiteWithAlpha30;
   }
 
   /// Retorna el color del gradiente hero final según el tema
   static Color getHeroGradientEnd(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? gray900.withValues(alpha: 0.9)
-        : white.withValues(alpha: 0.95);
+        ? darkBackgroundWithAlpha90
+        : whiteWithAlpha70;
   }
 
   /// Retorna el color de fondo del contenedor de servicios según el tema
   static Color getServicesContainerColor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? gray800.withValues(alpha: 0.4)
-        : gray100.withValues(alpha: 0.8);
+        ? darkSurfaceWithAlpha40
+        : gray100;
   }
 
   /// Retorna el color de fondo del card de servicio según el tema
   static Color getServiceCardColor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? gray800.withValues(alpha: 0.3)
-        : white.withValues(alpha: 0.9);
+        ? darkSurfaceWithAlpha30
+        : whiteWithAlpha90;
+  }
+
+  /// Retorna el color de fondo para inputs según el tema
+  static Color getInputBackgroundColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? darkSurface : gray100;
+  }
+
+  /// Retorna el color de fondo para chips/tags según el tema
+  static Color getChipBackgroundColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkSurfaceWithAlpha60
+        : gray100;
+  }
+
+  /// Retorna el color gold con alpha adaptado al tema
+  static Color getGoldWithAlpha(BuildContext context, {double alpha = 0.2}) {
+    if (Theme.of(context).brightness == Brightness.dark) {
+      // Retornar el color predefinido más cercano
+      if (alpha <= 0.1) return goldWithAlpha10;
+      if (alpha <= 0.2) return goldWithAlpha20;
+      if (alpha <= 0.3) return goldWithAlpha30;
+      if (alpha <= 0.4) return goldWithAlpha40;
+      return goldWithAlpha50;
+    }
+    return goldWithAlpha20;
+  }
+
+  /// Retorna el color de texto terciario según el tema
+  static Color getTextTertiaryColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? gray400 : gray400;
   }
 
   /// Retorna true si el tema actual es oscuro
   static bool isDarkMode(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark;
+  }
+
+  // ============== COLORES HOUSE RULES (DARK ADAPTATIVOS) ==============
+
+  /// Color de fondo del icono en las normas de la casa
+  static Color getHouseRuleIconBackground(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? goldWithAlpha10
+        : goldWithAlpha20;
+  }
+
+  /// Color del borde de la tarjeta de norma de la casa
+  static Color getHouseRuleCardBorder(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? goldWithAlpha20
+        : goldWithAlpha30;
+  }
+
+  /// Color de fondo del badge de contador en house rules
+  static Color getHouseRuleBadgeBackground(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? goldWithAlpha10
+        : goldWithAlpha20;
+  }
+
+  /// Color del divider vertical en house rules
+  static Color getHouseRuleDividerColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? goldWithAlpha50
+        : gold;
   }
 }

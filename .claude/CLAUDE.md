@@ -10,35 +10,37 @@
 
 ## 🗄️ SUPABASE - CONFIGURACIÓN DEL PROYECTO
 
-### Proyecto Futbase
+### Proyecto BF Stay
 
 | Campo | Valor |
 |-------|-------|
-| **Nombre** | futbase |
-| **Project ID** | `xgcqpdbmzgtisulylmtd` |
-| **Region** | eu-west-1 |
-| **Host** | db.xgcqpdbmzgtisulylmtd.supabase.co |
-| **MCP** | `mcp__supabase-Futbase__*` |
+| **Nombre** | bf_stay |
+| **Project ID** | `qwepisgdqlmqfxwqkztz` |
+| **MCP** | `mcp__supabase-carniceria__*` |
 
 ### Uso del MCP de Supabase
 
 ```dart
-// Siempre usar el proyecto Futbase con el ID:
-project_id: "xgcqpdbmzgtisulylmtd"
+// Siempre usar el proyecto BF Stay con el ID:
+project_id: "qwepisgdqlmqfxwqkztz"
 
 // Ejemplo de consulta:
-mcp__supabase-Futbase__execute_sql(
-  project_id: "xgcqpdbmzgtisulylmtd",
-  query: "SELECT * FROM tpartidos LIMIT 10;"
+mcp__supabase-carniceria__execute_sql(
+  project_id: "qwepisgdqlmqfxwqkztz",
+  query: "SELECT * FROM properties LIMIT 10;"
 )
 ```
 
-### Vistas Importantes
+### Tablas Principales
 
-| Vista | Descripción |
+| Tabla | Descripción |
 |-------|-------------|
-| `vpartidosjugadores` | Jugadores convocados por partido |
-| `veventos` | Eventos de partidos (goles, tarjetas) |
+| `properties` | Propiedades/alojamientos |
+| `units` | Unidades (apartamentos/habitaciones) |
+| `bookings` | Reservas |
+| `guests` | Huéspedes |
+| `checkins` | Check-ins |
+| `house_rules` | Normas de la casa |
 
 ---
 
@@ -123,6 +125,158 @@ dart run build_runner build --delete-conflicting-outputs && dart fix --apply
 - ✅ **Tarjetas KPI deben expandirse equitativamente** usando `Row` + `Expanded` (no ancho fijo)
 - ✅ **Tarjetas en filas deben tener la MISMA ALTURA** usando `IntrinsicHeight` + `crossAxisAlignment: CrossAxisAlignment.stretch`
 - ✅ Usar SIEMPRE `AppColors` para colores, nunca hardcodear valores hexadecimales
+
+### 🌙 Tema Oscuro con Gold (OBLIGATORIO)
+
+**REGLA CRÍTICA**: El tema por defecto de la aplicación es **DARK MODE** con acentos en **GOLD**.
+
+#### ❌ PROHIBIDO
+```dart
+// ❌ NUNCA usar withValues o withOpacity
+AppColors.gold.withValues(alpha: 0.2)
+AppColors.black.withValues(alpha: 0.5)
+AppColors.white.withOpacity(0.8)
+AppColors.darkBackground.withValues(alpha: 0.4)
+```
+
+#### ✅ OBLIGATORIO
+```dart
+// ✅ USAR colores predefinidos de AppColors
+AppColors.goldWithAlpha20      // Gold con 20% alpha
+AppColors.goldWithAlpha30      // Gold con 30% alpha
+AppColors.goldWithAlpha40      // Gold con 40% alpha
+AppColors.goldWithAlpha50      // Gold con 50% alpha
+
+AppColors.blackWithAlpha05     // Black con 5% alpha
+AppColors.blackWithAlpha20     // Black con 20% alpha
+AppColors.blackWithAlpha30     // Black con 30% alpha
+AppColors.blackWithAlpha40     // Black con 40% alpha
+AppColors.blackWithAlpha50     // Black con 50% alpha
+AppColors.blackWithAlpha80     // Black con 80% alpha
+AppColors.blackWithAlpha90     // Black con 90% alpha
+
+AppColors.whiteWithAlpha05     // White con 5% alpha
+AppColors.whiteWithAlpha10     // White con 10% alpha
+AppColors.whiteWithAlpha20     // White con 20% alpha
+AppColors.whiteWithAlpha30     // White con 30% alpha
+AppColors.whiteWithAlpha40     // White con 40% alpha
+AppColors.whiteWithAlpha50     // White con 50% alpha
+AppColors.whiteWithAlpha70     // White con 70% alpha
+AppColors.whiteWithAlpha80     // White con 80% alpha
+AppColors.whiteWithAlpha90     // White con 90% alpha
+
+AppColors.darkSurfaceWithAlpha30  // Dark surface con 30% alpha
+AppColors.darkSurfaceWithAlpha40  // Dark surface con 40% alpha
+AppColors.darkSurfaceWithAlpha50  // Dark surface con 50% alpha
+AppColors.darkSurfaceWithAlpha60  // Dark surface con 60% alpha
+AppColors.darkSurfaceWithAlpha70  // Dark surface con 70% alpha
+AppColors.darkSurfaceWithAlpha80  // Dark surface con 80% alpha
+
+AppColors.darkBackgroundWithAlpha40  // Dark background con 40% alpha
+AppColors.darkBackgroundWithAlpha50  // Dark background con 50% alpha
+AppColors.darkBackgroundWithAlpha70  // Dark background con 70% alpha
+AppColors.darkBackgroundWithAlpha80  // Dark background con 80% alpha
+AppColors.darkBackgroundWithAlpha90  // Dark background con 90% alpha
+```
+
+#### Paleta de Colores BF Stay
+
+| Color | Uso | Valor |
+|-------|-----|-------|
+| **Gold** | Color primario, acentos, botones | `#D4AF37` |
+| **GoldLight** | Gradientes, hover | `#E5C962` |
+| **GoldDark** | Bordes activos | `#B8942D` |
+| **Silver** | Color secundario | `#C0C0C0` |
+| **Black** | Fondo dark theme | `#0D0D0D` |
+| **BlackLight** | Surface/Card dark | `#1A1A1A` |
+| **White** | Texto en dark, fondo light | `#FFFFFF` |
+
+#### Ejemplo de uso correcto
+```dart
+// ✅ CORRECTO: Usar colores predefinidos
+Container(
+  decoration: BoxDecoration(
+    color: isDark ? AppColors.darkSurfaceWithAlpha40 : AppColors.whiteWithAlpha90,
+    border: Border.all(color: isDark ? AppColors.gold : AppColors.blackWithAlpha30),
+  ),
+)
+
+// ❌ INCORRECTO: Usar withValues
+Container(
+  decoration: BoxDecoration(
+    color: isDark ? AppColors.darkSurface.withValues(alpha: 0.4) : AppColors.white.withValues(alpha: 0.9),
+    border: Border.all(color: isDark ? AppColors.gold : AppColors.black.withValues(alpha: 0.3)),
+  ),
+)
+```
+
+### 📱 GridViews Responsivos (OBLIGATORIO)
+
+**REGLA CRÍTICA**: TODOS los GridViews deben ser responsivos y adaptarse al contenido y tamaño de pantalla.
+
+#### ❌ PROHIBIDO
+```dart
+// ❌ NUNCA usar childAspectRatio fijo
+SliverGridDelegateWithFixedCrossAxisCount(
+  crossAxisCount: 2,
+  childAspectRatio: 0.72,  // ❌ PROHIBIDO
+)
+```
+
+#### ✅ OBLIGATORIO
+```dart
+import 'package:bf_stay/shared/widgets/responsive_grid_view.dart';
+
+// Para CustomScrollView (Sliver)
+SliverResponsiveGridView<MyItem>(
+  items: items,
+  itemBuilder: (context, item) => MyCard(item: item),
+  minItemWidth: 160,
+  maxItemWidth: 220,
+  minItemsPerRow: 2,
+  maxItemsPerRow: 3,
+  itemSpacing: 12,
+  rowSpacing: 12,
+  padding: const EdgeInsets.symmetric(horizontal: 16),
+)
+
+// Para uso normal (non-Sliver)
+ResponsiveGridView<MyItem>(
+  items: items,
+  itemBuilder: (context, item) => MyCard(item: item),
+  minItemWidth: 160,
+  maxItemWidth: 220,
+  // ...
+)
+```
+
+#### Tarjetas Responsivas
+```dart
+class MyCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,  // ✅ OBLIGATORIO
+        children: [
+          AspectRatio(aspectRatio: 16 / 10, child: Image(...)),
+          Flexible(  // ✅ Para contenido variable
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,  // ✅ OBLIGATORIO
+                children: [...],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**Ver agente completo**: `.claude/agents/responsive_grid_view.md`
 
 ### ⚽ Widget de Loading OBLIGATORIO (CELoading)
 

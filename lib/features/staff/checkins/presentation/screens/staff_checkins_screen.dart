@@ -49,13 +49,16 @@ class _StaffCheckinsScreenState extends State<StaffCheckinsScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _PendingCheckinsTab(),
-          _InProgressCheckinsTab(),
-          _CompletedCheckinsTab(),
-        ],
+      body: SafeArea(
+        top: false,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _PendingCheckinsTab(),
+            _InProgressCheckinsTab(),
+            _CompletedCheckinsTab(),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},

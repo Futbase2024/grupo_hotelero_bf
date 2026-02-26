@@ -1,0 +1,321 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/di/injection.dart';
+import '../../../../auth/domain/bloc/auth_bloc.dart';
+import '../../../domain/bloc/bloc.dart';
+import '../../../domain/repositories/admin_panel_repository.dart';
+import '../../../bookings/presentation/sheets/create_booking_bottom_sheet.dart';
+import '../widgets/dashboard_tab.dart';
+import '../widgets/bookings_tab.dart';
+import '../widgets/checkins_tab.dart';
+import '../widgets/properties_tab.dart';
+
+// ignore: avoid_classes_with_only_static_members
+class _Debug {
+  static void log(String message) {
+    debugPrint('🔵 [AdminDashboard] $message');
+  }
+
+  static void error(String message, [Object? error]) {
+    debugPrint('🔴 [AdminDashboard] $message');
+    if (error != null) {
+      debugPrint('🔴 [AdminDashboard] Error: $error');
+    }
+  }
+}
+
+/// Pantalla principal del panel de administración.
+/// Shell con BottomNavigationBar y 4 tabs.
+class AdminDashboardScreen extends StatefulWidget {
+  const AdminDashboardScreen({super.key});
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  late final AdminDashboardBloc _bloc;
+  late final AuthBloc _authBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _Debug.log('initState - Iniciando AdminDashboardScreen');
+    _bloc = AdminDashboardBloc(
+      repository: getIt<AdminPanelRepository>(),
+    );
+    _authBloc = context.read<AuthBloc>();
+    _Debug.log('initState - AuthBloc obtenido: ${_authBloc.state}');
+    _bloc.add(const AdminDashboardLoadRequested());
+    _Debug.log('initState - AdminDashboardLoadRequested enviado');
+  }
+
+  @override
+  void dispose() {
+    _Debug.log('dispose - Cerrando AdminDashboardScreen');
+    _bloc.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _Debug.log('build - Construyendo widget');
+    return BlocProvider.value(
+      value: _bloc,
+      child: BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
+        buildWhen: (prev, curr) => prev.currentTabIndex != curr.currentTabIndex,
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: AppColors.darkBackground,
+            appBar: _buildAppBar(context, state),
+            body: _buildBody(state),
+            bottomNavigationBar: _buildBottomNav(state),
+            floatingActionButton: _buildFAB(state),
+          );
+        },
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context, AdminDashboardState state) {
+    final authState = _authBloc.state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+    final propertyName = isAdmin
+        ? 'BF-Stay Admin'
+        : (authState is AuthAuthenticated ? (authState.user.propertyId ?? '') : '');
+
+    return AppBar(
+      backgroundColor: AppColors.darkSurface,
+      elevation: 0,
+      leading: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.goldWithAlpha20,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Center(
+            child: Text(
+              'BF',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.gold,
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        propertyName,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: AppColors.white,
+        ),
+      ),
+      actions: [
+        // Notification bell
+        BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
+          buildWhen: (prev, curr) =>
+              prev.unreadNotificationsCount != curr.unreadNotificationsCount,
+          builder: (context, state) {
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.white,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    // TODO: Navigate to notifications screen
+                  },
+                ),
+                if (state.unreadNotificationsCount > 0)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 18),
+                      child: Text(
+                        state.unreadNotificationsCount > 9
+                            ? '9+'
+                            : state.unreadNotificationsCount.toString(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        // Logout button
+        IconButton(
+          icon: Icon(
+            Icons.logout_rounded,
+            color: AppColors.whiteWithAlpha70,
+            size: 22,
+          ),
+          onPressed: () => _showLogoutDialog(context),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+
+  Widget _buildBody(AdminDashboardState state) {
+    final authState = _authBloc.state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+
+    return IndexedStack(
+      index: state.currentTabIndex,
+      children: [
+        const DashboardTab(),
+        const BookingsTab(),
+        const CheckinsTab(),
+        // Tab de alojamientos solo visible para admin
+        if (isAdmin)
+          const PropertiesTab()
+        else
+          const SizedBox.shrink(),
+      ],
+    );
+  }
+
+  Widget _buildBottomNav(AdminDashboardState state) {
+    final authState = _authBloc.state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.darkSurface,
+        border: Border(
+          top: BorderSide(color: AppColors.darkBorder, width: 1),
+        ),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: state.currentTabIndex,
+        onTap: (index) {
+          // Si no es admin y trata de acceder al tab 3, ignorar
+          if (!isAdmin && index == 3) return;
+          _Debug.log('Tab pulsado: $index (${['Resumen', 'Reservas', 'Check-ins', 'Alojamientos'][index]})');
+          _bloc.add(AdminDashboardTabChanged(index));
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.darkSurface,
+        selectedItemColor: AppColors.gold,
+        unselectedItemColor: AppColors.gray500,
+        selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Resumen',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month_outlined),
+            activeIcon: Icon(Icons.calendar_month),
+            label: 'Reservas',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.how_to_reg_outlined),
+            activeIcon: Icon(Icons.how_to_reg),
+            label: 'Check-ins',
+          ),
+          // Solo mostrar tab de alojamientos para admin
+          if (isAdmin)
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.apartment_outlined),
+              activeIcon: Icon(Icons.apartment),
+              label: 'Alojamientos',
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget? _buildFAB(AdminDashboardState state) {
+    // Solo mostrar FAB en el tab de reservas
+    if (state.currentTabIndex != 1) return null;
+
+    return FloatingActionButton(
+      onPressed: () {
+        _Debug.log('FAB presionado - Abriendo CreateBookingBottomSheet');
+        try {
+          CreateBookingBottomSheet.show(
+            context,
+            repository: getIt<AdminPanelRepository>(),
+            dashboardBloc: _bloc,
+          );
+          _Debug.log('FAB - CreateBookingBottomSheet.show() llamado correctamente');
+        } catch (e, stackTrace) {
+          _Debug.error('FAB - Error al abrir CreateBookingBottomSheet', e);
+          debugPrint('🔴 StackTrace: $stackTrace');
+        }
+      },
+      backgroundColor: AppColors.gold,
+      child: const Icon(
+        Icons.add,
+        color: AppColors.black,
+        size: 28,
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.darkBorder),
+        ),
+        title: const Text(
+          'Cerrar sesión',
+          style: TextStyle(color: AppColors.white),
+        ),
+        content: const Text(
+          '¿Estás seguro de que quieres cerrar sesión?',
+          style: TextStyle(color: AppColors.gray400),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.gray400),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _authBloc.add(const AuthLogoutRequested());
+            },
+            child: const Text(
+              'Cerrar sesión',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

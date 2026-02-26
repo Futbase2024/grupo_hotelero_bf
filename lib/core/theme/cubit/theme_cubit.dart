@@ -4,10 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Cubit para gestionar el tema de la aplicación
 /// Permite cambiar entre tema claro, oscuro o seguir el sistema
+/// Por defecto inicia en tema oscuro (dark mode)
 class ThemeCubit extends Cubit<ThemeMode> {
   static const String _themePreferenceKey = 'theme_mode';
 
-  ThemeCubit() : super(ThemeMode.light) {
+  ThemeCubit() : super(ThemeMode.dark) {
     _loadThemePreference();
   }
 

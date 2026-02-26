@@ -1,21 +1,48 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/supabase_config.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../services/guest_session_service.dart';
 
 /// Implementación del repositorio de autenticación con Supabase
-/// Usa el schema definido en 0001_bf_stay_init.sql
+/// Para guests: usa validación de código + sesión local (sin usuarios anónimos)
+/// Para staff/admin: usa Supabase Auth normal
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({SupabaseClient? supabaseClient})
       : _supabase = supabaseClient ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
+  final GuestSessionService _guestSession = GuestSessionService.instance;
 
   @override
   Future<UserEntity?> getCurrentUser() async {
+    // Primero verificar si hay sesión local de guest
+    final guestSession = await _guestSession.getSession();
+    if (guestSession != null) {
+      debugPrint('👤 [getCurrentUser] Sesión local de guest encontrada');
+      // Verificar que la reserva sigue siendo válida
+      final bookingResponse = await _supabase
+          .from(SupabaseTables.bookings)
+          .select('id, status')
+          .eq('id', guestSession.bookingId)
+          .inFilter('status', ['confirmed', 'checked_in'])
+          .maybeSingle();
+
+      if (bookingResponse != null) {
+        return guestSession.toUserEntity();
+      } else {
+        // La reserva ya no es válida, limpiar sesión
+        debugPrint('⚠️ [getCurrentUser] Reserva ya no válida, limpiando sesión');
+        await _guestSession.clearSession();
+        return null;
+      }
+    }
+
+    // Si no hay sesión de guest, verificar Supabase Auth (staff/admin)
     final user = _supabase.auth.currentUser;
 
     if (user == null) return null;
@@ -92,9 +119,87 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserEntity> loginWithBookingCode({
     required String bookingCode,
-    required String lastName,
   }) async {
-    // Buscar la reserva por código y apellido (según schema)
+    debugPrint('🔑 [loginWithBookingCode] Iniciando login con código: $bookingCode');
+
+    try {
+      // Buscar la reserva por código único
+      // Solo permite acceso si status es 'confirmed' o 'checked_in'
+      debugPrint('📋 [loginWithBookingCode] Buscando reserva...');
+      final bookingResponse = await _supabase
+          .from(SupabaseTables.bookings)
+          .select('''
+            id,
+            property_id,
+            unit_id,
+            booking_code,
+            guest_first_name,
+            last_name,
+            num_guests,
+            checkin_date,
+            checkout_date,
+            status
+          ''')
+          .eq('booking_code', bookingCode.toUpperCase().trim())
+          .inFilter('status', ['confirmed', 'checked_in'])
+          .maybeSingle();
+
+      debugPrint('📋 [loginWithBookingCode] Respuesta: $bookingResponse');
+
+      if (bookingResponse == null) {
+        debugPrint('❌ [loginWithBookingCode] Reserva no encontrada o no válida');
+        throw Exception('booking not found');
+      }
+
+      final String guestName = '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim();
+      final String bookingId = bookingResponse['id'] as String;
+      final String propertyId = bookingResponse['property_id'] as String;
+      final String unitId = bookingResponse['unit_id'] as String;
+      final DateTime checkinDate = DateTime.parse(bookingResponse['checkin_date'] as String);
+      final DateTime checkoutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
+
+      // Guardar sesión local (sin crear usuario en Supabase Auth)
+      await _guestSession.saveSession(
+        bookingCode: bookingCode.toUpperCase().trim(),
+        bookingId: bookingId,
+        propertyId: propertyId,
+        guestName: guestName,
+        unitId: unitId,
+        checkinDate: checkinDate,
+        checkoutDate: checkoutDate,
+      );
+      debugPrint('✅ [loginWithBookingCode] Sesión local guardada correctamente');
+
+      return UserEntity(
+        id: bookingId,
+        email: '',
+        role: UserRole.guest,
+        name: guestName,
+        bookingId: bookingId,
+        propertyId: propertyId,
+      );
+    } on PostgrestException catch (e) {
+      debugPrint('❌ [loginWithBookingCode] PostgrestException: ${e.message}');
+      debugPrint('❌ [loginWithBookingCode] Code: ${e.code}');
+      debugPrint('❌ [loginWithBookingCode] Details: ${e.details}');
+      rethrow;
+    } catch (e, stackTrace) {
+      debugPrint('❌ [loginWithBookingCode] Error: $e');
+      debugPrint('❌ [loginWithBookingCode] StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<UserEntity> loginWithBookingCodeAndEmail({
+    required String email,
+    required String bookingCode,
+  }) async {
+    // Normalizar el código (mayúsculas, sin espacios extra)
+    final normalizedCode = bookingCode.toUpperCase().trim();
+    final normalizedEmail = email.toLowerCase().trim();
+
+    // Buscar la reserva por código único
     final bookingResponse = await _supabase
         .from(SupabaseTables.bookings)
         .select('''
@@ -102,23 +207,46 @@ class AuthRepositoryImpl implements AuthRepository {
           property_id,
           unit_id,
           booking_code,
+          guest_first_name,
           last_name,
+          guest_email,
+          num_guests,
           checkin_date,
           checkout_date,
-          status
+          status,
+          code_expires_at
         ''')
-        .eq('booking_code', bookingCode.toUpperCase().trim())
-        .eq('last_name', lastName.toUpperCase().trim())
-        .inFilter('status', ['confirmed', 'checked_in'])
+        .eq('booking_code', normalizedCode)
         .maybeSingle();
 
+    // Código no encontrado
     if (bookingResponse == null) {
-      throw Exception('booking not found');
+      throw Exception('code_not_found');
+    }
+
+    // Verificar si el código ha expirado
+    final codeExpiresAt = bookingResponse['code_expires_at'];
+    if (codeExpiresAt != null) {
+      final expiresAt = DateTime.parse(codeExpiresAt as String);
+      if (DateTime.now().isAfter(expiresAt)) {
+        throw Exception('code_expired');
+      }
+    }
+
+    // Verificar que el estado es válido
+    final status = bookingResponse['status'] as String?;
+    if (status != null && !['confirmed', 'checked_in'].contains(status)) {
+      throw Exception('code_expired');
+    }
+
+    // Verificar que el email coincide con el de la reserva
+    final bookingEmail = (bookingResponse['guest_email'] as String?)?.toLowerCase().trim();
+    if (bookingEmail != null && bookingEmail != normalizedEmail) {
+      throw Exception('email_mismatch');
     }
 
     // Crear sesión anónima para el huésped
     final anonSession = await _supabase.auth.signInAnonymously();
-
     final userId = anonSession.user!.id;
 
     // Asignar rol de guest al usuario
@@ -128,15 +256,27 @@ class AuthRepositoryImpl implements AuthRepository {
       'property_id': bookingResponse['property_id'],
     });
 
-    // Actualizar la reserva con el user_id del huésped
+    // Actualizar la reserva con el user_id del huésped y marcar primer uso
+    final updateData = <String, dynamic>{
+      'primary_guest_user_id': userId,
+      'guest_email': normalizedEmail,
+    };
+
+    // Marcar código como usado si es la primera vez
+    if (bookingResponse['code_first_used_at'] == null) {
+      updateData['code_first_used_at'] = DateTime.now().toIso8601String();
+    }
+
     await _supabase
         .from(SupabaseTables.bookings)
-        .update({'primary_guest_user_id': userId}).eq('id', bookingResponse['id']);
+        .update(updateData)
+        .eq('id', bookingResponse['id']);
 
     return UserEntity(
       id: userId,
-      email: anonSession.user?.email ?? '',
+      email: normalizedEmail,
       role: UserRole.guest,
+      name: '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim(),
       bookingId: bookingResponse['id'] as String,
       propertyId: bookingResponse['property_id'] as String?,
     );
@@ -144,6 +284,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    // Limpiar sesión local de guest
+    await _guestSession.clearSession();
+    // También cerrar sesión de Supabase Auth si la hay
     await _supabase.auth.signOut();
   }
 

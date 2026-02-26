@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../entities/user_entity.dart';
@@ -34,17 +35,31 @@ class AuthLoginRequested extends AuthEvent {
 }
 
 /// Evento para iniciar sesión con código de reserva
+/// El código es único y está ligado a un alojamiento y número de huéspedes
 class AuthLoginWithBookingRequested extends AuthEvent {
   const AuthLoginWithBookingRequested({
     required this.bookingCode,
-    required this.lastName,
   });
 
   final String bookingCode;
-  final String lastName;
 
   @override
-  List<Object?> get props => [bookingCode, lastName];
+  List<Object?> get props => [bookingCode];
+}
+
+/// Evento para iniciar sesión con código de reserva y verificación de email
+/// El código tiene formato BF-XXXX-XXXX
+class AuthLoginWithBookingAndEmailRequested extends AuthEvent {
+  const AuthLoginWithBookingAndEmailRequested({
+    required this.email,
+    required this.bookingCode,
+  });
+
+  final String email;
+  final String bookingCode;
+
+  @override
+  List<Object?> get props => [email, bookingCode];
 }
 
 /// Evento para cerrar sesión
@@ -118,6 +133,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthLoginWithBookingRequested>(_onLoginWithBookingRequested);
+    on<AuthLoginWithBookingAndEmailRequested>(_onLoginWithBookingAndEmailRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
 
@@ -180,7 +196,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.loginWithBookingCode(
         bookingCode: event.bookingCode,
-        lastName: event.lastName,
+      );
+
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      debugPrint('❌ [_onLoginWithBookingRequested] Error: $e');
+      debugPrint('❌ [_onLoginWithBookingRequested] Error type: ${e.runtimeType}');
+      emit(AuthError(message: _getErrorMessage(e)));
+    }
+  }
+
+  /// Maneja el inicio de sesión con código de reserva y verificación de email
+  Future<void> _onLoginWithBookingAndEmailRequested(
+    AuthLoginWithBookingAndEmailRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+
+    try {
+      final user = await _authRepository.loginWithBookingCodeAndEmail(
+        email: event.email,
+        bookingCode: event.bookingCode,
       );
 
       emit(AuthAuthenticated(user: user));
@@ -236,8 +272,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       return 'Reserva no encontrada. Verifica el código y tu apellido.';
     }
 
+    // Errores específicos del login con código + email
+    if (errorString.contains('code_not_found')) {
+      return 'Código no encontrado. Revisa que esté bien escrito.';
+    }
+
+    if (errorString.contains('code_expired')) {
+      return 'Este código ya no está activo.';
+    }
+
+    if (errorString.contains('email_mismatch')) {
+      return 'El correo no coincide con esta reserva.';
+    }
+
     if (errorString.contains('network') || errorString.contains('connection')) {
-      return 'Error de conexión. Por favor, verifica tu conexión a internet.';
+      return 'Sin conexión. Comprueba tu red e inténtalo de nuevo.';
     }
 
     if (errorString.contains('too many requests')) {

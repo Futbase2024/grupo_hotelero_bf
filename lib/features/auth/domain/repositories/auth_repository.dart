@@ -12,9 +12,17 @@ abstract class AuthRepository {
   });
 
   /// Inicia sesión con código de reserva (para huéspedes)
+  /// El código es único y está ligado a un alojamiento y número de huéspedes
   Future<UserEntity> loginWithBookingCode({
     required String bookingCode,
-    required String lastName,
+  });
+
+  /// Inicia sesión con código de reserva y verificación de email
+  /// Valida que el email coincida con el de la reserva
+  /// El código tiene formato BF-XXXX-XXXX
+  Future<UserEntity> loginWithBookingCodeAndEmail({
+    required String email,
+    required String bookingCode,
   });
 
   /// Cierra la sesión del usuario actual

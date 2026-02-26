@@ -44,6 +44,8 @@ class SupabaseTables {
   // Propiedades y unidades
   static const String properties = 'properties';
   static const String units = 'units';
+  static const String unitsWithFullAddress = 'units_with_full_address';
+  static const String unitPhotos = 'unit_photos';
 
   // Reservas y huéspedes
   static const String bookings = 'bookings';
@@ -56,6 +58,13 @@ class SupabaseTables {
 
   // Stay Guide
   static const String guideItems = 'guide_items';
+
+  // House Rules
+  static const String houseRules = 'house_rules';
+
+  // Places to See (Qué ver)
+  static const String places = 'places';
+  static const String placeCollections = 'place_collections';
 
   // Chat
   static const String conversations = 'conversations';

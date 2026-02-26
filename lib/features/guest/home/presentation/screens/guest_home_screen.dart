@@ -315,38 +315,98 @@ class GuestHomeScreen extends StatelessWidget {
   }
 
   Widget _buildServicesGrid(BuildContext context) {
-    final crossAxisCount = context.responsive(mobile: 2, tablet: 3, desktop: 4);
-    final childAspectRatio = context.responsive(mobile: 1.5, tablet: 1.3, desktop: 1.2);
+    final services = [
+      _ServiceItem(
+        icon: Icons.book_outlined,
+        title: 'Guía de Estadía',
+        route: '/guest/guide',
+      ),
+      _ServiceItem(
+        icon: Icons.chat_bubble_outline,
+        title: 'Chat',
+        route: '/guest/chat',
+      ),
+      _ServiceItem(
+        icon: Icons.star_outline,
+        title: 'Reseñas',
+        route: '/guest/reviews/bf000000-0000-0000-0000-000000000001',
+      ),
+      _ServiceItem(
+        icon: Icons.room_service_outlined,
+        title: 'Servicios',
+        route: null,
+      ),
+      _ServiceItem(
+        icon: Icons.report_problem_outlined,
+        title: 'Incidencias',
+        route: null,
+      ),
+      _ServiceItem(
+        icon: Icons.rule_outlined,
+        title: 'Normas de la Casa',
+        route: '/guest/house-rules/bf000000-0000-0000-0000-000000000001',
+      ),
+    ];
 
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: crossAxisCount,
-      mainAxisSpacing: AppTheme.spacing12,
-      crossAxisSpacing: AppTheme.spacing12,
-      childAspectRatio: childAspectRatio,
-      children: [
-        _ServiceCard(
-          icon: Icons.book_outlined,
-          title: 'Guía de Estadía',
-          onTap: () => context.go('/guest/guide'),
+    return Column(
+      children: services.map((service) => Padding(
+        padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+        child: _ServiceListTile(
+          icon: service.icon,
+          title: service.title,
+          onTap: service.route != null
+              ? () => context.go(service.route!)
+              : null,
         ),
-        _ServiceCard(
-          icon: Icons.chat_bubble_outline,
-          title: 'Chat',
-          onTap: () => context.go('/guest/chat'),
+      )).toList(),
+    );
+  }
+}
+
+class _ServiceItem {
+  const _ServiceItem({
+    required this.icon,
+    required this.title,
+    this.route,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? route;
+}
+
+class _ServiceListTile extends StatelessWidget {
+  const _ServiceListTile({
+    required this.icon,
+    required this.title,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        side: BorderSide(color: AppColors.border),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: AppColors.gold),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w500),
         ),
-        _ServiceCard(
-          icon: Icons.room_service_outlined,
-          title: 'Servicios',
-          onTap: () {},
-        ),
-        _ServiceCard(
-          icon: Icons.report_problem_outlined,
-          title: 'Incidencias',
-          onTap: () {},
-        ),
-      ],
+        trailing: onTap != null
+            ? const Icon(Icons.arrow_forward_ios, size: 16)
+            : null,
+        enabled: onTap != null,
+      ),
     );
   }
 }
@@ -392,48 +452,6 @@ class _QuickActionCard extends StatelessWidget {
                 fontSize: ResponsiveFontSize.labelLarge(context),
                 color: color,
                 fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ServiceCard extends StatelessWidget {
-  const _ServiceCard({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final iconSize = context.responsive(mobile: 28.0, tablet: 32.0);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.backgroundCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.gold, size: iconSize),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: ResponsiveFontSize.labelLarge(context),
               ),
             ),
           ],
