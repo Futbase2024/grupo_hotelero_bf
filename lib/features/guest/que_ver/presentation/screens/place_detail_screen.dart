@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../../core/di/injection.dart';
@@ -126,7 +127,13 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
           backgroundColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.gold),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
         ),
         body: SafeArea(
@@ -284,7 +291,13 @@ class _SliverImageGalleryState extends State<_SliverImageGallery> {
             color: AppColors.white,
           ),
         ),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/');
+          }
+        },
       ),
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
@@ -457,7 +470,13 @@ class _GalleryViewState extends State<_GalleryView> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: AppColors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/');
+          }
+        },
         ),
         title: Text(
           widget.place.title,

@@ -1,0 +1,14 @@
+{
+  "name": "cleanup-documents",
+  "version": "1.0.0",
+  "description": "Elimina documentos expirados del bucket guest-documents y de la base de datos",
+  "main": "index.ts",
+  "scripts": {
+    "deploy": "supabase functions deploy cleanup-documents",
+    "serve": "supabase functions serve cleanup-documents --env-file ./supabase/.env"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

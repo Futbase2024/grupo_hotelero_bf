@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../../core/di/injection.dart';
 import '../../../../../../core/theme/app_colors.dart';
@@ -42,7 +43,13 @@ class HouseRulesScreen extends StatelessWidget {
               Icons.arrow_back_ios_new,
               color: isDark ? AppColors.gold : AppColors.textPrimary,
             ),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
           elevation: 0,
           scrolledUnderElevation: 1,

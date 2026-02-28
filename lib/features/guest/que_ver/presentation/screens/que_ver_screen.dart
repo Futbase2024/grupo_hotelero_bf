@@ -167,7 +167,13 @@ class _SliverAppBar extends StatelessWidget {
           Icons.arrow_back_ios_new,
           color: AppColors.gold,
         ),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/');
+          }
+        },
       ),
       title: Text(
         '¿Qué ver?',

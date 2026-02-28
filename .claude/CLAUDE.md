@@ -16,7 +16,7 @@
 |-------|-------|
 | **Nombre** | bf_stay |
 | **Project ID** | `qwepisgdqlmqfxwqkztz` |
-| **MCP** | `mcp__supabase-carniceria__*` |
+| **MCP** | `mcp__supabase-bf-stay__*` |
 
 ### Uso del MCP de Supabase
 
@@ -25,7 +25,7 @@
 project_id: "qwepisgdqlmqfxwqkztz"
 
 // Ejemplo de consulta:
-mcp__supabase-carniceria__execute_sql(
+mcp__supabase-bf-stay__execute_sql(
   project_id: "qwepisgdqlmqfxwqkztz",
   query: "SELECT * FROM properties LIMIT 10;"
 )

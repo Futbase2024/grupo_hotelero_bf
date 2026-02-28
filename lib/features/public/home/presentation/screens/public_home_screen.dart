@@ -284,48 +284,64 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         title: 'Check-in Digital',
         description: 'Registro de entrada sin esperas.',
         route: AppRoutes.bookingAccess,
+        imageAsset: 'assets/images/checkin.png',
+        overlayColor: const Color(0xFF2E7D32),
       ),
       _ServiceItem(
         icon: Icons.logout_outlined,
         title: 'Check-out Digital',
         description: 'Salida rápida y sencilla.',
         route: AppRoutes.bookingAccess,
+        imageAsset: 'assets/images/checkout.png',
+        overlayColor: const Color(0xFF1565C0),
       ),
       _ServiceItem(
         icon: Icons.rule_outlined,
         title: 'Normas de la Casa',
         description: 'Reglas y recomendaciones.',
         route: AppRoutes.houseRulesGeneral,
+        imageAsset: 'assets/images/normas.png',
+        overlayColor: const Color(0xFF6D4C41),
       ),
       _ServiceItem(
         icon: Icons.attractions_outlined,
         title: '¿Qué ver?',
         description: 'Lugares de interés cercanos.',
         route: AppRoutes.queVer,
+        imageAsset: 'assets/images/quever.png',
+        overlayColor: const Color(0xFF00838F),
       ),
       _ServiceItem(
         icon: Icons.local_parking_outlined,
-        title: 'Aparcamientos Cercanos',
+        title: 'Aparcamientos',
         description: 'Opciones de parking.',
         route: AppRoutes.parkings,
+        imageAsset: 'assets/images/parking.png',
+        overlayColor: const Color(0xFF5E35B1),
       ),
       _ServiceItem(
         icon: Icons.chat_bubble_outline_rounded,
         title: 'Chat',
         description: 'Conserje virtual 24/7.',
         route: AppRoutes.bookingAccess,
+        imageAsset: 'assets/images/chat.png',
+        overlayColor: const Color(0xFF00695C),
       ),
       _ServiceItem(
         icon: Icons.home_work_outlined,
-        title: 'Nuestros Alojamientos',
-        description: 'Otras propiedades disponibles.',
+        title: 'Alojamientos',
+        description: 'Otras propiedades.',
         route: AppRoutes.alojamientos,
+        imageAsset: 'assets/images/alojamiento.png',
+        overlayColor: const Color(0xFF455A64),
       ),
       _ServiceItem(
         icon: Icons.star_outline_rounded,
-        title: 'Reseñas y Comentarios',
+        title: 'Reseñas',
         description: 'Opiniones de huéspedes.',
         route: '/guest/reviews/bf000000-0000-0000-0000-000000000001',
+        imageAsset: 'assets/images/reseña.png',
+        overlayColor: const Color(0xFFEF6C00),
       ),
     ];
 
@@ -359,9 +375,9 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
             padding: EdgeInsets.zero,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              mainAxisSpacing: AppTheme.spacing12,
-              crossAxisSpacing: AppTheme.spacing12,
-              mainAxisExtent: context.responsive(mobile: 150.0, tablet: 160.0, desktop: 170.0),
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
+              mainAxisExtent: context.responsive(mobile: 130.0, tablet: 140.0, desktop: 150.0),
             ),
             itemCount: services.length,
             itemBuilder: (context, index) => _buildServiceCard(context, services[index], cardBorderColor),
@@ -501,83 +517,91 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
 
   /// Card de servicio compacta para grid
   Widget _buildServiceCard(BuildContext context, _ServiceItem service, Color borderColor) {
-    final isDark = AppColors.isDarkMode(context);
-    final iconSize = context.responsive(mobile: 32.0, tablet: 36.0, desktop: 40.0);
-    final iconInnerSize = context.responsive(mobile: 18.0, tablet: 20.0, desktop: 22.0);
-    final titleSize = context.responsive(mobile: 13.0, tablet: 14.0, desktop: 15.0);
-    final descSize = context.responsive(mobile: 11.0, tablet: 12.0, desktop: 13.0);
-    final padding = context.responsive(mobile: 12.0, tablet: 14.0, desktop: 16.0);
-
+    final titleSize = context.responsive(mobile: 12.0, tablet: 13.0, desktop: 14.0);
     final isClickable = service.route != null;
+    final overlayColor = service.overlayColor ?? AppColors.gold;
+    final isDark = AppColors.isDarkMode(context);
 
     return GestureDetector(
       onTap: isClickable ? () => context.push(service.route!) : null,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: EdgeInsets.all(padding),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceWithAlpha30 : AppColors.gray50,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          border: Border.all(color: borderColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icono
-            Container(
-              width: iconSize,
-              height: iconSize,
+      child: Column(
+        children: [
+          // Tarjeta con imagen
+          Expanded(
+            child: Container(
               decoration: BoxDecoration(
-                color: AppColors.gold,
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                border: Border.all(color: borderColor),
               ),
-              child: Icon(
-                service.icon,
-                color: AppColors.black,
-                size: iconInnerSize,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium - 1),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Imagen de fondo (si existe) o gradiente de color
+                    service.imageAsset != null
+                        ? Image.asset(
+                            service.imageAsset!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    overlayColor,
+                                    overlayColor.withValues(alpha: 0.7),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  overlayColor,
+                                  overlayColor.withValues(alpha: 0.7),
+                                ],
+                              ),
+                            ),
+                          ),
+                    // Overlay oscuro sutil
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.blackWithAlpha05,
+                            AppColors.blackWithAlpha20,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: context.responsive(mobile: 8.0, tablet: 10.0, desktop: 12.0)),
-            // Título
-            Text(
-              service.title,
-              style: TextStyle(
-                fontSize: titleSize,
-                fontWeight: FontWeight.w700,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.black,
-                height: 1.2,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          ),
+          // Título debajo de la tarjeta
+          const SizedBox(height: 6),
+          Text(
+            service.title,
+            style: TextStyle(
+              fontSize: titleSize,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.black,
+              height: 1.2,
             ),
-            const SizedBox(height: 4),
-            // Descripción
-            Text(
-              service.description,
-              style: TextStyle(
-                fontSize: descSize,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.black,
-                height: 1.3,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (isClickable) ...[
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 12,
-                    color: isDark ? AppColors.gold : AppColors.black,
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -609,11 +633,15 @@ class _ServiceItem {
   final String title;
   final String description;
   final String? route;
+  final String? imageAsset;
+  final Color? overlayColor;
 
   const _ServiceItem({
     required this.icon,
     required this.title,
     required this.description,
     this.route,
+    this.imageAsset,
+    this.overlayColor,
   });
 }

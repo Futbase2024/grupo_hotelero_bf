@@ -15,6 +15,10 @@ import '../../features/guest/parkings/data/repositories/parkings_repository_impl
 import '../../features/guest/parkings/domain/repositories/parkings_repository.dart';
 import '../../features/guest/reviews/data/repositories/reviews_repository_impl.dart';
 import '../../features/guest/reviews/domain/repositories/reviews_repository.dart';
+import '../../features/guest/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/guest/chat/domain/repositories/chat_repository.dart';
+import '../../features/guest/checkin/data/repositories/checkin_repository_impl.dart';
+import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -46,6 +50,16 @@ Future<void> configureDependencies() async {
   // Admin repositories
   getIt.registerLazySingleton<AdminPanelRepository>(
     () => AdminPanelRepositoryImpl(),
+  );
+
+  // Chat repository
+  getIt.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(),
+  );
+
+  // Checkin repository
+  getIt.registerLazySingleton<CheckinRepository>(
+    () => CheckinRepositoryImpl(),
   );
 
   // BLoCs/Cubits se crean con BlocProvider en la UI

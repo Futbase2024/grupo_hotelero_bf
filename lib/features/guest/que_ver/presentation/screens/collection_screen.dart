@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
 import '../../domain/entities/collection_entity.dart';
@@ -38,7 +39,13 @@ class CollectionScreen extends StatelessWidget {
             Icons.arrow_back_ios_new,
             color: isDark ? AppColors.gold : AppColors.textPrimary,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
         elevation: 0,
         scrolledUnderElevation: 1,

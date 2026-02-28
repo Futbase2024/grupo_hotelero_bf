@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/router/app_router.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../shared/widgets/admin_widgets.dart';
@@ -67,7 +69,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
   CreateBookingResult? result;
 
   List<UnitWithAvailability> units = [];
-  bool isLoadingUnits = true;
+  bool isLoadingUnits = false;
   String? unitsError;
 
   String? selectedUnitId;
@@ -81,9 +83,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
   void initState() {
     super.initState();
     Debug.log('initState - BottomSheet inicializado');
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      loadUnits();
-    });
+    // No cargamos unidades hasta que se seleccionen las fechas
   }
 
   Future<void> loadUnits() async {
@@ -311,81 +311,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (isLoadingUnits)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.darkSurface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.gold),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold)),
-                const SizedBox(width: 12),
-                Text('Cargando alojamientos...', style: TextStyle(color: AppColors.getTextSecondaryColor(context))),
-              ],
-            ),
-          )
-        else if (unitsError != null)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.errorLight,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.gold),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.error_outline, color: AppColors.error, size: 20),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Error al cargar alojamientos', style: const TextStyle(color: AppColors.error))),
-                TextButton(onPressed: loadUnits, child: const Text('Reintentar')),
-              ],
-            ),
-          )
-        else if (units.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.darkSurface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.darkBorder),
-            ),
-            child: Text('No hay alojamientos disponibles', style: TextStyle(color: AppColors.getTextSecondaryColor(context))),
-          )
-        else
-          DropdownButtonFormField<String>(
-            style: const TextStyle(color: AppColors.white),
-            dropdownColor: AppColors.darkSurface,
-            decoration: buildInputDecoration('Alojamiento', Icons.apartment_outlined).copyWith(
-              hintText: 'Selecciona un alojamiento',
-              hintStyle: const TextStyle(color: AppColors.gray500),
-              helperText: checkInDate != null && checkOutDate != null
-                  ? 'Los alojamientos en rojo no están disponibles'
-                  : 'Selecciona fechas para ver disponibilidad',
-              helperStyle: TextStyle(fontSize: 11, color: AppColors.getTextSecondaryColor(context)),
-            ),
-            items: units.map((unitWithAvail) {
-              final unit = unitWithAvail.unit;
-              final isAvailable = unitWithAvail.isAvailable;
-              return DropdownMenuItem<String>(
-                value: unit.id,
-                enabled: isAvailable || checkInDate == null,
-                child: Text(
-                  '${isAvailable || checkInDate == null ? "✓" : "✗"} ${unit.name}${!isAvailable && checkInDate != null ? " (Ocupado)" : ""}',
-                  style: TextStyle(
-                    color: isAvailable || checkInDate == null ? AppColors.white : AppColors.gray500,
-                    decoration: isAvailable || checkInDate == null ? null : TextDecoration.lineThrough,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              );
-            }).toList(),
-            onChanged: (value) => setState(() => selectedUnitId = value),
-            validator: (value) => value == null ? 'Selecciona un alojamiento' : null,
-          ),
-        const SizedBox(height: 12),
+        // PRIMERO: Fechas
         Row(
           children: [
             Expanded(
@@ -424,6 +350,109 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
           ],
         ),
         const SizedBox(height: 12),
+        // SEGUNDO: Alojamiento (solo si hay fechas seleccionadas)
+        if (checkInDate == null || checkOutDate == null)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.darkBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.getTextSecondaryColor(context), size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Selecciona las fechas para ver alojamientos disponibles',
+                    style: TextStyle(color: AppColors.getTextSecondaryColor(context)),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (isLoadingUnits)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.gold),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold)),
+                const SizedBox(width: 12),
+                Text('Buscando alojamientos disponibles...', style: TextStyle(color: AppColors.getTextSecondaryColor(context))),
+              ],
+            ),
+          )
+        else if (unitsError != null)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.errorLight,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.gold),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Error al cargar alojamientos', style: const TextStyle(color: AppColors.error))),
+                TextButton(onPressed: loadUnits, child: const Text('Reintentar')),
+              ],
+            ),
+          )
+        else if (units.where((u) => u.isAvailable).isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.warningLight,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.warning),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.event_busy, color: AppColors.warning, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'No hay alojamientos disponibles para las fechas seleccionadas',
+                    style: TextStyle(color: AppColors.getTextSecondaryColor(context)),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          DropdownButtonFormField<String>(
+            style: const TextStyle(color: AppColors.white),
+            dropdownColor: AppColors.darkSurface,
+            decoration: buildInputDecoration('Alojamiento', Icons.apartment_outlined).copyWith(
+              hintText: 'Selecciona un alojamiento',
+              hintStyle: const TextStyle(color: AppColors.gray500),
+              helperText: 'Solo se muestran alojamientos disponibles',
+              helperStyle: TextStyle(fontSize: 11, color: AppColors.getTextSecondaryColor(context)),
+            ),
+            items: units.where((u) => u.isAvailable).map((unitWithAvail) {
+              final unit = unitWithAvail.unit;
+              return DropdownMenuItem<String>(
+                value: unit.id,
+                child: Text(
+                  unit.name,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (value) => setState(() => selectedUnitId = value),
+            validator: (value) => value == null ? 'Selecciona un alojamiento' : null,
+          ),
+        const SizedBox(height: 12),
         Row(
           children: [
             const Icon(Icons.person_outline, color: AppColors.gray500, size: 20),
@@ -444,7 +473,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
           children: [
             const Icon(Icons.child_care_outlined, color: AppColors.gray500, size: 20),
             const SizedBox(width: 8),
-            Text('Niños (0-13 años)', style: TextStyle(color: AppColors.getTextSecondaryColor(context))),
+            Text('Niños (0-17 años)', style: TextStyle(color: AppColors.getTextSecondaryColor(context))),
             const Spacer(),
             buildCounter(
               value: numChildren,
@@ -466,6 +495,14 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
           ],
         ),
         if (numChildren > 0) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 28),
+            child: Text(
+              '* Los menores de 14 años no requieren documentación',
+              style: TextStyle(color: AppColors.getTextSecondaryColor(context), fontSize: 11, fontStyle: FontStyle.italic),
+            ),
+          ),
           const SizedBox(height: 12),
           ...List.generate(numChildren, (index) {
             return Padding(
@@ -490,7 +527,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
                         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.gold)),
                         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.gold, width: 2)),
                       ),
-                      items: List.generate(14, (i) => DropdownMenuItem(value: i, child: Text('$i ${i == 1 ? 'año' : 'años'}'))),
+                      items: List.generate(18, (i) => DropdownMenuItem(value: i, child: Text('$i ${i == 1 ? 'año' : 'años'}'))),
                       onChanged: (value) {
                         setState(() {
                           while (childrenAges.length <= index) {
@@ -572,12 +609,19 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       setState(() {
         if (isCheckIn) {
           checkInDate = picked;
-          if (checkOutDate != null && checkOutDate!.isBefore(picked)) checkOutDate = null;
+          if (checkOutDate != null && checkOutDate!.isBefore(picked)) {
+            checkOutDate = null;
+          }
         } else {
           checkOutDate = picked;
         }
+        // Limpiar alojamiento seleccionado cuando cambian las fechas
+        selectedUnitId = null;
       });
-      loadUnits();
+      // Solo cargar unidades si ambas fechas están seleccionadas
+      if (checkInDate != null && checkOutDate != null) {
+        loadUnits();
+      }
     }
   }
 
@@ -622,6 +666,9 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
         checkInDate: checkInDate!,
         checkOutDate: checkOutDate!,
         numGuests: numAdults + numChildren,
+        numAdults: numAdults,
+        numChildren: numChildren,
+        childrenAges: childrenAges.take(numChildren).toList(),
         staffNotes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
         propertyId: propertyId,
       );
@@ -651,49 +698,82 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
     if (result == null) return const Center(child: Text('Error: No hay resultado'));
 
     final selectedUnit = units.firstWhere((u) => u.unit.id == selectedUnitId, orElse: () => units.first);
+    final nights = checkInDate != null && checkOutDate != null
+        ? checkOutDate!.difference(checkInDate!).inDays
+        : 0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // Icono de éxito
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: AppColors.successLight, shape: BoxShape.circle),
-            child: const Icon(Icons.check_circle_outline, size: 64, color: AppColors.success),
+            decoration: BoxDecoration(
+              color: AppColors.successLight,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle_outline,
+              size: 64,
+              color: AppColors.success,
+            ),
           ),
-          const SizedBox(height: 24),
-          Text('Reserva creada para', style: TextStyle(fontSize: 13, color: AppColors.getTextSecondaryColor(context))),
-          const SizedBox(height: 4),
+          const SizedBox(height: 20),
+
+          // Título
           Text(
-            '${firstNameController.text} ${lastNameController.text}',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: AppColors.white),
-            textAlign: TextAlign.center,
+            'Reserva creada',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: AppColors.white,
+            ),
           ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: AppColors.darkSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.darkBorder)),
-            child: Column(
-              children: [
-                buildSummaryRow('Alojamiento', selectedUnit.unit.name),
-                const Divider(color: AppColors.darkBorder),
-                buildSummaryRow('Entrada', checkInDate != null ? DateFormat('dd/MM/yyyy').format(checkInDate!) : ''),
-                const Divider(color: AppColors.darkBorder),
-                buildSummaryRow('Salida', checkOutDate != null ? DateFormat('dd/MM/yyyy').format(checkOutDate!) : ''),
-                const Divider(color: AppColors.darkBorder),
-                buildSummaryRow('Adultos', '$numAdults'),
-                if (numChildren > 0) ...[
-                  const Divider(color: AppColors.darkBorder),
-                  buildSummaryRow('Niños', '$numChildren (${childrenAges.take(numChildren).join(", ")} años)'),
-                ],
-              ],
+          const SizedBox(height: 8),
+          Text(
+            'para ${firstNameController.text} ${lastNameController.text}',
+            style: TextStyle(
+              fontSize: 15,
+              color: AppColors.getTextSecondaryColor(context),
             ),
           ),
           const SizedBox(height: 24),
-          BfCodeDisplayWidget(code: result!.bookingCode, checkInDate: checkInDate, checkOutDate: checkOutDate),
-          const SizedBox(height: 24),
+
+          // TARJETA PROFESIONAL CLICKEABLE
+          _BookingSuccessCard(
+            unitName: selectedUnit.unit.name,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
+            nights: nights,
+            numAdults: numAdults,
+            numChildren: numChildren,
+            childrenAges: childrenAges.take(numChildren).toList(),
+            bookingCode: result!.bookingCode,
+            keyboxCode: result!.keyboxCode,
+            onTap: () {
+              Navigator.of(context).pop();
+              context.push(
+                AppRoutes.adminBookingDetail.replaceFirst(':bookingId', result!.bookingId),
+              );
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // Widget de códigos
+          BfCodeDisplayWidget(
+            code: result!.bookingCode,
+            keyboxCode: result!.keyboxCode,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
+          ),
+          const SizedBox(height: 16),
+
+          // Estado del email
           buildEmailStatusCard(),
           const SizedBox(height: 24),
+
+          // Botón principal
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -704,13 +784,21 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              child: const Text('Entendido', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              child: const Text(
+                'Entendido',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
           const SizedBox(height: 12),
+
+          // Crear otra reserva
           TextButton(
             onPressed: resetForm,
-            child: Text('Crear otra reserva', style: TextStyle(color: AppColors.getTextSecondaryColor(context))),
+            child: Text(
+              'Crear otra reserva',
+              style: TextStyle(color: AppColors.getTextSecondaryColor(context)),
+            ),
           ),
         ],
       ),
@@ -808,7 +896,349 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       numAdults = 2;
       numChildren = 0;
       childrenAges = [];
+      units = [];
+      unitsError = null;
     });
-    loadUnits();
+    // No cargamos unidades hasta que se seleccionen las fechas
+  }
+}
+
+/// Widget de tarjeta profesional para mostrar la reserva creada exitosamente
+/// Al pulsar navega a los detalles de la reserva
+class _BookingSuccessCard extends StatelessWidget {
+  const _BookingSuccessCard({
+    required this.unitName,
+    required this.checkInDate,
+    required this.checkOutDate,
+    required this.nights,
+    required this.numAdults,
+    required this.numChildren,
+    required this.childrenAges,
+    required this.bookingCode,
+    required this.keyboxCode,
+    required this.onTap,
+  });
+
+  final String unitName;
+  final DateTime? checkInDate;
+  final DateTime? checkOutDate;
+  final int nights;
+  final int numAdults;
+  final int numChildren;
+  final List<int> childrenAges;
+  final String bookingCode;
+  final String keyboxCode;
+  final VoidCallback onTap;
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '--';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.gold.withValues(alpha: 0.15),
+                AppColors.darkSurface,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.gold,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.gold.withValues(alpha: 0.25),
+                blurRadius: 20,
+                spreadRadius: 2,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // HEADER PRINCIPAL
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.1),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.gold.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.apartment_rounded,
+                        color: AppColors.black,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            unitName,
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.open_in_new_rounded,
+                                  color: AppColors.gold,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Ver detalles completos',
+                                  style: TextStyle(
+                                    color: AppColors.gold,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: AppColors.gold,
+                        size: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // CUERPO CON INFORMACIÓN
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // FILA DE FECHAS
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkBackground,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          // Check-in
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.gold,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.login_rounded,
+                                    color: AppColors.black,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'ENTRADA',
+                                  style: TextStyle(
+                                    color: AppColors.getTextSecondaryColor(context),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatDate(checkInDate),
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Separador con noches
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '$nights',
+                                  style: const TextStyle(
+                                    color: AppColors.black,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                Text(
+                                  nights == 1 ? 'NOCHE' : 'NOCHES',
+                                  style: const TextStyle(
+                                    color: AppColors.black,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Check-out
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.gold,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.logout_rounded,
+                                    color: AppColors.black,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'SALIDA',
+                                  style: TextStyle(
+                                    color: AppColors.getTextSecondaryColor(context),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatDate(checkOutDate),
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Huéspedes
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkBackground,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: const BoxDecoration(
+                              color: AppColors.gold,
+                              borderRadius: BorderRadius.all(Radius.circular(10)),
+                            ),
+                            child: const Icon(
+                              Icons.people_rounded,
+                              color: AppColors.black,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '$numAdults ${numAdults == 1 ? "adulto" : "adultos"}',
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (numChildren > 0) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$numChildren ${numChildren == 1 ? "niño" : "niños"}${childrenAges.isNotEmpty ? " (${childrenAges.join(', ')} años)" : ""}',
+                                    style: TextStyle(
+                                      color: AppColors.getTextSecondaryColor(context),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

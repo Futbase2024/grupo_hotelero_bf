@@ -31,6 +31,9 @@ abstract class AdminPanelRepository {
     required DateTime checkInDate,
     required DateTime checkOutDate,
     required int numGuests,
+    int numAdults = 1,
+    int numChildren = 0,
+    List<int> childrenAges = const [],
     String? staffNotes,
     String? propertyId,
   });
@@ -53,6 +56,44 @@ abstract class AdminPanelRepository {
     required String bookingId,
     String? reason,
   });
+
+  /// Obtiene el detalle completo de un check-in
+  /// Incluye huéspedes, documentos y firma
+  Future<CheckinDetailEntity> getCheckinDetail(String checkinId);
+
+  /// Obtiene la URL firmada para ver un documento
+  Future<String> getDocumentUrl(String storagePath);
+
+  // ==================== MÉTODOS DE CHECK-OUT ====================
+
+  /// Valida el check-out de una reserva
+  /// Esto marca checkout_status = validated y booking_status = closed
+  Future<void> validateCheckout({
+    required String bookingId,
+    String? notes,
+  });
+
+  /// Rechaza el check-out con motivo (incidencias)
+  /// El huésped deberá resolver las incidencias y volver a solicitar
+  Future<void> rejectCheckout({
+    required String bookingId,
+    required String reason,
+  });
+
+  /// Cierra una reserva manualmente
+  /// Útil para cerrar reservas sin check-out solicitado
+  Future<void> closeBooking({
+    required String bookingId,
+    String? notes,
+  });
+
+  /// Cancela una reserva
+  Future<void> cancelBooking({
+    required String bookingId,
+    String? reason,
+  });
+
+  // ==================== MÉTODOS DE UNIDADES ====================
 
   /// Lista unidades de una propiedad
   Future<List<AdminUnitEntity>> listUnits(String propertyId);
@@ -78,6 +119,15 @@ abstract class AdminPanelRepository {
   Stream<StaffNotificationEntity> watchNotifications({
     String? propertyId,
   });
+
+  // ==================== MÉTODOS DE DOCUMENTOS ====================
+
+  /// Limpia documentos expirados (más de 1 año)
+  /// Retorna el número de documentos eliminados
+  Future<CleanupResult> cleanupExpiredDocuments();
+
+  /// Obtiene documentos próximos a expirar
+  Future<List<ExpiringDocument>> getDocumentsExpiringSoon({int daysBefore = 7});
 }
 
 /// Resultado de crear una reserva
@@ -85,6 +135,7 @@ class CreateBookingResult {
   const CreateBookingResult({
     required this.bookingId,
     required this.bookingCode,
+    required this.keyboxCode,
     required this.emailSent,
     this.emailError,
     this.simulated = false,
@@ -92,6 +143,7 @@ class CreateBookingResult {
 
   final String bookingId;
   final String bookingCode;
+  final String keyboxCode;
   final bool emailSent;
   final String? emailError;
   final bool simulated;
@@ -105,6 +157,7 @@ class CreateBookingResult {
     return CreateBookingResult(
       bookingId: (booking['id'] ?? booking['booking_id']) as String,
       bookingCode: (booking['booking_code'] ?? booking['code']) as String,
+      keyboxCode: (booking['keybox_code'] ?? '') as String,
       emailSent: json['email_sent'] as bool? ?? false,
       emailError: (json['email_result'] ?? json['email_error']) as String?,
       simulated: json['simulated'] as bool? ?? false,
@@ -163,5 +216,83 @@ class UnitWithAvailability {
       'conflicting_booking_id': conflictingBookingId,
       'conflicting_guest_name': conflictingGuestName,
     };
+  }
+}
+
+/// Resultado de limpiar documentos expirados
+class CleanupResult {
+  const CleanupResult({
+    required this.deletedCount,
+    required this.errorCount,
+    this.details = const [],
+  });
+
+  final int deletedCount;
+  final int errorCount;
+  final List<CleanupDetail> details;
+
+  factory CleanupResult.fromJson(Map<String, dynamic> json) {
+    final detailsList = (json['details'] as List<dynamic>?) ?? [];
+    return CleanupResult(
+      deletedCount: json['deleted_count'] as int? ?? 0,
+      errorCount: json['error_count'] as int? ?? 0,
+      details: detailsList
+          .map((e) => CleanupDetail.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+/// Detalle de un documento eliminado
+class CleanupDetail {
+  const CleanupDetail({
+    required this.id,
+    required this.path,
+    required this.status,
+    this.error,
+  });
+
+  final String id;
+  final String path;
+  final String status;
+  final String? error;
+
+  factory CleanupDetail.fromJson(Map<String, dynamic> json) {
+    return CleanupDetail(
+      id: json['id'] as String? ?? '',
+      path: json['path'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      error: json['error'] as String?,
+    );
+  }
+}
+
+/// Documento próximo a expirar
+class ExpiringDocument {
+  const ExpiringDocument({
+    required this.id,
+    required this.storagePath,
+    required this.expiresAt,
+    this.guestId,
+    required this.bookingId,
+    required this.daysRemaining,
+  });
+
+  final String id;
+  final String storagePath;
+  final DateTime expiresAt;
+  final String? guestId;
+  final String bookingId;
+  final int daysRemaining;
+
+  factory ExpiringDocument.fromJson(Map<String, dynamic> json) {
+    return ExpiringDocument(
+      id: json['id'] as String,
+      storagePath: json['storage_path'] as String,
+      expiresAt: DateTime.parse(json['expires_at'] as String),
+      guestId: json['guest_id'] as String?,
+      bookingId: json['booking_id'] as String,
+      daysRemaining: json['days_remaining'] as int? ?? 0,
+    );
   }
 }

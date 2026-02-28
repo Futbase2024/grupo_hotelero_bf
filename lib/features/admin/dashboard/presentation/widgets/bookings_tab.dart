@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/router/app_router.dart';
+import '../../../../../core/enums/enums.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../shared/widgets/admin_widgets.dart';
 
@@ -200,7 +203,9 @@ class _BookingsTabState extends State<BookingsTab> {
             guestName: booking.guestFullName,
             docsPending: booking.docsPending ?? 0,
             onTap: () {
-              // TODO: Navigate to booking detail
+              context.push(
+                AppRoutes.adminBookingDetail.replaceFirst(':bookingId', booking.id),
+              );
             },
           );
         },

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../shared/widgets/admin_widgets.dart';
+import '../../../checkins/presentation/screens/checkin_detail_screen.dart';
 
 /// Tab de check-ins del dashboard de administración
 class CheckinsTab extends StatelessWidget {
@@ -148,13 +150,170 @@ class CheckinsTab extends StatelessWidget {
           final checkin = checkins[index];
           return _CheckinListTile(
             checkin: checkin,
-            onTap: () {
-              // TODO: Navigate to booking detail
-            },
+            onTap: checkin.checkinId != null
+                ? () => _navigateToDetail(context, checkin.checkinId!, checkin.bookingCode)
+                : null,
+            onValidate: checkin.checkinStatus == 'submitted' && checkin.checkinId != null
+                ? () => _validateCheckin(context, checkin.checkinId!)
+                : null,
+            onReject: checkin.checkinStatus == 'submitted' && checkin.checkinId != null
+                ? () => _showRejectDialog(context, checkin.checkinId!)
+                : null,
           );
         },
       ),
     );
+  }
+
+  void _navigateToDetail(BuildContext context, String checkinId, String bookingCode) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CheckinDetailScreen(
+          checkinId: checkinId,
+          bookingCode: bookingCode,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _validateCheckin(BuildContext context, String checkinId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        title: const Text('Validar Check-in', style: TextStyle(color: AppColors.white)),
+        content: const Text(
+          '¿Confirmar que el check-in es correcto? La reserva pasará a estado "Checked In".',
+          style: TextStyle(color: AppColors.gray300),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            child: const Text('Validar', style: TextStyle(color: AppColors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await Supabase.instance.client.rpc(
+          'validate_checkin',
+          params: {'p_checkin_id': checkinId},
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Check-in validado correctamente'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.fixed,
+            ),
+          );
+          context.read<AdminDashboardBloc>().add(
+            const AdminDashboardCheckinsLoadRequested(),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.fixed,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _showRejectDialog(BuildContext context, String checkinId) async {
+    final reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        title: const Text('Rechazar Check-in', style: TextStyle(color: AppColors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Indica el motivo del rechazo:',
+              style: TextStyle(color: AppColors.gray300),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              style: const TextStyle(color: AppColors.white),
+              decoration: InputDecoration(
+                hintText: 'Ej: Documento ilegible',
+                hintStyle: const TextStyle(color: AppColors.gray500),
+                filled: true,
+                fillColor: AppColors.darkBackground,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.darkBorder),
+                ),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Rechazar', style: TextStyle(color: AppColors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await Supabase.instance.client.rpc(
+          'reject_checkin',
+          params: {
+            'p_checkin_id': checkinId,
+            'p_reason': reasonController.text.trim().isEmpty
+                ? 'Sin motivo especificado'
+                : reasonController.text.trim(),
+          },
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Check-in rechazado'),
+              backgroundColor: AppColors.warning,
+              behavior: SnackBarBehavior.fixed,
+            ),
+          );
+          context.read<AdminDashboardBloc>().add(
+            const AdminDashboardCheckinsLoadRequested(),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.fixed,
+            ),
+          );
+        }
+      }
+    }
   }
 }
 
@@ -162,10 +321,14 @@ class _CheckinListTile extends StatelessWidget {
   const _CheckinListTile({
     required this.checkin,
     this.onTap,
+    this.onValidate,
+    this.onReject,
   });
 
   final dynamic checkin;
   final VoidCallback? onTap;
+  final VoidCallback? onValidate;
+  final VoidCallback? onReject;
 
   Color _getStatusColor(String? status) {
     switch (status) {
@@ -196,137 +359,175 @@ class _CheckinListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(checkin.checkinStatus);
+    final isSubmitted = checkin.checkinStatus == 'submitted';
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: AppColors.darkSurface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.darkBorder),
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            children: [
-              // Indicador de color según status (3px de ancho)
-              Container(
-                width: 3,
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    bottomLeft: Radius.circular(8),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: AppColors.darkSurface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.darkBorder),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                // Indicador de color según status (3px de ancho)
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
                   ),
                 ),
-              ),
 
-              // Contenido
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Línea 1: Guest name + status
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              checkin.guestFullName.isNotEmpty
-                                  ? checkin.guestFullName
-                                  : 'Huésped',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.white,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              _getStatusText(checkin.checkinStatus),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-
-                      // Línea 2: Unit name
-                      Text(
-                        checkin.unitName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w300,
-                          color: AppColors.getTextSecondaryColor(context),
-                        ),
-                      ),
-
-                      // Línea 3: Docs pendientes si aplica
-                      if (checkin.hasDocsPending) ...[
-                        const SizedBox(height: 4),
+                // Contenido
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Línea 1: Guest name + status
                         Row(
                           children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              size: 14,
-                              color: AppColors.warning,
+                            Expanded(
+                              child: Text(
+                                checkin.guestFullName.isNotEmpty
+                                    ? checkin.guestFullName
+                                    : 'Huésped',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.white,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${checkin.docsPending} documentos pendientes',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.warning,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                _getStatusText(checkin.checkinStatus),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: statusColor,
+                                ),
                               ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 4),
+
+                        // Línea 2: Unit name + booking code
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                checkin.unitName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w300,
+                                  color: AppColors.getTextSecondaryColor(context),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              checkin.bookingCode,
+                              style: const TextStyle(
+                                fontFamily: 'JetBrains Mono',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Línea 3: Docs pendientes si aplica
+                        if (checkin.hasDocsPending) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 14,
+                                color: AppColors.warning,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${checkin.docsPending} documentos pendientes',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.warning,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        // Botones de acción para check-ins pendientes
+                        if (isSubmitted && (onValidate != null || onReject != null)) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              if (onValidate != null)
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: onValidate,
+                                    icon: const Icon(Icons.check, size: 16),
+                                    label: const Text('Validar'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.success,
+                                      foregroundColor: AppColors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (onValidate != null && onReject != null)
+                                const SizedBox(width: 8),
+                              if (onReject != null)
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: onReject,
+                                    icon: const Icon(Icons.close, size: 16),
+                                    label: const Text('Rechazar'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.error,
+                                      side: const BorderSide(color: AppColors.error),
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
-
-              // Código BF + flecha
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      checkin.bookingCode,
-                      style: const TextStyle(
-                        fontFamily: 'JetBrains Mono',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.gold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: AppColors.getTextSecondaryColor(context),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

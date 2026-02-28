@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/router/app_router.dart';
 import '../../../domain/bloc/bloc.dart';
 
 /// Tab de resumen del dashboard de administración
@@ -166,11 +169,11 @@ class DashboardTab extends StatelessWidget {
           children: [
             Expanded(
               child: _StatCard(
-                icon: Icons.mark_email_unread_outlined,
-                value: state.unreadNotificationsCount.toString(),
-                label: 'Notificaciones nuevas',
+                icon: Icons.chat_bubble_outline,
+                value: 'Chat',
+                label: 'Mensajes de huéspedes',
                 onTap: () {
-                  // TODO: Navigate to notifications
+                  context.go(AppRoutes.adminChat);
                 },
               ),
             ),

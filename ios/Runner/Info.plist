@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Permisos para image_picker -->
+	<key>NSCameraUsageDescription</key>
+	<string>Necesitamos acceso a la cámara para capturar tu documento de identidad</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a la galería para seleccionar tu documento de identidad</string>
 </dict>
 </plist>

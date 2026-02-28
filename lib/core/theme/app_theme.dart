@@ -369,7 +369,7 @@ class AppTheme {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusMedium),
       ),
-      behavior: SnackBarBehavior.floating,
+      behavior: SnackBarBehavior.fixed,
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: AppColors.background,
@@ -559,7 +559,7 @@ class AppTheme {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusMedium),
       ),
-      behavior: SnackBarBehavior.floating,
+      behavior: SnackBarBehavior.fixed,
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: AppColors.darkSurface,

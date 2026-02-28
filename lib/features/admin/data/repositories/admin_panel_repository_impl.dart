@@ -66,9 +66,11 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     try {
       debugPrint('📋 [listBookings] Iniciando consulta...');
 
-      // Construir query base con joins
-      // Schema original: id, property_id, unit_id, booking_code, last_name,
-      // checkin_date, checkout_date, status, primary_guest_user_id, created_at
+      // Columnas disponibles en la tabla bookings:
+      // id, property_id, unit_id, booking_code, last_name, checkin_date, checkout_date,
+      // status, primary_guest_user_id, created_at, num_guests, staff_notes,
+      // code_first_used_at, guest_first_name, guest_email, guest_phone, code_sent_at,
+      // keybox_code, num_adults, num_children, children_ages
       var query = _client
           .from('bookings')
           .select('''
@@ -80,6 +82,15 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
             checkout_date,
             status,
             last_name,
+            guest_first_name,
+            guest_email,
+            guest_phone,
+            num_guests,
+            num_adults,
+            num_children,
+            staff_notes,
+            code_first_used_at,
+            code_sent_at,
             created_at,
             units!bookings_unit_id_fkey (
               name
@@ -146,18 +157,24 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
           'property_name': property?['name'] ?? '',
           'check_in_date': row['checkin_date'],
           'check_out_date': row['checkout_date'],
-          'num_guests': 1,
+          'num_guests': row['num_guests'] ?? 1,
           'status': row['status'] ?? 'confirmed',
-          'guest_email': '',
-          'guest_first_name': null,
+          'booking_status': row['status'] ?? 'confirmed', // Usar status como booking_status
+          'checkout_status': null, // No existe en la tabla
+          'guest_email': row['guest_email'] ?? '',
+          'guest_first_name': row['guest_first_name'],
           'guest_last_name': row['last_name'],
-          'guest_phone': null,
-          'staff_notes': null,
-          'code_first_used_at': null,
-          'code_sent_at': null,
+          'guest_phone': row['guest_phone'],
+          'staff_notes': row['staff_notes'],
+          'code_first_used_at': row['code_first_used_at'],
+          'code_sent_at': row['code_sent_at'],
           'checkin_id': checkin?['id'],
           'checkin_status': checkin?['status'],
           'docs_pending': 0,
+          'activated_at': null, // No existe en la tabla
+          'closed_at': null, // No existe en la tabla
+          'checkout_requested_at': null, // No existe en la tabla
+          'checkout_validated_at': null, // No existe en la tabla
           'created_at': row['created_at'],
           'updated_at': null,
         });
@@ -193,9 +210,13 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     required DateTime checkInDate,
     required DateTime checkOutDate,
     required int numGuests,
+    int numAdults = 1,
+    int numChildren = 0,
+    List<int> childrenAges = const [],
     String? staffNotes,
     String? propertyId,
   }) async {
+    // num_guests se calcula automáticamente en la RPC (num_adults + num_children)
     final response = await _callAdminPanel(
       action: 'create_booking',
       params: {
@@ -207,7 +228,9 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         if (guestPhone != null) 'guest_phone': guestPhone,
         'checkin_date': checkInDate.toIso8601String().split('T').first,
         'checkout_date': checkOutDate.toIso8601String().split('T').first,
-        'num_guests': numGuests,
+        'num_adults': numAdults,
+        'num_children': numChildren,
+        'children_ages': childrenAges,
         if (staffNotes != null) 'staff_notes': staffNotes,
       },
     );
@@ -268,6 +291,172 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       },
     );
   }
+
+  /// Obtiene el detalle completo de un check-in usando la función RPC
+  @override
+  Future<CheckinDetailEntity> getCheckinDetail(String checkinId) async {
+    try {
+      debugPrint('📋 [getCheckinDetail] Obteniendo detalle: $checkinId');
+
+      final response = await _client.rpc(
+        'get_checkin_details',
+        params: {'p_checkin_id': checkinId},
+      );
+
+      if (response == null || (response is List && response.isEmpty)) {
+        throw Exception('Check-in no encontrado');
+      }
+
+      final data = response is List ? response.first : response;
+      debugPrint('📋 [getCheckinDetail] Datos recibidos');
+
+      return CheckinDetailEntity.fromJson(data as Map<String, dynamic>);
+    } catch (e, s) {
+      debugPrint('❌ [getCheckinDetail] Error: $e');
+      debugPrint('❌ [getCheckinDetail] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Obtiene la URL firmada para ver un documento
+  @override
+  Future<String> getDocumentUrl(String storagePath) async {
+    try {
+      debugPrint('📄 [getDocumentUrl] Generando URL para: $storagePath');
+
+      // Generar URL firmada válida por 1 año (31536000 segundos)
+      final url = await _client.storage
+          .from('guest-documents')
+          .createSignedUrl(storagePath, 31536000);
+
+      debugPrint('✅ [getDocumentUrl] URL generada');
+      return url;
+    } catch (e, s) {
+      debugPrint('❌ [getDocumentUrl] Error: $e');
+      debugPrint('❌ [getDocumentUrl] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  // ==================== MÉTODOS DE CHECK-OUT ====================
+
+  /// Valida el check-out de una reserva usando RPC
+  @override
+  Future<void> validateCheckout({
+    required String bookingId,
+    String? notes,
+  }) async {
+    try {
+      debugPrint('✅ [validateCheckout] Validando check-out: $bookingId');
+
+      final success = await _client.rpc(
+        'validate_checkout',
+        params: {
+          'p_booking_id': bookingId,
+          if (notes != null) 'p_notes': notes,
+        },
+      ) as bool?;
+
+      if (success != true) {
+        throw Exception('No se pudo validar el check-out');
+      }
+
+      debugPrint('✅ [validateCheckout] Check-out validado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [validateCheckout] Error: $e');
+      debugPrint('❌ [validateCheckout] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Rechaza el check-out con motivo (incidencias)
+  @override
+  Future<void> rejectCheckout({
+    required String bookingId,
+    required String reason,
+  }) async {
+    try {
+      debugPrint('🔴 [rejectCheckout] Rechazando check-out: $bookingId');
+
+      final success = await _client.rpc(
+        'reject_checkout',
+        params: {
+          'p_booking_id': bookingId,
+          'p_reason': reason,
+        },
+      ) as bool?;
+
+      if (success != true) {
+        throw Exception('No se pudo rechazar el check-out');
+      }
+
+      debugPrint('✅ [rejectCheckout] Check-out rechazado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [rejectCheckout] Error: $e');
+      debugPrint('❌ [rejectCheckout] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Cierra una reserva manualmente
+  @override
+  Future<void> closeBooking({
+    required String bookingId,
+    String? notes,
+  }) async {
+    try {
+      debugPrint('🔒 [closeBooking] Cerrando reserva: $bookingId');
+
+      final success = await _client.rpc(
+        'close_booking',
+        params: {
+          'p_booking_id': bookingId,
+          if (notes != null) 'p_notes': notes,
+        },
+      ) as bool?;
+
+      if (success != true) {
+        throw Exception('No se pudo cerrar la reserva');
+      }
+
+      debugPrint('✅ [closeBooking] Reserva cerrada correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [closeBooking] Error: $e');
+      debugPrint('❌ [closeBooking] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Cancela una reserva
+  @override
+  Future<void> cancelBooking({
+    required String bookingId,
+    String? reason,
+  }) async {
+    try {
+      debugPrint('🚫 [cancelBooking] Cancelando reserva: $bookingId');
+
+      final success = await _client.rpc(
+        'cancel_booking',
+        params: {
+          'p_booking_id': bookingId,
+          if (reason != null) 'p_reason': reason,
+        },
+      ) as bool?;
+
+      if (success != true) {
+        throw Exception('No se pudo cancelar la reserva');
+      }
+
+      debugPrint('✅ [cancelBooking] Reserva cancelada correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [cancelBooking] Error: $e');
+      debugPrint('❌ [cancelBooking] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  // ==================== MÉTODOS DE UNIDADES ====================
 
   // EF devuelve: { success, units: [...] }
   @override
@@ -393,5 +582,50 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         .expand((list) => list)
         .where((row) => propertyId == null || row['property_id'] == propertyId)
         .map((row) => StaffNotificationEntity.fromJson(row));
+  }
+
+  // ==================== MÉTODOS DE DOCUMENTOS ====================
+
+  /// Limpia documentos expirados (más de 1 año)
+  @override
+  Future<CleanupResult> cleanupExpiredDocuments() async {
+    try {
+      debugPrint('🧹 [cleanupExpiredDocuments] Iniciando limpieza...');
+
+      final response = await _client.rpc('cleanup_expired_documents');
+
+      final result = CleanupResult.fromJson(response as Map<String, dynamic>);
+      debugPrint('✅ [cleanupExpiredDocuments] Eliminados: ${result.deletedCount}, Errores: ${result.errorCount}');
+
+      return result;
+    } catch (e, s) {
+      debugPrint('❌ [cleanupExpiredDocuments] Error: $e');
+      debugPrint('❌ [cleanupExpiredDocuments] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Obtiene documentos próximos a expirar
+  @override
+  Future<List<ExpiringDocument>> getDocumentsExpiringSoon({int daysBefore = 7}) async {
+    try {
+      debugPrint('📅 [getDocumentsExpiringSoon] Buscando documentos que expiran en $daysBefore días...');
+
+      final response = await _client.rpc(
+        'get_documents_expiring_soon',
+        params: {'days_before': daysBefore},
+      );
+
+      final documents = (response as List)
+          .map((e) => ExpiringDocument.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      debugPrint('📅 [getDocumentsExpiringSoon] Encontrados: ${documents.length}');
+      return documents;
+    } catch (e, s) {
+      debugPrint('❌ [getDocumentsExpiringSoon] Error: $e');
+      debugPrint('❌ [getDocumentsExpiringSoon] StackTrace: $s');
+      rethrow;
+    }
   }
 }

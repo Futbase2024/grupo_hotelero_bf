@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -114,7 +115,13 @@ class _SliverAppBar extends StatelessWidget {
       backgroundColor: isDark ? AppColors.black : AppColors.white,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/');
+          }
+        },
         icon: const Icon(
           Icons.arrow_back_ios_new,
           color: AppColors.gold,

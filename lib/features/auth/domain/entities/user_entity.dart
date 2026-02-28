@@ -36,6 +36,8 @@ class UserEntity extends Equatable {
     this.avatarUrl,
     this.bookingId,
     this.propertyId,
+    this.checkInCompleted = false,
+    this.checkinStatus,
   });
 
   final String id;
@@ -46,8 +48,11 @@ class UserEntity extends Equatable {
   final String? avatarUrl;
   final String? bookingId;
   final String? propertyId;
+  final bool checkInCompleted;
+  /// Estado del check-in: 'not_started', 'in_progress', 'submitted', 'validated', 'rejected'
+  final String? checkinStatus;
 
-  /// Nombre para mostrar (nombre completo o email)
+  /// Nombre para mostrar (nombre completo, email o vacío)
   String get displayName {
     if (name != null && name!.isNotEmpty) {
       return name!;
@@ -55,7 +60,7 @@ class UserEntity extends Equatable {
     if (email.isNotEmpty) {
       return email.split('@').first;
     }
-    return 'Huésped';
+    return '';
   }
 
   /// Iniciales del usuario para avatar
@@ -93,6 +98,8 @@ class UserEntity extends Equatable {
     String? avatarUrl,
     String? bookingId,
     String? propertyId,
+    bool? checkInCompleted,
+    String? checkinStatus,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -103,6 +110,8 @@ class UserEntity extends Equatable {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       bookingId: bookingId ?? this.bookingId,
       propertyId: propertyId ?? this.propertyId,
+      checkInCompleted: checkInCompleted ?? this.checkInCompleted,
+      checkinStatus: checkinStatus ?? this.checkinStatus,
     );
   }
 
@@ -116,5 +125,7 @@ class UserEntity extends Equatable {
         avatarUrl,
         bookingId,
         propertyId,
+        checkInCompleted,
+        checkinStatus,
       ];
 }

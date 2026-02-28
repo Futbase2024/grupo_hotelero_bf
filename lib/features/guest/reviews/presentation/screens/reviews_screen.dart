@@ -44,7 +44,13 @@ class ReviewsScreen extends StatelessWidget {
             Icons.arrow_back_ios_new,
             color: isDark ? AppColors.white : AppColors.gray900,
           ),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
         actions: [
           // Botón para escribir reseña (solo si está autenticado)

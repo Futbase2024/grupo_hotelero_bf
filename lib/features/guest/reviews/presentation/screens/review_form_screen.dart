@@ -76,7 +76,13 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
             Icons.arrow_back_ios_new,
             color: isDark ? AppColors.white : AppColors.gray900,
           ),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: SafeArea(
@@ -96,7 +102,11 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
                   ),
                 ),
               );
-              context.pop(true);
+              if (context.canPop()) {
+                context.pop(true);
+              } else {
+                context.go('/');
+              }
             } else if (state is ReviewsError) {
               setState(() => _isSubmitting = false);
               ScaffoldMessenger.of(context).showSnackBar(

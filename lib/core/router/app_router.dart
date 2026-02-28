@@ -12,6 +12,8 @@ import '../../features/public/home/presentation/screens/public_home_light_screen
 import '../../features/auth/presentation/screens/booking_access_screen.dart';
 import '../../features/guest/home/presentation/screens/guest_home_screen.dart';
 import '../../features/guest/checkin/presentation/screens/checkin_screen.dart';
+import '../../features/guest/checkin/presentation/bloc/checkin_bloc.dart';
+import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
 import '../../features/guest/access_box/presentation/screens/access_box_screen.dart';
 import '../../features/guest/stay_guide/presentation/screens/stay_guide_screen.dart';
 import '../../features/guest/chat/presentation/screens/chat_screen.dart';
@@ -33,6 +35,10 @@ import '../../features/guest/reviews/presentation/screens/review_form_screen.dar
 import '../../features/staff/dashboard/presentation/screens/staff_dashboard_screen.dart';
 import '../../features/staff/checkins/presentation/screens/staff_checkins_screen.dart';
 import '../../features/admin/dashboard/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/admin/chat/presentation/screens/conversations_screen.dart';
+import '../../features/admin/chat/presentation/screens/admin_chat_screen.dart';
+import '../../features/admin/bookings/presentation/screens/booking_detail_screen.dart';
+import '../../features/admin/domain/repositories/admin_panel_repository.dart';
 import '../di/injection.dart';
 
 /// Rutas de la aplicación
@@ -49,7 +55,7 @@ class AppRoutes {
 
   // Guest routes
   static const String guestHome = '/guest';
-  static const String checkin = '/guest/checkin';
+  static const String checkin = '/guest/checkin/:bookingId';
   static const String accessBox = '/guest/access-box';
   static const String stayGuide = '/guest/guide';
   static const String chat = '/guest/chat';
@@ -75,6 +81,9 @@ class AppRoutes {
 
   // Admin routes
   static const String adminDashboard = '/admin';
+  static const String adminChat = '/admin/chat';
+  static const String adminChatConversation = '/admin/chat/:conversationId';
+  static const String adminBookingDetail = '/admin/booking/:bookingId';
 }
 
 /// Router principal de la aplicación con redirección basada en roles
@@ -172,7 +181,15 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.checkin,
           name: 'checkin',
-          builder: (context, state) => const CheckinScreen(),
+          builder: (context, state) {
+            final bookingId = state.pathParameters['bookingId']!;
+            return BlocProvider(
+              create: (context) => CheckinBloc(
+                repository: getIt<CheckinRepository>(),
+              ),
+              child: CheckinScreen(bookingId: bookingId),
+            );
+          },
         ),
         GoRoute(
           path: AppRoutes.accessBox,
@@ -338,6 +355,30 @@ class AppRouter {
           name: 'admin-dashboard',
           builder: (context, state) => const AdminDashboardScreen(),
         ),
+        GoRoute(
+          path: AppRoutes.adminChat,
+          name: 'admin-chat',
+          builder: (context, state) => const ConversationsScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.adminChatConversation,
+          name: 'admin-chat-conversation',
+          builder: (context, state) {
+            final conversationId = state.pathParameters['conversationId']!;
+            return AdminChatScreen(conversationId: conversationId);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.adminBookingDetail,
+          name: 'admin-booking-detail',
+          builder: (context, state) {
+            final bookingId = state.pathParameters['bookingId']!;
+            return BookingDetailScreen(
+              bookingId: bookingId,
+              repository: getIt<AdminPanelRepository>(),
+            );
+          },
+        ),
       ],
       errorBuilder: (context, state) => Scaffold(
         body: Center(
@@ -394,6 +435,7 @@ class AppRouter {
 
     // Rutas que empiezan por cierto patrón también son permitidas
     const guestRoutePrefixes = [
+      '/guest/checkin/',
       '/guest/alojamientos/',
       '/guest/house-rules/',
       '/guest/que-ver/',

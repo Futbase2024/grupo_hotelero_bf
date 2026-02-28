@@ -24,16 +24,42 @@ class AuthRepositoryImpl implements AuthRepository {
     final guestSession = await _guestSession.getSession();
     if (guestSession != null) {
       debugPrint('👤 [getCurrentUser] Sesión local de guest encontrada');
-      // Verificar que la reserva sigue siendo válida
+      // Verificar que la reserva sigue siendo válida y obtener estado del check-in
       final bookingResponse = await _supabase
           .from(SupabaseTables.bookings)
-          .select('id, status')
+          .select('''
+            id,
+            status,
+            checkins (
+              status
+            )
+          ''')
           .eq('id', guestSession.bookingId)
           .inFilter('status', ['confirmed', 'checked_in'])
           .maybeSingle();
 
       if (bookingResponse != null) {
-        return guestSession.toUserEntity();
+        // Verificar estado del check-in
+        // Supabase puede devolver un Map (relación uno-a-uno) o un List
+        String? checkinStatus;
+        final checkinsData = bookingResponse['checkins'];
+        if (checkinsData is Map<String, dynamic>) {
+          // Relación uno-a-uno: devuelve un solo objeto
+          checkinStatus = checkinsData['status'] as String?;
+        } else if (checkinsData is List && checkinsData.isNotEmpty) {
+          // Relación uno-a-muchos: devuelve una lista
+          checkinStatus = (checkinsData.first as Map<String, dynamic>)['status'] as String?;
+        }
+        // Solo 'validated' significa check-in completado
+        // 'submitted' = pendiente de validación por admin
+        final checkInCompleted = checkinStatus == 'validated';
+
+        debugPrint('👤 [getCurrentUser] Check-in status: $checkinStatus, completed: $checkInCompleted');
+
+        return guestSession.toUserEntity().copyWith(
+          checkInCompleted: checkInCompleted,
+          checkinStatus: checkinStatus,
+        );
       } else {
         // La reserva ya no es válida, limpiar sesión
         debugPrint('⚠️ [getCurrentUser] Reserva ya no válida, limpiando sesión');
@@ -60,12 +86,20 @@ class AuthRepositoryImpl implements AuthRepository {
           : UserRole.guest;
       final propertyId = roleResponse?['property_id'] as String?;
 
-      // Si es guest, obtener booking activo
+      // Si es guest, obtener booking activo y estado del check-in
       String? bookingId;
+      bool checkInCompleted = false;
+      String? checkinStatus;
+
       if (role == UserRole.guest) {
         final bookingResponse = await _supabase
             .from(SupabaseTables.bookings)
-            .select('id')
+            .select('''
+              id,
+              checkins (
+                status
+              )
+            ''')
             .eq('primary_guest_user_id', user.id)
             .inFilter('status', ['confirmed', 'checked_in'])
             .order('checkin_date', ascending: false)
@@ -73,6 +107,20 @@ class AuthRepositoryImpl implements AuthRepository {
             .maybeSingle();
 
         bookingId = bookingResponse?['id'] as String?;
+
+        // Verificar estado del check-in
+        if (bookingResponse != null) {
+          // Supabase puede devolver un Map (relación uno-a-uno) o un List
+          final checkinsData = bookingResponse['checkins'];
+          if (checkinsData is Map<String, dynamic>) {
+            checkinStatus = checkinsData['status'] as String?;
+          } else if (checkinsData is List && checkinsData.isNotEmpty) {
+            checkinStatus = (checkinsData.first as Map<String, dynamic>)['status'] as String?;
+          }
+          // Solo 'validated' significa check-in completado
+          // 'submitted' = pendiente de validación por admin
+          checkInCompleted = checkinStatus == 'validated';
+        }
       }
 
       return UserEntity(
@@ -84,6 +132,8 @@ class AuthRepositoryImpl implements AuthRepository {
         avatarUrl: user.userMetadata?['avatar_url'],
         bookingId: bookingId,
         propertyId: propertyId,
+        checkInCompleted: checkInCompleted,
+        checkinStatus: checkinStatus,
       );
     } catch (e) {
       // Si hay error, retornar entity básico
@@ -135,6 +185,7 @@ class AuthRepositoryImpl implements AuthRepository {
             booking_code,
             guest_first_name,
             last_name,
+            guest_email,
             num_guests,
             checkin_date,
             checkout_date,
@@ -152,13 +203,75 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       final String guestName = '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim();
+      final String guestEmail = (bookingResponse['guest_email'] as String?)?.toLowerCase().trim() ?? '';
       final String bookingId = bookingResponse['id'] as String;
       final String propertyId = bookingResponse['property_id'] as String;
       final String unitId = bookingResponse['unit_id'] as String;
       final DateTime checkinDate = DateTime.parse(bookingResponse['checkin_date'] as String);
       final DateTime checkoutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
 
-      // Guardar sesión local (sin crear usuario en Supabase Auth)
+      // 🔑 Crear/login usuario con email del huésped
+      // Contraseña genérica para todos los huéspedes (acceso protegido por booking_code)
+      const String guestPassword = 'BFGuest2024!';
+      String? supabaseUserId;
+
+      if (guestEmail.isNotEmpty) {
+        debugPrint('🔐 [loginWithBookingCode] Intentando login con email: $guestEmail');
+
+        // Intentar login primero
+        try {
+          final response = await _supabase.auth.signInWithPassword(
+            email: guestEmail,
+            password: guestPassword,
+          );
+          supabaseUserId = response.user?.id;
+          debugPrint('✅ [loginWithBookingCode] Login exitoso: $supabaseUserId');
+        } catch (e) {
+          debugPrint('⚠️ [loginWithBookingCode] Login falló, intentando registro: $e');
+
+          // Si falla, intentar registro
+          try {
+            final response = await _supabase.auth.signUp(
+              email: guestEmail,
+              password: guestPassword,
+            );
+            supabaseUserId = response.user?.id;
+            debugPrint('✅ [loginWithBookingCode] Registro exitoso: $supabaseUserId');
+          } catch (signUpError) {
+            debugPrint('⚠️ [loginWithBookingCode] Registro falló, usando sesión anónima: $signUpError');
+          }
+        }
+      }
+
+      // Si no hay email o falló login/registro, usar sesión anónima
+      if (supabaseUserId == null) {
+        debugPrint('🔐 [loginWithBookingCode] Creando sesión anónima...');
+        try {
+          final anonSession = await _supabase.auth.signInAnonymously();
+          supabaseUserId = anonSession.user?.id;
+          debugPrint('✅ [loginWithBookingCode] Sesión anónima creada: $supabaseUserId');
+        } catch (e) {
+          debugPrint('⚠️ [loginWithBookingCode] Error creando sesión anónima: $e');
+        }
+      }
+
+      // Asignar primary_guest_user_id a la reserva usando función RPC con SECURITY DEFINER
+      if (supabaseUserId != null) {
+        try {
+          await _supabase.rpc(
+            'assign_primary_guest_to_booking',
+            params: {
+              'p_booking_id': bookingId,
+              'p_user_id': supabaseUserId,
+            },
+          );
+          debugPrint('✅ [loginWithBookingCode] primary_guest_user_id asignado via RPC');
+        } catch (e) {
+          debugPrint('⚠️ [loginWithBookingCode] Error asignando via RPC: $e');
+        }
+      }
+
+      // Guardar sesión local
       await _guestSession.saveSession(
         bookingCode: bookingCode.toUpperCase().trim(),
         bookingId: bookingId,
@@ -171,8 +284,8 @@ class AuthRepositoryImpl implements AuthRepository {
       debugPrint('✅ [loginWithBookingCode] Sesión local guardada correctamente');
 
       return UserEntity(
-        id: bookingId,
-        email: '',
+        id: supabaseUserId ?? bookingId, // Usar ID de Supabase si está disponible
+        email: guestEmail,
         role: UserRole.guest,
         name: guestName,
         bookingId: bookingId,
