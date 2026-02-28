@@ -231,7 +231,7 @@ class AppColors {
 
   /// Retorna el color de texto secundario según el tema
   static Color getTextSecondaryColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? darkTextSecondary : gray600;
+    return Theme.of(context).brightness == Brightness.dark ? white : gray600;
   }
 
   /// Retorna el color de borde según el tema

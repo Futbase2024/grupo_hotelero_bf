@@ -14,6 +14,9 @@ import '../../features/guest/home/presentation/screens/guest_home_screen.dart';
 import '../../features/guest/checkin/presentation/screens/checkin_screen.dart';
 import '../../features/guest/checkin/presentation/bloc/checkin_bloc.dart';
 import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
+import '../../features/guest/checkout/presentation/screens/checkout_screen.dart';
+import '../../features/guest/checkout/presentation/bloc/checkout_bloc.dart';
+import '../../features/guest/checkout/domain/repositories/checkout_repository.dart';
 import '../../features/guest/access_box/presentation/screens/access_box_screen.dart';
 import '../../features/guest/stay_guide/presentation/screens/stay_guide_screen.dart';
 import '../../features/guest/chat/presentation/screens/chat_screen.dart';
@@ -56,6 +59,7 @@ class AppRoutes {
   // Guest routes
   static const String guestHome = '/guest';
   static const String checkin = '/guest/checkin/:bookingId';
+  static const String checkout = '/guest/checkout/:bookingId';
   static const String accessBox = '/guest/access-box';
   static const String stayGuide = '/guest/guide';
   static const String chat = '/guest/chat';
@@ -188,6 +192,19 @@ class AppRouter {
                 repository: getIt<CheckinRepository>(),
               ),
               child: CheckinScreen(bookingId: bookingId),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.checkout,
+          name: 'checkout',
+          builder: (context, state) {
+            final bookingId = state.pathParameters['bookingId']!;
+            return BlocProvider(
+              create: (context) => CheckoutBloc(
+                repository: getIt<CheckoutRepository>(),
+              ),
+              child: CheckoutScreen(bookingId: bookingId),
             );
           },
         ),
@@ -425,6 +442,7 @@ class AppRouter {
     const guestRoutes = [
       AppRoutes.guestHome,
       AppRoutes.checkin,
+      AppRoutes.checkout,
       AppRoutes.accessBox,
       AppRoutes.stayGuide,
       AppRoutes.chat,
@@ -436,6 +454,7 @@ class AppRouter {
     // Rutas que empiezan por cierto patrón también son permitidas
     const guestRoutePrefixes = [
       '/guest/checkin/',
+      '/guest/checkout/',
       '/guest/alojamientos/',
       '/guest/house-rules/',
       '/guest/que-ver/',

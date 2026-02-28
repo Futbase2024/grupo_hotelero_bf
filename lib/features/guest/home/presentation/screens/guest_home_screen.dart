@@ -349,15 +349,19 @@ class GuestHomeScreen extends StatelessWidget {
     final isWide = context.isTablet || context.isDesktop;
     // Si está submitted, el check-in está deshabilitado (ya enviado)
     final canDoCheckin = !isCheckinSubmitted && !isCheckinValidated;
+    // Si el check-in está validado, mostrar Check-out en lugar de Check-in
+    final showCheckout = isCheckinValidated;
 
     if (isWide) {
       return Row(
         children: [
           Expanded(
             child: _QuickActionCard(
-              icon: Icons.fact_check_outlined,
-              title: 'Check-in',
-              onTap: canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null,
+              icon: showCheckout ? Icons.logout_outlined : Icons.fact_check_outlined,
+              title: showCheckout ? 'Check-out' : 'Check-in',
+              onTap: showCheckout
+                  ? (bookingId != null ? () => context.go('/guest/checkout/$bookingId') : null)
+                  : (canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null),
             ),
           ),
           const SizedBox(width: AppTheme.spacing16),
@@ -397,9 +401,11 @@ class GuestHomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _QuickActionCard(
-                icon: Icons.fact_check_outlined,
-                title: 'Check-in',
-                onTap: canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null,
+                icon: showCheckout ? Icons.logout_outlined : Icons.fact_check_outlined,
+                title: showCheckout ? 'Check-out' : 'Check-in',
+                onTap: showCheckout
+                    ? (bookingId != null ? () => context.go('/guest/checkout/$bookingId') : null)
+                    : (canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null),
               ),
             ),
             const SizedBox(width: AppTheme.spacing12),

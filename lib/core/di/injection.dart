@@ -21,6 +21,8 @@ import '../../features/guest/checkin/data/repositories/checkin_repository_impl.d
 import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
 import '../../features/guest/access_box/data/repositories/access_box_repository_impl.dart';
 import '../../features/guest/access_box/domain/repositories/access_box_repository.dart';
+import '../../features/guest/checkout/data/repositories/checkout_repository_impl.dart';
+import '../../features/guest/checkout/domain/repositories/checkout_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -67,6 +69,11 @@ Future<void> configureDependencies() async {
   // Access Box repository
   getIt.registerLazySingleton<AccessBoxRepository>(
     () => AccessBoxRepositoryImpl(supabase: getIt<SupabaseClient>()),
+  );
+
+  // Checkout repository
+  getIt.registerLazySingleton<CheckoutRepository>(
+    () => CheckoutRepositoryImpl(),
   );
 
   // BLoCs/Cubits se crean con BlocProvider en la UI
