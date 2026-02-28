@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BF Stay - Screenshots Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            color: #FFC916;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 40px;
+            opacity: 0.7;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .screenshot-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .screenshot-title {
+            color: #FFC916;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Phone mockup - 9:16 aspect ratio (1080 x 1920 scaled to 270 x 480) */
+        .phone-mockup {
+            width: 270px;
+            height: 480px;
+            background: #0D0D0D;
+            border-radius: 30px;
+            border: 3px solid #2a2a2a;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .status-bar {
+            height: 44px;
+            background: #0D0D0D;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .status-bar .time { font-weight: 600; }
+        .status-bar .icons { display: flex; gap: 5px; }
+
+        .screen-content {
+            height: calc(100% - 44px);
+            overflow: hidden;
+        }
+
+        /* Home Screen */
+        .home-screen {
+            padding: 20px 16px;
+            background: linear-gradient(180deg, #0D0D0D 0%, #1A1A1A 100%);
+            height: 100%;
+        }
+
+        .home-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .home-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .home-logo-bf {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #E5C962 0%, #FFC916 50%, #B8942D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .home-logo-stay {
+            font-size: 12px;
+            color: #C0C0C0;
+            letter-spacing: 3px;
+        }
+
+        .property-card {
+            background: #1A1A1A;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 201, 22, 0.2);
+        }
+
+        .property-image {
+            height: 120px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFC916;
+            font-size: 40px;
+        }
+
+        .property-info {
+            padding: 16px;
+        }
+
+        .property-name {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .property-location {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .action-btn {
+            background: rgba(255, 201, 22, 0.1);
+            border: 1px solid rgba(255, 201, 22, 0.2);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .action-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .action-text {
+            color: #fff;
+            font-size: 10px;
+        }
+
+        /* Check-in Screen */
+        .checkin-screen {
+            padding: 20px 16px;
+            background: linear-gradient(180deg, #0D0D0D 0%, #1A1A1A 100%);
+            height: 100%;
+        }
+
+        .screen-title {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .form-field {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-input {
+            background: #1A1A1A;
+            border: 1px solid rgba(255, 201, 22, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            color: #fff;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .form-input-filled {
+            background: #1A1A1A;
+            border: 1px solid #FFC916;
+            border-radius: 10px;
+            padding: 12px;
+            color: #fff;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #E5C962 0%, #FFC916 50%, #B8942D 100%);
+            color: #0D0D0D;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        /* House Rules Screen */
+        .rules-screen {
+            padding: 20px 16px;
+            background: linear-gradient(180deg, #0D0D0D 0%, #1A1A1A 100%);
+            height: 100%;
+        }
+
+        .rule-card {
+            background: #1A1A1A;
+            border: 1px solid rgba(255, 201, 22, 0.2);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rule-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 201, 22, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .rule-text {
+            color: #fff;
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .rule-status {
+            color: #22C55E;
+            font-size: 14px;
+        }
+
+        /* Chat Screen */
+        .chat-screen {
+            background: linear-gradient(180deg, #0D0D0D 0%, #1A1A1A 100%);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 201, 22, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 201, 22, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .chat-name {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            color: #22C55E;
+            font-size: 11px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-received {
+            background: #2a2a2a;
+            border-radius: 16px 16px 16px 4px;
+            padding: 10px 14px;
+            max-width: 80%;
+            align-self: flex-start;
+        }
+
+        .message-sent {
+            background: #FFC916;
+            color: #0D0D0D;
+            border-radius: 16px 16px 4px 16px;
+            padding: 10px 14px;
+            max-width: 80%;
+            align-self: flex-end;
+        }
+
+        .message-text {
+            font-size: 12px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .chat-input {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 201, 22, 0.2);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            background: #1A1A1A;
+            border: 1px solid rgba(255, 201, 22, 0.2);
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .chat-send {
+            width: 36px;
+            height: 36px;
+            background: #FFC916;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* Places Screen */
+        .places-screen {
+            padding: 20px 16px;
+            background: linear-gradient(180deg, #0D0D0D 0%, #1A1A1A 100%);
+            height: 100%;
+        }
+
+        .place-card {
+            background: #1A1A1A;
+            border: 1px solid rgba(255, 201, 22, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .place-image {
+            height: 80px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .place-info {
+            padding: 12px;
+        }
+
+        .place-name {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .place-distance {
+            color: #FFC916;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        /* Download button */
+        .download-section {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #E5C962 0%, #FFC916 50%, #B8942D 100%);
+            color: #0D0D0D;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        .note {
+            color: #888;
+            font-size: 12px;
+            margin-top: 15px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>BF Stay - Capturas de Pantalla</h1>
+    <p class="instructions">
+        Estas son capturas de pantalla mockup para Google Play Store (1080 x 1920 px, relación 9:16).
+        <br>Haz clic en "Descargar Todas" para obtener los archivos PNG.
+    </p>
+
+    <div class="screenshots-grid">
+        <!-- Screenshot 1: Home -->
+        <div class="screenshot-item">
+            <span class="screenshot-title">1. Pantalla Principal</span>
+            <div class="phone-mockup" id="screenshot1">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <span class="icons">📶 🔋</span>
+                </div>
+                <div class="screen-content">
+                    <div class="home-screen">
+                        <div class="home-header">
+                            <div class="home-logo">
+                                <span class="home-logo-bf">BF</span>
+                                <span class="home-logo-stay">STAY</span>
+                            </div>
+                            <span style="color: #FFC916; font-size: 20px;">👤</span>
+                        </div>
+
+                        <div class="property-card">
+                            <div class="property-image">🏠</div>
+                            <div class="property-info">
+                                <div class="property-name">Apartamento Centro</div>
+                                <div class="property-location">📍 Madrid, España</div>
+                            </div>
+                        </div>
+
+                        <div class="quick-actions">
+                            <div class="action-btn">
+                                <div class="action-icon">✓</div>
+                                <div class="action-text">Check-in</div>
+                            </div>
+                            <div class="action-btn">
+                                <div class="action-icon">📋</div>
+                                <div class="action-text">Normas</div>
+                            </div>
+                            <div class="action-btn">
+                                <div class="action-icon">💬</div>
+                                <div class="action-text">Chat</div>
+                            </div>
+                            <div class="action-btn">
+                                <div class="action-icon">📍</div>
+                                <div class="action-text">Qué Ver</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 2: Check-in -->
+        <div class="screenshot-item">
+            <span class="screenshot-title">2. Check-in Digital</span>
+            <div class="phone-mockup" id="screenshot2">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <span class="icons">📶 🔋</span>
+                </div>
+                <div class="screen-content">
+                    <div class="checkin-screen">
+                        <div class="screen-title">Check-in Digital</div>
+
+                        <div class="form-field">
+                            <label class="form-label">Nombre completo</label>
+                            <div class="form-input-filled">Juan García López</div>
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-label">DNI / Pasaporte</label>
+                            <div class="form-input-filled">12345678A</div>
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-label">Email</label>
+                            <div class="form-input">tu@email.com</div>
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-label">Teléfono</label>
+                            <div class="form-input">+34 600 000 000</div>
+                        </div>
+
+                        <button class="submit-btn">Completar Check-in</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 3: House Rules -->
+        <div class="screenshot-item">
+            <span class="screenshot-title">3. Normas de la Casa</span>
+            <div class="phone-mockup" id="screenshot3">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <span class="icons">📶 🔋</span>
+                </div>
+                <div class="screen-content">
+                    <div class="rules-screen">
+                        <div class="screen-title">Normas de la Casa</div>
+
+                        <div class="rule-card">
+                            <div class="rule-icon">🕐</div>
+                            <div class="rule-text">Hora de entrada: 15:00</div>
+                            <span class="rule-status">✓</span>
+                        </div>
+
+                        <div class="rule-card">
+                            <div class="rule-icon">🚪</div>
+                            <div class="rule-text">Hora de salida: 11:00</div>
+                            <span class="rule-status">✓</span>
+                        </div>
+
+                        <div class="rule-card">
+                            <div class="rule-icon">🚭</div>
+                            <div class="rule-text">No fumar en el interior</div>
+                            <span class="rule-status">✓</span>
+                        </div>
+
+                        <div class="rule-card">
+                            <div class="rule-icon">🔇</div>
+                            <div class="rule-text">Silencio 22:00 - 08:00</div>
+                            <span class="rule-status">✓</span>
+                        </div>
+
+                        <div class="rule-card">
+                            <div class="rule-icon">🐕</div>
+                            <div class="rule-text">Mascotas permitidas</div>
+                            <span class="rule-status">✓</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 4: Chat -->
+        <div class="screenshot-item">
+            <span class="screenshot-title">4. Chat con Anfitrión</span>
+            <div class="phone-mockup" id="screenshot4">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <span class="icons">📶 🔋</span>
+                </div>
+                <div class="screen-content">
+                    <div class="chat-screen">
+                        <div class="chat-header">
+                            <div class="chat-avatar">🏠</div>
+                            <div>
+                                <div class="chat-name">Concierge BF Stay</div>
+                                <div class="chat-status">En línea</div>
+                            </div>
+                        </div>
+
+                        <div class="chat-messages">
+                            <div class="message-received">
+                                <div class="message-text">¡Hola! Bienvenido a tu alojamiento. ¿En qué puedo ayudarte?</div>
+                                <div class="message-time">10:30</div>
+                            </div>
+
+                            <div class="message-sent">
+                                <div class="message-text">¿A qué hora puedo hacer el check-in?</div>
+                                <div class="message-time">10:32</div>
+                            </div>
+
+                            <div class="message-received">
+                                <div class="message-text">Puedes hacer check-in a partir de las 15:00. Te enviaré las instrucciones de acceso.</div>
+                                <div class="message-time">10:33</div>
+                            </div>
+                        </div>
+
+                        <div class="chat-input">
+                            <input type="text" placeholder="Escribe un mensaje...">
+                            <div class="chat-send">➤</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 5: Places -->
+        <div class="screenshot-item">
+            <span class="screenshot-title">5. Qué Ver</span>
+            <div class="phone-mockup" id="screenshot5">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <span class="icons">📶 🔋</span>
+                </div>
+                <div class="screen-content">
+                    <div class="places-screen">
+                        <div class="screen-title">Qué Ver Cerca</div>
+
+                        <div class="place-card">
+                            <div class="place-image">🏛️</div>
+                            <div class="place-info">
+                                <div class="place-name">Museo del Prado</div>
+                                <div class="place-distance">📍 0.5 km • ⭐ 4.8</div>
+                            </div>
+                        </div>
+
+                        <div class="place-card">
+                            <div class="place-image">🌳</div>
+                            <div class="place-info">
+                                <div class="place-name">Parque del Retiro</div>
+                                <div class="place-distance">📍 0.8 km • ⭐ 4.9</div>
+                            </div>
+                        </div>
+
+                        <div class="place-card">
+                            <div class="place-image">🍽️</div>
+                            <div class="place-info">
+                                <div class="place-name">Restaurante El Paraguas</div>
+                                <div class="place-distance">📍 0.3 km • ⭐ 4.7</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="download-section">
+        <button class="download-btn" onclick="downloadAll()">Descargar Todas las Capturas (PNG)</button>
+        <p class="note">
+            Las capturas se generarán en resolución 1080 x 1920 px (9:16), compatible con Google Play Store.
+            <br>Se descargarán 5 archivos PNG listos para subir.
+        </p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        async function downloadAll() {
+            const screenshots = [
+                { id: 'screenshot1', name: '01_home' },
+                { id: 'screenshot2', name: '02_checkin' },
+                { id: 'screenshot3', name: '03_normas' },
+                { id: 'screenshot4', name: '04_chat' },
+                { id: 'screenshot5', name: '05_que_ver' }
+            ];
+
+            for (const screenshot of screenshots) {
+                const element = document.getElementById(screenshot.id);
+
+                // Scale to 1080x1920 (4x the mockup size)
+                const canvas = await html2canvas(element, {
+                    scale: 4,
+                    useCORS: true,
+                    backgroundColor: '#0D0D0D'
+                });
+
+                const link = document.createElement('a');
+                link.download = `screenshot_${screenshot.name}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // Wait a bit between downloads
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+    </script>
+</body>
+</html>

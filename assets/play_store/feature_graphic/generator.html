@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BF Stay - Feature Graphic Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            color: #FFC916;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .instructions {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .canvas-container {
+            border: 2px solid #FFC916;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Feature Graphic - 1024 x 500 */
+        .feature-graphic {
+            width: 1024px;
+            height: 500px;
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative circles */
+        .circle-1 {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: #FFC916;
+            opacity: 0.05;
+            top: -100px;
+            right: -50px;
+        }
+
+        .circle-2 {
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: #FFC916;
+            opacity: 0.08;
+            bottom: -80px;
+            left: -60px;
+        }
+
+        /* Logo section */
+        .logo-section {
+            position: absolute;
+            left: 80px;
+            top: 100px;
+        }
+
+        .logo-bf {
+            font-size: 150px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #E5C962 0%, #FFC916 50%, #B8942D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -5px;
+            line-height: 1;
+        }
+
+        .logo-stay {
+            font-size: 60px;
+            font-weight: 300;
+            color: #C0C0C0;
+            letter-spacing: 15px;
+            margin-top: -10px;
+            margin-left: 5px;
+        }
+
+        .tagline {
+            position: absolute;
+            left: 80px;
+            bottom: 100px;
+            color: #FFFFFF;
+            font-size: 28px;
+            opacity: 0.9;
+        }
+
+        /* Features section */
+        .features {
+            position: absolute;
+            right: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 40px;
+        }
+
+        .feature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 201, 22, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .feature-text {
+            color: #FFFFFF;
+            font-size: 14px;
+            text-align: center;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        /* Bottom accent */
+        .bottom-accent {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 12px;
+            background: linear-gradient(90deg, #E5C962 0%, #FFC916 50%, #B8942D 100%);
+        }
+
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #FFC916;
+            color: #0D0D0D;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: #E5C962;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #FFC916;
+            border: 1px solid #FFC916;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 201, 22, 0.1);
+        }
+
+        .note {
+            color: #888;
+            font-size: 14px;
+            margin-top: 20px;
+            text-align: center;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>BF Stay - Feature Graphic</h1>
+    <p class="instructions">
+        Este es el gráfico de funciones para Google Play Store (1024 x 500 px).
+        <br>Para guardarlo: Haz clic derecho > "Guardar imagen como..." o usa el botón de abajo.
+    </p>
+
+    <div class="canvas-container">
+        <div class="feature-graphic" id="featureGraphic">
+            <!-- Decorative circles -->
+            <div class="circle-1"></div>
+            <div class="circle-2"></div>
+
+            <!-- Logo -->
+            <div class="logo-section">
+                <div class="logo-bf">BF</div>
+                <div class="logo-stay">STAY</div>
+            </div>
+
+            <!-- Tagline -->
+            <div class="tagline">Tu alojamiento perfecto, a un clic de distancia</div>
+
+            <!-- Features -->
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Check-in<br>Digital</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-text">Normas<br>Casa</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-text">Chat<br>Directo</div>
+                </div>
+            </div>
+
+            <!-- Bottom accent -->
+            <div class="bottom-accent"></div>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button class="btn-primary" onclick="downloadImage()">Descargar PNG</button>
+        <button class="btn-secondary" onclick="openInNewTab()">Abrir en nueva pestaña</button>
+    </div>
+
+    <p class="note">
+        El archivo descargado tendrá las dimensiones correctas (1024 x 500 px) para Google Play Store.
+    </p>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        async function downloadImage() {
+            const element = document.getElementById('featureGraphic');
+            const canvas = await html2canvas(element, {
+                scale: 1,
+                useCORS: true,
+                backgroundColor: '#0D0D0D'
+            });
+
+            const link = document.createElement('a');
+            link.download = 'feature_graphic.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function openInNewTab() {
+            const element = document.getElementById('featureGraphic');
+            html2canvas(element, {
+                scale: 1,
+                useCORS: true,
+                backgroundColor: '#0D0D0D'
+            }).then(canvas => {
+                const newTab = window.open();
+                newTab.document.body.style.margin = '0';
+                newTab.document.body.style.display = 'flex';
+                newTab.document.body.style.justifyContent = 'center';
+                newTab.document.body.style.alignItems = 'center';
+                newTab.document.body.style.minHeight = '100vh';
+                newTab.document.body.style.background = '#1a1a1a';
+                newTab.document.body.appendChild(canvas);
+            });
+        }
+    </script>
+</body>
+</html>

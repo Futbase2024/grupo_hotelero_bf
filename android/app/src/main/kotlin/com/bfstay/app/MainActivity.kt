@@ -1,4 +1,4 @@
-package com.example.bf_stay
+package com.bfstay.app
 
 import io.flutter.embedding.android.FlutterActivity
 

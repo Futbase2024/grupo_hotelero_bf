@@ -10,9 +10,14 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <application
-        android:label="bf_stay"
+        android:label="BF Stay"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
+        <!-- URLs requeridas para Google Play -->
+        <meta-data
+            android:name="android.app.lib_name"
+            android:value="" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
