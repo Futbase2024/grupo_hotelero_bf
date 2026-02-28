@@ -183,6 +183,11 @@ class DashboardTab extends StatelessWidget {
                 icon: Icons.apartment_outlined,
                 value: summary?.totalUnits.toString() ?? '0',
                 label: 'Alojamientos activos',
+                onTap: () {
+                  context.read<AdminDashboardBloc>().add(
+                        const AdminDashboardTabChanged(3),
+                      );
+                },
               ),
             ),
           ],

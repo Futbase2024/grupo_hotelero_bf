@@ -88,3 +88,29 @@ class AdminDashboardCheckinsFilterChanged extends AdminDashboardEvent {
   @override
   List<Object?> get props => [statusFilter];
 }
+
+/// Cargar unidades de una propiedad
+class AdminDashboardUnitsLoadRequested extends AdminDashboardEvent {
+  const AdminDashboardUnitsLoadRequested(this.propertyId);
+
+  final String propertyId;
+
+  @override
+  List<Object?> get props => [propertyId];
+}
+
+/// Actualizar WiFi de una unidad
+class AdminDashboardUnitWifiUpdateRequested extends AdminDashboardEvent {
+  const AdminDashboardUnitWifiUpdateRequested({
+    required this.unitId,
+    required this.wifiNetwork,
+    required this.wifiPassword,
+  });
+
+  final String unitId;
+  final String wifiNetwork;
+  final String wifiPassword;
+
+  @override
+  List<Object?> get props => [unitId, wifiNetwork, wifiPassword];
+}

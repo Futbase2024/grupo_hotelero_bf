@@ -126,6 +126,126 @@ dart run build_runner build --delete-conflicting-outputs && dart fix --apply
 - ✅ **Tarjetas en filas deben tener la MISMA ALTURA** usando `IntrinsicHeight` + `crossAxisAlignment: CrossAxisAlignment.stretch`
 - ✅ Usar SIEMPRE `AppColors` para colores, nunca hardcodear valores hexadecimales
 
+### 🌙 Soporte de Tema Claro/Oscuro (OBLIGATORIO)
+
+**REGLA CRÍTICA**: La aplicación soporta **AMBOS temas** (claro y oscuro). TODAS las pantallas y widgets DEBEN adaptarse correctamente al tema actual usando los métodos helper de `AppColors`.
+
+#### Métodos Helper de AppColors para Tema Adaptativo
+
+```dart
+// Detectar tema actual
+AppColors.isDarkMode(context)  // Retorna true si tema oscuro
+
+// Colores de fondo adaptativos
+AppColors.getSurfaceColor(context)           // Fondo principal
+AppColors.getSurfaceSecondaryColor(context)  // Fondo secundario
+AppColors.getCardColor(context)              // Fondo de cards
+AppColors.getInputBackgroundColor(context)   // Fondo de inputs
+AppColors.getChipBackgroundColor(context)    // Fondo de chips/tags
+
+// Colores de texto adaptativos
+AppColors.getTextPrimaryColor(context)       // Texto principal
+AppColors.getTextSecondaryColor(context)     // Texto secundario
+AppColors.getTextTertiaryColor(context)      // Texto terciario
+
+// Colores de borde adaptativos
+AppColors.getBorderColor(context)            // Bordes
+
+// Colores con alpha adaptativos
+AppColors.getGoldWithAlpha(context, alpha: 0.1)  // Gold con alpha según tema
+
+// Otros colores adaptativos
+AppColors.getHeroOverlayColor(context)
+AppColors.getHeroGradientStart(context)
+AppColors.getHeroGradientEnd(context)
+AppColors.getServicesContainerColor(context)
+AppColors.getServiceCardColor(context)
+```
+
+#### ✅ Ejemplo Correcto: Pantalla Adaptativa
+
+```dart
+class MyScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDarkMode(context);
+
+    return Scaffold(
+      backgroundColor: AppColors.getSurfaceColor(context),
+      appBar: AppBar(
+        backgroundColor: AppColors.getSurfaceColor(context),
+        title: Text(
+          'Título',
+          style: TextStyle(
+            color: AppColors.getTextPrimaryColor(context),
+          ),
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: AppColors.getCardColor(context),
+          border: Border.all(
+            color: AppColors.getBorderColor(context),
+          ),
+        ),
+        child: Text(
+          'Contenido',
+          style: TextStyle(
+            color: AppColors.getTextSecondaryColor(context),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+#### ❌ PROHIBIDO
+
+```dart
+// ❌ NUNCA usar withValues o withOpacity
+AppColors.gold.withValues(alpha: 0.2)
+AppColors.black.withValues(alpha: 0.5)
+AppColors.white.withOpacity(0.8)
+AppColors.darkBackground.withValues(alpha: 0.4)
+
+// ❌ NUNCA hardcodear colores sin adaptar al tema
+Container(
+  color: AppColors.white,  // ❌ Mal en tema oscuro
+)
+
+// ❌ NUNCA usar colores estáticos para fondos/textos adaptativos
+color: AppColors.textPrimary  // ❌ No se adapta al tema
+color: AppColors.background   // ❌ No se adapta al tema
+```
+
+#### ✅ OBLIGATORIO
+
+```dart
+// ✅ Usar métodos helper para adaptar al tema
+Container(
+  color: AppColors.getCardColor(context),  // ✅ Se adapta
+)
+
+// ✅ Usar colores predefinidos con alpha
+AppColors.goldWithAlpha20      // Gold con 20% alpha
+AppColors.goldWithAlpha30      // Gold con 30% alpha
+AppColors.whiteWithAlpha80     // White con 80% alpha
+AppColors.darkSurfaceWithAlpha50  // Dark surface con 50% alpha
+
+// ✅ Para tarjetas con borde gold adaptativo
+Container(
+  decoration: BoxDecoration(
+    color: AppColors.getCardColor(context),
+    border: Border.all(
+      color: AppColors.getGoldWithAlpha(context, alpha: 0.2),
+    ),
+  ),
+)
+```
+
+---
+
 ### 🌙 Tema Oscuro con Gold (OBLIGATORIO)
 
 **REGLA CRÍTICA**: El tema por defecto de la aplicación es **DARK MODE** con acentos en **GOLD**.

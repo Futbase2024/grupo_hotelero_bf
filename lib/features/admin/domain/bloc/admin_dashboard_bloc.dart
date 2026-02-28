@@ -19,6 +19,8 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     on<AdminDashboardBookingsFilterChanged>(_onBookingsFilterChanged);
     on<AdminDashboardBookingsSearchChanged>(_onBookingsSearchChanged);
     on<AdminDashboardCheckinsFilterChanged>(_onCheckinsFilterChanged);
+    on<AdminDashboardUnitsLoadRequested>(_onUnitsLoadRequested);
+    on<AdminDashboardUnitWifiUpdateRequested>(_onUnitWifiUpdateRequested);
   }
 
   final AdminPanelRepository _repository;
@@ -210,5 +212,68 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     Emitter<AdminDashboardState> emit,
   ) {
     emit(state.copyWith(checkinsStatusFilter: event.statusFilter));
+  }
+
+  Future<void> _onUnitsLoadRequested(
+    AdminDashboardUnitsLoadRequested event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    emit(state.copyWith(isLoadingUnits: true, clearError: true));
+
+    try {
+      final units = await _repository.listUnits(event.propertyId);
+
+      emit(state.copyWith(
+        units: units,
+        selectedPropertyId: event.propertyId,
+        isLoadingUnits: false,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoadingUnits: false,
+        error: e.toString(),
+      ));
+    }
+  }
+
+  Future<void> _onUnitWifiUpdateRequested(
+    AdminDashboardUnitWifiUpdateRequested event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    try {
+      await _repository.updateUnitWifi(
+        unitId: event.unitId,
+        wifiNetwork: event.wifiNetwork,
+        wifiPassword: event.wifiPassword,
+      );
+
+      // Actualizar la unidad en la lista local
+      final updatedUnits = state.units.map((unit) {
+        if (unit.id == event.unitId) {
+          return AdminUnitEntity(
+            id: unit.id,
+            propertyId: unit.propertyId,
+            name: unit.name,
+            unitType: unit.unitType,
+            addressLine1: unit.addressLine1,
+            city: unit.city,
+            postalCode: unit.postalCode,
+            boxCode: unit.boxCode,
+            accessInstructions: unit.accessInstructions,
+            wifiNetwork: event.wifiNetwork,
+            wifiPassword: event.wifiPassword,
+            activeBookingsCount: unit.activeBookingsCount,
+            createdAt: unit.createdAt,
+            updatedAt: DateTime.now(),
+          );
+        }
+        return unit;
+      }).toList();
+
+      emit(state.copyWith(units: updatedUnits));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+      rethrow;
+    }
   }
 }

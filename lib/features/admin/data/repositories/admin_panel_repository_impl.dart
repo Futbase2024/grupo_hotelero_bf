@@ -458,18 +458,42 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
 
   // ==================== MÉTODOS DE UNIDADES ====================
 
-  // EF devuelve: { success, units: [...] }
+  /// Lista unidades de una propiedad directamente desde la base de datos
   @override
   Future<List<AdminUnitEntity>> listUnits(String propertyId) async {
-    final response = await _callAdminPanel(
-      action: 'list_units',
-      params: {'property_id': propertyId},
-    );
+    try {
+      debugPrint('🏠 [listUnits] Cargando unidades de propiedad: $propertyId');
 
-    final data = (response['units'] as List<dynamic>?) ?? [];
-    return data
-        .map((e) => AdminUnitEntity.fromJson(e as Map<String, dynamic>))
-        .toList();
+      final response = await _client
+          .from('units')
+          .select('''
+            id,
+            property_id,
+            name,
+            unit_type,
+            address_line1,
+            city,
+            postal_code,
+            box_code,
+            access_instructions,
+            wifi_network,
+            wifi_password,
+            created_at
+          ''')
+          .eq('property_id', propertyId)
+          .order('name');
+
+      final units = (response as List)
+          .map((e) => AdminUnitEntity.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      debugPrint('✅ [listUnits] ${units.length} unidades encontradas');
+      return units;
+    } catch (e, s) {
+      debugPrint('❌ [listUnits] Error: $e');
+      debugPrint('❌ [listUnits] StackTrace: $s');
+      rethrow;
+    }
   }
 
   // Consulta directa + RPC is_unit_available
@@ -539,6 +563,32 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     }
 
     return result;
+  }
+
+  /// Actualiza los datos de WiFi de una unidad
+  @override
+  Future<void> updateUnitWifi({
+    required String unitId,
+    required String wifiNetwork,
+    required String wifiPassword,
+  }) async {
+    try {
+      debugPrint('📶 [updateUnitWifi] Actualizando WiFi de unidad: $unitId');
+
+      await _client
+          .from('units')
+          .update({
+            'wifi_network': wifiNetwork,
+            'wifi_password': wifiPassword,
+          })
+          .eq('id', unitId);
+
+      debugPrint('✅ [updateUnitWifi] WiFi actualizado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [updateUnitWifi] Error: $e');
+      debugPrint('❌ [updateUnitWifi] StackTrace: $s');
+      rethrow;
+    }
   }
 
   // EF devuelve: { success, notifications: [...] }

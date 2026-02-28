@@ -12,6 +12,8 @@ class AdminUnitEntity extends Equatable {
     this.postalCode,
     this.boxCode,
     this.accessInstructions,
+    this.wifiNetwork,
+    this.wifiPassword,
     this.activeBookingsCount,
     this.createdAt,
     this.updatedAt,
@@ -26,6 +28,8 @@ class AdminUnitEntity extends Equatable {
   final String? postalCode;
   final String? boxCode;
   final String? accessInstructions;
+  final String? wifiNetwork;
+  final String? wifiPassword;
   final int? activeBookingsCount;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -46,6 +50,9 @@ class AdminUnitEntity extends Equatable {
   bool get hasAccessInstructions =>
       accessInstructions != null && accessInstructions!.isNotEmpty;
 
+  /// Si tiene WiFi configurado
+  bool get hasWifi => wifiNetwork != null && wifiNetwork!.isNotEmpty;
+
   /// Convierte desde un mapa JSON
   factory AdminUnitEntity.fromJson(Map<String, dynamic> json) {
     return AdminUnitEntity(
@@ -58,6 +65,8 @@ class AdminUnitEntity extends Equatable {
       postalCode: json['postal_code'] as String?,
       boxCode: json['box_code'] as String?,
       accessInstructions: json['access_instructions'] as String?,
+      wifiNetwork: json['wifi_network'] as String?,
+      wifiPassword: json['wifi_password'] as String?,
       activeBookingsCount: json['active_bookings_count'] as int?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -80,6 +89,8 @@ class AdminUnitEntity extends Equatable {
       'postal_code': postalCode,
       'box_code': boxCode,
       'access_instructions': accessInstructions,
+      'wifi_network': wifiNetwork,
+      'wifi_password': wifiPassword,
       'active_bookings_count': activeBookingsCount,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
@@ -97,6 +108,8 @@ class AdminUnitEntity extends Equatable {
         postalCode,
         boxCode,
         accessInstructions,
+        wifiNetwork,
+        wifiPassword,
         activeBookingsCount,
         createdAt,
         updatedAt,

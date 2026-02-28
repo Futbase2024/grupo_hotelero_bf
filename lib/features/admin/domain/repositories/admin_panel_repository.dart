@@ -106,6 +106,13 @@ abstract class AdminPanelRepository {
     DateTime? checkOutDate,
   });
 
+  /// Actualiza los datos de WiFi de una unidad
+  Future<void> updateUnitWifi({
+    required String unitId,
+    required String wifiNetwork,
+    required String wifiPassword,
+  });
+
   /// Obtiene notificaciones
   Future<List<StaffNotificationEntity>> getNotifications({
     String? propertyId,

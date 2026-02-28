@@ -10,6 +10,7 @@ class AdminDashboardState extends Equatable {
     this.checkins = const [],
     this.properties = const [],
     this.units = const [],
+    this.selectedPropertyId,
     this.notifications = const [],
     this.unreadNotificationsCount = 0,
     this.bookingsStatusFilter,
@@ -19,6 +20,7 @@ class AdminDashboardState extends Equatable {
     this.isLoadingBookings = false,
     this.isLoadingCheckins = false,
     this.isLoadingProperties = false,
+    this.isLoadingUnits = false,
     this.error,
   });
 
@@ -40,6 +42,9 @@ class AdminDashboardState extends Equatable {
   /// Lista de unidades de la propiedad seleccionada
   final List<AdminUnitEntity> units;
 
+  /// ID de la propiedad seleccionada para ver unidades
+  final String? selectedPropertyId;
+
   /// Lista de notificaciones
   final List<StaffNotificationEntity> notifications;
 
@@ -60,6 +65,7 @@ class AdminDashboardState extends Equatable {
   final bool isLoadingBookings;
   final bool isLoadingCheckins;
   final bool isLoadingProperties;
+  final bool isLoadingUnits;
 
   /// Error general
   final String? error;
@@ -75,6 +81,7 @@ class AdminDashboardState extends Equatable {
     List<AdminBookingEntity>? checkins,
     List<Map<String, dynamic>>? properties,
     List<AdminUnitEntity>? units,
+    String? selectedPropertyId,
     List<StaffNotificationEntity>? notifications,
     int? unreadNotificationsCount,
     String? bookingsStatusFilter,
@@ -84,9 +91,11 @@ class AdminDashboardState extends Equatable {
     bool? isLoadingBookings,
     bool? isLoadingCheckins,
     bool? isLoadingProperties,
+    bool? isLoadingUnits,
     String? error,
     bool clearError = false,
     bool clearFilters = false,
+    bool clearSelectedProperty = false,
   }) {
     return AdminDashboardState(
       currentTabIndex: currentTabIndex ?? this.currentTabIndex,
@@ -95,6 +104,8 @@ class AdminDashboardState extends Equatable {
       checkins: checkins ?? this.checkins,
       properties: properties ?? this.properties,
       units: units ?? this.units,
+      selectedPropertyId:
+          clearSelectedProperty ? null : (selectedPropertyId ?? this.selectedPropertyId),
       notifications: notifications ?? this.notifications,
       unreadNotificationsCount:
           unreadNotificationsCount ?? this.unreadNotificationsCount,
@@ -108,6 +119,7 @@ class AdminDashboardState extends Equatable {
       isLoadingBookings: isLoadingBookings ?? this.isLoadingBookings,
       isLoadingCheckins: isLoadingCheckins ?? this.isLoadingCheckins,
       isLoadingProperties: isLoadingProperties ?? this.isLoadingProperties,
+      isLoadingUnits: isLoadingUnits ?? this.isLoadingUnits,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -166,6 +178,7 @@ class AdminDashboardState extends Equatable {
         checkins,
         properties,
         units,
+        selectedPropertyId,
         notifications,
         unreadNotificationsCount,
         bookingsStatusFilter,
@@ -175,6 +188,7 @@ class AdminDashboardState extends Equatable {
         isLoadingBookings,
         isLoadingCheckins,
         isLoadingProperties,
+        isLoadingUnits,
         error,
       ];
 }

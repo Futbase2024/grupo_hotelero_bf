@@ -183,18 +183,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final authState = _authBloc.state;
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
 
+    // Construir lista de tabs según permisos
+    final tabs = <Widget>[
+      const DashboardTab(),
+      const BookingsTab(),
+      const CheckinsTab(),
+    ];
+
+    // Tab de alojamientos solo visible para admin
+    if (isAdmin) {
+      tabs.add(const PropertiesTab());
+    }
+
+    // Asegurar que el índice está dentro del rango
+    final validIndex = state.currentTabIndex.clamp(0, tabs.length - 1);
+
     return IndexedStack(
-      index: state.currentTabIndex,
-      children: [
-        const DashboardTab(),
-        const BookingsTab(),
-        const CheckinsTab(),
-        // Tab de alojamientos solo visible para admin
-        if (isAdmin)
-          const PropertiesTab()
-        else
-          const SizedBox.shrink(),
-      ],
+      index: validIndex,
+      children: tabs,
     );
   }
 
