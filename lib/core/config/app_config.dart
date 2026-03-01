@@ -2,17 +2,30 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Configuración de la aplicación
 /// Gestiona las variables de entorno para diferentes ambientes
+/// Soporta tanto dotenv (desarrollo) como compile-time variables (producción web)
 class AppConfig {
   AppConfig._();
 
+  /// Obtiene variable de entorno con fallback a compile-time constant
+  /// Prioriza dotenv para desarrollo, luego usa String.fromEnvironment para web
+  static String _getEnvVar(String key, String compileTimeDefault) {
+    // Intentar obtener de dotenv primero (desarrollo)
+    final dotEnvValue = dotenv.env[key];
+    if (dotEnvValue != null && dotEnvValue.isNotEmpty) {
+      return dotEnvValue;
+    }
+    // Fallback a compile-time variable (producción web)
+    return compileTimeDefault;
+  }
+
   static String get supabaseUrl =>
-      dotenv.env['SUPABASE_URL'] ?? '';
+      _getEnvVar('SUPABASE_URL', const String.fromEnvironment('SUPABASE_URL', defaultValue: ''));
 
   static String get supabaseAnonKey =>
-      dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+      _getEnvVar('SUPABASE_ANON_KEY', const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: ''));
 
   static String get environment =>
-      dotenv.env['ENVIRONMENT'] ?? 'dev';
+      _getEnvVar('ENVIRONMENT', const String.fromEnvironment('ENVIRONMENT', defaultValue: 'dev'));
 
   static bool get isProduction => environment == 'prod';
   static bool get isDevelopment => environment == 'dev';

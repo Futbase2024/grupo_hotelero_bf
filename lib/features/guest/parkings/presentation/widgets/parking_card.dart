@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -297,10 +296,19 @@ class _MapButton extends StatelessWidget {
 
   final ParkingEntity parking;
 
+  /// Detecta si estamos en iOS (no web)
+  bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// Detecta si estamos en web
+  bool get _isWeb => kIsWeb;
+
   Future<void> _openMap() async {
+    // En web abrimos Google Maps en nueva pestaña
     // En iOS usamos Apple Maps, en Android usamos Google Maps
     final String mapUrl;
-    if (Platform.isIOS) {
+    if (_isWeb) {
+      mapUrl = parking.effectiveGoogleMapsUrl ?? '';
+    } else if (_isIOS) {
       mapUrl = parking.effectiveAppleMapsUrl ?? parking.effectiveGoogleMapsUrl ?? '';
     } else {
       mapUrl = parking.effectiveGoogleMapsUrl ?? '';
@@ -323,12 +331,16 @@ class _MapButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: _openMap,
         icon: Icon(
-          Platform.isIOS ? Icons.navigation_outlined : Icons.map_outlined,
+          _isWeb
+              ? Icons.open_in_new
+              : (_isIOS ? Icons.navigation_outlined : Icons.map_outlined),
           size: 18,
           color: isDark ? AppColors.black : AppColors.white,
         ),
         label: Text(
-          Platform.isIOS ? 'Abrir en Mapas' : 'Abrir en Google Maps',
+          _isWeb
+              ? 'Abrir en Google Maps'
+              : (_isIOS ? 'Abrir en Mapas' : 'Abrir en Google Maps'),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
