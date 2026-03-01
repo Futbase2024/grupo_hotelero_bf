@@ -69,10 +69,39 @@ class AllUnitParkingsLoaded extends ParkingsState {
   final List<UnitParkingEntity> unitParkings;
   final bool isRefreshing;
 
-  /// Agrupa los parkings por unidad
+  /// Parkings únicos de habitaciones de hotel (sin duplicar)
+  List<UnitParkingEntity> get hotelParkings {
+    final hotelRooms = unitParkings.where((up) => up.isHotelRoom).toList();
+    final seenParkingIds = <String>{};
+    final uniqueParkings = <UnitParkingEntity>[];
+
+    for (final up in hotelRooms) {
+      if (!seenParkingIds.contains(up.parkingId)) {
+        seenParkingIds.add(up.parkingId);
+        uniqueParkings.add(up);
+      }
+    }
+
+    // Ordenar por prioridad
+    uniqueParkings.sort((a, b) => a.priority.compareTo(b.priority));
+    return uniqueParkings;
+  }
+
+  /// Parkings que no son de hotel (apartamentos y habitaciones normales)
+  List<UnitParkingEntity> get nonHotelParkings =>
+      unitParkings.where((up) => !up.isHotelRoom).toList();
+
+  /// Indica si hay parkings de hotel
+  bool get hasHotelParkings => hotelParkings.isNotEmpty;
+
+  /// Nombre del hotel (tomado del primer parking de hotel)
+  String? get hotelName =>
+      hotelParkings.isNotEmpty ? hotelParkings.first.propertyName : null;
+
+  /// Agrupa los parkings por unidad (solo no-hotel)
   Map<String, List<UnitParkingEntity>> get groupedParkings {
     final map = <String, List<UnitParkingEntity>>{};
-    for (final up in unitParkings) {
+    for (final up in nonHotelParkings) {
       final unitId = up.unitId;
       map.putIfAbsent(unitId, () => []);
       map[unitId]!.add(up);
@@ -87,7 +116,7 @@ class AllUnitParkingsLoaded extends ParkingsState {
   /// Cantidad total de parkings
   int get count => unitParkings.length;
 
-  /// Cantidad de unidades con parkings
+  /// Cantidad de unidades con parkings (excluyendo hotel)
   int get unitsCount => groupedParkings.length;
 
   @override

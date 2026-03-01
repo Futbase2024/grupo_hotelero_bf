@@ -8,8 +8,10 @@ import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
-import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
+import '../../domain/bloc/guest_home_bloc.dart';
+import '../../domain/bloc/guest_home_event.dart';
+import '../../domain/bloc/guest_home_state.dart';
 
 /// Pantalla principal del huésped
 class GuestHomeScreen extends StatelessWidget {
@@ -25,47 +27,43 @@ class GuestHomeScreen extends StatelessWidget {
         final isCheckinValidated = checkinStatus == 'validated';
         final isCheckinSubmitted = checkinStatus == 'submitted';
 
-        // Solo acceso completo cuando check-in está validado
-        final canAccessFullPanel = isCheckinValidated;
+        return BlocProvider(
+          create: (context) => GuestHomeBloc(
+            repository: getIt<AdminPanelRepository>(),
+          )..add(GuestHomeLoadBooking(user?.bookingId ?? '')),
+          child: Scaffold(
+            backgroundColor: AppColors.getSurfaceColor(context),
+            body: SafeArea(
+              child: ResponsiveContent(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    vertical: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header con saludo
+                      _buildHeader(context, user),
+                      SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
 
-        return Scaffold(
-          backgroundColor: AppColors.getSurfaceColor(context),
-          body: SafeArea(
-            child: ResponsiveContent(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  vertical: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header con saludo
-                    _buildHeader(context, user),
-                    SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
-
-                    // Tu Estancia - con datos reales
-                    _buildSectionTitle(context, 'Tu Estancia'),
-                    const SizedBox(height: AppTheme.spacing16),
-                    _StayInfoCard(bookingId: user?.bookingId),
-                    SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
-
-                    // Status message basado en el estado
-                    _buildStatusBanner(context, checkinStatus),
-                    const SizedBox(height: AppTheme.spacing16),
-
-                    // Quick actions
-                    _buildSectionTitle(context, 'Acciones Rápidas'),
-                    const SizedBox(height: AppTheme.spacing16),
-                    _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user?.bookingId),
-                    SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
-
-                    // Services - Solo visibles después del check-in validado
-                    if (canAccessFullPanel) ...[
-                      _buildSectionTitle(context, 'Servicios'),
+                      // Tu Estancia - con datos reales del BLoC
+                      _buildSectionTitle(context, 'Tu Estancia'),
                       const SizedBox(height: AppTheme.spacing16),
-                      _buildServicesGrid(context),
+                      const _StayInfoCard(),
+                      SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
+
+                      // Status message basado en el estado - Solo si NO está validado
+                      if (!isCheckinValidated) ...[
+                        _buildStatusBanner(context, checkinStatus),
+                        const SizedBox(height: AppTheme.spacing16),
+                      ],
+
+                      // Quick actions
+                      _buildSectionTitle(context, 'Acciones Rápidas'),
+                      const SizedBox(height: AppTheme.spacing16),
+                      _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user?.bookingId),
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -345,238 +343,167 @@ class GuestHomeScreen extends StatelessWidget {
   }
 
   Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId) {
-    // En tablet/desktop, mostrar más acciones en fila
-    final isWide = context.isTablet || context.isDesktop;
     // Si está submitted, el check-in está deshabilitado (ya enviado)
     final canDoCheckin = !isCheckinSubmitted && !isCheckinValidated;
-    // Si el check-in está validado, mostrar Check-out en lugar de Check-in
-    final showCheckout = isCheckinValidated;
 
-    if (isWide) {
+    // Si NO está validado: Solo Check-in + Chat
+    if (!isCheckinValidated) {
       return Row(
         children: [
           Expanded(
-            child: _QuickActionCard(
-              icon: showCheckout ? Icons.logout_outlined : Icons.fact_check_outlined,
-              title: showCheckout ? 'Check-out' : 'Check-in',
-              onTap: showCheckout
-                  ? (bookingId != null ? () => context.go('/guest/checkout/$bookingId') : null)
-                  : (canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null),
+            child: _ServiceCard(
+              icon: Icons.fact_check_outlined,
+              title: 'Check-in',
+              imagePath: 'assets/images/checkin.png',
+              onTap: canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null,
             ),
           ),
-          const SizedBox(width: AppTheme.spacing16),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
-            child: _QuickActionCard(
+            child: _ServiceCard(
               icon: Icons.chat_bubble_outline,
               title: 'Chat',
+              imagePath: 'assets/images/chat.png',
               onTap: () => context.go('/guest/chat'),
-            ),
-          ),
-          const SizedBox(width: AppTheme.spacing16),
-          Expanded(
-            child: _QuickActionCard(
-              icon: Icons.lock_open_outlined,
-              title: 'Access Box',
-              onTap: isCheckinValidated ? () => context.go('/guest/access-box') : null,
-            ),
-          ),
-          const SizedBox(width: AppTheme.spacing16),
-          Expanded(
-            child: _QuickActionCard(
-              icon: Icons.book_outlined,
-              title: 'Guía',
-              onTap: isCheckinValidated ? () => context.go('/guest/guide') : null,
             ),
           ),
         ],
       );
     }
 
-    // En móvil, mostrar en 2 columnas
-    // Sin check-in: Check-in + Chat activos
-    // Con check-in validado: Todos activos
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _QuickActionCard(
-                icon: showCheckout ? Icons.logout_outlined : Icons.fact_check_outlined,
-                title: showCheckout ? 'Check-out' : 'Check-in',
-                onTap: showCheckout
-                    ? (bookingId != null ? () => context.go('/guest/checkout/$bookingId') : null)
-                    : (canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: _QuickActionCard(
-                icon: Icons.chat_bubble_outline,
-                title: 'Chat',
-                onTap: () => context.go('/guest/chat'),
-              ),
-            ),
-          ],
-        ),
-        if (isCheckinValidated) ...[
-          const SizedBox(height: AppTheme.spacing12),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickActionCard(
-                  icon: Icons.lock_open_outlined,
-                  title: 'Access Box',
-                  onTap: () => context.go('/guest/access-box'),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: _QuickActionCard(
-                  icon: Icons.book_outlined,
-                  title: 'Guía',
-                  onTap: () => context.go('/guest/guide'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildServicesGrid(BuildContext context) {
-    final services = [
+    // Si está validado: Grid de 3 columnas con todos los servicios
+    final services = <_ServiceItem>[
       _ServiceItem(
-        icon: Icons.star_outline,
-        title: 'Reseñas',
-        route: '/guest/reviews/bf000000-0000-0000-0000-000000000001',
+        icon: Icons.home_outlined,
+        title: 'Mi Alojamiento',
+        imagePath: 'assets/images/alojamiento.png',
+        onTap: () => context.push('/guest/my-accommodation'),
+      ),
+      _ServiceItem(
+        icon: Icons.rule_outlined,
+        title: 'Normas',
+        imagePath: 'assets/images/normas.png',
+        onTap: bookingId != null ? () => context.push('/guest/normas/$bookingId') : null,
       ),
       _ServiceItem(
         icon: Icons.room_service_outlined,
         title: 'Servicios',
-        route: null,
+        onTap: () => context.go('/guest/servicios'),
       ),
       _ServiceItem(
-        icon: Icons.report_problem_outlined,
-        title: 'Incidencias',
-        route: null,
+        icon: Icons.chat_bubble_outline,
+        title: 'Chat',
+        imagePath: 'assets/images/chat.png',
+        onTap: () => context.go('/guest/chat'),
       ),
       _ServiceItem(
-        icon: Icons.rule_outlined,
-        title: 'Normas de la Casa',
-        route: '/guest/house-rules/bf000000-0000-0000-0000-000000000001',
+        icon: Icons.book_outlined,
+        title: 'Guía',
+        imagePath: 'assets/images/quever.png',
+        onTap: () => context.go('/guest/guide'),
+      ),
+      _ServiceItem(
+        icon: Icons.logout_outlined,
+        title: 'Check-out',
+        imagePath: 'assets/images/checkout.png',
+        onTap: bookingId != null ? () => context.go('/guest/checkout/$bookingId') : null,
       ),
     ];
 
-    return Column(
-      children: services.map((service) => Padding(
-        padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
-        child: _ServiceListTile(
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 4,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: services.length,
+      itemBuilder: (context, index) {
+        final service = services[index];
+        return _ServiceCard(
           icon: service.icon,
           title: service.title,
-          onTap: service.route != null
-              ? () => context.go(service.route!)
-              : null,
-        ),
-      )).toList(),
+          imagePath: service.imagePath,
+          onTap: service.onTap,
+        );
+      },
     );
   }
 }
 
-/// Widget para mostrar la información de la estancia con datos reales
-class _StayInfoCard extends StatefulWidget {
-  const _StayInfoCard({required this.bookingId});
-
-  final String? bookingId;
-
-  @override
-  State<_StayInfoCard> createState() => _StayInfoCardState();
-}
-
-class _StayInfoCardState extends State<_StayInfoCard> {
-  AdminBookingEntity? _booking;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBooking();
-  }
-
-  Future<void> _loadBooking() async {
-    if (widget.bookingId == null) {
-      setState(() {
-        _isLoading = false;
-        _error = 'No hay reserva asociada';
-      });
-      return;
-    }
-
-    try {
-      final repository = getIt<AdminPanelRepository>();
-      final booking = await repository.getBooking(widget.bookingId!);
-
-      if (mounted) {
-        setState(() {
-          _booking = booking;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Error al cargar la reserva';
-          _isLoading = false;
-        });
-      }
-    }
-  }
+/// Widget para mostrar la información de la estancia usando el BLoC
+class _StayInfoCard extends StatelessWidget {
+  const _StayInfoCard();
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.getCardColor(context),
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          border: Border.all(color: AppColors.getBorderColor(context)),
-        ),
-        child: const Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.gold,
-            ),
+    return BlocBuilder<GuestHomeBloc, GuestHomeState>(
+      builder: (context, state) {
+        if (state is GuestHomeLoading) {
+          return _buildLoadingCard(context);
+        }
+
+        if (state is GuestHomeError) {
+          return _buildErrorCard(context, state.message);
+        }
+
+        if (state is GuestHomeNoBooking) {
+          return _buildErrorCard(context, 'No hay reserva asociada');
+        }
+
+        if (state is GuestHomeLoaded) {
+          return _buildBookingCard(context, state.booking, state.isRefreshing);
+        }
+
+        return _buildLoadingCard(context);
+      },
+    );
+  }
+
+  Widget _buildLoadingCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.getCardColor(context),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: AppColors.getBorderColor(context)),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.gold,
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    if (_error != null || _booking == null) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.getCardColor(context),
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          border: Border.all(color: AppColors.getBorderColor(context)),
-        ),
-        child: Center(
-          child: Text(
-            _error ?? 'No hay información de reserva',
-            style: TextStyle(
-              color: AppColors.getTextSecondaryColor(context),
-              fontSize: 14,
-            ),
+  Widget _buildErrorCard(BuildContext context, String message) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.getCardColor(context),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: AppColors.getBorderColor(context)),
+      ),
+      child: Center(
+        child: Text(
+          message,
+          style: TextStyle(
+            color: AppColors.getTextSecondaryColor(context),
+            fontSize: 14,
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    final booking = _booking!;
+  Widget _buildBookingCard(BuildContext context, booking, bool isRefreshing) {
     final dateFormat = DateFormat('d MMM');
     final checkInStr = dateFormat.format(booking.checkInDate);
     final checkOutStr = dateFormat.format(booking.checkOutDate);
@@ -587,7 +514,10 @@ class _StayInfoCardState extends State<_StayInfoCard> {
       decoration: BoxDecoration(
         color: AppColors.getCardColor(context),
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: AppColors.getBorderColor(context)),
+        border: Border.all(
+          color: AppColors.gold,
+          width: 1.5,
+        ),
         boxShadow: context.isDesktop
             ? [
                 BoxShadow(
@@ -620,13 +550,28 @@ class _StayInfoCardState extends State<_StayInfoCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      booking.unitName.isNotEmpty ? booking.unitName : 'Alojamiento',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.getTextPrimaryColor(context),
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            booking.unitName.isNotEmpty ? booking.unitName : 'Alojamiento',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.getTextPrimaryColor(context),
+                            ),
+                          ),
+                        ),
+                        if (isRefreshing)
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.gold,
+                            ),
+                          ),
+                      ],
                     ),
                     Text(
                       booking.propertyName.isNotEmpty ? booking.propertyName : 'BF Stay',
@@ -729,119 +674,103 @@ class _StayInfoItem extends StatelessWidget {
   }
 }
 
+/// Modelo para los items de servicio
 class _ServiceItem {
   const _ServiceItem({
     required this.icon,
     required this.title,
-    this.route,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? route;
-}
-
-class _ServiceListTile extends StatelessWidget {
-  const _ServiceListTile({
-    required this.icon,
-    required this.title,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      color: AppColors.getCardColor(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        side: BorderSide(color: AppColors.getBorderColor(context)),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.gold,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: AppColors.black, size: 20),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: AppColors.getTextPrimaryColor(context),
-          ),
-        ),
-        trailing: onTap != null
-            ? Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.getTextSecondaryColor(context))
-            : null,
-        enabled: onTap != null,
-      ),
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.icon,
-    required this.title,
+    this.imagePath,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
+  final String? imagePath;
+  final VoidCallback? onTap;
+}
+
+/// Widget para las tarjetas de servicio con imagen y texto debajo
+class _ServiceCard extends StatelessWidget {
+  const _ServiceCard({
+    required this.icon,
+    required this.title,
+    this.imagePath,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? imagePath;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final padding = context.responsive(
-      mobile: AppTheme.spacing16,
-      tablet: AppTheme.spacing20,
-    );
-    final iconSize = context.responsive(mobile: 28.0, tablet: 32.0);
     final isEnabled = onTap != null;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-      child: Container(
-        padding: EdgeInsets.all(padding),
-        decoration: BoxDecoration(
-          color: AppColors.getCardColor(context),
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          border: Border.all(
-            color: isEnabled ? AppColors.gold : AppColors.getBorderColor(context),
-            width: isEnabled ? 2 : 1,
-          ),
-        ),
+      borderRadius: BorderRadius.circular(12),
+      child: Opacity(
+        opacity: isEnabled ? 1.0 : 0.5,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.gold,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.black,
-                size: iconSize,
+            // Contenedor con imagen o gradiente
+            Flexible(
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.gold,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10.5),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: imagePath == null
+                            ? LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  AppColors.gold,
+                                  AppColors.goldLight,
+                                ],
+                              )
+                            : null,
+                      ),
+                      child: imagePath != null
+                          ? Image.asset(
+                              imagePath!,
+                              fit: BoxFit.cover,
+                            )
+                          : Icon(
+                              icon,
+                              color: AppColors.black,
+                              size: 32,
+                            ),
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: AppTheme.spacing8),
+            const SizedBox(height: 6),
+            // Título debajo del recuadro
             Text(
               title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: ResponsiveFontSize.labelLarge(context),
-                color: isEnabled ? AppColors.getTextPrimaryColor(context) : AppColors.getTextSecondaryColor(context),
-                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isEnabled
+                    ? AppColors.getTextPrimaryColor(context)
+                    : AppColors.getTextSecondaryColor(context),
               ),
             ),
           ],

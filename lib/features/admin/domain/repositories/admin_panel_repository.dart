@@ -113,6 +113,12 @@ abstract class AdminPanelRepository {
     required String wifiPassword,
   });
 
+  /// Actualiza el código de la puerta principal de una propiedad
+  Future<void> updatePropertyMainDoorKeycode({
+    required String propertyId,
+    required String keycode,
+  });
+
   /// Obtiene notificaciones
   Future<List<StaffNotificationEntity>> getNotifications({
     String? propertyId,

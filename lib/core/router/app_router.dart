@@ -23,13 +23,17 @@ import '../../features/guest/chat/presentation/screens/chat_screen.dart';
 import '../../features/guest/alojamientos/presentation/screens/alojamientos_screen.dart';
 import '../../features/guest/alojamientos/presentation/screens/alojamiento_detail_screen.dart';
 import '../../features/guest/alojamientos/presentation/screens/unit_detail_screen.dart';
+import '../../features/guest/alojamientos/presentation/screens/hotel_rooms_screen.dart';
+import '../../features/guest/alojamientos/presentation/screens/hotel_common_areas_screen.dart';
 import '../../features/guest/alojamientos/domain/bloc/alojamientos_bloc.dart';
 import '../../features/guest/alojamientos/domain/repositories/properties_repository.dart';
 import '../../features/guest/house_rules/presentation/screens/house_rules_screen.dart';
+import '../../features/guest/normas/presentation/screens/normas_screen.dart';
 import '../../features/guest/que_ver/presentation/screens/que_ver_screen.dart';
 import '../../features/guest/que_ver/presentation/screens/place_detail_screen.dart';
 import '../../features/guest/que_ver/domain/entities/place_entity.dart';
 import '../../features/guest/parkings/presentation/screens/parkings_screen.dart';
+import '../../features/guest/my_accommodation/presentation/screens/my_accommodation_screen.dart';
 import '../../features/guest/reviews/domain/bloc/reviews_bloc.dart';
 import '../../features/guest/reviews/domain/entities/review_entity.dart';
 import '../../features/guest/reviews/domain/repositories/reviews_repository.dart';
@@ -61,13 +65,17 @@ class AppRoutes {
   static const String checkin = '/guest/checkin/:bookingId';
   static const String checkout = '/guest/checkout/:bookingId';
   static const String accessBox = '/guest/access-box';
+  static const String myAccommodation = '/guest/my-accommodation';
   static const String stayGuide = '/guest/guide';
   static const String chat = '/guest/chat';
   static const String alojamientos = '/guest/alojamientos';
   static const String alojamientoDetail = '/guest/alojamientos/:id';
+  static const String hotelRooms = '/guest/alojamientos/hotel/:propertyId';
+  static const String hotelCommonAreas = '/guest/alojamientos/hotel/:propertyId/common-areas';
   static const String unitDetail = '/guest/alojamientos/unit/:unitId';
   static const String houseRulesGeneral = '/guest/house-rules';
   static const String houseRules = '/guest/house-rules/:propertyId';
+  static const String normas = '/guest/normas/:bookingId';
   static const String queVer = '/guest/que-ver';
   static const String placeDetail = '/guest/que-ver/:id';
   static const String collection = '/guest/que-ver/collection/:id';
@@ -114,7 +122,7 @@ class AppRouter {
           AppRoutes.houseRulesGeneral,
         ];
         // Rutas que empiezan con estos prefijos también son públicas
-        const publicRoutePrefixes = ['/guest/alojamientos', '/guest/house-rules/', '/guest/que-ver', '/guest/parkings', '/guest/reviews'];
+        const publicRoutePrefixes = ['/guest/alojamientos', '/guest/house-rules/', '/guest/que-ver', '/guest/parkings', '/guest/reviews', '/guest/alojamientos/hotel/'];
         final isPublicRoute = publicRoutes.contains(state.matchedLocation) ||
             publicRoutePrefixes.any((prefix) => state.matchedLocation.startsWith(prefix));
 
@@ -214,6 +222,11 @@ class AppRouter {
           builder: (context, state) => const AccessBoxScreen(),
         ),
         GoRoute(
+          path: AppRoutes.myAccommodation,
+          name: 'my-accommodation',
+          builder: (context, state) => const MyAccommodationScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.stayGuide,
           name: 'stay-guide',
           builder: (context, state) => const StayGuideScreen(),
@@ -242,6 +255,27 @@ class AppRouter {
           },
         ),
         GoRoute(
+          path: AppRoutes.hotelRooms,
+          name: 'hotel-rooms',
+          builder: (context, state) {
+            final propertyId = state.pathParameters['propertyId']!;
+            return BlocProvider(
+              create: (context) => AlojamientosBloc(
+                propertiesRepository: getIt<PropertiesRepository>(),
+              )..add(const AlojamientosStarted()),
+              child: HotelRoomsScreen(propertyId: propertyId),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.hotelCommonAreas,
+          name: 'hotel-common-areas',
+          builder: (context, state) {
+            final propertyId = state.pathParameters['propertyId']!;
+            return HotelCommonAreasScreen(propertyId: propertyId);
+          },
+        ),
+        GoRoute(
           path: AppRoutes.unitDetail,
           name: 'unit-detail',
           builder: (context, state) {
@@ -265,6 +299,14 @@ class AppRouter {
           builder: (context, state) {
             final propertyId = state.pathParameters['propertyId']!;
             return HouseRulesScreen(propertyId: propertyId);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.normas,
+          name: 'normas',
+          builder: (context, state) {
+            final bookingId = state.pathParameters['bookingId']!;
+            return NormasScreen(bookingId: bookingId);
           },
         ),
         GoRoute(
@@ -444,6 +486,7 @@ class AppRouter {
       AppRoutes.checkin,
       AppRoutes.checkout,
       AppRoutes.accessBox,
+      AppRoutes.myAccommodation,
       AppRoutes.stayGuide,
       AppRoutes.chat,
       AppRoutes.alojamientos,
@@ -457,6 +500,7 @@ class AppRouter {
       '/guest/checkout/',
       '/guest/alojamientos/',
       '/guest/house-rules/',
+      '/guest/normas/',
       '/guest/que-ver/',
       '/guest/parkings/',
     ];

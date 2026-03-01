@@ -7,6 +7,7 @@ import '../../../domain/entities/admin_unit_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../shared/widgets/admin_widgets.dart';
 import '../../../shared/widgets/edit_wifi_bottom_sheet.dart';
+import '../../../shared/widgets/edit_main_door_keycode_bottom_sheet.dart';
 
 /// Tab de propiedades del dashboard de administración
 /// Muestra todas las unidades con su información de WiFi
@@ -20,6 +21,7 @@ class PropertiesTab extends StatefulWidget {
 class _PropertiesTabState extends State<PropertiesTab> {
   List<AdminUnitEntity> _units = [];
   Map<String, String> _propertyNames = {};
+  Map<String, String?> _propertyKeycodes = {};
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -38,14 +40,16 @@ class _PropertiesTabState extends State<PropertiesTab> {
     try {
       debugPrint('🏠 [PropertiesTab] Cargando datos...');
 
-      // Cargar propiedades para obtener nombres
+      // Cargar propiedades para obtener nombres y keycodes
       final propertiesResponse = await getIt<SupabaseClient>()
           .from('properties')
-          .select('id, name');
+          .select('id, name, main_door_keycode');
 
       final propertyMap = <String, String>{};
+      final keycodeMap = <String, String?>{};
       for (final p in propertiesResponse) {
         propertyMap[p['id'] as String] = p['name'] as String;
+        keycodeMap[p['id'] as String] = p['main_door_keycode'] as String?;
       }
       debugPrint('✅ [PropertiesTab] ${propertyMap.length} propiedades cargadas');
 
@@ -84,6 +88,7 @@ class _PropertiesTabState extends State<PropertiesTab> {
 
       setState(() {
         _propertyNames = propertyMap;
+        _propertyKeycodes = keycodeMap;
         _units = units;
         _isLoading = false;
       });
@@ -192,11 +197,11 @@ class _PropertiesTabState extends State<PropertiesTab> {
       );
     }
 
-    if (_units.isEmpty) {
+    if (_propertyNames.isEmpty) {
       return EmptyStateWidget(
-        icon: Icons.meeting_room_outlined,
-        title: 'Sin unidades',
-        subtitle: 'No hay unidades configuradas',
+        icon: Icons.home_work_outlined,
+        title: 'Sin propiedades',
+        subtitle: 'No hay propiedades configuradas',
       );
     }
 
@@ -204,18 +209,74 @@ class _PropertiesTabState extends State<PropertiesTab> {
       color: AppColors.gold,
       backgroundColor: AppColors.darkSurface,
       onRefresh: _loadData,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: _units.length,
-        itemBuilder: (context, index) {
-          final unit = _units[index];
-          final propertyName = _propertyNames[unit.propertyId] ?? 'Propiedad';
-          return _UnitCard(
-            unit: unit,
-            propertyName: propertyName,
-            onEditWifi: () => _showEditWifiSheet(unit),
-          );
-        },
+      child: CustomScrollView(
+        slivers: [
+          // Sección de Propiedades con keycode
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Códigos de Puerta Principal',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.gray300,
+                ),
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final propertyId = _propertyNames.keys.elementAt(index);
+                final propertyName = _propertyNames[propertyId]!;
+                final keycode = _propertyKeycodes[propertyId];
+                return _PropertyKeycodeCard(
+                  propertyName: propertyName,
+                  keycode: keycode,
+                  onEdit: () => _showEditKeycodeSheet(propertyId, propertyName, keycode),
+                );
+              },
+              childCount: _propertyNames.length,
+            ),
+          ),
+
+          // Separador
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+              child: Text(
+                'Unidades',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.gray300,
+                ),
+              ),
+            ),
+          ),
+          // Lista de Unidades
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final unit = _units[index];
+                final propertyName = _propertyNames[unit.propertyId] ?? 'Propiedad';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: _UnitCard(
+                    unit: unit,
+                    propertyName: propertyName,
+                    onEditWifi: () => _showEditWifiSheet(unit),
+                  ),
+                );
+              },
+              childCount: _units.length,
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 24),
+          ),
+        ],
       ),
     );
   }
@@ -225,6 +286,19 @@ class _PropertiesTabState extends State<PropertiesTab> {
       context: context,
       unit: unit,
       repository: getIt<AdminPanelRepository>(),
+    ).then((_) {
+      // Recargar datos después de editar
+      _loadData();
+    });
+  }
+
+  void _showEditKeycodeSheet(String propertyId, String propertyName, String? currentKeycode) {
+    EditMainDoorKeycodeBottomSheet.show(
+      context: context,
+      propertyId: propertyId,
+      propertyName: propertyName,
+      repository: getIt<AdminPanelRepository>(),
+      currentKeycode: currentKeycode,
     ).then((_) {
       // Recargar datos después de editar
       _loadData();
@@ -370,5 +444,91 @@ class _UnitCard extends StatelessWidget {
       default:
         return type;
     }
+  }
+}
+
+/// Tarjeta para mostrar y editar el keycode de una propiedad
+class _PropertyKeycodeCard extends StatelessWidget {
+  const _PropertyKeycodeCard({
+    required this.propertyName,
+    required this.keycode,
+    required this.onEdit,
+  });
+
+  final String propertyName;
+  final String? keycode;
+  final VoidCallback onEdit;
+
+  bool get hasKeycode => keycode != null && keycode!.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasKeycode ? AppColors.success.withValues(alpha: 0.3) : AppColors.darkBorder,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: hasKeycode
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.goldWithAlpha10,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.door_front_door_outlined,
+              color: hasKeycode ? AppColors.success : AppColors.gold,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  propertyName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  hasKeycode ? 'Código: $keycode' : 'Sin código configurado',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: hasKeycode ? AppColors.success : AppColors.gray500,
+                    fontWeight: hasKeycode ? FontWeight.w600 : FontWeight.normal,
+                    letterSpacing: hasKeycode ? 2 : 0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            onPressed: onEdit,
+            icon: Icon(
+              hasKeycode ? Icons.edit : Icons.add,
+              color: AppColors.gold,
+              size: 18,
+            ),
+            label: Text(
+              hasKeycode ? 'Editar' : 'Añadir',
+              style: const TextStyle(color: AppColors.gold, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

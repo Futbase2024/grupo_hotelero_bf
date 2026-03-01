@@ -591,6 +591,28 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     }
   }
 
+  /// Actualiza el código de la puerta principal de una propiedad
+  @override
+  Future<void> updatePropertyMainDoorKeycode({
+    required String propertyId,
+    required String keycode,
+  }) async {
+    try {
+      debugPrint('🔑 [updatePropertyMainDoorKeycode] Actualizando keycode de propiedad: $propertyId');
+
+      await _client
+          .from('properties')
+          .update({'main_door_keycode': keycode})
+          .eq('id', propertyId);
+
+      debugPrint('✅ [updatePropertyMainDoorKeycode] Keycode actualizado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [updatePropertyMainDoorKeycode] Error: $e');
+      debugPrint('❌ [updatePropertyMainDoorKeycode] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   // EF devuelve: { success, notifications: [...] }
   @override
   Future<List<StaffNotificationEntity>> getNotifications({

@@ -77,12 +77,14 @@ class _ParkingsBody extends StatelessWidget {
                 ),
               )
             else if (state is AllUnitParkingsLoaded)
-              state.groupedParkings.isEmpty
+              state.unitParkings.isEmpty
                   ? const SliverFillRemaining(
                       child: _EmptyView(),
                     )
                   : _GroupedParkingsList(
                       groupedParkings: state.groupedParkings,
+                      hotelParkings: state.hotelParkings,
+                      hotelName: state.hotelName,
                     ),
           ],
         );
@@ -173,29 +175,50 @@ class _SliverAppBar extends StatelessWidget {
 class _GroupedParkingsList extends StatelessWidget {
   const _GroupedParkingsList({
     required this.groupedParkings,
+    required this.hotelParkings,
+    this.hotelName,
   });
 
   final Map<String, List<UnitParkingEntity>> groupedParkings;
+  final List<UnitParkingEntity> hotelParkings;
+  final String? hotelName;
 
   @override
   Widget build(BuildContext context) {
     final unitIds = groupedParkings.keys.toList();
+    final hasHotel = hotelParkings.isNotEmpty;
 
     return SliverPadding(
       padding: const EdgeInsets.only(bottom: 24),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            final unitId = unitIds[index];
+            // Si hay hotel, mostrarlo primero (índice 0)
+            if (hasHotel && index == 0) {
+              return _UnitParkingSection(
+                unitName: hotelName ?? 'Hotel',
+                parkings: hotelParkings,
+                isHotel: true,
+              );
+            }
+
+            // Ajustar índice para las unidades normales
+            final adjustedIndex = hasHotel ? index - 1 : index;
+            if (adjustedIndex < 0 || adjustedIndex >= unitIds.length) {
+              return const SizedBox.shrink();
+            }
+
+            final unitId = unitIds[adjustedIndex];
             final parkings = groupedParkings[unitId]!;
             final unitName = parkings.first.unitName ?? 'Alojamiento';
 
             return _UnitParkingSection(
               unitName: unitName,
               parkings: parkings,
+              isHotel: false,
             );
           },
-          childCount: unitIds.length,
+          childCount: unitIds.length + (hasHotel ? 1 : 0),
         ),
       ),
     );
@@ -207,10 +230,12 @@ class _UnitParkingSection extends StatefulWidget {
   const _UnitParkingSection({
     required this.unitName,
     required this.parkings,
+    this.isHotel = false,
   });
 
   final String unitName;
   final List<UnitParkingEntity> parkings;
+  final bool isHotel;
 
   @override
   State<_UnitParkingSection> createState() => _UnitParkingSectionState();
@@ -256,8 +281,10 @@ class _UnitParkingSectionState extends State<_UnitParkingSection> {
                       color: AppColors.goldWithAlpha20,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.home_outlined,
+                    child: Icon(
+                      widget.isHotel
+                          ? Icons.hotel_outlined
+                          : Icons.home_outlined,
                       size: 20,
                       color: AppColors.gold,
                     ),

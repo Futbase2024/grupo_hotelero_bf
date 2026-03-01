@@ -258,4 +258,62 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
       }).toList();
     });
   }
+
+  @override
+  Future<List<String>> getCommonAreasPhotos(String propertyId) async {
+    try {
+      const String bucketId = 'unit-photos';
+      const String folderPath = 'Hotel/Zonas Comunes';
+
+      log('📦 PropertiesRepository: Listando fotos de zonas comunes...');
+      log('📦 PropertiesRepository: FolderPath: $folderPath');
+
+      // Listar archivos en la carpeta Zonas Comunes
+      final files = await _supabase.storage
+          .from(bucketId)
+          .list(path: folderPath);
+
+      log('📦 PropertiesRepository: Archivos encontrados: ${files.length}');
+
+      if (files.isEmpty) {
+        log('⚠️ PropertiesRepository: No se encontraron fotos en $folderPath');
+        return [];
+      }
+
+      // Log de todos los archivos encontrados
+      for (final file in files) {
+        log('📦 PropertiesRepository: Archivo: ${file.name}');
+      }
+
+      // Filtrar solo archivos de imagen y ordenar por nombre
+      final imageFiles = files
+          .where((file) =>
+              file.name.toLowerCase().endsWith('.jpg') ||
+              file.name.toLowerCase().endsWith('.jpeg') ||
+              file.name.toLowerCase().endsWith('.png') ||
+              file.name.toLowerCase().endsWith('.webp'))
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+
+      log('📦 PropertiesRepository: Fotos de imagen encontradas: ${imageFiles.length}');
+
+      // Generar URLs firmadas para cada imagen
+      final urls = <String>[];
+      for (final file in imageFiles) {
+        final filePath = '$folderPath/${file.name}';
+        log('📦 PropertiesRepository: Generando URL para: $filePath');
+        final signedUrl = await _supabase.storage
+            .from(bucketId)
+            .createSignedUrl(filePath, 3600); // 1 hora
+        urls.add(signedUrl);
+        log('✅ PropertiesRepository: URL generada');
+      }
+
+      return urls;
+    } catch (e, stackTrace) {
+      log('❌ PropertiesRepository: Error al cargar fotos de zonas comunes: $e');
+      log('❌ StackTrace: $stackTrace');
+      return [];
+    }
+  }
 }

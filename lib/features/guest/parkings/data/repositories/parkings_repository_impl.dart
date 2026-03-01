@@ -95,7 +95,13 @@ class ParkingsRepositoryImpl implements ParkingsRepository {
           ),
           units (
             id,
-            name
+            name,
+            unit_type,
+            property_id,
+            properties (
+              id,
+              name
+            )
           )
         ''')
         .eq('parkings.is_active', true)

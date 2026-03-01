@@ -100,6 +100,30 @@ class AlojamientosLoaded extends AlojamientosState {
   final String searchQuery;
   final bool isRefreshing;
 
+  /// Obtiene todas las unidades de todas las propiedades
+  List<UnitEntity> get allUnits {
+    return properties.expand((p) => p.units).toList();
+  }
+
+  /// Obtiene solo los apartamentos
+  List<UnitEntity> get apartments {
+    return allUnits.where((u) => u.unitType == UnitType.apartment).toList();
+  }
+
+  /// Obtiene las habitaciones del hotel
+  List<UnitEntity> get hotelRooms {
+    return allUnits.where((u) => u.unitType == UnitType.hotelRoom).toList();
+  }
+
+  /// Obtiene la propiedad del hotel (que contiene las habitaciones)
+  PropertyEntity? get hotelProperty {
+    for (final property in properties) {
+      final hasHotelRooms = property.units.any((u) => u.unitType == UnitType.hotelRoom);
+      if (hasHotelRooms) return property;
+    }
+    return null;
+  }
+
   /// Propiedades filtradas por búsqueda
   List<PropertyEntity> get filteredProperties {
     if (searchQuery.isEmpty) return properties;

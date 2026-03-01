@@ -27,4 +27,8 @@ abstract class PropertiesRepository {
 
   /// Stream de propiedades en tiempo real
   Stream<List<PropertyEntity>> watchAll();
+
+  /// Obtiene las URLs de las fotos de zonas comunes de un hotel desde Supabase Storage
+  /// Retorna una lista de URLs firmadas
+  Future<List<String>> getCommonAreasPhotos(String propertyId);
 }

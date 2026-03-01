@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 /// Tipo de unidad
-enum UnitType { apartment, room }
+enum UnitType { apartment, room, hotelRoom }
 
 /// Extensión para convertir string a UnitType
 extension UnitTypeExtension on UnitType {
@@ -11,6 +11,8 @@ extension UnitTypeExtension on UnitType {
         return 'apartment';
       case UnitType.room:
         return 'room';
+      case UnitType.hotelRoom:
+        return 'hotel_room';
     }
   }
 
@@ -20,6 +22,8 @@ extension UnitTypeExtension on UnitType {
         return UnitType.apartment;
       case 'room':
         return UnitType.room;
+      case 'hotel_room':
+        return UnitType.hotelRoom;
       default:
         return UnitType.apartment;
     }
@@ -28,8 +32,10 @@ extension UnitTypeExtension on UnitType {
   String get displayName {
     switch (this) {
       case UnitType.apartment:
-        return 'Hotel';
+        return 'Apartamento';
       case UnitType.room:
+        return 'Habitación';
+      case UnitType.hotelRoom:
         return 'Habitación';
     }
   }

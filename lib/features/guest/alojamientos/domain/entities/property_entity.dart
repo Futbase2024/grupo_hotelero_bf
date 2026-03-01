@@ -12,6 +12,7 @@ class PropertyEntity extends Equatable {
     this.timezone = 'Europe/Madrid',
     this.lat,
     this.lng,
+    this.mainDoorKeycode,
     this.units = const [],
   });
 
@@ -23,6 +24,7 @@ class PropertyEntity extends Equatable {
   final String timezone;
   final double? lat;
   final double? lng;
+  final String? mainDoorKeycode;
   final List<UnitEntity> units;
 
   /// Indica si la propiedad tiene ubicación geográfica
@@ -47,6 +49,7 @@ class PropertyEntity extends Equatable {
     String? timezone,
     double? lat,
     double? lng,
+    String? mainDoorKeycode,
     List<UnitEntity>? units,
   }) {
     return PropertyEntity(
@@ -58,6 +61,7 @@ class PropertyEntity extends Equatable {
       timezone: timezone ?? this.timezone,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
+      mainDoorKeycode: mainDoorKeycode ?? this.mainDoorKeycode,
       units: units ?? this.units,
     );
   }
@@ -73,6 +77,7 @@ class PropertyEntity extends Equatable {
       timezone: json['timezone'] as String? ?? 'Europe/Madrid',
       lat: json['lat'] as double?,
       lng: json['lng'] as double?,
+      mainDoorKeycode: json['main_door_keycode'] as String?,
       units: json['units'] != null
           ? (json['units'] as List)
               .map((u) => UnitEntity.fromJson(u as Map<String, dynamic>))
@@ -92,6 +97,7 @@ class PropertyEntity extends Equatable {
       'timezone': timezone,
       'lat': lat,
       'lng': lng,
+      'main_door_keycode': mainDoorKeycode,
       'units': units.map((u) => u.toJson()).toList(),
     };
   }
@@ -106,6 +112,7 @@ class PropertyEntity extends Equatable {
         timezone,
         lat,
         lng,
+        mainDoorKeycode,
         units,
       ];
 }

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../alojamientos/domain/entities/unit_entity.dart';
 import 'parking_entity.dart';
 
 /// Entidad que representa la relación entre una unidad y un parking
@@ -13,6 +14,9 @@ class UnitParkingEntity extends Equatable {
     this.notes,
     this.parking,
     this.unitName,
+    this.unitType,
+    this.propertyId,
+    this.propertyName,
   });
 
   final String id;
@@ -22,6 +26,12 @@ class UnitParkingEntity extends Equatable {
   final String? notes;
   final ParkingEntity? parking;
   final String? unitName;
+  final UnitType? unitType;
+  final String? propertyId;
+  final String? propertyName;
+
+  /// Indica si la unidad es una habitación de hotel
+  bool get isHotelRoom => unitType == UnitType.hotelRoom;
 
   /// Indica si tiene notas
   bool get hasNotes => notes != null && notes!.isNotEmpty;
@@ -49,6 +59,9 @@ class UnitParkingEntity extends Equatable {
     String? notes,
     ParkingEntity? parking,
     String? unitName,
+    UnitType? unitType,
+    String? propertyId,
+    String? propertyName,
   }) {
     return UnitParkingEntity(
       id: id ?? this.id,
@@ -58,11 +71,17 @@ class UnitParkingEntity extends Equatable {
       notes: notes ?? this.notes,
       parking: parking ?? this.parking,
       unitName: unitName ?? this.unitName,
+      unitType: unitType ?? this.unitType,
+      propertyId: propertyId ?? this.propertyId,
+      propertyName: propertyName ?? this.propertyName,
     );
   }
 
   /// Crea una entidad desde un mapa JSON
   factory UnitParkingEntity.fromJson(Map<String, dynamic> json) {
+    final unitsJson = json['units'] as Map<String, dynamic>?;
+    final propertiesJson = json['properties'] as Map<String, dynamic>?;
+
     return UnitParkingEntity(
       id: json['id'] as String,
       unitId: json['unit_id'] as String,
@@ -74,9 +93,12 @@ class UnitParkingEntity extends Equatable {
               json['parkings'] as Map<String, dynamic>,
             )
           : null,
-      unitName: json['units'] != null
-          ? (json['units'] as Map<String, dynamic>)['name'] as String?
+      unitName: unitsJson?['name'] as String?,
+      unitType: unitsJson?['unit_type'] != null
+          ? UnitTypeExtension.fromString(unitsJson!['unit_type'] as String)
           : null,
+      propertyId: unitsJson?['property_id'] as String?,
+      propertyName: propertiesJson?['name'] as String?,
     );
   }
 
@@ -100,5 +122,8 @@ class UnitParkingEntity extends Equatable {
         notes,
         parking,
         unitName,
+        unitType,
+        propertyId,
+        propertyName,
       ];
 }

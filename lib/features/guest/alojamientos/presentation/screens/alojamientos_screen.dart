@@ -1,8 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_theme.dart';
@@ -80,10 +78,7 @@ class _AlojamientosScreenState extends State<AlojamientosScreen> {
             }
 
             if (state is AlojamientosLoaded) {
-              return _LoadedView(
-                properties: state.properties,
-                coverPhotos: state.coverPhotos,
-              );
+              return _LoadedView(state: state);
             }
 
             return const _LoadingView();
@@ -192,23 +187,18 @@ class _ErrorView extends StatelessWidget {
 /// Vista con datos cargados - Grid de alojamientos
 class _LoadedView extends StatelessWidget {
   const _LoadedView({
-    required this.properties,
-    this.coverPhotos = const {},
+    required this.state,
   });
 
-  final List<PropertyEntity> properties;
-  final Map<String, UnitPhotoEntity> coverPhotos;
-
-  /// Obtiene todas las unidades de todas las propiedades
-  List<UnitEntity> get _allUnits {
-    return properties.expand((p) => p.units).toList();
-  }
+  final AlojamientosLoaded state;
 
   @override
   Widget build(BuildContext context) {
-    final units = _allUnits;
+    final apartments = state.apartments;
+    final hotelRooms = state.hotelRooms;
+    final hotelProperty = state.hotelProperty;
 
-    if (units.isEmpty) {
+    if (apartments.isEmpty && hotelRooms.isEmpty) {
       return const _EmptyView();
     }
 
@@ -226,11 +216,22 @@ class _LoadedView extends StatelessWidget {
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                final unit = units[index];
-                final coverPhoto = coverPhotos[unit.id];
-                return _UnitCard(unit: unit, index: index, coverPhoto: coverPhoto);
+                // Los apartamentos primero
+                if (index < apartments.length) {
+                  final unit = apartments[index];
+                  final coverPhoto = state.coverPhotos[unit.id];
+                  return _UnitCard(unit: unit, index: index, coverPhoto: coverPhoto);
+                }
+                // Luego la tarjeta del Hotel (si hay habitaciones)
+                if (hotelRooms.isNotEmpty && hotelProperty != null) {
+                  return _HotelCard(
+                    property: hotelProperty,
+                    roomCount: hotelRooms.length,
+                  );
+                }
+                return null;
               },
-              childCount: units.length,
+              childCount: apartments.length + (hotelRooms.isNotEmpty ? 1 : 0),
             ),
           ),
         ),
@@ -268,12 +269,17 @@ class _UnitCard extends StatelessWidget {
 
   List<Color> get _colors => _gradientColors[index % _gradientColors.length];
 
-  /// Obtiene la URL pública de una imagen de Supabase Storage
-  String _getImageUrl(String path) {
-    return Supabase.instance.client.storage
-        .from('unit-photos')
-        .getPublicUrl(path);
-  }
+  /// Mapeo de nombres de unidades a imágenes locales
+  static const Map<String, String> _unitImageMap = {
+    'Apartamento Bandera': 'assets/alojamientos/ApartamentoBanferra.jpeg',
+    'Apartamento BF Jerez': 'assets/alojamientos/ApartamentoBFJerez.jpeg',
+    'Ático Jerez': 'assets/alojamientos/ApartamentoAticoJerez.jpeg',
+    'BF Jacuzzi Jerez': 'assets/alojamientos/ApartamentoBFJacuzzi.jpeg',
+    'Jacuzzi Jerez': 'assets/alojamientos/EstudioBFJacuzzi.jpeg',
+  };
+
+  /// Obtiene la ruta de la imagen local para una unidad
+  String? get _localImagePath => _unitImageMap[unit.name];
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +288,6 @@ class _UnitCard extends StatelessWidget {
     final borderColor = isDark ? AppColors.gold : AppColors.black.withValues(alpha: 0.15);
     // Fondo de la sección de texto adaptado al tema
     final cardBgColor = isDark ? AppColors.blackLight : AppColors.white;
-    final hasCoverPhoto = coverPhoto != null;
 
     return GestureDetector(
       onTap: () {
@@ -310,28 +315,13 @@ class _UnitCard extends StatelessWidget {
                 flex: 3,
                 child: Stack(
                   fit: StackFit.expand,
-                  children: [
-                    // Imagen o gradiente de fondo
-                    if (hasCoverPhoto)
-                      CachedNetworkImage(
-                        imageUrl: _getImageUrl(coverPhoto!.path),
+                    children: [
+                    // Imagen local o gradiente de fondo
+                    if (_localImagePath != null)
+                      Image.asset(
+                        _localImagePath!,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: _colors,
-                            ),
-                          ),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.gold,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
+                        errorBuilder: (context, error, stackTrace) => Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
@@ -374,7 +364,7 @@ class _UnitCard extends StatelessWidget {
                       ),
                     ),
                     // Icono decorativo (solo si no hay foto)
-                    if (!hasCoverPhoto)
+                    if (_localImagePath == null)
                       Center(
                         child: Icon(
                           unit.unitType == UnitType.apartment
@@ -469,6 +459,205 @@ class _UnitCard extends StatelessWidget {
                           size: 12,
                           color: AppColors.gold,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Card especial para el Hotel que agrupa las habitaciones
+class _HotelCard extends StatelessWidget {
+  const _HotelCard({
+    required this.property,
+    required this.roomCount,
+  });
+
+  final PropertyEntity property;
+  final int roomCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDarkMode(context);
+    final borderColor = isDark ? AppColors.gold : AppColors.black.withValues(alpha: 0.15);
+    final cardBgColor = isDark ? AppColors.blackLight : AppColors.white;
+
+    return GestureDetector(
+      onTap: () {
+        context.go('/guest/alojamientos/hotel/${property.id}');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          border: Border.all(color: borderColor, width: isDark ? 1.5 : 1),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? AppColors.gold.withValues(alpha: 0.1) : AppColors.black.withValues(alpha: 0.1),
+              blurRadius: isDark ? 16 : 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge - 1),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Imagen del hotel
+              Expanded(
+                flex: 3,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Imagen local del hotel
+                    Image.asset(
+                      'assets/alojamientos/HotelBoutique.jpeg',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.goldDark.withValues(alpha: 0.8),
+                              AppColors.gold.withValues(alpha: 0.9),
+                              AppColors.goldLight.withValues(alpha: 0.8),
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.hotel_rounded,
+                            size: 56,
+                            color: AppColors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Overlay con gradiente
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            AppColors.black.withValues(alpha: 0.3),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Badge de Hotel
+                    Positioned(
+                      top: AppTheme.spacing12,
+                      right: AppTheme.spacing12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing8,
+                          vertical: AppTheme.spacing4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.black,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                        ),
+                        child: const Text(
+                          'HOTEL',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.gold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Texto debajo
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  decoration: BoxDecoration(
+                    color: cardBgColor,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(AppTheme.radiusLarge - 1),
+                      bottomRight: Radius.circular(AppTheme.radiusLarge - 1),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        property.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? AppColors.white : AppColors.gray900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (property.fullAddress.isNotEmpty) ...[
+                        const SizedBox(height: AppTheme.spacing4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 12,
+                              color: isDark ? AppColors.silver : AppColors.gray500,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                property.fullAddress,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark ? AppColors.silver : AppColors.gray500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: AppTheme.spacing8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.meeting_room_outlined,
+                                size: 14,
+                                color: AppColors.gold,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$roomCount habitaciones',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.gold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: AppColors.gold,
+                          ),
+                        ],
                       ),
                     ],
                   ),
