@@ -15,8 +15,14 @@ import 'features/guest/alojamientos/domain/repositories/properties_repository.da
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  // Load environment variables (with fallback for web production)
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    // En web production, el archivo .env no existe
+    // Las variables se obtienen de compile-time constants en AppConfig
+    debugPrint('dotenv not available, using compile-time variables');
+  }
 
   // Initialize Supabase
   await SupabaseConfig.initialize();
