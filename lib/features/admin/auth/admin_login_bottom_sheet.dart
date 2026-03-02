@@ -161,7 +161,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
                 const SizedBox(height: 24),
 
                 // Botón de acceso
-                _buildSubmitButton(isDark),
+                _buildSubmitButton(),
               ],
             ),
           ),
@@ -399,11 +399,10 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
     );
   }
 
-  Widget _buildSubmitButton(bool isDark) {
+  Widget _buildSubmitButton() {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final isLoading = state is AuthLoading;
-        final isDisabled = !_isFormValid && !_hasSubmittedOnce;
 
         return SizedBox(
           width: double.infinity,
@@ -411,13 +410,8 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              color: _isSuccess
-                  ? AppColors.success
-                  : isDisabled
-                      ? isDark
-                          ? AppColors.darkSurface
-                          : AppColors.gray100
-                      : AppColors.gold,
+              // El botón siempre es gold, solo cambia a verde en éxito
+              color: _isSuccess ? AppColors.success : AppColors.gold,
               borderRadius: BorderRadius.circular(8),
             ),
             child: ElevatedButton(
@@ -431,7 +425,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 disabledBackgroundColor: Colors.transparent,
-                disabledForegroundColor: AppColors.gray400,
+                disabledForegroundColor: AppColors.black,
               ),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
@@ -457,9 +451,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
-                              color: isDisabled
-                                  ? AppColors.gray400
-                                  : AppColors.black,
+                              color: AppColors.black,
                             ),
                           ),
               ),
