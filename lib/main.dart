@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'core/config/supabase_config.dart';
+import 'core/config/url_strategy.dart'
+    if (dart.library.html) 'core/config/url_strategy_web.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -14,6 +16,9 @@ import 'features/guest/alojamientos/domain/repositories/properties_repository.da
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configurar URL strategy para web (hash URLs)
+  configureUrlStrategy();
 
   // Load environment variables (with fallback for web production)
   try {

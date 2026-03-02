@@ -9,6 +9,7 @@ import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
+import 'package:bf_stay/shared/utils/unit_image_helper.dart';
 import '../../domain/bloc/guest_home_bloc.dart';
 import '../../domain/bloc/guest_home_event.dart';
 import '../../domain/bloc/guest_home_state.dart';
@@ -61,7 +62,12 @@ class GuestHomeScreen extends StatelessWidget {
                       // Quick actions
                       _buildSectionTitle(context, 'Acciones Rápidas'),
                       const SizedBox(height: AppTheme.spacing16),
-                      _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user?.bookingId),
+                      BlocBuilder<GuestHomeBloc, GuestHomeState>(
+                        builder: (context, state) {
+                          final unitName = state is GuestHomeLoaded ? state.booking.unitName : null;
+                          return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user?.bookingId, unitName);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -342,9 +348,11 @@ class GuestHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId) {
+  Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId, String? unitName) {
     // Si está submitted, el check-in está deshabilitado (ya enviado)
     final canDoCheckin = !isCheckinSubmitted && !isCheckinValidated;
+    // Obtener imagen dinámica del alojamiento
+    final accommodationImagePath = UnitImageHelper.getLocalImagePath(unitName);
 
     // Si NO está validado: Solo Check-in + Chat
     if (!isCheckinValidated) {
@@ -376,7 +384,7 @@ class GuestHomeScreen extends StatelessWidget {
       _ServiceItem(
         icon: Icons.home_outlined,
         title: 'Mi Alojamiento',
-        imagePath: 'assets/images/alojamiento.png',
+        imagePath: accommodationImagePath,
         onTap: () => context.push('/guest/my-accommodation'),
       ),
       _ServiceItem(
@@ -388,6 +396,7 @@ class GuestHomeScreen extends StatelessWidget {
       _ServiceItem(
         icon: Icons.room_service_outlined,
         title: 'Servicios',
+        imagePath: 'assets/images/servicios.png',
         onTap: () => context.go('/guest/servicios'),
       ),
       _ServiceItem(
@@ -399,7 +408,7 @@ class GuestHomeScreen extends StatelessWidget {
       _ServiceItem(
         icon: Icons.book_outlined,
         title: 'Guía',
-        imagePath: 'assets/images/quever.png',
+        imagePath: 'assets/images/info.png',
         onTap: () => context.go('/guest/guide'),
       ),
       _ServiceItem(
@@ -407,6 +416,25 @@ class GuestHomeScreen extends StatelessWidget {
         title: 'Check-out',
         imagePath: 'assets/images/checkout.png',
         onTap: bookingId != null ? () => context.go('/guest/checkout/$bookingId') : null,
+      ),
+      // Nuevas acciones al final
+      _ServiceItem(
+        icon: Icons.apartment_outlined,
+        title: 'Alojamientos',
+        imagePath: 'assets/images/alojamiento.png',
+        onTap: () => context.go('/guest/alojamientos'),
+      ),
+      _ServiceItem(
+        icon: Icons.local_parking_outlined,
+        title: 'Parkings',
+        imagePath: 'assets/images/parking.png',
+        onTap: () => context.go('/guest/parkings'),
+      ),
+      _ServiceItem(
+        icon: Icons.explore_outlined,
+        title: '¿Qué ver?',
+        imagePath: 'assets/images/quever.png',
+        onTap: () => context.go('/guest/que-ver'),
       ),
     ];
 
@@ -436,6 +464,11 @@ class GuestHomeScreen extends StatelessWidget {
 /// Widget para mostrar la información de la estancia usando el BLoC
 class _StayInfoCard extends StatelessWidget {
   const _StayInfoCard();
+
+  /// Obtiene la ruta de la imagen local para una unidad
+  String? _getLocalImagePath(String? unitName) {
+    return UnitImageHelper.getLocalImagePath(unitName);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -508,6 +541,7 @@ class _StayInfoCard extends StatelessWidget {
     final checkInStr = dateFormat.format(booking.checkInDate);
     final checkOutStr = dateFormat.format(booking.checkOutDate);
     final nights = booking.stayDurationNights;
+    final imagePath = _getLocalImagePath(booking.unitName);
 
     return Container(
       padding: EdgeInsets.all(context.responsive(mobile: AppTheme.spacing16, tablet: AppTheme.spacing24)),
@@ -533,17 +567,44 @@ class _StayInfoCard extends StatelessWidget {
           // Header con nombre de unidad y propiedad
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.gold,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.home_outlined,
-                  color: AppColors.black,
-                  size: 24,
-                ),
+              // Foto del alojamiento o icono como fallback
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: imagePath != null
+                    ? Image.asset(
+                        imagePath,
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 44,
+                          height: 44,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.gold,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.home_outlined,
+                            color: AppColors.black,
+                            size: 24,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        width: 44,
+                        height: 44,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.home_outlined,
+                          color: AppColors.black,
+                          size: 24,
+                        ),
+                      ),
               ),
               const SizedBox(width: AppTheme.spacing12),
               Expanded(

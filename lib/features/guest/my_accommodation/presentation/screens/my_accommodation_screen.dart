@@ -15,6 +15,7 @@ import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repositor
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/property_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/repositories/properties_repository.dart';
+import 'package:bf_stay/shared/utils/unit_image_helper.dart';
 
 /// Pantalla de Mi Alojamiento para el huésped
 class MyAccommodationScreen extends StatefulWidget {
@@ -30,6 +31,54 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   PropertyEntity? _property;
   bool _isLoading = true;
   String? _error;
+
+  /// Hora a partir de la cual están disponibles las llaves/códigos (14:00)
+  static const int _keysAvailableHour = 14;
+
+  /// Verifica si las llaves y códigos están disponibles (a partir de las 14:00 del día de check-in)
+  bool get _areKeysAvailable {
+    if (_booking == null) return false;
+
+    final checkInDate = _booking!.checkInDate;
+    final keysAvailableTime = DateTime(
+      checkInDate.year,
+      checkInDate.month,
+      checkInDate.day,
+      _keysAvailableHour,
+      0,
+      0,
+    );
+
+    return DateTime.now().isAfter(keysAvailableTime) ||
+        DateTime.now().isAtSameMomentAs(keysAvailableTime);
+  }
+
+  /// Calcula cuándo estarán disponibles las llaves
+  DateTime get _keysAvailableTime {
+    if (_booking == null) return DateTime.now();
+
+    final checkInDate = _booking!.checkInDate;
+    return DateTime(
+      checkInDate.year,
+      checkInDate.month,
+      checkInDate.day,
+      _keysAvailableHour,
+      0,
+      0,
+    );
+  }
+
+  /// Obtiene la ruta de la imagen local para una unidad
+  String? get _localImagePath {
+    // Priorizar el nombre del booking (que es lo que funciona en Tu Estancia)
+    final unitName = _booking?.unitName ?? _unit?.name;
+    debugPrint('🏠 Mi Alojamiento - unitName: "$unitName"');
+    debugPrint('🏠 Mi Alojamiento - _booking?.unitName: "${_booking?.unitName}"');
+    debugPrint('🏠 Mi Alojamiento - _unit?.name: "${_unit?.name}"');
+    final path = UnitImageHelper.getLocalImagePath(unitName);
+    debugPrint('🏠 Mi Alojamiento - path: "$path"');
+    return path;
+  }
 
   @override
   void initState() {
@@ -145,37 +194,44 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
         _buildHeader(),
         const SizedBox(height: AppTheme.spacing24),
 
-        // Código de la puerta principal de la propiedad
-        if (_property?.mainDoorKeycode != null &&
-            _property!.mainDoorKeycode!.isNotEmpty) ...[
-          _buildMainDoorKeycodeCard(),
-          const SizedBox(height: AppTheme.spacing16),
-        ],
+        // Sección de llaves y códigos - condicionada a las 14:00 del día de check-in
+        if (_areKeysAvailable) ...[
+          // Código de la puerta principal de la propiedad
+          if (_property?.mainDoorKeycode != null &&
+              _property!.mainDoorKeycode!.isNotEmpty) ...[
+            _buildMainDoorKeycodeCard(),
+            const SizedBox(height: AppTheme.spacing16),
+          ],
 
-        // Box Code - mostrar si hay código de la reserva o de la unidad
-        if ((_booking?.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty) ||
-            (_unit?.boxCode != null && _unit!.boxCode!.isNotEmpty)) ...[
-          _buildBoxCodeCard(),
-          const SizedBox(height: AppTheme.spacing16),
-        ],
+          // Box Code - mostrar si hay código de la reserva o de la unidad
+          if ((_booking?.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty) ||
+              (_unit?.boxCode != null && _unit!.boxCode!.isNotEmpty)) ...[
+            _buildBoxCodeCard(),
+            const SizedBox(height: AppTheme.spacing16),
+          ],
 
-        // Ubicación de la caja
-        if (_unit?.boxLocationText != null && _unit!.boxLocationText!.isNotEmpty) ...[
-          _buildInfoCard(
-            icon: Icons.place_outlined,
-            title: 'Ubicación de la caja',
-            content: _unit!.boxLocationText!,
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-        ],
+          // Ubicación de la caja
+          if (_unit?.boxLocationText != null && _unit!.boxLocationText!.isNotEmpty) ...[
+            _buildInfoCard(
+              icon: Icons.place_outlined,
+              title: 'Ubicación de la caja',
+              content: _unit!.boxLocationText!,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+          ],
 
-        // Instrucciones de acceso
-        if (_unit?.accessInstructions != null && _unit!.accessInstructions!.isNotEmpty) ...[
-          _buildInfoCard(
-            icon: Icons.info_outline,
-            title: 'Instrucciones de acceso',
-            content: _unit!.accessInstructions!,
-          ),
+          // Instrucciones de acceso
+          if (_unit?.accessInstructions != null && _unit!.accessInstructions!.isNotEmpty) ...[
+            _buildInfoCard(
+              icon: Icons.info_outline,
+              title: 'Instrucciones de acceso',
+              content: _unit!.accessInstructions!,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+          ],
+        ] else ...[
+          // Mensaje informativo cuando las llaves no están disponibles
+          _buildKeysNotAvailableCard(),
           const SizedBox(height: AppTheme.spacing16),
         ],
 
@@ -190,6 +246,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   Widget _buildHeader() {
+    final imagePath = _localImagePath;
+    debugPrint('🏠 _buildHeader - imagePath: "$imagePath"');
+
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
@@ -199,17 +258,43 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.gold,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.home_outlined,
-              color: AppColors.black,
-              size: 28,
-            ),
+          // Foto del alojamiento o icono como fallback
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: imagePath != null
+                ? Image.asset(
+                    imagePath,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('❌ Error cargando imagen: $error');
+                      return Container(
+                        width: 52,
+                        height: 52,
+                        color: AppColors.gold,
+                        child: const Icon(
+                          Icons.home_outlined,
+                          color: AppColors.black,
+                          size: 28,
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    width: 52,
+                    height: 52,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.home_outlined,
+                      color: AppColors.black,
+                      size: 28,
+                    ),
+                  ),
           ),
           const SizedBox(width: AppTheme.spacing16),
           Expanded(
@@ -240,6 +325,97 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
+  /// Tarjeta informativa cuando las llaves/códigos aún no están disponibles
+  Widget _buildKeysNotAvailableCard() {
+    final keysAvailableTime = _keysAvailableTime;
+    final formattedDate =
+        '${keysAvailableTime.day.toString().padLeft(2, '0')}/${keysAvailableTime.month.toString().padLeft(2, '0')}/${keysAvailableTime.year}';
+    final formattedTime =
+        '${_keysAvailableHour.toString().padLeft(2, '0')}:00';
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing20),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(
+          color: AppColors.gold.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Icono
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.lock_clock_outlined,
+              size: 32,
+              color: AppColors.gold,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+
+          // Título
+          Text(
+            'Códigos de acceso',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.getTextPrimaryColor(context),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+
+          // Mensaje descriptivo
+          Text(
+            'Los códigos de acceso y llaves estarán disponibles el día de tu llegada a partir de las $formattedTime h.',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.getTextSecondaryColor(context),
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+
+          // Fecha destacada
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.gold,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.event_outlined,
+                  size: 18,
+                  color: AppColors.black,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$formattedDate a las $formattedTime h',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Tarjeta para el código de la puerta principal del edificio
   Widget _buildMainDoorKeycodeCard() {
     final keycode = _property?.mainDoorKeycode;
@@ -254,20 +430,26 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.gold,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.door_front_door_outlined,
-              color: AppColors.black,
-              size: 18,
+          // Icono flex 1
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.gold,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.door_front_door_outlined,
+                color: AppColors.black,
+                size: 18,
+              ),
             ),
           ),
           const SizedBox(width: 12),
+          // Texto flex 5
           Expanded(
+            flex: 5,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -289,11 +471,11 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               ],
             ),
           ),
-          // Código compacto
-          SizedBox(
-            width: 80,
+          // Código flex 3
+          Expanded(
+            flex: 3,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AppColors.gold,
                 borderRadius: BorderRadius.circular(8),
@@ -311,12 +493,16 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: () => _copyToClipboard(keycode, 'Código de puerta'),
-            icon: const Icon(Icons.copy, size: 20),
-            color: AppColors.getTextSecondaryColor(context),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          // Icono copiar flex 1
+          Expanded(
+            flex: 1,
+            child: IconButton(
+              onPressed: () => _copyToClipboard(keycode, 'Código de puerta'),
+              icon: const Icon(Icons.copy, size: 20),
+              color: AppColors.getTextSecondaryColor(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            ),
           ),
         ],
       ),
@@ -350,20 +536,26 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.gold,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.lock_open_outlined,
-              color: AppColors.black,
-              size: 18,
+          // Icono flex 1
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.gold,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.lock_open_outlined,
+                color: AppColors.black,
+                size: 18,
+              ),
             ),
           ),
           const SizedBox(width: 12),
+          // Texto flex 5
           Expanded(
+            flex: 5,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -385,11 +577,11 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               ],
             ),
           ),
-          // Código compacto
-          SizedBox(
-            width: 80,
+          // Código flex 3
+          Expanded(
+            flex: 3,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AppColors.gold,
                 borderRadius: BorderRadius.circular(8),
@@ -407,12 +599,16 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: () => _copyToClipboard(boxCode, 'Key Box Code'),
-            icon: const Icon(Icons.copy, size: 20),
-            color: AppColors.getTextSecondaryColor(context),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          // Icono copiar flex 1
+          Expanded(
+            flex: 1,
+            child: IconButton(
+              onPressed: () => _copyToClipboard(boxCode, 'Key Box Code'),
+              icon: const Icon(Icons.copy, size: 20),
+              color: AppColors.getTextSecondaryColor(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            ),
           ),
         ],
       ),
