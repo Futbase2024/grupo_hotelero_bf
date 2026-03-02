@@ -39,19 +39,108 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     return response.data as Map<String, dynamic>;
   }
 
-  // EF devuelve: { success, summary: { pending_checkins, ... } }
+  // Consulta directa a la base de datos (más robusto que Edge Function)
   @override
   Future<DashboardSummaryEntity> getDashboardSummary({
     String? propertyId,
   }) async {
-    final response = await _callAdminPanel(
-      action: 'dashboard_summary',
-      params: propertyId != null ? {'property_id': propertyId} : null,
-    );
+    try {
+      debugPrint('📊 [getDashboardSummary] Iniciando consulta...');
 
-    return DashboardSummaryEntity.fromJson(
-      response['summary'] as Map<String, dynamic>,
-    );
+      // 1. Contar check-ins pendientes (status: draft o submitted)
+      var pendingCheckinsQuery = _client.from('checkins').select('id');
+      if (propertyId != null) {
+        pendingCheckinsQuery = pendingCheckinsQuery.eq('property_id', propertyId);
+      }
+      final pendingCheckinsResponse = await pendingCheckinsQuery.inFilter('status', ['draft', 'submitted']);
+      final pendingCheckins = (pendingCheckinsResponse as List).length;
+
+      // 2. Contar llegadas próximas (check-in en los próximos 7 días)
+      final now = DateTime.now();
+      final sevenDaysLater = now.add(const Duration(days: 7));
+      var upcomingQuery = _client.from('bookings').select('id');
+      if (propertyId != null) {
+        upcomingQuery = upcomingQuery.eq('property_id', propertyId);
+      }
+      final upcomingResponse = await upcomingQuery
+          .gte('checkin_date', now.toIso8601String().split('T').first)
+          .lte('checkin_date', sevenDaysLater.toIso8601String().split('T').first)
+          .not('status', 'in', '(cancelled,closed)');
+      final upcomingCheckins = (upcomingResponse as List).length;
+
+      // 3. Contar unidades activas
+      var unitsQuery = _client.from('units').select('id');
+      if (propertyId != null) {
+        unitsQuery = unitsQuery.eq('property_id', propertyId);
+      }
+      final unitsResponse = await unitsQuery;
+      final totalUnits = (unitsResponse as List).length;
+
+      // 4. Contar notificaciones no leídas
+      var notificationsQuery = _client.from('staff_notifications').select('id');
+      if (propertyId != null) {
+        notificationsQuery = notificationsQuery.eq('property_id', propertyId);
+      }
+      final notificationsResponse = await notificationsQuery.eq('is_read', false);
+      final unreadNotifications = (notificationsResponse as List).length;
+
+      // 5. Obtener últimos 5 check-ins con información completa
+      var recentCheckinsQuery = _client.from('checkins').select('''
+            id,
+            status,
+            submitted_at,
+            booking_id,
+            bookings (
+              id,
+              booking_code,
+              guest_first_name,
+              last_name,
+              unit_id,
+              units (
+                name
+              )
+            )
+          ''');
+      if (propertyId != null) {
+        recentCheckinsQuery = recentCheckinsQuery.eq('property_id', propertyId);
+      }
+      final recentCheckinsResponse = await recentCheckinsQuery
+          .not('submitted_at', 'is', null)
+          .order('submitted_at', ascending: false)
+          .limit(5);
+
+      // Mapear recent_checkins al formato esperado
+      final recentCheckins = (recentCheckinsResponse as List).map((row) {
+        final booking = row['bookings'] as Map<String, dynamic>?;
+        final unit = booking?['units'] as Map<String, dynamic>?;
+        final guestFirstName = (booking?['guest_first_name'] as String?) ?? '';
+        final lastName = (booking?['last_name'] as String?) ?? '';
+        final guestName = '$guestFirstName $lastName'.trim();
+
+        return {
+          'booking_id': booking?['id'] ?? row['booking_id'],
+          'booking_code': booking?['booking_code'] ?? '',
+          'guest_name': guestName.isNotEmpty ? guestName : 'Huésped',
+          'unit_name': unit?['name'] ?? '',
+          'checkin_status': row['status'] ?? 'draft',
+          'submitted_at': row['submitted_at'],
+        };
+      }).toList();
+
+      debugPrint('📊 [getDashboardSummary] pendientes: $pendingCheckins, próximos: $upcomingCheckins, unidades: $totalUnits, recientes: ${recentCheckins.length}');
+
+      return DashboardSummaryEntity.fromJson({
+        'pending_checkins': pendingCheckins,
+        'upcoming_checkins': upcomingCheckins,
+        'unread_notifications': unreadNotifications,
+        'total_units': totalUnits,
+        'recent_checkins': recentCheckins,
+      });
+    } catch (e, s) {
+      debugPrint('❌ [getDashboardSummary] Error: $e');
+      debugPrint('❌ [getDashboardSummary] StackTrace: $s');
+      rethrow;
+    }
   }
 
   // Consulta directa a la base de datos (sin Edge Function)
@@ -189,14 +278,33 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
   // La EF no tiene get_booking individual → consulta directa a la vista
   @override
   Future<AdminBookingEntity?> getBooking(String bookingId) async {
-    final data = await _client
-        .from('admin_bookings_dashboard')
-        .select()
-        .eq('booking_id', bookingId)
-        .maybeSingle();
+    try {
+      debugPrint('📋 [getBooking] Consultando booking: $bookingId');
+      final data = await _client
+          .from('admin_bookings_dashboard')
+          .select()
+          .eq('booking_id', bookingId)
+          .maybeSingle();
 
-    if (data == null) return null;
-    return AdminBookingEntity.fromJson(data);
+      if (data == null) {
+        debugPrint('📋 [getBooking] No se encontró booking');
+        return null;
+      }
+
+      debugPrint('📋 [getBooking] Datos recibidos, parseando entity...');
+      final entity = AdminBookingEntity.fromJson(data);
+      debugPrint('📋 [getBooking] Entity creado: unitName=${entity.unitName}');
+      return entity;
+    } on PostgrestException catch (e) {
+      debugPrint('❌ [getBooking] PostgrestException: ${e.message}');
+      debugPrint('❌ [getBooking] Code: ${e.code}');
+      debugPrint('❌ [getBooking] Details: ${e.details}');
+      rethrow;
+    } catch (e, stackTrace) {
+      debugPrint('❌ [getBooking] Error: $e');
+      debugPrint('❌ [getBooking] StackTrace: $stackTrace');
+      rethrow;
+    }
   }
 
   // EF devuelve: { success, booking: {...}, email_sent, email_result }

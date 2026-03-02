@@ -83,9 +83,13 @@ class GuestSessionService {
     // Asegurar que hay sesión de Supabase activa
     await _ensureAnonymousSession();
 
+    final bookingId = prefs.getString(_keyBookingId);
+    debugPrint('📦 [GuestSessionService] getSession - bookingId: "$bookingId"');
+    debugPrint('📦 [GuestSessionService] getSession - bookingCode: "$bookingCode"');
+
     return GuestSession(
       bookingCode: bookingCode,
-      bookingId: prefs.getString(_keyBookingId) ?? '',
+      bookingId: bookingId ?? '',
       propertyId: prefs.getString(_keyPropertyId) ?? '',
       guestName: prefs.getString(_keyGuestName) ?? '',
       unitId: prefs.getString(_keyUnitId) ?? '',

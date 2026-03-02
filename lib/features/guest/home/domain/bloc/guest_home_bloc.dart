@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../admin/domain/entities/admin_booking_entity.dart';
 import '../../../../admin/domain/repositories/admin_panel_repository.dart';
@@ -22,16 +23,28 @@ class GuestHomeBloc extends Bloc<GuestHomeEvent, GuestHomeState> {
   ) async {
     emit(const GuestHomeLoading());
 
+    // Si no hay bookingId, mostrar estado de no booking
+    if (event.bookingId == null || event.bookingId!.isEmpty) {
+      debugPrint('🏠 [GuestHomeBloc] No hay bookingId, mostrando estado NoBooking');
+      emit(const GuestHomeNoBooking());
+      return;
+    }
+
     try {
-      final booking = await _repository.getBooking(event.bookingId);
+      debugPrint('🏠 [GuestHomeBloc] Cargando booking: ${event.bookingId}');
+      final booking = await _repository.getBooking(event.bookingId!);
 
       if (booking == null) {
+        debugPrint('🏠 [GuestHomeBloc] Booking no encontrado');
         emit(const GuestHomeNoBooking());
         return;
       }
 
+      debugPrint('🏠 [GuestHomeBloc] Booking cargado: ${booking.bookingCode}, unitName: ${booking.unitName}');
       emit(GuestHomeLoaded(booking: booking));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('❌ [GuestHomeBloc] Error cargando booking: $e');
+      debugPrint('❌ [GuestHomeBloc] StackTrace: $stackTrace');
       emit(GuestHomeError(e.toString()));
     }
   }

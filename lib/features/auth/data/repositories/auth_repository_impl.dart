@@ -24,6 +24,10 @@ class AuthRepositoryImpl implements AuthRepository {
     final guestSession = await _guestSession.getSession();
     if (guestSession != null) {
       debugPrint('👤 [getCurrentUser] Sesión local de guest encontrada');
+      debugPrint('👤 [getCurrentUser] bookingId: "${guestSession.bookingId}"');
+      debugPrint('👤 [getCurrentUser] bookingCode: "${guestSession.bookingCode}"');
+      debugPrint('👤 [getCurrentUser] supabaseUserId: "${guestSession.supabaseUserId}"');
+
       // Verificar que la reserva sigue siendo válida y obtener estado del check-in
       final bookingResponse = await _supabase
           .from(SupabaseTables.bookings)

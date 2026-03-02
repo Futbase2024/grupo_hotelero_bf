@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Mapeo de nombres de unidades a imágenes locales
 class UnitImageHelper {
   /// Imagen del hotel para habitaciones
@@ -16,18 +14,13 @@ class UnitImageHelper {
 
   /// Obtiene la ruta de la imagen local para una unidad
   static String? getLocalImagePath(String? unitName) {
-    debugPrint('🖼️ UnitImageHelper - unitName recibido: "$unitName"');
-    debugPrint('🖼️ UnitImageHelper - claves disponibles: ${_unitImageMap.keys.toList()}');
     if (unitName == null || unitName.isEmpty) return null;
 
     // Si es una habitación del hotel (empieza por "HAB"), usar imagen del hotel
     if (unitName.toUpperCase().startsWith('HAB')) {
-      debugPrint('🖼️ UnitImageHelper - Es habitación de hotel, usando: $_hotelImagePath');
       return _hotelImagePath;
     }
 
-    final path = _unitImageMap[unitName];
-    debugPrint('🖼️ UnitImageHelper - path encontrado: "$path"');
-    return path;
+    return _unitImageMap[unitName];
   }
 }

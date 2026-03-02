@@ -12,7 +12,7 @@ abstract class GuestHomeEvent extends Equatable {
 class GuestHomeLoadBooking extends GuestHomeEvent {
   const GuestHomeLoadBooking(this.bookingId);
 
-  final String bookingId;
+  final String? bookingId;
 
   @override
   List<Object?> get props => [bookingId];

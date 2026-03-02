@@ -22,16 +22,44 @@ class GuestHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
+        // Mientras carga la autenticación, mostrar loading
+        if (state is AuthLoading || state is AuthInitial) {
+          return Scaffold(
+            backgroundColor: AppColors.getSurfaceColor(context),
+            body: SafeArea(
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.gold,
+                ),
+              ),
+            ),
+          );
+        }
+
         final user = state is AuthAuthenticated ? state.user : null;
+        debugPrint('🏠 [GuestHomeScreen] AuthState: ${state.runtimeType}, user?.bookingId: "${user?.bookingId}"');
+
+        // Si no hay usuario autenticado, no mostrar nada (debería redirigir a login)
+        if (user == null) {
+          return Scaffold(
+            backgroundColor: AppColors.getSurfaceColor(context),
+            body: SafeArea(
+              child: Center(
+                child: Text('No autenticado'),
+              ),
+            ),
+          );
+        }
+
         // Obtener estado del check-in
-        final checkinStatus = user?.checkinStatus;
+        final checkinStatus = user.checkinStatus;
         final isCheckinValidated = checkinStatus == 'validated';
         final isCheckinSubmitted = checkinStatus == 'submitted';
 
         return BlocProvider(
           create: (context) => GuestHomeBloc(
             repository: getIt<AdminPanelRepository>(),
-          )..add(GuestHomeLoadBooking(user?.bookingId ?? '')),
+          )..add(GuestHomeLoadBooking(user.bookingId)),
           child: Scaffold(
             backgroundColor: AppColors.getSurfaceColor(context),
             body: SafeArea(
@@ -64,8 +92,14 @@ class GuestHomeScreen extends StatelessWidget {
                       const SizedBox(height: AppTheme.spacing16),
                       BlocBuilder<GuestHomeBloc, GuestHomeState>(
                         builder: (context, state) {
+                          // Solo obtener unitName si el estado es GuestHomeLoaded
+                          // Si está cargando, usar null (se mostrará loading en _StayInfoCard)
                           final unitName = state is GuestHomeLoaded ? state.booking.unitName : null;
-                          return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user?.bookingId, unitName);
+                          // Si está cargando, no llamar a UnitImageHelper todavía
+                          if (state is GuestHomeInitial || state is GuestHomeLoading) {
+                            return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null);
+                          }
+                          return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName);
                         },
                       ),
                     ],
