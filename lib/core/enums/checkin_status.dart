@@ -13,7 +13,10 @@ enum CheckinStatus {
   validated,
 
   /// Rechazado - necesita corrección/subsanación
-  rejected;
+  rejected,
+
+  /// Cancelado - la reserva ha sido cancelada, no permite corrección
+  cancelled;
 
   /// Convierte desde string de base de datos
   static CheckinStatus fromString(String value) {
@@ -24,6 +27,7 @@ enum CheckinStatus {
       'submitted' => CheckinStatus.submitted,
       'validated' => CheckinStatus.validated,
       'rejected' => CheckinStatus.rejected,
+      'cancelled' => CheckinStatus.cancelled,
       _ => CheckinStatus.notStarted,
     };
   }
@@ -36,6 +40,7 @@ enum CheckinStatus {
       CheckinStatus.submitted => 'submitted',
       CheckinStatus.validated => 'validated',
       CheckinStatus.rejected => 'rejected',
+      CheckinStatus.cancelled => 'cancelled',
     };
   }
 
@@ -47,6 +52,7 @@ enum CheckinStatus {
       CheckinStatus.submitted => 'Enviado',
       CheckinStatus.validated => 'Validado',
       CheckinStatus.rejected => 'Rechazado',
+      CheckinStatus.cancelled => 'Cancelado',
     };
   }
 
@@ -58,6 +64,7 @@ enum CheckinStatus {
       CheckinStatus.submitted => 'Pendiente de revisión por el administrador',
       CheckinStatus.validated => 'Check-in validado, estancia autorizada',
       CheckinStatus.rejected => 'Requiere corrección por el huésped',
+      CheckinStatus.cancelled => 'Reserva cancelada, contacte con recepción',
     };
   }
 
@@ -76,6 +83,9 @@ enum CheckinStatus {
 
   /// Si el check-in fue rechazado y necesita corrección
   bool get needsCorrection => this == CheckinStatus.rejected;
+
+  /// Si el check-in fue cancelado (no permite corrección)
+  bool get isCancelled => this == CheckinStatus.cancelled;
 
   /// Si el check-in ya comenzó (no está en not_started)
   bool get hasStarted => this != CheckinStatus.notStarted;

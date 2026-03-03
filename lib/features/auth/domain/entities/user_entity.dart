@@ -38,6 +38,8 @@ class UserEntity extends Equatable {
     this.propertyId,
     this.checkInCompleted = false,
     this.checkinStatus,
+    this.checkinRejectionReason,
+    this.checkinCancellationReason,
   });
 
   final String id;
@@ -49,8 +51,12 @@ class UserEntity extends Equatable {
   final String? bookingId;
   final String? propertyId;
   final bool checkInCompleted;
-  /// Estado del check-in: 'not_started', 'in_progress', 'submitted', 'validated', 'rejected'
+  /// Estado del check-in: 'not_started', 'in_progress', 'submitted', 'validated', 'rejected', 'cancelled'
   final String? checkinStatus;
+  /// Motivo del rechazo del check-in (si aplica, permite corrección)
+  final String? checkinRejectionReason;
+  /// Motivo de la cancelación del check-in (si aplica, NO permite corrección)
+  final String? checkinCancellationReason;
 
   /// Nombre para mostrar (nombre completo, email o vacío)
   String get displayName {
@@ -100,6 +106,8 @@ class UserEntity extends Equatable {
     String? propertyId,
     bool? checkInCompleted,
     String? checkinStatus,
+    String? checkinRejectionReason,
+    String? checkinCancellationReason,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -112,6 +120,8 @@ class UserEntity extends Equatable {
       propertyId: propertyId ?? this.propertyId,
       checkInCompleted: checkInCompleted ?? this.checkInCompleted,
       checkinStatus: checkinStatus ?? this.checkinStatus,
+      checkinRejectionReason: checkinRejectionReason ?? this.checkinRejectionReason,
+      checkinCancellationReason: checkinCancellationReason ?? this.checkinCancellationReason,
     );
   }
 
@@ -127,5 +137,7 @@ class UserEntity extends Equatable {
         propertyId,
         checkInCompleted,
         checkinStatus,
+        checkinRejectionReason,
+        checkinCancellationReason,
       ];
 }

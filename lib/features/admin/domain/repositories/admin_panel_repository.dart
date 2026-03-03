@@ -57,6 +57,14 @@ abstract class AdminPanelRepository {
     String? reason,
   });
 
+  /// Cancela un check-in con motivo
+  /// A diferencia del rechazo, la cancelación NO permite corrección por el huésped
+  Future<void> cancelCheckin({
+    required String checkinId,
+    required String bookingId,
+    String? reason,
+  });
+
   /// Obtiene el detalle completo de un check-in
   /// Incluye huéspedes, documentos y firma
   Future<CheckinDetailEntity> getCheckinDetail(String checkinId);

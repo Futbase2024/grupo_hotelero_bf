@@ -400,6 +400,37 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     );
   }
 
+  /// Cancela un check-in usando RPC
+  /// A diferencia del rechazo, la cancelación NO permite corrección por el huésped
+  @override
+  Future<void> cancelCheckin({
+    required String checkinId,
+    required String bookingId,
+    String? reason,
+  }) async {
+    try {
+      debugPrint('🚫 [cancelCheckin] Cancelando check-in: $checkinId');
+
+      final success = await _client.rpc(
+        'cancel_checkin',
+        params: {
+          'p_checkin_id': checkinId,
+          'p_reason': reason ?? 'Sin motivo especificado',
+        },
+      ) as bool?;
+
+      if (success != true) {
+        throw Exception('No se pudo cancelar el check-in');
+      }
+
+      debugPrint('✅ [cancelCheckin] Check-in cancelado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [cancelCheckin] Error: $e');
+      debugPrint('❌ [cancelCheckin] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   /// Obtiene el detalle completo de un check-in usando la función RPC
   @override
   Future<CheckinDetailEntity> getCheckinDetail(String checkinId) async {

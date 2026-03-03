@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_entities.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
-import 'package:bf_stay/features/admin/domain/bloc/bloc.dart';
+import 'package:bf_stay/features/admin/domain/services/email_service.dart';
 
 /// Pantalla de detalle de check-in para administración
 /// Muestra huéspedes, documentos y firma del check-in
@@ -93,6 +92,9 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Debug: mostrar estado del check-in
+    debugPrint('🏗️ [CheckinDetail] BUILD - Status: ${_checkinDetail?.checkinStatus}, isPending: ${_checkinDetail?.isPending}');
+
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       appBar: AppBar(
@@ -111,16 +113,26 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           ),
         ),
         actions: [
-          if (_checkinDetail != null && _checkinDetail!.isPending) ...[
+          // Mostrar acciones para check-ins que se pueden actuar (pendientes o rechazados)
+          if (_checkinDetail != null && !_checkinDetail!.isValidated && !_checkinDetail!.isCancelled) ...[
+            // Solo mostrar Validar y Rechazar si está pendiente (submitted)
+            if (_checkinDetail!.isPending) ...[
+              IconButton(
+                icon: const Icon(Icons.check_circle_outline, color: AppColors.success),
+                tooltip: 'Validar',
+                onPressed: _validateCheckin,
+              ),
+              IconButton(
+                icon: const Icon(Icons.cancel_outlined, color: AppColors.warning),
+                tooltip: 'Rechazar',
+                onPressed: _showRejectDialog,
+              ),
+            ],
+            // Cancelar disponible tanto si está pendiente como rechazado
             IconButton(
-              icon: const Icon(Icons.check_circle, color: AppColors.success),
-              tooltip: 'Validar',
-              onPressed: () => _validateCheckin(),
-            ),
-            IconButton(
-              icon: const Icon(Icons.cancel, color: AppColors.error),
-              tooltip: 'Rechazar',
-              onPressed: () => _showRejectDialog(),
+              icon: const Icon(Icons.delete_forever, color: AppColors.error),
+              tooltip: 'Cancelar Reserva',
+              onPressed: _showCancelDialog,
             ),
           ],
         ],
@@ -213,6 +225,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               const SizedBox(height: 16),
               _buildSignatureSection(),
             ],
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -237,9 +250,14 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         statusIcon = Icons.check_circle;
         break;
       case 'rejected':
-        statusColor = const Color(0xFFC0392B);
+        statusColor = const Color(0xFFE67E22);
         statusText = 'Rechazado';
         statusIcon = Icons.cancel;
+        break;
+      case 'cancelled':
+        statusColor = const Color(0xFFC0392B);
+        statusText = 'Cancelado';
+        statusIcon = Icons.delete_forever;
         break;
       default:
         statusColor = AppColors.gray500;
@@ -259,10 +277,10 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.15),
+              color: statusColor,
               shape: BoxShape.circle,
             ),
-            child: Icon(statusIcon, color: statusColor, size: 28),
+            child: Icon(statusIcon, color: AppColors.white, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -290,6 +308,11 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                 if (_checkinDetail!.rejectedAt != null)
                   Text(
                     'Rechazado: ${_formatDateTime(_checkinDetail!.rejectedAt!)}',
+                    style: TextStyle(color: AppColors.gray400, fontSize: 12),
+                  ),
+                if (_checkinDetail!.cancelledAt != null)
+                  Text(
+                    'Cancelado: ${_formatDateTime(_checkinDetail!.cancelledAt!)}',
                     style: TextStyle(color: AppColors.gray400, fontSize: 12),
                   ),
               ],
@@ -743,10 +766,38 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
     if (confirmed == true && mounted) {
       try {
+        // 1. Validar el check-in en la base de datos
         await Supabase.instance.client.rpc(
           'validate_checkin',
           params: {'p_checkin_id': widget.checkinId},
         );
+
+        // 2. Enviar email de confirmación al huésped
+        if (_checkinDetail != null) {
+          final primaryGuest = _checkinDetail!.primaryGuest;
+          if (primaryGuest?.email != null && primaryGuest!.email!.isNotEmpty) {
+            debugPrint('📧 [ValidateCheckin] Enviando email a: ${primaryGuest.email}');
+            final emailSent = await EmailService().sendCheckinConfirmationEmail(
+              toEmail: primaryGuest.email!,
+              guestName: primaryGuest.fullName,
+              propertyName: _checkinDetail!.propertyName,
+              unitName: _checkinDetail!.unitName,
+              checkinDate: _checkinDetail!.checkinDate,
+              checkoutDate: _checkinDetail!.checkoutDate,
+              bookingCode: _checkinDetail!.bookingCode,
+              accessInstructions: _checkinDetail!.accessInstructions,
+              wifiNetwork: _checkinDetail!.wifiNetwork,
+              wifiPassword: _checkinDetail!.wifiPassword,
+              fullAddress: _checkinDetail!.fullAddress,
+              bookingId: _checkinDetail!.bookingId,
+              unitId: _checkinDetail!.unitId,
+            );
+            debugPrint('📧 [ValidateCheckin] Email enviado: $emailSent');
+          } else {
+            debugPrint('⚠️ [ValidateCheckin] No hay email del huésped para enviar confirmación');
+          }
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -755,10 +806,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               behavior: SnackBarBehavior.fixed,
             ),
           );
-          // Recargar datos del dashboard
-          context.read<AdminDashboardBloc>().add(
-            const AdminDashboardCheckinsLoadRequested(),
-          );
+          // Regresar a la pantalla anterior y devolver true para indicar éxito
           Navigator.pop(context, true);
         }
       } catch (e) {
@@ -815,8 +863,8 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: Text('Rechazar', style: TextStyle(color: AppColors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
+            child: Text('Rechazar', style: TextStyle(color: AppColors.black)),
           ),
         ],
       ),
@@ -841,10 +889,123 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               behavior: SnackBarBehavior.fixed,
             ),
           );
-          // Recargar datos del dashboard
-          context.read<AdminDashboardBloc>().add(
-            const AdminDashboardCheckinsLoadRequested(),
+          // Regresar a la pantalla anterior y devolver true para indicar éxito
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.fixed,
+            ),
           );
+        }
+      }
+    }
+  }
+
+  Future<void> _showCancelDialog() async {
+    final reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.error),
+            SizedBox(width: 8),
+            Text('Cancelar Reserva', style: TextStyle(color: AppColors.white)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Esta acción cancelará la reserva por completo.',
+              style: TextStyle(color: AppColors.gray300),
+            ),
+            SizedBox(height: 8),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.error, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'El huésped NO podrá corregir los datos. Deberá contactar con recepción.',
+                      style: TextStyle(color: AppColors.error, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Motivo de la cancelación:',
+              style: TextStyle(color: AppColors.gray300),
+            ),
+            SizedBox(height: 8),
+            TextField(
+              controller: reasonController,
+              style: TextStyle(color: AppColors.white),
+              decoration: InputDecoration(
+                hintText: 'Ej: Reserva no encontrada en sistema',
+                hintStyle: TextStyle(color: AppColors.gray500),
+                filled: true,
+                fillColor: AppColors.darkBackground,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.darkBorder),
+                ),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Atrás', style: TextStyle(color: AppColors.gray400)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: Text('Cancelar Reserva', style: TextStyle(color: AppColors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await Supabase.instance.client.rpc(
+          'cancel_checkin',
+          params: {
+            'p_checkin_id': widget.checkinId,
+            'p_reason': reasonController.text.trim().isEmpty
+                ? 'Sin motivo especificado'
+                : reasonController.text.trim(),
+          },
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Reserva cancelada'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.fixed,
+            ),
+          );
+          // Regresar a la pantalla anterior y devolver true para indicar éxito
           Navigator.pop(context, true);
         }
       } catch (e) {

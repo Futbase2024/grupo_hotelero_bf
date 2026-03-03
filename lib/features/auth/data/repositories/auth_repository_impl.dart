@@ -35,7 +35,8 @@ class AuthRepositoryImpl implements AuthRepository {
             id,
             status,
             checkins (
-              status
+              status,
+              rejection_reason
             )
           ''')
           .eq('id', guestSession.bookingId)
@@ -46,13 +47,16 @@ class AuthRepositoryImpl implements AuthRepository {
         // Verificar estado del check-in
         // Supabase puede devolver un Map (relación uno-a-uno) o un List
         String? checkinStatus;
+        String? checkinRejectionReason;
         final checkinsData = bookingResponse['checkins'];
         if (checkinsData is Map<String, dynamic>) {
           // Relación uno-a-uno: devuelve un solo objeto
           checkinStatus = checkinsData['status'] as String?;
+          checkinRejectionReason = checkinsData['rejection_reason'] as String?;
         } else if (checkinsData is List && checkinsData.isNotEmpty) {
           // Relación uno-a-muchos: devuelve una lista
           checkinStatus = (checkinsData.first as Map<String, dynamic>)['status'] as String?;
+          checkinRejectionReason = (checkinsData.first as Map<String, dynamic>)['rejection_reason'] as String?;
         }
         // Solo 'validated' significa check-in completado
         // 'submitted' = pendiente de validación por admin
@@ -63,6 +67,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return guestSession.toUserEntity().copyWith(
           checkInCompleted: checkInCompleted,
           checkinStatus: checkinStatus,
+          checkinRejectionReason: checkinRejectionReason,
         );
       } else {
         // La reserva ya no es válida, limpiar sesión

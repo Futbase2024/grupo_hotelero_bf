@@ -47,6 +47,7 @@ class GuestSessionService {
       prefs.setString(_keyCheckoutDate, checkoutDate.toIso8601String()),
       if (supabaseUserId != null) prefs.setString(_keySupabaseUserId, supabaseUserId),
     ]);
+
     debugPrint('💾 [GuestSessionService] Sesión guardada: $bookingCode, supabaseUserId: $supabaseUserId');
   }
 
@@ -87,17 +88,37 @@ class GuestSessionService {
     debugPrint('📦 [GuestSessionService] getSession - bookingId: "$bookingId"');
     debugPrint('📦 [GuestSessionService] getSession - bookingCode: "$bookingCode"');
 
-    return GuestSession(
-      bookingCode: bookingCode,
-      bookingId: bookingId ?? '',
-      propertyId: prefs.getString(_keyPropertyId) ?? '',
-      guestName: prefs.getString(_keyGuestName) ?? '',
-      unitId: prefs.getString(_keyUnitId) ?? '',
-      checkinDate: DateTime.parse(prefs.getString(_keyCheckinDate) ?? DateTime.now().toIso8601String()),
-      checkoutDate: DateTime.parse(prefs.getString(_keyCheckoutDate) ?? DateTime.now().toIso8601String()),
-      checkInCompleted: prefs.getBool(_keyCheckInCompleted) ?? false,
-      supabaseUserId: prefs.getString(_keySupabaseUserId),
-    );
+    if (bookingId == null) return null;
+
+    // Consultar el estado del check-in y el motivo del rechazo en la base de datos
+    final checkinData = await _getCheckinStatus(bookingId);
+    if (checkinData != null) {
+      return GuestSession(
+        bookingCode: bookingCode,
+        bookingId: bookingId,
+        propertyId: prefs.getString(_keyPropertyId) ?? '',
+        guestName: prefs.getString(_keyGuestName) ?? '',
+        unitId: prefs.getString(_keyUnitId) ?? '',
+        checkinDate: DateTime.parse(prefs.getString(_keyCheckinDate) ?? DateTime.now().toIso8601String()),
+        checkoutDate: DateTime.parse(prefs.getString(_keyCheckoutDate) ?? DateTime.now().toIso8601String()),
+        checkInCompleted: checkinData['status'] == 'validated',
+        supabaseUserId: prefs.getString(_keySupabaseUserId),
+        checkinRejectionReason: checkinData['rejection_reason'] as String?,
+        checkinCancellationReason: checkinData['cancellation_reason'] as String?,
+      );
+    } else {
+      return GuestSession(
+        bookingCode: bookingCode,
+        bookingId: bookingId,
+        propertyId: prefs.getString(_keyPropertyId) ?? '',
+        guestName: prefs.getString(_keyGuestName) ?? '',
+        unitId: prefs.getString(_keyUnitId) ?? '',
+        checkinDate: DateTime.parse(prefs.getString(_keyCheckinDate) ?? DateTime.now().toIso8601String()),
+        checkoutDate: DateTime.parse(prefs.getString(_keyCheckoutDate) ?? DateTime.now().toIso8601String()),
+        checkInCompleted: false,
+        supabaseUserId: prefs.getString(_keySupabaseUserId),
+      );
+    }
   }
 
   /// Verifica si hay una sesión activa
@@ -149,6 +170,35 @@ class GuestSessionService {
     ]);
     debugPrint('🗑️ [GuestSessionService] Sesión eliminada');
   }
+
+  /// Obtiene el estado del check-in desde la base de datos
+  Future<Map<String, dynamic>?> _getCheckinStatus(String? bookingId) async {
+    if (bookingId == null || bookingId.isEmpty) return null;
+
+    try {
+      final response = await _supabase
+          .from('checkins')
+          .select('status, rejection_reason, cancellation_reason')
+          .eq('booking_id', bookingId)
+          .maybeSingle();
+
+      if (response == null) {
+        return null;
+      }
+
+      return {
+        'status': response['status'] as String?,
+        'rejection_reason': response['rejection_reason'] as String?,
+        'cancellation_reason': response['cancellation_reason'] as String?,
+      };
+    } on PostgrestException catch (e) {
+      debugPrint('❌ [_getCheckinStatus] PostgrestException: ${e.message}');
+      return null;
+    } catch (e) {
+      debugPrint('❌ [_getCheckinStatus] Error: $e');
+      return null;
+    }
+  }
 }
 
 /// Datos de la sesión del huésped
@@ -162,6 +212,8 @@ class GuestSession {
   final DateTime checkoutDate;
   final bool checkInCompleted;
   final String? supabaseUserId;
+  final String? checkinRejectionReason;
+  final String? checkinCancellationReason;
 
   const GuestSession({
     required this.bookingCode,
@@ -173,10 +225,12 @@ class GuestSession {
     required this.checkoutDate,
     this.checkInCompleted = false,
     this.supabaseUserId,
+    this.checkinRejectionReason,
+    this.checkinCancellationReason,
   });
 
   /// Convierte a UserEntity para usar en la app
-  /// Usa el ID de Supabase si está disponible, sino usa bookingId como fallback
+  /// Usa el ID de Supabase si está disponible, sino fall back a bookingId como fallback
   UserEntity toUserEntity() {
     return UserEntity(
       id: supabaseUserId ?? bookingId, // Usar Supabase ID si está disponible
@@ -186,6 +240,9 @@ class GuestSession {
       bookingId: bookingId,
       propertyId: propertyId,
       checkInCompleted: checkInCompleted,
+      checkinStatus: null, // Se estado del check-in se obtiene de la BD
+      checkinRejectionReason: checkinRejectionReason, // Motivo del rechazo si aplica
+      checkinCancellationReason: checkinCancellationReason, // Motivo de la cancelación si aplica
     );
   }
 
@@ -199,6 +256,8 @@ class GuestSession {
     DateTime? checkoutDate,
     bool? checkInCompleted,
     String? supabaseUserId,
+    String? checkinRejectionReason,
+    String? checkinCancellationReason,
   }) {
     return GuestSession(
       bookingCode: bookingCode ?? this.bookingCode,
@@ -210,6 +269,8 @@ class GuestSession {
       checkoutDate: checkoutDate ?? this.checkoutDate,
       checkInCompleted: checkInCompleted ?? this.checkInCompleted,
       supabaseUserId: supabaseUserId ?? this.supabaseUserId,
+      checkinRejectionReason: checkinRejectionReason ?? this.checkinRejectionReason,
+      checkinCancellationReason: checkinCancellationReason ?? this.checkinCancellationReason,
     );
   }
 }

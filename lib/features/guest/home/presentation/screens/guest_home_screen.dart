@@ -53,6 +53,7 @@ class GuestHomeScreen extends StatelessWidget {
 
         // Obtener estado del check-in
         final checkinStatus = user.checkinStatus;
+        final checkinRejectionReason = user.checkinRejectionReason;
         final isCheckinValidated = checkinStatus == 'validated';
         final isCheckinSubmitted = checkinStatus == 'submitted';
 
@@ -83,7 +84,7 @@ class GuestHomeScreen extends StatelessWidget {
 
                       // Status message basado en el estado - Solo si NO está validado
                       if (!isCheckinValidated) ...[
-                        _buildStatusBanner(context, checkinStatus),
+                        _buildStatusBanner(context, checkinStatus, checkinRejectionReason, user.checkinCancellationReason),
                         const SizedBox(height: AppTheme.spacing16),
                       ],
 
@@ -114,7 +115,7 @@ class GuestHomeScreen extends StatelessWidget {
   }
 
   /// Banner de estado que muestra información según el estado del check-in
-  Widget _buildStatusBanner(BuildContext context, String? checkinStatus) {
+  Widget _buildStatusBanner(BuildContext context, String? checkinStatus, String? rejectionReason, String? cancellationReason) {
     final isDark = AppColors.isDarkMode(context);
 
     // Estado validado - Acceso completo
@@ -213,7 +214,7 @@ class GuestHomeScreen extends StatelessWidget {
       );
     }
 
-    // Estado rejected - Rechazado
+    // Estado rejected - Rechazado (puede corregir)
     if (checkinStatus == 'rejected') {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -222,35 +223,203 @@ class GuestHomeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.error_outline, color: AppColors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Check-in rechazado',
-                    style: TextStyle(
-                      color: AppColors.error,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 2),
+                  child: const Icon(Icons.error_outline, color: AppColors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Check-in rechazado',
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Debes corregir los errores y volver a enviarlo.',
+                        style: TextStyle(
+                          color: AppColors.getTextSecondaryColor(context),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            // Mostrar motivo del rechazo si existe
+            if (rejectionReason != null && rejectionReason.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.blackWithAlpha30 : AppColors.whiteWithAlpha90,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Motivo del rechazo:',
+                          style: TextStyle(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      rejectionReason,
+                      style: TextStyle(
+                        color: AppColors.getTextPrimaryColor(context),
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Estado cancelled - Reserva cancelada (NO permite corregir)
+    if (checkinStatus == 'cancelled') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.block, color: AppColors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Reserva cancelada',
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Tu reserva ha sido cancelada.',
+                        style: TextStyle(
+                          color: AppColors.getTextSecondaryColor(context),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            // Mostrar motivo de la cancelación si existe
+            if (cancellationReason != null && cancellationReason.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.blackWithAlpha30 : AppColors.whiteWithAlpha90,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Motivo de la cancelación:',
+                          style: TextStyle(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      cancellationReason,
+                      style: TextStyle(
+                        color: AppColors.getTextPrimaryColor(context),
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            // Añadir aviso de contacto
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.phone, color: AppColors.gold, size: 16),
+                  const SizedBox(width: 8),
                   Text(
-                    'Hay incidencias con tu check-in. Contacta con el personal.',
+                    'Contacta con recepción',
                     style: TextStyle(
-                      color: AppColors.getTextSecondaryColor(context),
-                      fontSize: 12,
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
                     ),
                   ),
                 ],

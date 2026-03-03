@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../shared/widgets/admin_widgets.dart';
@@ -57,6 +57,7 @@ class CheckinsTab extends StatelessWidget {
       ('submitted', 'Por revisar', const Color(0xFFE67E22)),
       ('validated', 'Validados', const Color(0xFF27AE60)),
       ('rejected', 'Rechazados', const Color(0xFFC0392B)),
+      ('cancelled', 'Cancelados', const Color(0xFF7F8C8D)),
     ];
 
     return SizedBox(
@@ -68,7 +69,7 @@ class CheckinsTab extends StatelessWidget {
         itemBuilder: (context, index) {
           final (value, label, accentColor) = filters[index];
           final isSelected = state.checkinsStatusFilter == value ||
-              (state.checkinsStatusFilter == null && value == 'all');
+              (state.checkinsStatusFilter == 'all' && value == 'all');
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -94,7 +95,7 @@ class CheckinsTab extends StatelessWidget {
               onSelected: (selected) {
                 context.read<AdminDashboardBloc>().add(
                       AdminDashboardCheckinsFilterChanged(
-                        value == 'all' ? null : value,
+                        value == 'all' ? 'all' : value,
                       ),
                     );
               },
@@ -153,12 +154,6 @@ class CheckinsTab extends StatelessWidget {
             onTap: checkin.checkinId != null
                 ? () => _navigateToDetail(context, checkin.checkinId!, checkin.bookingCode)
                 : null,
-            onValidate: checkin.checkinStatus == 'submitted' && checkin.checkinId != null
-                ? () => _validateCheckin(context, checkin.checkinId!)
-                : null,
-            onReject: checkin.checkinStatus == 'submitted' && checkin.checkinId != null
-                ? () => _showRejectDialog(context, checkin.checkinId!)
-                : null,
           );
         },
       ),
@@ -175,160 +170,17 @@ class CheckinsTab extends StatelessWidget {
       ),
     );
   }
-
-  Future<void> _validateCheckin(BuildContext context, String checkinId) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        title: const Text('Validar Check-in', style: TextStyle(color: AppColors.white)),
-        content: const Text(
-          '¿Confirmar que el check-in es correcto? La reserva pasará a estado "Checked In".',
-          style: TextStyle(color: AppColors.gray300),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-            child: const Text('Validar', style: TextStyle(color: AppColors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        await Supabase.instance.client.rpc(
-          'validate_checkin',
-          params: {'p_checkin_id': checkinId},
-        );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Check-in validado correctamente'),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.fixed,
-            ),
-          );
-          context.read<AdminDashboardBloc>().add(
-            const AdminDashboardCheckinsLoadRequested(),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.fixed,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _showRejectDialog(BuildContext context, String checkinId) async {
-    final reasonController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        title: const Text('Rechazar Check-in', style: TextStyle(color: AppColors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Indica el motivo del rechazo:',
-              style: TextStyle(color: AppColors.gray300),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonController,
-              style: const TextStyle(color: AppColors.white),
-              decoration: InputDecoration(
-                hintText: 'Ej: Documento ilegible',
-                hintStyle: const TextStyle(color: AppColors.gray500),
-                filled: true,
-                fillColor: AppColors.darkBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.darkBorder),
-                ),
-              ),
-              maxLines: 2,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Rechazar', style: TextStyle(color: AppColors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        await Supabase.instance.client.rpc(
-          'reject_checkin',
-          params: {
-            'p_checkin_id': checkinId,
-            'p_reason': reasonController.text.trim().isEmpty
-                ? 'Sin motivo especificado'
-                : reasonController.text.trim(),
-          },
-        );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Check-in rechazado'),
-              backgroundColor: AppColors.warning,
-              behavior: SnackBarBehavior.fixed,
-            ),
-          );
-          context.read<AdminDashboardBloc>().add(
-            const AdminDashboardCheckinsLoadRequested(),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.fixed,
-            ),
-          );
-        }
-      }
-    }
-  }
 }
 
+/// Tarjeta profesional de check-in con diseño mejorado
 class _CheckinListTile extends StatelessWidget {
   const _CheckinListTile({
     required this.checkin,
     this.onTap,
-    this.onValidate,
-    this.onReject,
   });
 
   final dynamic checkin;
   final VoidCallback? onTap;
-  final VoidCallback? onValidate;
-  final VoidCallback? onReject;
 
   Color _getStatusColor(String? status) {
     switch (status) {
@@ -338,6 +190,8 @@ class _CheckinListTile extends StatelessWidget {
         return const Color(0xFF27AE60);
       case 'rejected':
         return const Color(0xFFC0392B);
+      case 'cancelled':
+        return const Color(0xFF7F8C8D);
       default:
         return AppColors.gray500;
     }
@@ -351,179 +205,226 @@ class _CheckinListTile extends StatelessWidget {
         return 'Validado';
       case 'rejected':
         return 'Rechazado';
+      case 'cancelled':
+        return 'Cancelado';
       default:
         return 'Sin empezar';
+    }
+  }
+
+  IconData _getStatusIcon(String? status) {
+    switch (status) {
+      case 'submitted':
+        return Icons.pending_actions_outlined;
+      case 'validated':
+        return Icons.check_circle_outline;
+      case 'rejected':
+        return Icons.cancel_outlined;
+      case 'cancelled':
+        return Icons.block;
+      default:
+        return Icons.edit_document;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(checkin.checkinStatus);
-    final isSubmitted = checkin.checkinStatus == 'submitted';
+    final statusText = _getStatusText(checkin.checkinStatus);
+    final statusIcon = _getStatusIcon(checkin.checkinStatus);
+    final guestName = checkin.guestFullName.isNotEmpty ? checkin.guestFullName : 'Huésped';
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: BoxDecoration(
-            color: AppColors.darkSurface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.darkBorder),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: statusColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.blackWithAlpha20,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
               children: [
-                // Indicador de color según status (3px de ancho)
+                // Header con estilo gold
                 Container(
-                  width: 3,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                  decoration: const BoxDecoration(
+                    color: AppColors.gold,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      // Icono de estado con fondo de color
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          statusIcon,
+                          size: 20,
+                          color: AppColors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Nombre del huésped
+                      Expanded(
+                        child: Text(
+                          guestName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.darkBackground,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // Badge de estado con fondo de color
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          statusText,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                // Contenido
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Línea 1: Guest name + status
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                checkin.guestFullName.isNotEmpty
-                                    ? checkin.guestFullName
-                                    : 'Huésped',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.white,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                // Cuerpo con información
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Fila 1: Unidad y Código
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _InfoRow(
+                              icon: Icons.apartment_outlined,
+                              label: 'Unidad',
+                              value: checkin.unitName,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                _getStatusText(checkin.checkinStatus),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  color: statusColor,
-                                ),
-                              ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _InfoRow(
+                              icon: Icons.confirmation_number_outlined,
+                              label: 'Reserva',
+                              value: checkin.bookingCode,
+                              isMonospace: true,
+                              valueColor: AppColors.gold,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
+                          ),
+                        ],
+                      ),
 
-                        // Línea 2: Unit name + booking code
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                checkin.unitName,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w300,
-                                  color: AppColors.getTextSecondaryColor(context),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              checkin.bookingCode,
-                              style: const TextStyle(
-                                fontFamily: 'JetBrains Mono',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.gold,
-                              ),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(height: 12),
 
-                        // Línea 3: Docs pendientes si aplica
-                        if (checkin.hasDocsPending) ...[
-                          const SizedBox(height: 4),
-                          Row(
+                      // Fila 2: Fechas
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _InfoRow(
+                              icon: Icons.login,
+                              label: 'Check-in',
+                              value: _formatDate(checkin.checkInDate),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _InfoRow(
+                              icon: Icons.logout,
+                              label: 'Check-out',
+                              value: _formatDate(checkin.checkOutDate),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Alerta de documentos pendientes
+                      if (checkin.hasDocsPending) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: AppColors.warning.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
                             children: [
                               Icon(
                                 Icons.warning_amber_rounded,
-                                size: 14,
+                                size: 18,
                                 color: AppColors.warning,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 8),
                               Text(
                                 '${checkin.docsPending} documentos pendientes',
                                 style: const TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                   color: AppColors.warning,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-
-                        // Botones de acción para check-ins pendientes
-                        if (isSubmitted && (onValidate != null || onReject != null)) ...[
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              if (onValidate != null)
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: onValidate,
-                                    icon: const Icon(Icons.check, size: 16),
-                                    label: const Text('Validar'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.success,
-                                      foregroundColor: AppColors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (onValidate != null && onReject != null)
-                                const SizedBox(width: 8),
-                              if (onReject != null)
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: onReject,
-                                    icon: const Icon(Icons.close, size: 16),
-                                    label: const Text('Rechazar'),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.error,
-                                      side: const BorderSide(color: AppColors.error),
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ],
-                    ),
+                    ],
+                  ),
+                ),
+
+                // Footer con indicador de acción
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Ver detalle',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.gold.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: AppColors.gold.withValues(alpha: 0.8),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -531,6 +432,68 @@ class _CheckinListTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
+    return DateFormat('dd/MM/yyyy').format(date);
+  }
+}
+
+/// Fila de información con icono, etiqueta y valor
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isMonospace = false,
+    this.valueColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isMonospace;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: AppColors.gray500,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.gray500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: isMonospace ? 'JetBrains Mono' : null,
+                  color: valueColor ?? AppColors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

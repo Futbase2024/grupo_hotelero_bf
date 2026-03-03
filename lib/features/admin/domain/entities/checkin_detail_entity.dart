@@ -157,14 +157,23 @@ class CheckinDetailEntity extends Equatable {
     this.validatedAt,
     this.rejectedAt,
     this.rejectionReason,
+    this.cancelledAt,
+    this.cancellationReason,
     required this.bookingId,
     required this.bookingCode,
+    required this.unitId,
     required this.unitName,
     required this.propertyName,
     required this.checkinDate,
     required this.checkoutDate,
     required this.guests,
     required this.documents,
+    // Campos de acceso
+    this.boxCode,
+    this.accessInstructions,
+    this.wifiNetwork,
+    this.wifiPassword,
+    this.fullAddress,
   });
 
   final String checkinId;
@@ -174,14 +183,23 @@ class CheckinDetailEntity extends Equatable {
   final DateTime? validatedAt;
   final DateTime? rejectedAt;
   final String? rejectionReason;
+  final DateTime? cancelledAt;
+  final String? cancellationReason;
   final String bookingId;
   final String bookingCode;
+  final String unitId;
   final String unitName;
   final String propertyName;
   final DateTime checkinDate;
   final DateTime checkoutDate;
   final List<CheckinGuestEntity> guests;
   final List<CheckinDocumentEntity> documents;
+  // Campos de acceso
+  final String? boxCode;
+  final String? accessInstructions;
+  final String? wifiNetwork;
+  final String? wifiPassword;
+  final String? fullAddress;
 
   /// Si el check-in está pendiente de validación
   bool get isPending => checkinStatus == 'submitted';
@@ -191,6 +209,9 @@ class CheckinDetailEntity extends Equatable {
 
   /// Si el check-in está rechazado
   bool get isRejected => checkinStatus == 'rejected';
+
+  /// Si el check-in está cancelado
+  bool get isCancelled => checkinStatus == 'cancelled';
 
   /// Huésped titular
   CheckinGuestEntity? get primaryGuest {
@@ -233,8 +254,13 @@ class CheckinDetailEntity extends Equatable {
           ? DateTime.parse(json['rejected_at'] as String)
           : null,
       rejectionReason: json['rejection_reason'] as String?,
+      cancelledAt: json['cancelled_at'] != null
+          ? DateTime.parse(json['cancelled_at'] as String)
+          : null,
+      cancellationReason: json['cancellation_reason'] as String?,
       bookingId: json['booking_id'] as String? ?? '',
       bookingCode: json['booking_code'] as String? ?? '',
+      unitId: json['unit_id'] as String? ?? '',
       unitName: json['unit_name'] as String? ?? '',
       propertyName: json['property_name'] as String? ?? '',
       checkinDate: json['checkin_date'] != null
@@ -245,6 +271,12 @@ class CheckinDetailEntity extends Equatable {
           : DateTime.now(),
       guests: guests,
       documents: documents,
+      // Campos de acceso
+      boxCode: json['box_code'] as String?,
+      accessInstructions: json['access_instructions'] as String?,
+      wifiNetwork: json['wifi_network'] as String?,
+      wifiPassword: json['wifi_password'] as String?,
+      fullAddress: json['full_address'] as String?,
     );
   }
 
@@ -257,14 +289,23 @@ class CheckinDetailEntity extends Equatable {
       'validated_at': validatedAt?.toIso8601String(),
       'rejected_at': rejectedAt?.toIso8601String(),
       'rejection_reason': rejectionReason,
+      'cancelled_at': cancelledAt?.toIso8601String(),
+      'cancellation_reason': cancellationReason,
       'booking_id': bookingId,
       'booking_code': bookingCode,
+      'unit_id': unitId,
       'unit_name': unitName,
       'property_name': propertyName,
       'checkin_date': checkinDate.toIso8601String(),
       'checkout_date': checkoutDate.toIso8601String(),
       'guest_data': guests.map((g) => g.toJson()).toList(),
       'documents_data': documents.map((d) => d.toJson()).toList(),
+      // Campos de acceso
+      'box_code': boxCode,
+      'access_instructions': accessInstructions,
+      'wifi_network': wifiNetwork,
+      'wifi_password': wifiPassword,
+      'full_address': fullAddress,
     };
   }
 
@@ -277,13 +318,21 @@ class CheckinDetailEntity extends Equatable {
         validatedAt,
         rejectedAt,
         rejectionReason,
+        cancelledAt,
+        cancellationReason,
         bookingId,
         bookingCode,
+        unitId,
         unitName,
         propertyName,
         checkinDate,
         checkoutDate,
         guests,
         documents,
+        boxCode,
+        accessInstructions,
+        wifiNetwork,
+        wifiPassword,
+        fullAddress,
       ];
 }

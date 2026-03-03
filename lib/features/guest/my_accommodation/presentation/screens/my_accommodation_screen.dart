@@ -16,6 +16,7 @@ import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/property_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/repositories/properties_repository.dart';
 import 'package:bf_stay/shared/utils/unit_image_helper.dart';
+import 'package:bf_stay/features/guest/my_accommodation/presentation/screens/access_instructions_screen.dart';
 
 /// Pantalla de Mi Alojamiento para el huésped
 class MyAccommodationScreen extends StatefulWidget {
@@ -220,13 +221,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             const SizedBox(height: AppTheme.spacing16),
           ],
 
-          // Instrucciones de acceso
-          if (_unit?.accessInstructions != null && _unit!.accessInstructions!.isNotEmpty) ...[
-            _buildInfoCard(
-              icon: Icons.info_outline,
-              title: 'Instrucciones de acceso',
-              content: _unit!.accessInstructions!,
-            ),
+          // Instrucciones de acceso - Botón para ver instrucciones completas
+          if (_areKeysAvailable && _booking != null && _unit != null && _property != null) ...[
+            _buildAccessInstructionsButton(),
             const SizedBox(height: AppTheme.spacing16),
           ],
         ] else ...[
@@ -611,6 +608,78 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Botón para ver las instrucciones de acceso completas
+  Widget _buildAccessInstructionsButton() {
+    return GestureDetector(
+      onTap: () {
+        if (_booking != null && _unit != null && _property != null) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AccessInstructionsScreen(
+                booking: _booking!,
+                unit: _unit!,
+                property: _property!,
+              ),
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing20),
+        decoration: BoxDecoration(
+          color: AppColors.gold.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          border: Border.all(color: AppColors.gold, width: 2),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.gold,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.info_outline,
+                color: AppColors.black,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Instrucciones de Acceso',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.getTextPrimaryColor(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Toca para ver toda la información de acceso',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.getTextSecondaryColor(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: AppColors.gold,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }

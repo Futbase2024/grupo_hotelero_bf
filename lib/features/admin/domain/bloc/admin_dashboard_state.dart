@@ -15,7 +15,7 @@ class AdminDashboardState extends Equatable {
     this.unreadNotificationsCount = 0,
     this.bookingsStatusFilter,
     this.bookingsSearchQuery,
-    this.checkinsStatusFilter,
+    this.checkinsStatusFilter = 'submitted',
     this.isLoading = false,
     this.isLoadingBookings = false,
     this.isLoadingCheckins = false,
@@ -113,8 +113,9 @@ class AdminDashboardState extends Equatable {
           clearFilters ? null : (bookingsStatusFilter ?? this.bookingsStatusFilter),
       bookingsSearchQuery:
           clearFilters ? null : (bookingsSearchQuery ?? this.bookingsSearchQuery),
-      checkinsStatusFilter:
-          clearFilters ? null : (checkinsStatusFilter ?? this.checkinsStatusFilter),
+      checkinsStatusFilter: clearFilters
+          ? null
+          : (checkinsStatusFilter ?? this.checkinsStatusFilter),
       isLoading: isLoading ?? this.isLoading,
       isLoadingBookings: isLoadingBookings ?? this.isLoadingBookings,
       isLoadingCheckins: isLoadingCheckins ?? this.isLoadingCheckins,

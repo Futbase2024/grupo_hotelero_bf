@@ -51,6 +51,9 @@ class UnitEntity extends Equatable {
     this.boxLocationText,
     this.boxCode,
     this.accessInstructions,
+    // Campos de WiFi
+    this.wifiNetwork,
+    this.wifiPassword,
     // Campos de dirección
     this.addressLine1,
     this.addressLine2,
@@ -72,6 +75,10 @@ class UnitEntity extends Equatable {
   final String? boxLocationText;
   final String? boxCode;
   final String? accessInstructions;
+
+  // Campos de WiFi
+  final String? wifiNetwork;
+  final String? wifiPassword;
 
   // Campos de dirección
   final String? addressLine1;
@@ -95,6 +102,10 @@ class UnitEntity extends Equatable {
     String? boxLocationText,
     String? boxCode,
     String? accessInstructions,
+    // WiFi
+    String? wifiNetwork,
+    String? wifiPassword,
+    // Dirección
     String? addressLine1,
     String? addressLine2,
     String? neighborhood,
@@ -115,6 +126,10 @@ class UnitEntity extends Equatable {
       boxLocationText: boxLocationText ?? this.boxLocationText,
       boxCode: boxCode ?? this.boxCode,
       accessInstructions: accessInstructions ?? this.accessInstructions,
+      // WiFi
+      wifiNetwork: wifiNetwork ?? this.wifiNetwork,
+      wifiPassword: wifiPassword ?? this.wifiPassword,
+      // Dirección
       addressLine1: addressLine1 ?? this.addressLine1,
       addressLine2: addressLine2 ?? this.addressLine2,
       neighborhood: neighborhood ?? this.neighborhood,
@@ -139,6 +154,9 @@ class UnitEntity extends Equatable {
       boxLocationText: json['box_location_text'] as String?,
       boxCode: json['box_code'] as String?,
       accessInstructions: json['access_instructions'] as String?,
+      // Campos de WiFi
+      wifiNetwork: json['wifi_network'] as String?,
+      wifiPassword: json['wifi_password'] as String?,
       // Campos de dirección
       addressLine1: json['address_line1'] as String?,
       addressLine2: json['address_line2'] as String?,
@@ -164,6 +182,9 @@ class UnitEntity extends Equatable {
       'box_location_text': boxLocationText,
       'box_code': boxCode,
       'access_instructions': accessInstructions,
+      // Campos de WiFi
+      'wifi_network': wifiNetwork,
+      'wifi_password': wifiPassword,
       // Campos de dirección
       'address_line1': addressLine1,
       'address_line2': addressLine2,
@@ -188,6 +209,10 @@ class UnitEntity extends Equatable {
         boxLocationText,
         boxCode,
         accessInstructions,
+        // WiFi
+        wifiNetwork,
+        wifiPassword,
+        // Dirección
         addressLine1,
         addressLine2,
         neighborhood,
