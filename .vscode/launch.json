@@ -1,0 +1,126 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter: Debug (Auto)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Flutter: iPhone 15 Pro",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "iPhone 15 Pro"
+    },
+    {
+      "name": "Flutter: iPhone 15",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "iPhone 15"
+    },
+    {
+      "name": "Flutter: iPad Pro",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "iPad Pro (12.9-inch) (6th generation)"
+    },
+    {
+      "name": "Flutter: Android Emulator",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "sdk_gphone64_arm64"
+    },
+    {
+      "name": "Flutter: Chrome (Web)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome"
+    },
+    {
+      "name": "Flutter: Edge (Web)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "edge"
+    },
+    {
+      "name": "Flutter: macOS",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "macos"
+    },
+    {
+      "name": "Flutter: Profile Mode",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "Flutter: Release Mode",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "flutterMode": "release"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Flutter: iOS + Android",
+      "configurations": [
+        "Flutter: iPhone 15 Pro",
+        "Flutter: Android Emulator"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Flutter: iPhone 15 Pro + iPhone 15",
+      "configurations": [
+        "Flutter: iPhone 15 Pro",
+        "Flutter: iPhone 15"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Flutter: iOS + Web",
+      "configurations": [
+        "Flutter: iPhone 15 Pro",
+        "Flutter: Chrome (Web)"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Flutter: All Mobile",
+      "configurations": [
+        "Flutter: iPhone 15 Pro",
+        "Flutter: iPhone 15",
+        "Flutter: Android Emulator"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Flutter: Web Browsers",
+      "configurations": [
+        "Flutter: Chrome (Web)",
+        "Flutter: Edge (Web)"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Flutter: iOS + Android + Web",
+      "configurations": [
+        "Flutter: iPhone 15 Pro",
+        "Flutter: Android Emulator",
+        "Flutter: Chrome (Web)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

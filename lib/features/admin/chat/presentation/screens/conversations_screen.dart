@@ -56,14 +56,16 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       final user = authState.user;
       _Debug.log('User: ${user.id}, role: ${user.role}, propertyId: ${user.propertyId}');
 
-      if (user.propertyId != null && user.propertyId!.isNotEmpty) {
-        // Si tiene propertyId, cargar conversaciones de la propiedad
-        _Debug.log('Cargando conversaciones por propertyId: ${user.propertyId}');
+      // Validar que propertyId no sea null, vacío ni solo espacios
+      final propertyId = user.propertyId?.trim();
+      if (propertyId != null && propertyId.isNotEmpty) {
+        // Si tiene propertyId válido, cargar conversaciones de la propiedad
+        _Debug.log('Cargando conversaciones por propertyId: $propertyId');
         _conversationsBloc.add(
-          ConversationsStarted(propertyId: user.propertyId!),
+          ConversationsStarted(propertyId: propertyId),
         );
       } else {
-        // Sin propertyId, cargar conversaciones donde el usuario es participante
+        // Sin propertyId válido, cargar conversaciones donde el usuario es participante
         _Debug.log('Sin propertyId - cargando conversaciones por userId: ${user.id}');
         _conversationsBloc.add(
           ConversationsLoadForUser(userId: user.id),
@@ -234,9 +236,16 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               final authState = context.read<AuthBloc>().state;
               if (authState is AuthAuthenticated) {
                 final user = authState.user;
-                if (user.propertyId != null) {
+                // Validar que propertyId no sea null, vacío ni solo espacios
+                final propertyId = user.propertyId?.trim();
+                if (propertyId != null && propertyId.isNotEmpty) {
                   _conversationsBloc.add(
-                    ConversationsStarted(propertyId: user.propertyId!),
+                    ConversationsStarted(propertyId: propertyId),
+                  );
+                } else {
+                  // Sin propertyId válido, cargar por userId
+                  _conversationsBloc.add(
+                    ConversationsLoadForUser(userId: user.id),
                   );
                 }
               }

@@ -45,6 +45,8 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Mostrar nombre del remitente si no es mi mensaje
+            if (!isFromMe) _buildSenderName(context),
             if (message.isImage) ...[
               _buildImageContent(context),
             ] else ...[
@@ -64,6 +66,19 @@ class MessageBubble extends StatelessWidget {
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: AppColors.black,
           ),
+    );
+  }
+
+  Widget _buildSenderName(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(
+        message.displaySenderName,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: message.isFromStaff ? AppColors.gold : AppColors.gray600,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
     );
   }
 
@@ -109,12 +124,34 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildTimeLabel(BuildContext context) {
-    return Text(
-      message.formattedTime,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.black.withValues(alpha: 0.7),
-            fontSize: 10,
-          ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          message.formattedTime,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.black.withValues(alpha: 0.7),
+                fontSize: 10,
+              ),
+        ),
+        if (isFromMe) ...[
+          const SizedBox(width: 4),
+          _buildReadIndicator(context),
+        ],
+      ],
+    );
+  }
+
+  /// Indicador visual de lectura (✓✓)
+  Widget _buildReadIndicator(BuildContext context) {
+    final isRead = message.isRead;
+
+    return Icon(
+      isRead ? Icons.done_all : Icons.done,
+      size: 14,
+      color: isRead
+          ? AppColors.success
+          : AppColors.black.withValues(alpha: 0.5),
     );
   }
 }

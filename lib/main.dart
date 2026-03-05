@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'core/config/supabase_config.dart';
 import 'core/config/url_strategy.dart'
     if (dart.library.html) 'core/config/url_strategy_web.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
+import 'core/services/fcm_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/cubit/theme_cubit.dart';
 import 'features/auth/domain/bloc/auth_bloc.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/guest/alojamientos/domain/bloc/alojamientos_bloc.dart';
 import 'features/guest/alojamientos/domain/repositories/properties_repository.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,11 +32,21 @@ void main() async {
     debugPrint('dotenv not available, using compile-time variables');
   }
 
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  debugPrint('✅ Firebase initialized');
+
   // Initialize Supabase
   await SupabaseConfig.initialize();
 
   // Configure dependencies
   await configureDependencies();
+
+  // Initialize FCM Service
+  await FcmService().initialize();
+  debugPrint('✅ FCM Service initialized');
 
   runApp(const BFStayApp());
 }

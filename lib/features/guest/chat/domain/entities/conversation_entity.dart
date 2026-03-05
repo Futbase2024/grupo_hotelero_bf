@@ -171,7 +171,31 @@ class ConversationEntity extends Equatable {
     }
   }
 
+  /// Devuelve el nombre del otro participante según el contexto
+  /// - Si el usuario actual es guest → mostrar "Grupo H. BF"
+  /// - Si el usuario actual es staff → mostrar el nombre del huésped
+  String getOtherParticipantName(String currentUserId) {
+    // Encontrar al otro participante (que no sea el usuario actual)
+    try {
+      final otherParticipant = participants.firstWhere(
+        (p) => p.userId != currentUserId,
+      );
+
+      // Si el otro participante es staff, mostrar "Grupo H. BF"
+      if (otherParticipant.isStaff) {
+        return 'Grupo H. BF';
+      }
+
+      // Si es guest, mostrar su nombre
+      return otherParticipant.displayName;
+    } catch (_) {
+      // Si no hay otro participante, mostrar un valor por defecto
+      return 'Chat';
+    }
+  }
+
   /// Devuelve el nombre del otro participante (staff para guests, guest para staff)
+  /// @deprecated Usar getOtherParticipantName(currentUserId) en su lugar
   String get otherParticipantName {
     // Para guests, mostrar "Recepción"
     // Para staff, mostrar el nombre del huésped

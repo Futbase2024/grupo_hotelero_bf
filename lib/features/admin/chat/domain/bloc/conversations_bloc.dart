@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,6 +70,16 @@ class ConversationsSelected extends ConversationsEvent {
   List<Object?> get props => [conversation];
 }
 
+/// Evento interno cuando el realtime actualiza las conversaciones
+class _ConversationsUpdated extends ConversationsEvent {
+  const _ConversationsUpdated(this.conversations);
+
+  final List<ConversationEntity> conversations;
+
+  @override
+  List<Object?> get props => [conversations];
+}
+
 // ============== STATES ==============
 
 /// Estados base del ConversationsBloc
@@ -93,12 +105,15 @@ class ConversationsLoaded extends ConversationsState {
   const ConversationsLoaded({
     required this.conversations,
     required this.propertyId,
+    this.userId,
     this.isRefreshing = false,
     this.selectedConversation,
   });
 
   final List<ConversationEntity> conversations;
   final String propertyId;
+  /// ID del usuario actual (para refrescar cuando no hay propertyId)
+  final String? userId;
   final bool isRefreshing;
   final ConversationEntity? selectedConversation;
 
@@ -139,6 +154,7 @@ class ConversationsLoaded extends ConversationsState {
   List<Object?> get props => [
         conversations,
         propertyId,
+        userId,
         isRefreshing,
         selectedConversation,
       ];
@@ -166,9 +182,12 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     on<ConversationsLoadForUser>(_onLoadForUser);
     on<ConversationsRefreshRequested>(_onRefreshRequested);
     on<ConversationsSelected>(_onSelected);
+    on<_ConversationsUpdated>(_onConversationsUpdated);
   }
 
   final ChatRepository _chatRepository;
+
+  StreamSubscription<List<ConversationEntity>>? _conversationsSubscription;
 
   /// Maneja el evento de inicio
   Future<void> _onStarted(
@@ -202,11 +221,35 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
       emit(ConversationsLoaded(
         conversations: currentState.conversations,
         propertyId: currentState.propertyId,
+        userId: currentState.userId,
         isRefreshing: true,
         selectedConversation: currentState.selectedConversation,
       ));
 
-      await _loadConversationsByProperty(emit, currentState.propertyId);
+      // Si hay propertyId válido, refrescar por propiedad
+      // Si no hay propertyId pero sí userId, refrescar por usuario
+      if (currentState.propertyId.isNotEmpty) {
+        await _loadConversationsByProperty(
+          emit,
+          currentState.propertyId,
+          userId: currentState.userId,
+        );
+      } else if (currentState.userId != null && currentState.userId!.isNotEmpty) {
+        await _loadConversationsForUser(
+          emit,
+          userId: currentState.userId!,
+          propertyId: null,
+        );
+      } else {
+        // No podemos refrescar sin propertyId ni userId, mostrar estado actual
+        emit(ConversationsLoaded(
+          conversations: currentState.conversations,
+          propertyId: currentState.propertyId,
+          userId: currentState.userId,
+          isRefreshing: false,
+          selectedConversation: currentState.selectedConversation,
+        ));
+      }
     }
   }
 
@@ -220,7 +263,25 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
       emit(ConversationsLoaded(
         conversations: currentState.conversations,
         propertyId: currentState.propertyId,
+        userId: currentState.userId,
         selectedConversation: event.conversation,
+      ));
+    }
+  }
+
+  /// Maneja actualizaciones del realtime
+  void _onConversationsUpdated(
+    _ConversationsUpdated event,
+    Emitter<ConversationsState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is ConversationsLoaded) {
+      _Debug.log('Realtime: actualizando ${event.conversations.length} conversaciones');
+      emit(ConversationsLoaded(
+        conversations: event.conversations,
+        propertyId: currentState.propertyId,
+        userId: currentState.userId,
+        selectedConversation: currentState.selectedConversation,
       ));
     }
   }
@@ -228,8 +289,9 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
   /// Carga conversaciones por propiedad
   Future<void> _loadConversationsByProperty(
     Emitter<ConversationsState> emit,
-    String propertyId,
-  ) async {
+    String propertyId, {
+    String? userId,
+  }) async {
     try {
       _Debug.log('Cargando conversaciones por propiedad: $propertyId');
       final conversations = await _chatRepository.getConversationsByProperty(
@@ -237,9 +299,15 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
       );
       _Debug.log('Conversaciones cargadas: ${conversations.length}');
 
+      // Iniciar suscripción realtime si hay userId
+      if (userId != null && userId.isNotEmpty) {
+        _startRealtimeSubscription(userId: userId, propertyId: propertyId);
+      }
+
       emit(ConversationsLoaded(
         conversations: conversations,
         propertyId: propertyId,
+        userId: userId,
       ));
     } catch (e) {
       _Debug.error('Error en _loadConversationsByProperty', e);
@@ -261,14 +329,41 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
       );
       _Debug.log('Conversaciones cargadas: ${conversations.length}');
 
+      // Iniciar suscripción realtime
+      _startRealtimeSubscription(userId: userId, propertyId: propertyId);
+
       emit(ConversationsLoaded(
         conversations: conversations,
         propertyId: propertyId ?? '',
+        userId: userId,
       ));
     } catch (e) {
       _Debug.error('Error en _loadConversationsForUser', e);
       emit(ConversationsError(message: _getErrorMessage(e)));
     }
+  }
+
+  /// Inicia la suscripción realtime para actualizaciones de conversaciones
+  void _startRealtimeSubscription({
+    required String userId,
+    String? propertyId,
+  }) {
+    // Cancelar suscripción anterior si existe
+    _conversationsSubscription?.cancel();
+
+    _Debug.log('Iniciando suscripción realtime para userId: $userId');
+
+    _conversationsSubscription = _chatRepository
+        .watchUserConversations(userId: userId, propertyId: propertyId)
+        .listen(
+          (conversations) {
+            _Debug.log('Realtime: recibidas ${conversations.length} conversaciones');
+            add(_ConversationsUpdated(conversations));
+          },
+          onError: (error) {
+            _Debug.error('Error en suscripción realtime', error);
+          },
+        );
   }
 
   /// Obtiene un mensaje de error amigable
@@ -285,5 +380,11 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     }
 
     return 'Ha ocurrido un error al cargar las conversaciones.';
+  }
+
+  @override
+  Future<void> close() {
+    _conversationsSubscription?.cancel();
+    return super.close();
   }
 }

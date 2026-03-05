@@ -23,6 +23,24 @@ class ChatDatasource {
     }
   }
 
+  /// Asegura que hay una sesión activa de Supabase
+  /// Si no hay sesión, crea una sesión anónima
+  Future<void> _ensureSession() async {
+    final currentSession = _client.auth.currentSession;
+    if (currentSession == null) {
+      _log('No hay sesión activa, creando sesión anónima...');
+      try {
+        await _client.auth.signInAnonymously();
+        _log('Sesión anónima creada correctamente');
+      } catch (e) {
+        _logError('Error creando sesión anónima', e);
+        rethrow;
+      }
+    } else {
+      _log('Sesión activa encontrada: ${currentSession.user.id}');
+    }
+  }
+
   /// Obtiene o crea una conversación para un booking
   Future<ConversationEntity> getOrCreateConversation({
     required String propertyId,
@@ -137,6 +155,18 @@ class ChatDatasource {
     required String guestName,
   }) async {
     try {
+      // Asegurar que hay una sesión activa antes de hacer el insert
+      await _ensureSession();
+
+      // IMPORTANTE: Usar el ID de la sesión ACTUAL de Supabase
+      // para que coincida con auth.uid() en las políticas RLS
+      final currentAuthUserId = _client.auth.currentUser?.id;
+      if (currentAuthUserId == null) {
+        throw Exception('No se pudo obtener el ID de usuario de la sesión actual');
+      }
+
+      _log('_createConversation - Usando auth.uid(): $currentAuthUserId (guestUserId pasado: $guestUserId)');
+
       // Crear la conversación
       _log('_createConversation - insertando en conversations...');
       final conversationResponse = await _client
@@ -151,12 +181,12 @@ class ChatDatasource {
       final conversationId = conversationResponse['id'] as String;
       _log('_createConversation - conversación creada: $conversationId');
 
-      // Añadir al huésped como participante
+      // Añadir al huésped como participante usando el ID de la sesión actual
       // Nota: El trigger de BD añade automáticamente los staff/admin de la propiedad
       _log('_createConversation - insertando huésped como participante...');
       await _client.from(SupabaseTables.conversationParticipants).insert({
         'conversation_id': conversationId,
-        'user_id': guestUserId,
+        'user_id': currentAuthUserId, // Usar el ID de la sesión actual
         'role': 'guest',
       });
       _log('_createConversation - participante insertado');
@@ -182,11 +212,28 @@ class ChatDatasource {
         ''')
         .eq('conversation_id', conversationId);
 
-    final participants = (participantsResponse as List).map((p) {
-      return ParticipantEntity.fromJson(p);
+    // Obtener IDs de participantes para buscar sus nombres
+    final participantUserIds = (participantsResponse as List)
+        .map((p) => p['user_id'] as String)
+        .toList();
+
+    // Obtener información de todos los participantes en batch
+    final participantsInfo = await _getSendersInfo(participantUserIds);
+
+    // Mapear participantes incluyendo sus nombres
+    final participants = participantsResponse.map((p) {
+      final userId = p['user_id'] as String;
+      final info = participantsInfo[userId];
+
+      final flattenedMap = Map<String, dynamic>.from(p);
+      flattenedMap['user_name'] = info?['full_name'];
+      // Usar el email de auth.users si está disponible
+      flattenedMap['user_email'] = null;
+
+      return ParticipantEntity.fromJson(flattenedMap);
     }).toList();
 
-    // Obtener último mensaje
+    // Obtener último mensaje (sin joins, la relación es con auth.users)
     final lastMessageResponse = await _client
         .from(SupabaseTables.messages)
         .select('''
@@ -195,7 +242,8 @@ class ChatDatasource {
           sender_user_id,
           msg_type,
           content,
-          created_at
+          created_at,
+          read_at
         ''')
         .eq('conversation_id', conversationId)
         .order('created_at', ascending: false)
@@ -204,7 +252,15 @@ class ChatDatasource {
 
     MessageEntity? lastMessage;
     if (lastMessageResponse != null) {
-      lastMessage = MessageEntity.fromJson(lastMessageResponse);
+      // Obtener info del remitente
+      final senderUserId = lastMessageResponse['sender_user_id'] as String;
+      final senderInfo = await _getSenderInfo(senderUserId);
+
+      final flattenedMap = Map<String, dynamic>.from(lastMessageResponse);
+      flattenedMap['sender_name'] = senderInfo['full_name'];
+      flattenedMap['sender_role'] = senderInfo['role'];
+
+      lastMessage = MessageEntity.fromJson(flattenedMap);
     }
 
     return ConversationEntity(
@@ -320,17 +376,21 @@ class ChatDatasource {
   }) async {
     List<dynamic> response;
 
+    // Query básica sin joins (la relación es con auth.users, no con profiles)
+    final selectQuery = '''
+      id,
+      conversation_id,
+      sender_user_id,
+      msg_type,
+      content,
+      created_at,
+      read_at
+    ''';
+
     if (before != null) {
       response = await _client
           .from(SupabaseTables.messages)
-          .select('''
-            id,
-            conversation_id,
-            sender_user_id,
-            msg_type,
-            content,
-            created_at
-          ''')
+          .select(selectQuery)
           .eq('conversation_id', conversationId)
           .lt('created_at', before.toIso8601String())
           .order('created_at', ascending: true)
@@ -338,20 +398,62 @@ class ChatDatasource {
     } else {
       response = await _client
           .from(SupabaseTables.messages)
-          .select('''
-            id,
-            conversation_id,
-            sender_user_id,
-            msg_type,
-            content,
-            created_at
-          ''')
+          .select(selectQuery)
           .eq('conversation_id', conversationId)
           .order('created_at', ascending: true)
           .limit(limit);
     }
 
-    return response.map((m) => MessageEntity.fromJson(m)).toList();
+    // Obtener IDs únicos de remitentes para consulta batch
+    final senderIds = response
+        .map((m) => m['sender_user_id'] as String)
+        .toSet()
+        .toList();
+
+    // Obtener información de todos los remitentes en batch
+    final sendersInfo = await _getSendersInfo(senderIds);
+
+    // Mapear la respuesta incluyendo los datos del remitente
+    return response.map((m) {
+      final senderUserId = m['sender_user_id'] as String;
+      final senderInfo = sendersInfo[senderUserId];
+
+      final flattenedMap = Map<String, dynamic>.from(m);
+      flattenedMap['sender_name'] = senderInfo?['full_name'];
+      flattenedMap['sender_role'] = senderInfo?['role'];
+
+      return MessageEntity.fromJson(flattenedMap);
+    }).toList();
+  }
+
+  /// Obtiene información de múltiples remitentes en batch usando RPC
+  Future<Map<String, Map<String, String?>>> _getSendersInfo(List<String> userIds) async {
+    if (userIds.isEmpty) return {};
+
+    try {
+      // Usar función RPC con SECURITY DEFINER para evitar problemas de RLS
+      final response = await _client.rpc(
+        'get_senders_info',
+        params: {'user_ids': userIds},
+      );
+
+      if (response == null || response is! List) return {};
+
+      // Crear mapa de resultados
+      final result = <String, Map<String, String?>>{};
+      for (final data in response) {
+        final userId = data['user_id'] as String;
+        result[userId] = {
+          'full_name': data['full_name'] as String?,
+          'role': data['role'] as String?,
+        };
+      }
+
+      return result;
+    } catch (e) {
+      _logError('Error obteniendo info de remitentes', e);
+      return {};
+    }
   }
 
   /// Envía un mensaje de texto
@@ -397,6 +499,8 @@ class ChatDatasource {
   /// Suscribe a nuevos mensajes en tiempo real usando Supabase Realtime
   Stream<MessageEntity> watchMessages(String conversationId) {
     // Usar el stream nativo de Supabase para la tabla messages
+    // Nota: El stream no soporta joins, así que obtenemos datos básicos
+    // y luego enriquecemos con el nombre del remitente
     return _client
         .from(SupabaseTables.messages)
         .stream(primaryKey: ['id'])
@@ -406,7 +510,16 @@ class ChatDatasource {
           // Obtener solo el último mensaje nuevo
           if (data.isNotEmpty) {
             final lastRecord = data.last;
-            return MessageEntity.fromJson(lastRecord);
+
+            // Enriquecer con datos del remitente
+            final senderUserId = lastRecord['sender_user_id'] as String;
+            final senderInfo = await _getSenderInfo(senderUserId);
+
+            final flattenedMap = Map<String, dynamic>.from(lastRecord);
+            flattenedMap['sender_name'] = senderInfo['full_name'];
+            flattenedMap['sender_role'] = senderInfo['role'];
+
+            return MessageEntity.fromJson(flattenedMap);
           }
           // Retornar null si no hay datos, pero el stream necesita un valor
           // Usamos un mensaje vacío que será filtrado en el BLoC
@@ -422,22 +535,132 @@ class ChatDatasource {
         .where((message) => message.id.isNotEmpty); // Filtrar mensajes vacíos
   }
 
-  /// Marca mensajes como leídos (implementación futura con tabla de read_status)
+  /// Obtiene información del remitente (nombre y rol) usando RPC
+  Future<Map<String, String?>> _getSenderInfo(String userId) async {
+    try {
+      // Usar función RPC con SECURITY DEFINER para evitar problemas de RLS
+      final response = await _client.rpc(
+        'get_senders_info',
+        params: {'user_ids': [userId]},
+      );
+
+      if (response != null && response is List && response.isNotEmpty) {
+        final data = response.first;
+        return {
+          'full_name': data['full_name'] as String?,
+          'role': data['role'] as String?,
+        };
+      }
+
+      return {'full_name': null, 'role': null};
+    } catch (e) {
+      _logError('Error obteniendo info del remitente', e);
+      return {'full_name': null, 'role': null};
+    }
+  }
+
+  /// Suscribe a cambios en las conversaciones de un usuario en tiempo real
+  /// Incluye actualización de unread_count y último mensaje
+  Stream<List<ConversationEntity>> watchUserConversations({
+    required String userId,
+    String? propertyId,
+  }) {
+    _log('watchUserConversations - userId: $userId, propertyId: $propertyId');
+
+    // Obtener conversation_ids del usuario
+    return _client
+        .from(SupabaseTables.conversationParticipants)
+        .stream(primaryKey: ['conversation_id', 'user_id'])
+        .eq('user_id', userId)
+        .asyncMap((participantData) async {
+          if (participantData.isEmpty) return <ConversationEntity>[];
+
+          final conversationIds = (participantData as List)
+              .map((p) => p['conversation_id'] as String)
+              .toList();
+
+          _log('watchUserConversations - ${conversationIds.length} conversaciones');
+
+          // Cargar conversaciones completas
+          final conversations = <ConversationEntity>[];
+          for (final convId in conversationIds) {
+            final conv = await getConversation(convId);
+            if (conv != null) {
+              // Filtrar por propertyId si se especifica
+              if (propertyId == null || conv.propertyId == propertyId) {
+                conversations.add(conv);
+              }
+            }
+          }
+
+          // Ordenar por último mensaje
+          conversations.sort((a, b) {
+            if (a.lastMessage != null && b.lastMessage != null) {
+              return b.lastMessage!.createdAt.compareTo(a.lastMessage!.createdAt);
+            }
+            if (a.lastMessage != null) return -1;
+            if (b.lastMessage != null) return 1;
+            return b.createdAt.compareTo(a.createdAt);
+          });
+
+          return conversations;
+        });
+  }
+
+  /// Marca mensajes como leídos
+  /// Actualiza unread_count a 0 y marca los mensajes como leídos
   Future<void> markAsRead({
     required String conversationId,
     required String userId,
   }) async {
-    // Por ahora no implementamos tracking de lectura
-    // Se podría añadir una tabla message_read_status
+    _log('markAsRead - conversationId: $conversationId, userId: $userId');
+
+    try {
+      // 1. Actualizar unread_count a 0 y last_read_at en conversation_participants
+      await _client
+          .from(SupabaseTables.conversationParticipants)
+          .update({
+            'unread_count': 0,
+            'last_read_at': DateTime.now().toIso8601String(),
+          })
+          .eq('conversation_id', conversationId)
+          .eq('user_id', userId);
+
+      // 2. Marcar mensajes como leídos (los que no son del usuario y no están leídos)
+      await _client
+          .from(SupabaseTables.messages)
+          .update({'read_at': DateTime.now().toIso8601String()})
+          .eq('conversation_id', conversationId)
+          .neq('sender_user_id', userId)
+          .filter('read_at', 'is', null);
+
+      _log('markAsRead - mensajes marcados como leídos');
+    } catch (e) {
+      _logError('Error en markAsRead', e);
+      rethrow;
+    }
   }
 
-  /// Obtiene el conteo de mensajes no leídos
+  /// Obtiene el conteo de mensajes no leídos para un usuario en una conversación
   Future<int> getUnreadCount({
     required String conversationId,
     required String userId,
   }) async {
-    // Por ahora retorna 0, implementar con tabla de read_status
-    return 0;
+    try {
+      final response = await _client
+          .from(SupabaseTables.conversationParticipants)
+          .select('unread_count')
+          .eq('conversation_id', conversationId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      final count = response?['unread_count'] as int? ?? 0;
+      _log('getUnreadCount - count: $count');
+      return count;
+    } catch (e) {
+      _logError('Error en getUnreadCount', e);
+      return 0;
+    }
   }
 
   /// Cancela suscripciones (no-op con stream nativo de Supabase)

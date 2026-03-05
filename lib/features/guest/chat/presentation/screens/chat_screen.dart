@@ -118,7 +118,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       title: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
-          final title = state is ChatLoaded ? state.otherParticipantName : 'Recepción';
+          final title = state is ChatLoaded ? state.otherParticipantName : 'Grupo H. BF';
           final isOnline = state is ChatLoaded;
 
           return Row(

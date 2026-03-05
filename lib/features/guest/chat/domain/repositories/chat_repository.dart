@@ -62,6 +62,13 @@ abstract class ChatRepository {
     required String userId,
   });
 
+  /// Suscribe a cambios en las conversaciones del usuario en tiempo real
+  /// Incluye actualización de unread_count y último mensaje
+  Stream<List<ConversationEntity>> watchUserConversations({
+    required String userId,
+    String? propertyId,
+  });
+
   /// Obtiene el conteo de mensajes no leídos
   Future<int> getUnreadCount({
     required String conversationId,

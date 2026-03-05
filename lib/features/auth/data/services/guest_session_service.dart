@@ -72,6 +72,27 @@ class GuestSessionService {
     }
   }
 
+  /// Migra los datos del huésped (conversaciones, mensajes) de un ID antiguo a uno nuevo
+  Future<void> _migrateGuestData({
+    required String oldUserId,
+    required String newUserId,
+  }) async {
+    try {
+      debugPrint('🔄 [GuestSessionService] Migrando datos de $oldUserId a $newUserId');
+      await _supabase.rpc(
+        'migrate_guest_conversation_participant',
+        params: {
+          'p_old_user_id': oldUserId,
+          'p_new_user_id': newUserId,
+        },
+      );
+      debugPrint('✅ [GuestSessionService] Datos migrados correctamente');
+    } catch (e) {
+      debugPrint('🔴 [GuestSessionService] Error migrando datos: $e');
+      // No relanzamos el error para no bloquear el flujo principal
+    }
+  }
+
   /// Obtiene el ID de usuario de Supabase actual
   String? get currentSupabaseUserId => _supabase.auth.currentUser?.id;
 
@@ -84,9 +105,29 @@ class GuestSessionService {
     // Asegurar que hay sesión de Supabase activa
     await _ensureAnonymousSession();
 
+    // IMPORTANTE: Obtener el ID de la sesión ACTUAL de Supabase
+    // y actualizarlo en SharedPreferences si es diferente
+    final currentAuthUserId = currentSupabaseUserId;
+    final savedSupabaseUserId = prefs.getString(_keySupabaseUserId);
+
+    if (currentAuthUserId != null && currentAuthUserId != savedSupabaseUserId) {
+      debugPrint('🔄 [GuestSessionService] Actualizando supabaseUserId: $savedSupabaseUserId -> $currentAuthUserId');
+
+      // Migrar conversaciones y mensajes del ID antiguo al nuevo
+      if (savedSupabaseUserId != null && savedSupabaseUserId.isNotEmpty) {
+        await _migrateGuestData(
+          oldUserId: savedSupabaseUserId,
+          newUserId: currentAuthUserId,
+        );
+      }
+
+      await prefs.setString(_keySupabaseUserId, currentAuthUserId);
+    }
+
     final bookingId = prefs.getString(_keyBookingId);
     debugPrint('📦 [GuestSessionService] getSession - bookingId: "$bookingId"');
     debugPrint('📦 [GuestSessionService] getSession - bookingCode: "$bookingCode"');
+    debugPrint('📦 [GuestSessionService] getSession - currentAuthUserId: "$currentAuthUserId"');
 
     if (bookingId == null) return null;
 
@@ -230,10 +271,16 @@ class GuestSession {
   });
 
   /// Convierte a UserEntity para usar en la app
-  /// Usa el ID de Supabase si está disponible, sino fall back a bookingId como fallback
+  /// IMPORTANTE: Usa siempre el ID de la sesión ACTUAL de Supabase (auth.uid())
+  /// para que coincida con las políticas RLS de la base de datos
   UserEntity toUserEntity() {
+    // Obtener el ID de la sesión ACTUAL de Supabase
+    // Esto es crítico para que las políticas RLS funcionen correctamente
+    final currentAuthUserId = GuestSessionService.instance.currentSupabaseUserId;
+
     return UserEntity(
-      id: supabaseUserId ?? bookingId, // Usar Supabase ID si está disponible
+      // Usar siempre el ID de la sesión actual de Supabase para RLS
+      id: currentAuthUserId ?? supabaseUserId ?? bookingId,
       email: '',
       role: UserRole.guest,
       name: guestName,

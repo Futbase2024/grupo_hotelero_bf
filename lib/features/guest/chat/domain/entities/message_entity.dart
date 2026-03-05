@@ -25,6 +25,8 @@ class MessageEntity extends Equatable {
     // Campos joined desde auth.users
     this.senderName,
     this.senderRole,
+    // Campo de lectura
+    this.readAt,
   });
 
   final String id;
@@ -37,6 +39,9 @@ class MessageEntity extends Equatable {
   // Campos de relaciones (populados desde joins)
   final String? senderName;
   final String? senderRole;
+
+  // Campo de lectura
+  final DateTime? readAt;
 
   // ============================================
   // GETTERS
@@ -53,6 +58,9 @@ class MessageEntity extends Equatable {
 
   /// Indica si el mensaje fue enviado por staff
   bool get isFromStaff => senderRole == 'staff' || senderRole == 'admin';
+
+  /// Indica si el mensaje ha sido leído
+  bool get isRead => readAt != null;
 
   /// Devuelve el tiempo transcurrido en formato legible
   String get timeAgo {
@@ -101,6 +109,10 @@ class MessageEntity extends Equatable {
       // Campos joined
       senderName: json['sender_name'] as String?,
       senderRole: json['sender_role'] as String?,
+      // Campo de lectura
+      readAt: json['read_at'] != null
+          ? DateTime.parse(json['read_at'] as String)
+          : null,
     );
   }
 
@@ -118,6 +130,7 @@ class MessageEntity extends Equatable {
     DateTime? createdAt,
     String? senderName,
     String? senderRole,
+    DateTime? readAt,
   }) {
     return MessageEntity(
       id: id ?? this.id,
@@ -128,6 +141,7 @@ class MessageEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       senderName: senderName ?? this.senderName,
       senderRole: senderRole ?? this.senderRole,
+      readAt: readAt ?? this.readAt,
     );
   }
 
@@ -140,6 +154,7 @@ class MessageEntity extends Equatable {
       'msg_type': msgType.name,
       'content': content,
       'created_at': createdAt.toIso8601String(),
+      'read_at': readAt?.toIso8601String(),
     };
   }
 
@@ -163,6 +178,7 @@ class MessageEntity extends Equatable {
         createdAt,
         senderName,
         senderRole,
+        readAt,
       ];
 }
 

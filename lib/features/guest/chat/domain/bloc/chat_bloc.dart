@@ -124,8 +124,9 @@ class ChatLoaded extends ChatState {
   /// Cantidad de mensajes
   int get messageCount => messages.length;
 
-  /// Nombre del otro participante
-  String get otherParticipantName => conversation.otherParticipantName;
+  /// Nombre del otro participante (según el usuario actual)
+  String get otherParticipantName =>
+      conversation.getOtherParticipantName(currentUserId);
 
   @override
   List<Object?> get props => [

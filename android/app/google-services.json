@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "949013046522",
+    "project_id": "bf-stay",
+    "storage_bucket": "bf-stay.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949013046522:android:1431c447acc8c2e1299543",
+        "android_client_info": {
+          "package_name": "com.bfstay.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-WL4jfhbha9kXQKqRQEVZyiWxd1DGpYc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

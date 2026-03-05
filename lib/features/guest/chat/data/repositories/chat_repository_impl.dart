@@ -126,6 +126,17 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
+  Stream<List<ConversationEntity>> watchUserConversations({
+    required String userId,
+    String? propertyId,
+  }) {
+    return _datasource.watchUserConversations(
+      userId: userId,
+      propertyId: propertyId,
+    );
+  }
+
+  @override
   void dispose() {
     _datasource.dispose();
   }
