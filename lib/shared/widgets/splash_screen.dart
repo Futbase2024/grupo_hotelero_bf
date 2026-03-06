@@ -26,8 +26,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   bool _isInitialized = false;
 
-  // Tiempo mínimo que se muestra el splash (2 segundos)
-  static const Duration _minimumSplashDuration = Duration(milliseconds: 2000);
+  // Tiempo mínimo que se muestra el splash (4 segundos)
+  static const Duration _minimumSplashDuration = Duration(milliseconds: 4000);
 
   @override
   void initState() {

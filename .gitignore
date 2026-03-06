@@ -54,3 +54,6 @@ android/key.properties
 android/keystore/
 *.jks
 *.keystore
+
+# Firebase credentials
+supabase/functions/*firebase*.json
