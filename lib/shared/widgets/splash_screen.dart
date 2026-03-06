@@ -1,8 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// Splash screen profesional con imagen de Plaza del Arenal, Jerez
+/// Splash screen profesional con imágenes aleatorias de Jerez
 /// Muestra animación de fade mientras la app se inicializa
 class SplashScreen extends StatefulWidget {
   const SplashScreen({
@@ -18,6 +20,12 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+/// Lista de imágenes de splash disponibles
+const List<String> _splashImages = [
+  'assets/splash/splash.png',
+  'assets/splash/splash1.png',
+];
+
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
@@ -26,12 +34,16 @@ class _SplashScreenState extends State<SplashScreen>
 
   bool _isInitialized = false;
 
-  // Tiempo mínimo que se muestra el splash (4 segundos)
-  static const Duration _minimumSplashDuration = Duration(milliseconds: 4000);
+  // Imagen de splash seleccionada aleatoriamente
+  late final String _selectedSplashImage;
+
+  // Tiempo mínimo que se muestra el splash (2 segundos)
+  static const Duration _minimumSplashDuration = Duration(milliseconds: 2000);
 
   @override
   void initState() {
     super.initState();
+    _selectedSplashImage = _splashImages[Random().nextInt(_splashImages.length)];
     _setupAnimations();
     _startInitialization();
   }
@@ -115,9 +127,9 @@ class _SplashScreenState extends State<SplashScreen>
         body: Stack(
           fit: StackFit.expand,
           children: [
-            // Imagen de fondo de Plaza del Arenal (asset local)
+            // Imagen de fondo aleatoria de Jerez
             Image.asset(
-              'assets/images/splash.png',
+              _selectedSplashImage,
               fit: BoxFit.cover,
             ),
 
