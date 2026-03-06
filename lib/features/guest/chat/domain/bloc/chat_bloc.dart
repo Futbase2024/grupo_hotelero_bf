@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../entities/conversation_entity.dart';
 import '../entities/message_entity.dart';
@@ -316,6 +318,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         messages: updatedMessages,
         currentUserId: currentState.currentUserId,
       ));
+
+      // Disparar procesamiento de notificaciones push
+      _triggerPushNotificationProcessing();
     } catch (e) {
       // Volver al estado anterior con error
       emit(ChatLoaded(
@@ -400,6 +405,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     return 'Ha ocurrido un error. Por favor, intenta de nuevo.';
+  }
+
+  /// Dispara el procesamiento de notificaciones push en background
+  /// Llama a la Edge Function para procesar la cola de notificaciones
+  void _triggerPushNotificationProcessing() {
+    try {
+      // Llamar a la Edge Function de forma no bloqueante
+      unawaited(
+        Supabase.instance.client.functions.invoke('send-fcm-notifications'),
+      );
+      debugPrint('📬 Push notification processing triggered');
+    } catch (e) {
+      // No es crítico si falla, las notificaciones se procesarán después
+      debugPrint('⚠️ Error triggering push notification processing: $e');
+    }
   }
 
   @override

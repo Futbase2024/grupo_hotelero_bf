@@ -168,8 +168,19 @@ class FcmService {
     debugPrint('   Body: ${notification?.body}');
     debugPrint('   Data: $data');
 
-    if (notification == null) {
-      debugPrint('⚠️ Notificación sin payload de notificación, solo data');
+    // Si hay notification payload, FCM ya mostrará la notificación
+    // Solo mostramos notificación local para data-only messages
+    if (notification?.title != null && notification?.body != null) {
+      debugPrint('📱 Notificación con payload - FCM la mostrará automáticamente');
+      return;
+    }
+
+    // Para data-only messages, el título y cuerpo vienen en data
+    final title = data['title'] as String? ?? 'BF Stay';
+    final body = data['body'] as String? ?? '';
+
+    if (body.isEmpty) {
+      debugPrint('⚠️ Notificación sin contenido');
       return;
     }
 
@@ -193,13 +204,13 @@ class FcmService {
     );
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
+      title.hashCode,
+      title,
+      body,
       details,
       payload: message.data.toString(),
     );
-    debugPrint('✅ Notificación local mostrada');
+    debugPrint('✅ Notificación local mostrada: $title - $body');
   }
 
   void _handleMessageTap(RemoteMessage message) {

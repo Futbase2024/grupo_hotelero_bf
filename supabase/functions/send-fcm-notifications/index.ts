@@ -78,6 +78,8 @@ async function sendFCMNotification(
 ): Promise<FCMResponse> {
   const url = `https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`
 
+  // Mensaje con notification payload para background/terminated
+  // Flutter evitará duplicados en foreground verificando si hay notification payload
   const message = {
     message: {
       token: token,
@@ -92,7 +94,7 @@ async function sendFCMNotification(
         priority: 'high',
         notification: {
           channel_id: 'bf_stay_channel',
-          priority: 'high',
+          notification_count: 1,
         },
       },
       apns: {

@@ -17,51 +17,86 @@ import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/guest/alojamientos/domain/bloc/alojamientos_bloc.dart';
 import 'features/guest/alojamientos/domain/repositories/properties_repository.dart';
 import 'firebase_options.dart';
+import 'shared/widgets/splash_screen.dart';
 import 'shared/widgets/update_dialog.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Configurar URL strategy para web (hash URLs)
   configureUrlStrategy();
 
-  // Load environment variables (with fallback for web production)
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (e) {
-    // En web production, el archivo .env no existe
-    // Las variables se obtienen de compile-time constants en AppConfig
-    debugPrint('dotenv not available, using compile-time variables');
-  }
-
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  debugPrint('✅ Firebase initialized');
-
-  // Initialize Supabase
-  await SupabaseConfig.initialize();
-
-  // Configure dependencies
-  await configureDependencies();
-
-  // Initialize FCM Service
-  await FcmService().initialize();
-  debugPrint('✅ FCM Service initialized');
-
-  // Initialize App Update Service
-  await AppUpdateService.instance.initialize();
-  debugPrint('✅ App Update Service initialized');
-
   runApp(const BFStayApp());
 }
 
-class BFStayApp extends StatelessWidget {
+/// App principal con splash screen integrado
+class BFStayApp extends StatefulWidget {
   const BFStayApp({super.key});
 
   @override
+  State<BFStayApp> createState() => _BFStayAppState();
+}
+
+class _BFStayAppState extends State<BFStayApp> {
+  /// Indica si la inicialización está completa
+  bool _isInitialized = false;
+
+  /// Inicializa todos los servicios de la aplicación
+  Future<void> _initializeApp() async {
+    // Load environment variables (with fallback for web production)
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      // En web production, el archivo .env no existe
+      // Las variables se obtienen de compile-time constants en AppConfig
+      debugPrint('dotenv not available, using compile-time variables');
+    }
+
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✅ Firebase initialized');
+
+    // Initialize Supabase
+    await SupabaseConfig.initialize();
+
+    // Configure dependencies
+    await configureDependencies();
+
+    // Initialize FCM Service
+    await FcmService().initialize();
+    debugPrint('✅ FCM Service initialized');
+
+    // Initialize App Update Service
+    await AppUpdateService.instance.initialize();
+    debugPrint('✅ App Update Service initialized');
+
+    // Marcar como inicializado
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Mostrar splash screen mientras se inicializa
+    if (!_isInitialized) {
+      return MaterialApp(
+        title: 'BF Stay',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
+        home: SplashScreen(
+          onInitComplete: _initializeApp,
+        ),
+      );
+    }
+
+    // Mostrar la app principal después de la inicialización
     return MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>(

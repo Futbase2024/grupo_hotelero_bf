@@ -1,12 +1,14 @@
 #!/bin/bash
 
 # BF Stay - Build Web para Producción
-# Uso: ./scripts/build_web.sh
+# Uso: ./scripts/build_web.sh [--quiet]
 
 set -e
 
-echo "🚀 Iniciando build web para BF Stay..."
-echo ""
+QUIET=false
+if [[ "$1" == "--quiet" ]]; then
+    QUIET=true
+fi
 
 # Configuración de Supabase
 SUPABASE_URL="https://qwepisgdqlmqfxwqkztz.supabase.co"
@@ -15,10 +17,14 @@ SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 # Dominio de producción
 DOMAIN="https://bf-stay.pages.dev"
 
-echo "📦 Compilando Flutter Web..."
-echo "   URL: $SUPABASE_URL"
-echo "   Dominio: $DOMAIN"
-echo ""
+if [ "$QUIET" = false ]; then
+    echo "🚀 Iniciando build web para BF Stay..."
+    echo ""
+    echo "📦 Compilando Flutter Web..."
+    echo "   URL: $SUPABASE_URL"
+    echo "   Dominio: $DOMAIN"
+    echo ""
+fi
 
 flutter build web --release \
   --dart-define=SUPABASE_URL=$SUPABASE_URL \
@@ -27,12 +33,14 @@ flutter build web --release \
   --tree-shake-icons \
   --no-wasm-dry-run
 
-echo ""
-echo "✅ Build completado!"
-echo ""
-echo "📁 Output: build/web/"
-echo "🌐 Sube esta carpeta a Cloudflare Pages"
-echo ""
-echo "🔗 Recuerda configurar en Supabase:"
-echo "   - Site URL: $DOMAIN"
-echo "   - Redirect URLs: $DOMAIN/**"
+if [ "$QUIET" = false ]; then
+    echo ""
+    echo "✅ Build completado!"
+    echo ""
+    echo "📁 Output: build/web/"
+    echo "🌐 Sube esta carpeta a Cloudflare Pages"
+    echo ""
+    echo "🔗 Recuerda configurar en Supabase:"
+    echo "   - Site URL: $DOMAIN"
+    echo "   - Redirect URLs: $DOMAIN/**"
+fi
