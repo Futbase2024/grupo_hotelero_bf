@@ -228,6 +228,7 @@ class CheckinRepositoryImpl implements CheckinRepository {
               name
             ),
             properties!bookings_property_id_fkey (
+              id,
               name
             ),
             checkins (
@@ -243,6 +244,7 @@ class CheckinRepositoryImpl implements CheckinRepository {
       return CheckinBookingData.fromJson({
         ...response,
         'unit_name': (response['units'] as Map<String, dynamic>?)?['name'],
+        'property_id': (response['properties'] as Map<String, dynamic>?)?['id'],
         'property_name': (response['properties'] as Map<String, dynamic>?)?['name'],
         'checkin_id': (response['checkins'] as Map<String, dynamic>?)?['id'],
         'checkin_status': (response['checkins'] as Map<String, dynamic>?)?['status'],
@@ -590,5 +592,30 @@ class CheckinRepositoryImpl implements CheckinRepository {
       debugPrint('❌ [saveProfile] StackTrace: $s');
       // No relanzar, es un guardado secundario
     }
+  }
+
+  @override
+  Stream<CheckinStatus> watchCheckinStatus(String bookingId) {
+    debugPrint('👁️ [watchCheckinStatus] Suscribiendo a cambios en check-in: $bookingId');
+
+    return _client
+        .from('checkins')
+        .stream(primaryKey: ['id'])
+        .eq('booking_id', bookingId)
+        .map((data) {
+          if (data.isEmpty) {
+            debugPrint('👁️ [watchCheckinStatus] No hay datos');
+            return CheckinStatus.none;
+          }
+
+          // Obtener el status del primer registro
+          final record = data.first;
+          final status = record['status'] as String?;
+          debugPrint('👁️ [watchCheckinStatus] Nuevo estado: $status');
+          return CheckinStatusExtension.fromDbValue(status);
+        })
+        .handleError((error) {
+          debugPrint('❌ [watchCheckinStatus] Error en stream: $error');
+        });
   }
 }

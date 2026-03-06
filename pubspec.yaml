@@ -47,9 +47,13 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.8
 
-  url_launcher: any
+  url_launcher: ^6.3.1
   camera: ^0.12.0
   image: ^4.5.3
+
+  # App Updates
+  package_info_plus: ^8.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

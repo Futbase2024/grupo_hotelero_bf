@@ -5,6 +5,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/router/app_router.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
+import '../../../domain/services/email_service.dart';
 import '../../../shared/widgets/admin_widgets.dart';
 
 // ignore: avoid_classes_with_only_static_members
@@ -674,6 +675,35 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       );
 
       Debug.log('submitForm - Reserva creada: ${bookingResult.bookingCode}');
+
+      // Enviar email al huésped con el código de acceso
+      if (emailController.text.trim().isNotEmpty) {
+        try {
+          Debug.log('submitForm - Enviando email al huésped: ${emailController.text.trim()}');
+          final selectedUnit = units.firstWhere(
+            (u) => u.unit.id == selectedUnitId,
+            orElse: () => units.first,
+          );
+
+          await EmailService().sendBookingCreatedEmail(
+            toEmail: emailController.text.trim(),
+            guestName: '${firstNameController.text.trim()} ${lastNameController.text.trim()}',
+            propertyName: 'BF Stay',
+            unitName: selectedUnit.unit.name,
+            checkinDate: checkInDate!,
+            checkoutDate: checkOutDate!,
+            bookingCode: bookingResult.bookingCode,
+            numGuests: numAdults + numChildren,
+            bookingId: bookingResult.bookingId,
+            unitId: selectedUnitId,
+          );
+          Debug.log('submitForm - Email enviado correctamente');
+        } catch (e) {
+          // No bloquear el flujo si el email falla
+          Debug.error('submitForm - Error enviando email (no crítico)', e);
+        }
+      }
+
       setState(() {
         result = bookingResult;
         currentStep = 1;

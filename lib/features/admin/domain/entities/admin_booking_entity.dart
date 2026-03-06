@@ -348,6 +348,46 @@ class AdminBookingEntity extends Equatable {
     }
   }
 
+  /// Crea una entidad vacía para casos donde se necesita un placeholder
+  static AdminBookingEntity empty() {
+    return AdminBookingEntity(
+      id: '',
+      bookingCode: '',
+      unitId: '',
+      unitName: '',
+      propertyId: '',
+      propertyName: '',
+      checkInDate: DateTime.now(),
+      checkOutDate: DateTime.now().add(const Duration(days: 1)),
+      numGuests: 1,
+      numAdults: 1,
+      numChildren: 0,
+      childrenAges: const [],
+      status: 'confirmed',
+      bookingStatus: BookingStatus.created,
+      checkoutStatus: CheckoutStatus.notStarted,
+      guestEmail: '',
+      guestFirstName: null,
+      guestLastName: null,
+      guestPhone: null,
+      staffNotes: null,
+      codeFirstUsedAt: null,
+      codeSentAt: null,
+      checkinId: null,
+      checkinStatus: null,
+      signatureSvg: null,
+      docsPending: null,
+      activatedAt: null,
+      closedAt: null,
+      checkoutRequestedAt: null,
+      checkoutValidatedAt: null,
+      validationNotes: null,
+      checkoutNotes: null,
+      createdAt: null,
+      updatedAt: null,
+    );
+  }
+
   /// Convierte a un mapa JSON
   Map<String, dynamic> toJson() {
     return {

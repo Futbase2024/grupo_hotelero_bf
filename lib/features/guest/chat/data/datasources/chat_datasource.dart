@@ -497,42 +497,79 @@ class ChatDatasource {
   }
 
   /// Suscribe a nuevos mensajes en tiempo real usando Supabase Realtime
+  /// Emite SOLO cuando llega un mensaje nuevo (no re-emite mensajes existentes)
+  /// Cada suscripción mantiene su propio estado de tracking local
   Stream<MessageEntity> watchMessages(String conversationId) {
-    // Usar el stream nativo de Supabase para la tabla messages
-    // Nota: El stream no soporta joins, así que obtenemos datos básicos
-    // y luego enriquecemos con el nombre del remitente
+    _log('watchMessages - Iniciando stream para conversación: $conversationId');
+
+    // Estado local para esta suscripción específica
+    // Cada listener tiene su propio timestamp tracking
+    DateTime? lastSeenCreatedAt;
+    bool isFirstEmission = true;
+
     return _client
         .from(SupabaseTables.messages)
         .stream(primaryKey: ['id'])
         .eq('conversation_id', conversationId)
-        .order('created_at')
+        .order('created_at', ascending: true)
         .asyncMap((data) async {
-          // Obtener solo el último mensaje nuevo
-          if (data.isNotEmpty) {
-            final lastRecord = data.last;
+          if (data.isEmpty) return null;
 
-            // Enriquecer con datos del remitente
-            final senderUserId = lastRecord['sender_user_id'] as String;
-            final senderInfo = await _getSenderInfo(senderUserId);
-
-            final flattenedMap = Map<String, dynamic>.from(lastRecord);
-            flattenedMap['sender_name'] = senderInfo['full_name'];
-            flattenedMap['sender_role'] = senderInfo['role'];
-
-            return MessageEntity.fromJson(flattenedMap);
+          // Primera emisión: inicializar timestamp SIN emitir nada
+          // Los mensajes iniciales ya se cargaron con getMessages()
+          if (isFirstEmission) {
+            isFirstEmission = false;
+            if (data.isNotEmpty) {
+              lastSeenCreatedAt = DateTime.parse(
+                data.last['created_at'] as String,
+              );
+              _log('watchMessages - Timestamp inicial: $lastSeenCreatedAt');
+            }
+            return null;
           }
-          // Retornar null si no hay datos, pero el stream necesita un valor
-          // Usamos un mensaje vacío que será filtrado en el BLoC
-          return MessageEntity(
-            id: '',
-            conversationId: conversationId,
-            senderUserId: '',
-            msgType: MessageType.text,
-            content: '',
-            createdAt: DateTime.now(),
+
+          // Si no hay timestamp previo (edge case), no emitir
+          if (lastSeenCreatedAt == null) {
+            return null;
+          }
+
+          // Buscar mensajes nuevos comparando con el último timestamp visto
+          final newMessages = data.where((record) {
+            final createdAt = DateTime.parse(record['created_at'] as String);
+            return createdAt.isAfter(lastSeenCreatedAt!);
+          }).toList();
+
+          if (newMessages.isEmpty) return null;
+
+          // Actualizar el último timestamp visto al más reciente de los nuevos
+          final newestMessage = newMessages.last;
+          lastSeenCreatedAt = DateTime.parse(
+            newestMessage['created_at'] as String,
           );
+
+          // Obtener IDs únicos de remitentes de los mensajes nuevos
+          final senderIds = newMessages
+              .map((m) => m['sender_user_id'] as String)
+              .toSet()
+              .toList();
+
+          // Obtener info de remitentes en batch
+          final sendersInfo = await _getSendersInfo(senderIds);
+
+          // Devolver el mensaje más reciente (el stream emite uno a uno)
+          final record = newestMessage;
+          final senderUserId = record['sender_user_id'] as String;
+          final senderInfo = sendersInfo[senderUserId];
+
+          final flattenedMap = Map<String, dynamic>.from(record);
+          flattenedMap['sender_name'] = senderInfo?['full_name'];
+          flattenedMap['sender_role'] = senderInfo?['role'];
+
+          _log('watchMessages - Nuevo mensaje detectado: ${record['id']}');
+          return MessageEntity.fromJson(flattenedMap);
         })
-        .where((message) => message.id.isNotEmpty); // Filtrar mensajes vacíos
+        .where((message) => message != null)
+        .cast<MessageEntity>();
   }
 
   /// Obtiene información del remitente (nombre y rol) usando RPC

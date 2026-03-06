@@ -60,51 +60,68 @@ class GuestHomeScreen extends StatelessWidget {
         return BlocProvider(
           create: (context) => GuestHomeBloc(
             repository: getIt<AdminPanelRepository>(),
-          )..add(GuestHomeLoadBooking(user.bookingId)),
+          )
+            ..add(GuestHomeLoadBooking(user.bookingId ?? ''))
+            ..add(GuestHomeLoadNotifications(user.id)),
           child: Scaffold(
             backgroundColor: AppColors.getSurfaceColor(context),
             body: SafeArea(
               child: ResponsiveContent(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    vertical: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header con saludo
-                      _buildHeader(context, user),
-                      SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
+                child: Builder(
+                  builder: (innerContext) {
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        final bookingId = user.bookingId;
+                        if (bookingId == null || bookingId.isEmpty) return;
 
-                      // Tu Estancia - con datos reales del BLoC
-                      _buildSectionTitle(context, 'Tu Estancia'),
-                      const SizedBox(height: AppTheme.spacing16),
-                      const _StayInfoCard(),
-                      SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
+                        // Refrescar datos de la reserva y estado del usuario
+                        innerContext.read<GuestHomeBloc>().add(GuestHomeRefreshBooking(bookingId));
+                        innerContext.read<AuthBloc>().add(const AuthCheckRequested());
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.symmetric(
+                          vertical: innerContext.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header con saludo
+                            _buildHeader(innerContext, user),
+                            SizedBox(height: innerContext.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
 
-                      // Status message basado en el estado - Solo si NO está validado
-                      if (!isCheckinValidated) ...[
-                        _buildStatusBanner(context, checkinStatus, checkinRejectionReason, user.checkinCancellationReason),
-                        const SizedBox(height: AppTheme.spacing16),
-                      ],
+                            // Tu Estancia - con datos reales del BLoC
+                            _buildSectionTitle(innerContext, 'Tu Estancia'),
+                            const SizedBox(height: AppTheme.spacing16),
+                            const _StayInfoCard(),
+                            SizedBox(height: innerContext.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
 
-                      // Quick actions
-                      _buildSectionTitle(context, 'Acciones Rápidas'),
-                      const SizedBox(height: AppTheme.spacing16),
-                      BlocBuilder<GuestHomeBloc, GuestHomeState>(
-                        builder: (context, state) {
-                          // Solo obtener unitName si el estado es GuestHomeLoaded
-                          // Si está cargando, usar null (se mostrará loading en _StayInfoCard)
-                          final unitName = state is GuestHomeLoaded ? state.booking.unitName : null;
-                          // Si está cargando, no llamar a UnitImageHelper todavía
-                          if (state is GuestHomeInitial || state is GuestHomeLoading) {
-                            return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null);
-                          }
-                          return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName);
-                        },
+                            // Status message basado en el estado - Solo si NO está validado
+                            if (!isCheckinValidated) ...[
+                              _buildStatusBanner(innerContext, checkinStatus, checkinRejectionReason, user.checkinCancellationReason),
+                              const SizedBox(height: AppTheme.spacing16),
+                            ],
+
+                            // Quick actions
+                            _buildSectionTitle(innerContext, 'Acciones Rápidas'),
+                            const SizedBox(height: AppTheme.spacing16),
+                            BlocBuilder<GuestHomeBloc, GuestHomeState>(
+                              builder: (context, state) {
+                                // Solo obtener unitName si el estado es GuestHomeLoaded
+                                // Si está cargando, usar null (se mostrará loading en _StayInfoCard)
+                                final unitName = state is GuestHomeLoaded ? state.booking.unitName : null;
+                                // Si está cargando, no llamar a UnitImageHelper todavía
+                                if (state is GuestHomeInitial || state is GuestHomeLoading) {
+                                  return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null);
+                                }
+                                return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName);
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -527,6 +544,49 @@ class GuestHomeScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+        // Notification bell
+        BlocBuilder<GuestHomeBloc, GuestHomeState>(
+          buildWhen: (prev, curr) => curr is GuestHomeLoaded,
+          builder: (context, state) {
+            final unreadCount = state is GuestHomeLoaded ? state.unreadNotificationsCount : 0;
+            return Stack(
+              children: [
+                IconButton(
+                  onPressed: () => context.go('/guest/notifications'),
+                  icon: Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.getTextSecondaryColor(context),
+                  ),
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        unreadCount > 99 ? '99+' : '$unreadCount',
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         // Logout button
         IconButton(

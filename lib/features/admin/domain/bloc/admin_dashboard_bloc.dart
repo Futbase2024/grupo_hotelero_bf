@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../entities/admin_entities.dart';
 import '../repositories/admin_panel_repository.dart';
@@ -21,9 +23,87 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     on<AdminDashboardCheckinsFilterChanged>(_onCheckinsFilterChanged);
     on<AdminDashboardUnitsLoadRequested>(_onUnitsLoadRequested);
     on<AdminDashboardUnitWifiUpdateRequested>(_onUnitWifiUpdateRequested);
+    // Eventos de notificaciones
+    on<AdminDashboardNotificationsLoadRequested>(_onNotificationsLoadRequested);
+    on<AdminDashboardNotificationMarkAsReadRequested>(_onNotificationMarkAsReadRequested);
+    on<AdminDashboardNotificationsMarkAllAsReadRequested>(_onNotificationsMarkAllAsReadRequested);
+    on<AdminDashboardNotificationDeleteRequested>(_onNotificationDeleteRequested);
+    on<AdminDashboardNotificationsDeleteAllRequested>(_onNotificationsDeleteAllRequested);
+    on<AdminDashboardNotificationReceived>(_onNotificationReceived);
+    on<AdminDashboardCheckinsChanged>(_onCheckinsChanged);
+
+    // Suscribirse a notificaciones en tiempo real
+    _subscribeToNotifications();
+    // Suscribirse a cambios en checkins
+    _subscribeToCheckins();
   }
 
   final AdminPanelRepository _repository;
+  StreamSubscription<StaffNotificationEntity>? _notificationSubscription;
+  StreamSubscription<void>? _checkinsSubscription;
+
+  void _subscribeToNotifications() {
+    _notificationSubscription = _repository.watchNotifications().listen(
+      (notification) {
+        add(AdminDashboardNotificationReceived(notification));
+      },
+      onError: (error) {
+        debugPrint('Error en stream de notificaciones: $error');
+      },
+    );
+  }
+
+  void _subscribeToCheckins() {
+    _checkinsSubscription = _repository.watchCheckins().listen(
+      (_) {
+        add(const AdminDashboardCheckinsChanged());
+      },
+      onError: (error) {
+        debugPrint('Error en stream de checkins: $error');
+      },
+    );
+  }
+
+  @override
+  Future<void> close() {
+    _notificationSubscription?.cancel();
+    _checkinsSubscription?.cancel();
+    return super.close();
+  }
+
+  Future<void> _onCheckinsChanged(
+    AdminDashboardCheckinsChanged event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    // Recargar la lista de checkins cuando hay cambios
+    add(const AdminDashboardCheckinsLoadRequested());
+  }
+
+  Future<void> _onNotificationReceived(
+    AdminDashboardNotificationReceived event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    // Añadir la nueva notificación a la lista
+    final currentNotifications = List<StaffNotificationEntity>.from(state.notifications);
+
+    // Evitar duplicados
+    if (!currentNotifications.any((n) => n.id == event.notification.id)) {
+      currentNotifications.insert(0, event.notification);
+    }
+
+    final unreadCount = currentNotifications.where((n) => !n.read).length;
+
+    emit(state.copyWith(
+      notifications: currentNotifications,
+      unreadNotificationsCount: unreadCount,
+    ));
+
+    // Si es una notificación de check-in, recargar el resumen
+    if (event.notification.type == 'checkin_submitted' ||
+        event.notification.type == 'checkin_completed') {
+      add(const AdminDashboardLoadRequested());
+    }
+  }
 
   Future<void> _onLoadRequested(
     AdminDashboardLoadRequested event,
@@ -274,6 +354,108 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
       rethrow;
+    }
+  }
+
+  // ==================== MANEJADORES DE NOTIFICACIONES ====================
+
+  Future<void> _onNotificationsLoadRequested(
+    AdminDashboardNotificationsLoadRequested event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    try {
+      final notifications = await _repository.getNotifications(unreadOnly: false);
+      final unreadCount = notifications.where((n) => !n.read).length;
+
+      emit(state.copyWith(
+        notifications: notifications,
+        unreadNotificationsCount: unreadCount,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onNotificationMarkAsReadRequested(
+    AdminDashboardNotificationMarkAsReadRequested event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    try {
+      await _repository.markNotificationsAsRead([event.notificationId]);
+
+      final updatedNotifications = state.notifications.map((n) {
+        if (n.id == event.notificationId) {
+          return n.copyWith(read: true);
+        }
+        return n;
+      }).toList();
+
+      final unreadCount = updatedNotifications.where((n) => !n.read).length;
+
+      emit(state.copyWith(
+        notifications: updatedNotifications,
+        unreadNotificationsCount: unreadCount,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onNotificationsMarkAllAsReadRequested(
+    AdminDashboardNotificationsMarkAllAsReadRequested event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    try {
+      await _repository.markAllNotificationsAsRead();
+
+      final updatedNotifications = state.notifications
+          .map((n) => n.copyWith(read: true))
+          .toList();
+
+      emit(state.copyWith(
+        notifications: updatedNotifications,
+        unreadNotificationsCount: 0,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onNotificationDeleteRequested(
+    AdminDashboardNotificationDeleteRequested event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    try {
+      await _repository.deleteNotification(event.notificationId);
+
+      final updatedNotifications = state.notifications
+          .where((n) => n.id != event.notificationId)
+          .toList();
+
+      final unreadCount = updatedNotifications.where((n) => !n.read).length;
+
+      emit(state.copyWith(
+        notifications: updatedNotifications,
+        unreadNotificationsCount: unreadCount,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onNotificationsDeleteAllRequested(
+    AdminDashboardNotificationsDeleteAllRequested event,
+    Emitter<AdminDashboardState> emit,
+  ) async {
+    try {
+      await _repository.deleteAllNotifications();
+
+      emit(state.copyWith(
+        notifications: [],
+        unreadNotificationsCount: 0,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
     }
   }
 }

@@ -1,47 +1,49 @@
 import 'package:equatable/equatable.dart';
 
-/// Entity para notificaciones del staff en tiempo real
-class StaffNotificationEntity extends Equatable {
-  const StaffNotificationEntity({
+/// Entity para notificaciones del huésped
+class GuestNotificationEntity extends Equatable {
+  const GuestNotificationEntity({
     required this.id,
-    required this.propertyId,
+    required this.userId,
+    this.bookingId,
     required this.type,
     required this.title,
     required this.body,
-    required this.bookingId,
     this.data,
-    required this.read,
+    required this.isRead,
     required this.createdAt,
   });
 
   final String id;
-  final String propertyId;
-  final String type; // checkin_completed, checkin_rejected, etc.
+  final String userId;
+  final String? bookingId;
+  final String type; // checkin_validated, checkin_rejected, etc.
   final String title;
   final String body;
-  final String bookingId;
   final Map<String, dynamic>? data;
-  final bool read;
+  final bool isRead;
   final DateTime createdAt;
 
-  /// Si es una notificación de check-in completado
-  bool get isCheckinCompleted => type == 'checkin_completed';
+  /// Si es una notificación de check-in validado
+  bool get isCheckinValidated => type == 'checkin_validated';
 
   /// Si es una notificación de check-in rechazado
   bool get isCheckinRejected => type == 'checkin_rejected';
 
+  /// Si es una notificación de reserva cancelada
+  bool get isBookingCancelled => type == 'booking_cancelled';
+
   /// Convierte desde un mapa JSON
-  factory StaffNotificationEntity.fromJson(Map<String, dynamic> json) {
-    return StaffNotificationEntity(
+  factory GuestNotificationEntity.fromJson(Map<String, dynamic> json) {
+    return GuestNotificationEntity(
       id: json['id'] as String,
-      propertyId: json['property_id'] as String,
+      userId: json['user_id'] as String,
+      bookingId: json['booking_id'] as String?,
       type: json['type'] as String,
       title: json['title'] as String,
       body: json['body'] as String,
-      bookingId: json['booking_id'] as String,
       data: json['data'] as Map<String, dynamic>?,
-      // Aceptar tanto 'read' como 'is_read' de la base de datos
-      read: (json['read'] ?? json['is_read']) as bool? ?? false,
+      isRead: json['is_read'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -50,28 +52,28 @@ class StaffNotificationEntity extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'property_id': propertyId,
+      'user_id': userId,
+      'booking_id': bookingId,
       'type': type,
       'title': title,
       'body': body,
-      'booking_id': bookingId,
       'data': data,
-      'read': read,
+      'is_read': isRead,
       'created_at': createdAt.toIso8601String(),
     };
   }
 
   /// Crea una copia con el estado de lectura actualizado
-  StaffNotificationEntity copyWith({bool? read}) {
-    return StaffNotificationEntity(
+  GuestNotificationEntity copyWith({bool? isRead}) {
+    return GuestNotificationEntity(
       id: id,
-      propertyId: propertyId,
+      userId: userId,
+      bookingId: bookingId,
       type: type,
       title: title,
       body: body,
-      bookingId: bookingId,
       data: data,
-      read: read ?? this.read,
+      isRead: isRead ?? this.isRead,
       createdAt: createdAt,
     );
   }
@@ -79,13 +81,13 @@ class StaffNotificationEntity extends Equatable {
   @override
   List<Object?> get props => [
         id,
-        propertyId,
+        userId,
+        bookingId,
         type,
         title,
         body,
-        bookingId,
         data,
-        read,
+        isRead,
         createdAt,
       ];
 }

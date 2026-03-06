@@ -752,33 +752,117 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     }
   }
 
-  // EF devuelve: { success, notifications: [...] }
+  // Obtener notificaciones directamente desde la base de datos
   @override
   Future<List<StaffNotificationEntity>> getNotifications({
     String? propertyId,
     bool? unreadOnly,
   }) async {
-    final params = <String, dynamic>{};
-    if (propertyId != null) params['property_id'] = propertyId;
+    try {
+      debugPrint('📬 [getNotifications] Obteniendo notificaciones...');
 
-    final response = await _callAdminPanel(
-      action: 'get_notifications',
-      params: params.isNotEmpty ? params : null,
-    );
+      var query = _client
+          .from('staff_notifications')
+          .select('''
+            id,
+            property_id,
+            type,
+            title,
+            body,
+            booking_id,
+            data,
+            is_read,
+            created_at
+          ''');
 
-    final data = (response['notifications'] as List<dynamic>?) ?? [];
-    return data
-        .map((e) => StaffNotificationEntity.fromJson(e as Map<String, dynamic>))
-        .toList();
+      if (propertyId != null) {
+        query = query.eq('property_id', propertyId);
+      }
+
+      if (unreadOnly == true) {
+        query = query.eq('is_read', false);
+      }
+
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(100);
+
+      final notifications = (response as List)
+          .map((e) => StaffNotificationEntity.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      debugPrint('✅ [getNotifications] ${notifications.length} notificaciones encontradas');
+      return notifications;
+    } catch (e, s) {
+      debugPrint('❌ [getNotifications] Error: $e');
+      debugPrint('❌ [getNotifications] StackTrace: $s');
+      rethrow;
+    }
   }
 
   // La EF no tiene 'mark_notifications_read' → actualización directa
   @override
   Future<void> markNotificationsAsRead(List<String> notificationIds) async {
-    await _client
-        .from('staff_notifications')
-        .update({'is_read': true})
-        .inFilter('id', notificationIds);
+    try {
+      debugPrint('📬 [markNotificationsAsRead] Marcando ${notificationIds.length} notificaciones como leídas');
+      await _client
+          .from('staff_notifications')
+          .update({'is_read': true})
+          .inFilter('id', notificationIds);
+      debugPrint('✅ [markNotificationsAsRead] Notificaciones marcadas como leídas');
+    } catch (e, s) {
+      debugPrint('❌ [markNotificationsAsRead] Error: $e');
+      debugPrint('❌ [markNotificationsAsRead] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> markAllNotificationsAsRead() async {
+    try {
+      debugPrint('📬 [markAllNotificationsAsRead] Marcando todas las notificaciones como leídas');
+      await _client
+          .from('staff_notifications')
+          .update({'is_read': true})
+          .eq('is_read', false);
+      debugPrint('✅ [markAllNotificationsAsRead] Todas las notificaciones marcadas como leídas');
+    } catch (e, s) {
+      debugPrint('❌ [markAllNotificationsAsRead] Error: $e');
+      debugPrint('❌ [markAllNotificationsAsRead] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteNotification(String notificationId) async {
+    try {
+      debugPrint('🗑️ [deleteNotification] Eliminando notificación: $notificationId');
+      await _client
+          .from('staff_notifications')
+          .delete()
+          .eq('id', notificationId);
+      debugPrint('✅ [deleteNotification] Notificación eliminada');
+    } catch (e, s) {
+      debugPrint('❌ [deleteNotification] Error: $e');
+      debugPrint('❌ [deleteNotification] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteAllNotifications() async {
+    try {
+      debugPrint('🗑️ [deleteAllNotifications] Eliminando todas las notificaciones');
+      await _client
+          .from('staff_notifications')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000'); // Truco para eliminar todas
+      debugPrint('✅ [deleteAllNotifications] Todas las notificaciones eliminadas');
+    } catch (e, s) {
+      debugPrint('❌ [deleteAllNotifications] Error: $e');
+      debugPrint('❌ [deleteAllNotifications] StackTrace: $s');
+      rethrow;
+    }
   }
 
   @override
@@ -793,6 +877,18 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         .expand((list) => list)
         .where((row) => propertyId == null || row['property_id'] == propertyId)
         .map((row) => StaffNotificationEntity.fromJson(row));
+  }
+
+  @override
+  Stream<void> watchCheckins({
+    String? propertyId,
+  }) {
+    // Stream que emite cuando hay cambios en la tabla checkins
+    // Solo nos interesa saber que hubo un cambio, no los datos específicos
+    return _client
+        .from('checkins')
+        .stream(primaryKey: ['id'])
+        .map((_) {});
   }
 
   // ==================== MÉTODOS DE DOCUMENTOS ====================

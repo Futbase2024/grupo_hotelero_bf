@@ -160,8 +160,8 @@ class CheckinsTab extends StatelessWidget {
     );
   }
 
-  void _navigateToDetail(BuildContext context, String checkinId, String bookingCode) {
-    Navigator.of(context).push(
+  Future<void> _navigateToDetail(BuildContext context, String checkinId, String bookingCode) async {
+    final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => CheckinDetailScreen(
           checkinId: checkinId,
@@ -169,6 +169,13 @@ class CheckinsTab extends StatelessWidget {
         ),
       ),
     );
+
+    // Si se realizó una acción (validar/rechazar/cancelar), recargar la lista
+    if (result == true && context.mounted) {
+      context.read<AdminDashboardBloc>().add(
+            const AdminDashboardCheckinsLoadRequested(),
+          );
+    }
   }
 }
 

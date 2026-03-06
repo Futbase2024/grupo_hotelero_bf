@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../core/services/notification_service.dart';
 import '../../domain/entities/guest_entity.dart';
 import '../../domain/repositories/checkin_repository.dart';
 import 'checkin_event.dart';
@@ -22,6 +23,8 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
     on<CheckinSignatureSaved>(_onSignatureSaved);
     on<CheckinSubmitted>(_onSubmitted);
     on<CheckinRetry>(_onRetry);
+    on<CheckinRefreshRequested>(_onRefreshRequested);
+    on<CheckinStatusCheckRequested>(_onStatusCheckRequested);
   }
 
   final CheckinRepository _repository;
@@ -390,6 +393,18 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
           signatureSvg: currentState.signatureSvg!,
         );
 
+        // Notificar al admin del nuevo check-in pendiente
+        if (currentState.bookingData.propertyId.isNotEmpty) {
+          debugPrint('📬 [CheckinBloc] Notificando al admin...');
+          await NotificationService().notifyAdminCheckinSubmitted(
+            bookingId: currentState.bookingData.bookingId,
+            propertyId: currentState.bookingData.propertyId,
+            guestName: currentState.bookingData.guestFullName,
+            unitName: currentState.bookingData.unitName,
+          );
+          debugPrint('✅ [CheckinBloc] Admin notificado');
+        }
+
         emit(const CheckinSuccess());
       } catch (e) {
         emit(CheckinError('Error al enviar check-in: $e'));
@@ -425,6 +440,66 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
         return DocumentType.other;
       default:
         return null;
+    }
+  }
+
+  /// Maneja el evento de refresh (pull-to-refresh)
+  Future<void> _onRefreshRequested(
+    CheckinRefreshRequested event,
+    Emitter<CheckinState> emit,
+  ) async {
+    debugPrint('🔄 [CheckinBloc] Refresh solicitado...');
+    final currentState = state;
+
+    if (currentState is CheckinAlreadyCompleted) {
+      // Si estamos en estado completado, recargar el estado del check-in
+      final bookingData = await _repository.getBookingForCheckin(event.bookingId);
+      final existingGuests = await _repository.getBookingGuests(event.bookingId);
+      final newStatus = await _repository.getCheckinStatus(event.bookingId);
+
+      emit(CheckinAlreadyCompleted(
+        bookingData: bookingData,
+        guests: existingGuests,
+        checkinStatus: newStatus,
+      ));
+      debugPrint('✅ [CheckinBloc] Estado actualizado: $newStatus');
+    } else if (currentState is CheckinLoaded) {
+      // Si estamos en el flujo de check-in, recargar datos sin perder el progreso
+      final bookingData = await _repository.getBookingForCheckin(event.bookingId);
+      final existingGuests = await _repository.getBookingGuests(event.bookingId);
+
+      emit(currentState.copyWith(
+        bookingData: bookingData,
+        guests: existingGuests,
+      ));
+      debugPrint('✅ [CheckinBloc] Datos refrescados');
+    }
+  }
+
+  /// Maneja el evento de verificación de estado (desde Realtime o notificación)
+  Future<void> _onStatusCheckRequested(
+    CheckinStatusCheckRequested event,
+    Emitter<CheckinState> emit,
+  ) async {
+    debugPrint('🔄 [CheckinBloc] Verificando estado del check-in...');
+    final currentStatus = await _repository.getCheckinStatus(event.bookingId);
+
+    final currentState = state;
+
+    if (currentStatus == CheckinStatus.validated && currentState is CheckinAlreadyCompleted) {
+      // Si cambió a validado, recargar y mostrar la vista actualizada
+      final bookingData = await _repository.getBookingForCheckin(event.bookingId);
+      final existingGuests = await _repository.getBookingGuests(event.bookingId);
+
+      emit(CheckinAlreadyCompleted(
+        bookingData: bookingData,
+        guests: existingGuests,
+        checkinStatus: CheckinStatus.validated,
+      ));
+      debugPrint('✅ [CheckinBloc] Check-in validado!');
+    } else if (currentStatus == CheckinStatus.rejected && currentState is CheckinAlreadyCompleted) {
+      // Si fue rechazado, mostrar error
+      emit(const CheckinError('Tu check-in ha sido rechazado. Por favor, contacta con recepción.'));
     }
   }
 }

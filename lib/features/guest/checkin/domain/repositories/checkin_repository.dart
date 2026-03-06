@@ -52,6 +52,10 @@ abstract class CheckinRepository {
   /// Guarda o actualiza el perfil del usuario
   /// Se usa para persistir datos como DNI entre reservas
   Future<void> saveProfile(ProfileData profile);
+
+  /// Suscribe a cambios en tiempo real del estado del check-in
+  /// Retorna un Stream que emite el nuevo estado cada vez que cambia
+  Stream<CheckinStatus> watchCheckinStatus(String bookingId);
 }
 
 /// Datos de la reserva necesarios para el check-in
@@ -61,6 +65,7 @@ class CheckinBookingData {
     required this.bookingCode,
     required this.unitName,
     required this.propertyName,
+    required this.propertyId,
     required this.checkInDate,
     required this.checkOutDate,
     required this.numAdults,
@@ -78,6 +83,7 @@ class CheckinBookingData {
   final String bookingCode;
   final String unitName;
   final String propertyName;
+  final String propertyId;
   final DateTime checkInDate;
   final DateTime checkOutDate;
   final int numAdults;
@@ -123,6 +129,7 @@ class CheckinBookingData {
       bookingCode: json['booking_code'] as String,
       unitName: json['unit_name'] as String? ?? '',
       propertyName: json['property_name'] as String? ?? '',
+      propertyId: json['property_id'] as String? ?? '',
       checkInDate: DateTime.parse(json['checkin_date'] as String),
       checkOutDate: DateTime.parse(json['checkout_date'] as String),
       numAdults: json['num_adults'] as int? ?? 1,

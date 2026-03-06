@@ -135,62 +135,68 @@ class DashboardTab extends StatelessWidget {
 
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                icon: Icons.pending_actions_outlined,
-                value: summary?.pendingCheckins.toString() ?? '0',
-                label: 'Check-ins pendientes',
-                onTap: () {
-                  context.read<AdminDashboardBloc>().add(
-                        const AdminDashboardTabChanged(2),
-                      );
-                },
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _StatCard(
+                  icon: Icons.pending_actions_outlined,
+                  value: summary?.pendingCheckins.toString() ?? '0',
+                  label: 'Check-ins pendientes',
+                  onTap: () {
+                    context.read<AdminDashboardBloc>().add(
+                          const AdminDashboardTabChanged(2),
+                        );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatCard(
-                icon: Icons.flight_land_outlined,
-                value: summary?.upcomingCheckins.toString() ?? '0',
-                label: 'Llegadas próximas 7 días',
-                onTap: () {
-                  context.read<AdminDashboardBloc>().add(
-                        const AdminDashboardTabChanged(1),
-                      );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StatCard(
+                  icon: Icons.flight_land_outlined,
+                  value: summary?.upcomingCheckins.toString() ?? '0',
+                  label: 'Llegadas próximas 7 días',
+                  onTap: () {
+                    context.read<AdminDashboardBloc>().add(
+                          const AdminDashboardTabChanged(1),
+                        );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                icon: Icons.chat_bubble_outline,
-                value: 'Chat',
-                label: 'Mensajes de huéspedes',
-                onTap: () {
-                  context.go(AppRoutes.adminChat);
-                },
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _StatCard(
+                  icon: Icons.chat_bubble_outline,
+                  value: 'Chat',
+                  label: 'Mensajes de huéspedes',
+                  onTap: () {
+                    context.go(AppRoutes.adminChat);
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatCard(
-                icon: Icons.apartment_outlined,
-                value: summary?.totalUnits.toString() ?? '0',
-                label: 'Alojamientos activos',
-                onTap: () {
-                  context.read<AdminDashboardBloc>().add(
-                        const AdminDashboardTabChanged(3),
-                      );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StatCard(
+                  icon: Icons.apartment_outlined,
+                  value: summary?.totalUnits.toString() ?? '0',
+                  label: 'Alojamientos activos',
+                  onTap: () {
+                    context.read<AdminDashboardBloc>().add(
+                          const AdminDashboardTabChanged(3),
+                        );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -296,7 +302,10 @@ class _StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.darkSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.darkBorder),
+          border: Border.all(
+            color: AppColors.gold,
+            width: 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

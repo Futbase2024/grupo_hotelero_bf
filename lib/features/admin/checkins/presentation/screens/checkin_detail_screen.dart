@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
+import 'package:bf_stay/core/services/notification_service.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_entities.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/admin/domain/services/email_service.dart';
@@ -798,6 +799,14 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           }
         }
 
+        // 3. Enviar notificación push al huésped
+        if (_checkinDetail != null) {
+          await NotificationService().notifyGuestCheckinStatus(
+            bookingId: _checkinDetail!.bookingId,
+            status: 'validated',
+          );
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -871,16 +880,49 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
+      final reason = reasonController.text.trim().isEmpty
+          ? 'Sin motivo especificado'
+          : reasonController.text.trim();
+
       try {
+        // 1. Rechazar en la base de datos
         await Supabase.instance.client.rpc(
           'reject_checkin',
           params: {
             'p_checkin_id': widget.checkinId,
-            'p_reason': reasonController.text.trim().isEmpty
-                ? 'Sin motivo especificado'
-                : reasonController.text.trim(),
+            'p_reason': reason,
           },
         );
+
+        // 2. Enviar email de rechazo al huésped
+        if (_checkinDetail != null) {
+          final primaryGuest = _checkinDetail!.primaryGuest;
+          if (primaryGuest?.email != null && primaryGuest!.email!.isNotEmpty) {
+            debugPrint('📧 [RejectCheckin] Enviando email a: ${primaryGuest.email}');
+            await EmailService().sendCheckinRejectionEmail(
+              toEmail: primaryGuest.email!,
+              guestName: primaryGuest.fullName,
+              propertyName: _checkinDetail!.propertyName,
+              unitName: _checkinDetail!.unitName,
+              checkinDate: _checkinDetail!.checkinDate,
+              checkoutDate: _checkinDetail!.checkoutDate,
+              reason: reason,
+              bookingId: _checkinDetail!.bookingId,
+              unitId: _checkinDetail!.unitId,
+            );
+          }
+        }
+
+        // 3. Enviar notificación push al huésped
+        if (_checkinDetail != null) {
+          debugPrint('📱 [RejectCheckin] Enviando push notification...');
+          await NotificationService().notifyGuestCheckinStatus(
+            bookingId: _checkinDetail!.bookingId,
+            status: 'rejected',
+            reason: reason,
+          );
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -987,16 +1029,49 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
+      final reason = reasonController.text.trim().isEmpty
+          ? 'Sin motivo especificado'
+          : reasonController.text.trim();
+
       try {
+        // 1. Cancelar en la base de datos
         await Supabase.instance.client.rpc(
           'cancel_checkin',
           params: {
             'p_checkin_id': widget.checkinId,
-            'p_reason': reasonController.text.trim().isEmpty
-                ? 'Sin motivo especificado'
-                : reasonController.text.trim(),
+            'p_reason': reason,
           },
         );
+
+        // 2. Enviar email de cancelación al huésped
+        if (_checkinDetail != null) {
+          final primaryGuest = _checkinDetail!.primaryGuest;
+          if (primaryGuest?.email != null && primaryGuest!.email!.isNotEmpty) {
+            debugPrint('📧 [CancelCheckin] Enviando email a: ${primaryGuest.email}');
+            await EmailService().sendCheckinCancellationEmail(
+              toEmail: primaryGuest.email!,
+              guestName: primaryGuest.fullName,
+              propertyName: _checkinDetail!.propertyName,
+              unitName: _checkinDetail!.unitName,
+              checkinDate: _checkinDetail!.checkinDate,
+              checkoutDate: _checkinDetail!.checkoutDate,
+              reason: reason,
+              bookingId: _checkinDetail!.bookingId,
+              unitId: _checkinDetail!.unitId,
+            );
+          }
+        }
+
+        // 3. Enviar notificación push al huésped
+        if (_checkinDetail?.bookingId != null) {
+          debugPrint('📱 [CancelCheckin] Enviando push notification...');
+          await NotificationService().notifyGuestCheckinStatus(
+            bookingId: _checkinDetail!.bookingId,
+            status: 'cancelled',
+            reason: reason,
+          );
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

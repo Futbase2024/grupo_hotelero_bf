@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../entities/admin_entities.dart';
 
 /// Eventos del BLoC del dashboard de administración
 abstract class AdminDashboardEvent extends Equatable {
@@ -113,4 +114,56 @@ class AdminDashboardUnitWifiUpdateRequested extends AdminDashboardEvent {
 
   @override
   List<Object?> get props => [unitId, wifiNetwork, wifiPassword];
+}
+
+// ==================== EVENTOS DE NOTIFICACIONES ====================
+
+/// Cargar todas las notificaciones
+class AdminDashboardNotificationsLoadRequested extends AdminDashboardEvent {
+  const AdminDashboardNotificationsLoadRequested();
+}
+
+/// Marcar una notificación como leída
+class AdminDashboardNotificationMarkAsReadRequested extends AdminDashboardEvent {
+  const AdminDashboardNotificationMarkAsReadRequested(this.notificationId);
+
+  final String notificationId;
+
+  @override
+  List<Object?> get props => [notificationId];
+}
+
+/// Marcar todas las notificaciones como leídas
+class AdminDashboardNotificationsMarkAllAsReadRequested extends AdminDashboardEvent {
+  const AdminDashboardNotificationsMarkAllAsReadRequested();
+}
+
+/// Eliminar una notificación
+class AdminDashboardNotificationDeleteRequested extends AdminDashboardEvent {
+  const AdminDashboardNotificationDeleteRequested(this.notificationId);
+
+  final String notificationId;
+
+  @override
+  List<Object?> get props => [notificationId];
+}
+
+/// Eliminar todas las notificaciones
+class AdminDashboardNotificationsDeleteAllRequested extends AdminDashboardEvent {
+  const AdminDashboardNotificationsDeleteAllRequested();
+}
+
+/// Notificación recibida en tiempo real
+class AdminDashboardNotificationReceived extends AdminDashboardEvent {
+  const AdminDashboardNotificationReceived(this.notification);
+
+  final StaffNotificationEntity notification;
+
+  @override
+  List<Object?> get props => [notification];
+}
+
+/// Cambio detectado en checkins (realtime)
+class AdminDashboardCheckinsChanged extends AdminDashboardEvent {
+  const AdminDashboardCheckinsChanged();
 }

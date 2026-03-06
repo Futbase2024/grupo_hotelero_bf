@@ -136,8 +136,22 @@ abstract class AdminPanelRepository {
   /// Marca notificaciones como leídas
   Future<void> markNotificationsAsRead(List<String> notificationIds);
 
+  /// Marca todas las notificaciones como leídas
+  Future<void> markAllNotificationsAsRead();
+
+  /// Elimina una notificación
+  Future<void> deleteNotification(String notificationId);
+
+  /// Elimina todas las notificaciones
+  Future<void> deleteAllNotifications();
+
   /// Stream de notificaciones en tiempo real
   Stream<StaffNotificationEntity> watchNotifications({
+    String? propertyId,
+  });
+
+  /// Stream de cambios en checkins en tiempo real
+  Stream<void> watchCheckins({
     String? propertyId,
   });
 

@@ -220,6 +220,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       );
 
       // Suscribirse a nuevos mensajes en tiempo real
+      // El tracking ahora se maneja internamente en watchMessages
       _messagesSubscription?.cancel();
       _messagesSubscription = _chatRepository
           .watchMessages(conversation.id)

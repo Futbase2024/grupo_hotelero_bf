@@ -54,6 +54,7 @@ abstract class ChatRepository {
   });
 
   /// Suscribe a nuevos mensajes en tiempo real
+  /// Solo emite cuando llega un mensaje nuevo (no re-emite mensajes existentes)
   Stream<MessageEntity> watchMessages(String conversationId);
 
   /// Marca mensajes como leídos

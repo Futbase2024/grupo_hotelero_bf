@@ -11,10 +11,13 @@ import '../../features/public/home/presentation/screens/public_home_screen.dart'
 import '../../features/public/home/presentation/screens/public_home_light_screen.dart';
 import '../../features/auth/presentation/screens/booking_access_screen.dart';
 import '../../features/guest/home/presentation/screens/guest_home_screen.dart';
+import '../../features/guest/home/domain/bloc/guest_home_bloc.dart';
+import '../../features/guest/home/domain/bloc/guest_home_event.dart';
+import '../../features/guest/notifications/presentation/screens/guest_notifications_screen.dart';
 import '../../features/guest/checkin/presentation/screens/checkin_screen.dart';
+import '../../features/guest/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/guest/checkin/presentation/bloc/checkin_bloc.dart';
 import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
-import '../../features/guest/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/guest/checkout/presentation/bloc/checkout_bloc.dart';
 import '../../features/guest/checkout/domain/repositories/checkout_repository.dart';
 import '../../features/guest/access_box/presentation/screens/access_box_screen.dart';
@@ -48,6 +51,10 @@ import '../../features/admin/bookings/presentation/screens/booking_detail_screen
 import '../../features/admin/domain/repositories/admin_panel_repository.dart';
 import '../di/injection.dart';
 
+/// GlobalKey para acceder al Navigator desde cualquier lugar
+/// Necesario para mostrar diálogos desde fuera del árbol de navegación (ej: UpdateChecker)
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 /// Rutas de la aplicación
 class AppRoutes {
   AppRoutes._();
@@ -62,6 +69,7 @@ class AppRoutes {
 
   // Guest routes
   static const String guestHome = '/guest';
+  static const String guestNotifications = '/guest/notifications';
   static const String checkin = '/guest/checkin/:bookingId';
   static const String checkout = '/guest/checkout/:bookingId';
   static const String accessBox = '/guest/access-box';
@@ -105,6 +113,7 @@ class AppRouter {
   /// Crea el router con el AuthBloc para redirecciones
   static GoRouter createRouter(AuthBloc authBloc) {
     return GoRouter(
+      navigatorKey: rootNavigatorKey,
       initialLocation: AppRoutes.publicHome,
       debugLogDiagnostics: true,
       refreshListenable: GoRouterRefreshStream(authBloc.stream),
@@ -189,6 +198,21 @@ class AppRouter {
           path: AppRoutes.guestHome,
           name: 'guest-home',
           builder: (context, state) => const GuestHomeScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.guestNotifications,
+          name: 'guest-notifications',
+          builder: (context, state) {
+            final authState = context.read<AuthBloc>().state;
+            final user = authState is AuthAuthenticated ? authState.user : null;
+
+            return BlocProvider(
+              create: (context) => GuestHomeBloc(
+                repository: getIt<AdminPanelRepository>(),
+              )..add(GuestHomeLoadNotifications(user?.id ?? '')),
+              child: const GuestNotificationsScreen(),
+            );
+          },
         ),
         GoRoute(
           path: AppRoutes.checkin,
@@ -483,6 +507,7 @@ class AppRouter {
   static bool _isRouteAllowedForRole(String route, UserRole role) {
     const guestRoutes = [
       AppRoutes.guestHome,
+      AppRoutes.guestNotifications,
       AppRoutes.checkin,
       AppRoutes.checkout,
       AppRoutes.accessBox,

@@ -118,51 +118,53 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final isDark = AppColors.isDarkMode(context);
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) => _handleAuthStateChange(state),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.55,
-        ),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 8,
-            bottom: bottomPadding + 24,
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 150),
+        padding: EdgeInsets.only(bottom: keyboardHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : AppColors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Drag handle
-                _buildDragHandle(),
-                const SizedBox(height: 24),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 8,
+              bottom: bottomPadding + 24,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag handle
+                  _buildDragHandle(),
+                  const SizedBox(height: 24),
 
-                // Header
-                _buildHeader(isDark),
-                const SizedBox(height: 28),
+                  // Header
+                  _buildHeader(isDark),
+                  const SizedBox(height: 28),
 
-                // Campos del formulario
-                _buildEmailField(isDark),
-                const SizedBox(height: 16),
-                _buildPasswordField(isDark),
-                const SizedBox(height: 8),
+                  // Campos del formulario
+                  _buildEmailField(isDark),
+                  const SizedBox(height: 16),
+                  _buildPasswordField(isDark),
+                  const SizedBox(height: 8),
 
-                // Mensaje de error
-                _buildErrorMessage(),
-                const SizedBox(height: 24),
+                  // Mensaje de error
+                  _buildErrorMessage(),
+                  const SizedBox(height: 24),
 
-                // Botón de acceso
-                _buildSubmitButton(),
-              ],
+                  // Botón de acceso
+                  _buildSubmitButton(),
+                ],
+              ),
             ),
           ),
         ),

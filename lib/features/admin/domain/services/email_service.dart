@@ -12,6 +12,8 @@ class EmailService {
   SupabaseClient get _client => Supabase.instance.client;
 
   /// Envía email de confirmación de check-in validado
+  /// Template ID 3 en Brevo
+  /// Los parámetros hero_image_url, links y teléfonos tienen defaults en la Edge Function
   Future<bool> sendCheckinConfirmationEmail({
     required String toEmail,
     required String guestName,
@@ -40,9 +42,8 @@ class EmailService {
             'nombre_propiedad': '$propertyName - $unitName',
             'fecha_entrada': DateFormat('dd/MM/yyyy').format(checkinDate),
             'fecha_salida': DateFormat('dd/MM/yyyy').format(checkoutDate),
-            'codigo_acceso': bookingCode,
-            'link_app': 'https://bf-stay.pages.dev/',
-            'telefono_soporte': '+34 900 000 000',
+            // Link dinámico con el bookingId
+            if (bookingId != null) 'link_abrir_app': 'https://bf-stay.pages.dev/booking/$bookingId',
           },
           'booking_id': bookingId,
           'unit_id': unitId,
@@ -193,6 +194,75 @@ class EmailService {
       return response.status == 200;
     } catch (e) {
       debugPrint('❌ [EmailService] Error: $e');
+      return false;
+    }
+  }
+
+  /// Envía email cuando el admin crea una reserva
+  /// Este email incluye el código de acceso y enlace a la app
+  /// Usa la Edge Function send-new-booking-email existente
+  Future<bool> sendBookingCreatedEmail({
+    required String toEmail,
+    required String guestName,
+    required String propertyName,
+    required String unitName,
+    required DateTime checkinDate,
+    required DateTime checkoutDate,
+    required String bookingCode,
+    required int numGuests,
+    String? totalPrice,
+    String? accessCode,
+    String? accessInstructions,
+    String? wifiNetwork,
+    String? wifiPassword,
+    String? fullAddress,
+    String? bookingId,
+    String? unitId,
+  }) async {
+    try {
+      debugPrint('📧 [EmailService] Enviando email de reserva creada a: $toEmail');
+      debugPrint('📧 [EmailService] bookingCode: $bookingCode');
+      debugPrint('📧 [EmailService] guestName: $guestName');
+      debugPrint('📧 [EmailService] propertyName: $propertyName - $unitName');
+
+      if (bookingCode.isEmpty) {
+        debugPrint('❌ [EmailService] ERROR: bookingCode está vacío');
+        return false;
+      }
+
+      final response = await _client.functions.invoke(
+        'send-new-booking-email',
+        body: {
+          'to_email': toEmail,
+          'to_name': guestName,
+          'params': {
+            'nombre_huesped': guestName,
+            'nombre_propiedad': '$propertyName - $unitName',
+            'fecha_entrada': DateFormat('dd/MM/yyyy').format(checkinDate),
+            'fecha_salida': DateFormat('dd/MM/yyyy').format(checkoutDate),
+            'codigo_acceso': bookingCode,
+            // Link dinámico con el bookingId
+            if (bookingId != null) 'link_abrir_app': 'https://bf-stay.pages.dev/booking/$bookingId',
+            // Otros parámetros dinámicos
+            'num_huespedes': numGuests.toString(),
+            'precio_total': totalPrice ?? 'Confirmar con el establecimiento',
+          },
+          'booking_id': bookingId,
+          'unit_id': unitId,
+        },
+      );
+
+      if (response.status == 200) {
+        debugPrint('✅ [EmailService] Email de reserva creada enviado');
+        return true;
+      } else {
+        debugPrint('❌ [EmailService] Error enviando email: ${response.status}');
+        debugPrint('❌ [EmailService] Response: ${response.data}');
+        return false;
+      }
+    } catch (e, s) {
+      debugPrint('❌ [EmailService] Excepción enviando email: $e');
+      debugPrint('❌ [EmailService] StackTrace: $s');
       return false;
     }
   }

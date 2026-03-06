@@ -35,26 +35,36 @@ class _CheckinScreenState extends State<CheckinScreen> {
     return Scaffold(
       appBar: _buildAppBar(context),
       body: SafeArea(
-        child: BlocConsumer<CheckinBloc, CheckinState>(
-          listener: _handleStateChange,
-          builder: (context, state) {
-            if (state is CheckinLoading) {
-              return const _LoadingView();
-            }
-            if (state is CheckinLoaded) {
-              return _buildLoadedView(context, state);
-            }
-            if (state is CheckinSubmitting) {
-              return const _SubmittingView();
-            }
-            if (state is CheckinAlreadyCompleted) {
-              return _CheckinCompletedView(state: state);
-            }
-            if (state is CheckinError) {
-              return _ErrorView(message: state.message);
-            }
-            return const _LoadingView();
+        child: RefreshIndicator(
+          onRefresh: () async {
+            context.read<CheckinBloc>().add(
+              CheckinRefreshRequested(widget.bookingId),
+            );
           },
+          child: BlocConsumer<CheckinBloc, CheckinState>(
+            listener: _handleStateChange,
+            builder: (context, state) {
+              if (state is CheckinLoading) {
+                return const _LoadingView();
+              }
+              if (state is CheckinLoaded) {
+                return _buildLoadedView(context, state);
+              }
+              if (state is CheckinSubmitting) {
+                return const _SubmittingView();
+              }
+              if (state is CheckinAlreadyCompleted) {
+                return _CheckinCompletedView(
+                  state: state,
+                  bookingId: widget.bookingId,
+                );
+              }
+              if (state is CheckinError) {
+                return _ErrorView(message: state.message);
+              }
+              return const _LoadingView();
+            },
+          ),
         ),
       ),
     );
@@ -141,13 +151,18 @@ class _SubmittingView extends StatelessWidget {
 }
 
 class _CheckinCompletedView extends StatelessWidget {
-  const _CheckinCompletedView({required this.state});
+  const _CheckinCompletedView({
+    required this.state,
+    required this.bookingId,
+  });
 
   final CheckinAlreadyCompleted state;
+  final String bookingId;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -186,6 +201,32 @@ class _CheckinCompletedView extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            // Indicador de espera si está pendiente de validación
+            if (!state.isValidated) ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.gold.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Esperando validación...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.gray500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(16),

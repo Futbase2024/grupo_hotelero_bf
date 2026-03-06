@@ -126,3 +126,23 @@ class CheckinSubmitted extends CheckinEvent {
 class CheckinRetry extends CheckinEvent {
   const CheckinRetry();
 }
+
+/// Refrescar el estado del check-in (pull-to-refresh)
+class CheckinRefreshRequested extends CheckinEvent {
+  const CheckinRefreshRequested(this.bookingId);
+
+  final String bookingId;
+
+  @override
+  List<Object?> get props => [bookingId];
+}
+
+/// Verificar el estado del check-in (desde notificación o realtime)
+class CheckinStatusCheckRequested extends CheckinEvent {
+  const CheckinStatusCheckRequested(this.bookingId);
+
+  final String bookingId;
+
+  @override
+  List<Object?> get props => [bookingId];
+}

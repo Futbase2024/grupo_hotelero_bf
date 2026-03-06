@@ -6,6 +6,7 @@ import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../bookings/presentation/sheets/create_booking_bottom_sheet.dart';
+import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../widgets/dashboard_tab.dart';
 import '../widgets/bookings_tab.dart';
 import '../widgets/checkins_tab.dart';
@@ -131,7 +132,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     size: 24,
                   ),
                   onPressed: () {
-                    // TODO: Navigate to notifications screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider.value(
+                          value: _bloc,
+                          child: const NotificationsScreen(),
+                        ),
+                      ),
+                    );
                   },
                 ),
                 if (state.unreadNotificationsCount > 0)

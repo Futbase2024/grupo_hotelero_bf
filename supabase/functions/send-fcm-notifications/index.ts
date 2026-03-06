@@ -3,7 +3,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { jwt } from 'https://esm.sh/google-jwt@1.0.0'
+import { SignJWT, importPKCS8 } from 'https://esm.sh/jose@5.9.6'
 
 interface NotificationQueue {
   id: string
@@ -28,18 +28,44 @@ const FIREBASE_PROJECT_ID = Deno.env.get('FIREBASE_PROJECT_ID')!
 const FIREBASE_CLIENT_EMAIL = Deno.env.get('FIREBASE_CLIENT_EMAIL')!
 const FIREBASE_PRIVATE_KEY = Deno.env.get('FIREBASE_PRIVATE_KEY')!.replace(/\\n/g, '\n')
 
-// Obtener token de acceso OAuth2 para FCM
+// Obtener token de acceso OAuth2 para FCM usando jose
 async function getAccessToken(): Promise<string> {
   const scope = 'https://www.googleapis.com/auth/firebase.messaging'
 
-  const token = await jwt({
-    email: FIREBASE_CLIENT_EMAIL,
-    key: FIREBASE_PRIVATE_KEY,
-    scopes: [scope],
-    expiration: 3600,
+  // Importar la clave privada
+  const privateKey = await importPKCS8(FIREBASE_PRIVATE_KEY, 'RS256')
+
+  // Crear el JWT
+  const jwt = await new SignJWT({
+    scope: scope,
+  })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuer(FIREBASE_CLIENT_EMAIL)
+    .setSubject(FIREBASE_CLIENT_EMAIL)
+    .setAudience('https://oauth2.googleapis.com/token')
+    .setIssuedAt()
+    .setExpirationTime('1h')
+    .sign(privateKey)
+
+  // Intercambiar JWT por access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }).toString(),
   })
 
-  return token
+  const tokenData = await tokenResponse.json()
+
+  if (!tokenData.access_token) {
+    throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`)
+  }
+
+  return tokenData.access_token
 }
 
 // Enviar notificación a FCM HTTP v1 API
@@ -102,11 +128,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Verificar autorización (opcional: usar un secret como API key)
+    // Verificar autorización solo si viene header (para llamadas externas)
+    // Las llamadas internas desde triggers de Supabase no tienen header
     const authHeader = req.headers.get('Authorization')
     const expectedAuth = Deno.env.get('FCM_API_SECRET')
 
-    if (expectedAuth && authHeader !== `Bearer ${expectedAuth}`) {
+    // Si viene header de autorización, validarlo
+    // Si NO viene header, permitir (llamada interna desde trigger)
+    if (authHeader && expectedAuth && authHeader !== `Bearer ${expectedAuth}`) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },

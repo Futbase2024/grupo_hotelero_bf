@@ -27,3 +27,43 @@ class GuestHomeRefreshBooking extends GuestHomeEvent {
   @override
   List<Object?> get props => [bookingId];
 }
+
+/// Evento para cargar las notificaciones del huésped
+class GuestHomeLoadNotifications extends GuestHomeEvent {
+  const GuestHomeLoadNotifications(this.userId);
+
+  final String userId;
+
+  @override
+  List<Object?> get props => [userId];
+}
+
+/// Evento para marcar una notificación como leída
+class GuestHomeNotificationMarkAsRead extends GuestHomeEvent {
+  const GuestHomeNotificationMarkAsRead(this.notificationId);
+
+  final String notificationId;
+
+  @override
+  List<Object?> get props => [notificationId];
+}
+
+/// Evento para marcar todas las notificaciones como leídas
+class GuestHomeNotificationsMarkAllAsRead extends GuestHomeEvent {
+  const GuestHomeNotificationsMarkAllAsRead();
+}
+
+/// Evento para eliminar una notificación
+class GuestHomeNotificationDelete extends GuestHomeEvent {
+  const GuestHomeNotificationDelete(this.notificationId);
+
+  final String notificationId;
+
+  @override
+  List<Object?> get props => [notificationId];
+}
+
+/// Evento para eliminar todas las notificaciones
+class GuestHomeNotificationsDeleteAll extends GuestHomeEvent {
+  const GuestHomeNotificationsDeleteAll();
+}
