@@ -363,15 +363,19 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
           ),
           const SizedBox(height: AppTheme.spacing12),
 
-          // Contacto
+          // Contacto - Teléfonos
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildFooterContactItem(Icons.phone_outlined, '+34 123 456 789'),
+              _buildFooterContactItem(Icons.phone_outlined, '+34 656 61 80 65'),
               const SizedBox(width: AppTheme.spacing16),
-              _buildFooterContactItem(Icons.email_outlined, 'info@bfstay.com'),
+              _buildFooterContactItem(Icons.phone_outlined, '+34 674 27 70 16'),
             ],
           ),
+          const SizedBox(height: AppTheme.spacing8),
+
+          // Contacto - Email
+          _buildFooterContactItem(Icons.email_outlined, 'Info@boutiquejerez.es'),
           const SizedBox(height: AppTheme.spacing12),
 
           // Copyright

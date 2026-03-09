@@ -111,6 +111,17 @@ class AppColors {
   static const Color darkBackgroundWithAlpha80 = Color(0xCC0D0D0D);
   static const Color darkBackgroundWithAlpha90 = Color(0xE60D0D0D);
 
+  // ============== COLORES ROMÁNTICOS ==============
+
+  /// Rosa romántico - Color principal del pack romántico
+  static const Color romanticPink = Color(0xFFE91E63);
+
+  /// Rojo romántico - Para acentos y degradados
+  static const Color romanticRed = Color(0xFFC2185B);
+
+  /// Púrpura romántico - Para degradados elegantes
+  static const Color romanticPurple = Color(0xFF9C27B0);
+
   // ============== COLORES DE ESTADO ==============
 
   static const Color success = Color(0xFF22C55E);

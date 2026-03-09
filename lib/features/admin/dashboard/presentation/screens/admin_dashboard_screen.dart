@@ -5,8 +5,11 @@ import '../../../../../core/di/injection.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
+import '../../../domain/repositories/invoices_repository.dart';
 import '../../../bookings/presentation/sheets/create_booking_bottom_sheet.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../../invoices/presentation/bloc/invoices_bloc.dart';
+import '../../../invoices/presentation/widgets/invoices_tab.dart';
 import '../widgets/dashboard_tab.dart';
 import '../widgets/bookings_tab.dart';
 import '../widgets/checkins_tab.dart';
@@ -27,7 +30,7 @@ class _Debug {
 }
 
 /// Pantalla principal del panel de administración.
-/// Shell con BottomNavigationBar y 4 tabs.
+/// Shell con BottomNavigationBar y 5 tabs.
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -37,6 +40,7 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   late final AdminDashboardBloc _bloc;
+  late final InvoicesBloc _invoicesBloc;
   late final AuthBloc _authBloc;
 
   @override
@@ -45,6 +49,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     _Debug.log('initState - Iniciando AdminDashboardScreen');
     _bloc = AdminDashboardBloc(
       repository: getIt<AdminPanelRepository>(),
+    );
+    _invoicesBloc = InvoicesBloc(
+      repository: getIt<InvoicesRepository>(),
+      adminRepository: getIt<AdminPanelRepository>(),
     );
     _authBloc = context.read<AuthBloc>();
     _Debug.log('initState - AuthBloc obtenido: ${_authBloc.state}');
@@ -56,14 +64,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void dispose() {
     _Debug.log('dispose - Cerrando AdminDashboardScreen');
     _bloc.close();
+    _invoicesBloc.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     _Debug.log('build - Construyendo widget');
-    return BlocProvider.value(
-      value: _bloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _bloc),
+        BlocProvider.value(value: _invoicesBloc),
+      ],
       child: BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
         buildWhen: (prev, curr) => prev.currentTabIndex != curr.currentTabIndex,
         builder: (context, state) {
@@ -192,11 +204,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
 
     // Construir lista de tabs según permisos
+    // Orden: Resumen (0), Reservas (1), Check-ins (2), Facturas (3), Alojamientos (4)
     final tabs = <Widget>[
       const DashboardTab(),
       const BookingsTab(),
       const CheckinsTab(),
     ];
+
+    // Tab de facturas solo visible para admin
+    if (isAdmin) {
+      tabs.add(const InvoicesTab());
+    }
 
     // Tab de alojamientos solo visible para admin
     if (isAdmin) {
@@ -216,6 +234,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final authState = _authBloc.state;
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
 
+    final tabNames = ['Resumen', 'Reservas', 'Check-ins', 'Facturas', 'Alojamientos'];
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.darkSurface,
@@ -226,9 +246,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: BottomNavigationBar(
         currentIndex: state.currentTabIndex,
         onTap: (index) {
-          // Si no es admin y trata de acceder al tab 3, ignorar
-          if (!isAdmin && index == 3) return;
-          _Debug.log('Tab pulsado: $index (${['Resumen', 'Reservas', 'Check-ins', 'Alojamientos'][index]})');
+          // Si no es admin y trata de acceder a tabs de admin (3 o 4), ignorar
+          if (!isAdmin && (index == 3 || index == 4)) return;
+          _Debug.log('Tab pulsado: $index (${tabNames[index]})');
           _bloc.add(AdminDashboardTabChanged(index));
         },
         type: BottomNavigationBarType.fixed,
@@ -253,7 +273,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             activeIcon: Icon(Icons.how_to_reg),
             label: 'Check-ins',
           ),
-          // Solo mostrar tab de alojamientos para admin
+          // Tab de facturas solo visible para admin
+          if (isAdmin)
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long_outlined),
+              activeIcon: Icon(Icons.receipt_long),
+              label: 'Facturas',
+            ),
+          // Tab de alojamientos solo visible para admin
           if (isAdmin)
             const BottomNavigationBarItem(
               icon: Icon(Icons.apartment_outlined),
@@ -270,6 +297,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (state.currentTabIndex != 1) return null;
 
     return FloatingActionButton(
+      heroTag: 'admin_dashboard_fab',
       onPressed: () {
         _Debug.log('FAB presionado - Abriendo CreateBookingBottomSheet');
         try {

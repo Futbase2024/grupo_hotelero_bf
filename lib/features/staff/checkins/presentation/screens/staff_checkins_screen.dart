@@ -61,6 +61,7 @@ class _StaffCheckinsScreenState extends State<StaffCheckinsScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'staff_checkins_fab',
         onPressed: () {},
         backgroundColor: AppColors.gold,
         icon: const Icon(Icons.add, color: Colors.white),

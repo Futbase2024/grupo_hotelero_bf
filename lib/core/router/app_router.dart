@@ -37,6 +37,8 @@ import '../../features/guest/que_ver/presentation/screens/place_detail_screen.da
 import '../../features/guest/que_ver/domain/entities/place_entity.dart';
 import '../../features/guest/parkings/presentation/screens/parkings_screen.dart';
 import '../../features/guest/my_accommodation/presentation/screens/my_accommodation_screen.dart';
+import '../../features/guest/extras/presentation/screens/romantic_pack_screen.dart';
+import '../../features/guest/extras/presentation/screens/physical_registration_screen.dart';
 import '../../features/guest/reviews/domain/bloc/reviews_bloc.dart';
 import '../../features/guest/reviews/domain/entities/review_entity.dart';
 import '../../features/guest/reviews/domain/repositories/reviews_repository.dart';
@@ -89,6 +91,8 @@ class AppRoutes {
   static const String collection = '/guest/que-ver/collection/:id';
   static const String parkings = '/guest/parkings';
   static const String parkingsByUnit = '/guest/parkings/:unitId';
+  static const String romanticPack = '/guest/romantic-pack';
+  static const String physicalRegistration = '/guest/physical-registration';
 
   // Reviews routes
   static const String reviews = '/guest/reviews/:propertyId';
@@ -363,6 +367,16 @@ class AppRouter {
             return ParkingsScreen(unitId: unitId);
           },
         ),
+        GoRoute(
+          path: AppRoutes.romanticPack,
+          name: 'romantic-pack',
+          builder: (context, state) => const RomanticPackScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.physicalRegistration,
+          name: 'physical-registration',
+          builder: (context, state) => const PhysicalRegistrationScreen(),
+        ),
 
         // Reviews Routes
         GoRoute(
@@ -517,6 +531,8 @@ class AppRouter {
       AppRoutes.alojamientos,
       AppRoutes.queVer,
       AppRoutes.parkings,
+      AppRoutes.romanticPack,
+      AppRoutes.physicalRegistration,
     ];
 
     // Rutas que empiezan por cierto patrón también son permitidas

@@ -9,6 +9,7 @@ import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
+import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/shared/utils/unit_image_helper.dart';
 import '../../domain/bloc/guest_home_bloc.dart';
 import '../../domain/bloc/guest_home_event.dart';
@@ -107,14 +108,15 @@ class GuestHomeScreen extends StatelessWidget {
                             const SizedBox(height: AppTheme.spacing16),
                             BlocBuilder<GuestHomeBloc, GuestHomeState>(
                               builder: (context, state) {
-                                // Solo obtener unitName si el estado es GuestHomeLoaded
+                                // Solo obtener unitName y unitType si el estado es GuestHomeLoaded
                                 // Si está cargando, usar null (se mostrará loading en _StayInfoCard)
                                 final unitName = state is GuestHomeLoaded ? state.booking.unitName : null;
+                                final unitType = state is GuestHomeLoaded ? state.booking.unitType : UnitType.apartment;
                                 // Si está cargando, no llamar a UnitImageHelper todavía
                                 if (state is GuestHomeInitial || state is GuestHomeLoading) {
-                                  return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null);
+                                  return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null, UnitType.apartment);
                                 }
-                                return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName);
+                                return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName, unitType);
                               },
                             ),
                           ],
@@ -611,32 +613,65 @@ class GuestHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId, String? unitName) {
+  Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId, String? unitName, UnitType unitType) {
     // Si está submitted, el check-in está deshabilitado (ya enviado)
     final canDoCheckin = !isCheckinSubmitted && !isCheckinValidated;
     // Obtener imagen dinámica del alojamiento
     final accommodationImagePath = UnitImageHelper.getLocalImagePath(unitName);
+    // Determinar si es hotel para mostrar Registro Físico
+    final isHotel = unitType == UnitType.hotelRoom;
 
-    // Si NO está validado: Solo Check-in + Chat
+    // Si NO está validado: Check-in, Chat, Pack Romántico y Registro Físico
     if (!isCheckinValidated) {
-      return Row(
+      return Column(
         children: [
-          Expanded(
-            child: _ServiceCard(
-              icon: Icons.fact_check_outlined,
-              title: 'Check-in',
-              imagePath: 'assets/images/checkin.png',
-              onTap: canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null,
-            ),
+          // Primera fila: Check-in y Chat
+          Row(
+            children: [
+              Expanded(
+                child: _ServiceCard(
+                  icon: Icons.fact_check_outlined,
+                  title: 'Check-in',
+                  imagePath: 'assets/images/checkin.png',
+                  onTap: canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: _ServiceCard(
+                  icon: Icons.chat_bubble_outline,
+                  title: 'Chat',
+                  imagePath: 'assets/images/chat.png',
+                  onTap: () => context.go('/guest/chat'),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppTheme.spacing8),
-          Expanded(
-            child: _ServiceCard(
-              icon: Icons.chat_bubble_outline,
-              title: 'Chat',
-              imagePath: 'assets/images/chat.png',
-              onTap: () => context.go('/guest/chat'),
-            ),
+          const SizedBox(height: AppTheme.spacing8),
+          // Segunda fila: Pack Romántico y (Registro Físico solo si es hotel)
+          Row(
+            children: [
+              Expanded(
+                child: _ServiceCard(
+                  icon: Icons.favorite_outline,
+                  title: 'Pack Romántico',
+                  imagePath: 'assets/images/pack_romantico.png',
+                  onTap: () => context.go('/guest/romantic-pack'),
+                ),
+              ),
+              // Solo mostrar Registro Físico si es hotel
+              if (isHotel) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: _ServiceCard(
+                    icon: Icons.assignment_outlined,
+                    title: 'Registro Físico',
+                    imagePath: 'assets/images/registro_fisico.png',
+                    onTap: () => context.go('/guest/physical-registration'),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       );
@@ -699,6 +734,21 @@ class GuestHomeScreen extends StatelessWidget {
         imagePath: 'assets/images/quever.png',
         onTap: () => context.go('/guest/que-ver'),
       ),
+      // Pack Romántico (siempre disponible)
+      _ServiceItem(
+        icon: Icons.favorite_outline,
+        title: 'Pack Romántico',
+        imagePath: 'assets/images/pack_romantico.png',
+        onTap: () => context.go('/guest/romantic-pack'),
+      ),
+      // Registro Físico solo para hoteles
+      if (isHotel)
+        _ServiceItem(
+          icon: Icons.assignment_outlined,
+          title: 'Registro Físico',
+          imagePath: 'assets/images/registro_fisico.png',
+          onTap: () => context.go('/guest/physical-registration'),
+        ),
     ];
 
     return GridView.builder(

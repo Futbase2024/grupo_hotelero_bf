@@ -1,7 +1,7 @@
 name: bf_stay
 description: BF Stay - Guest & Staff Management App
 publish_to: 'none'
-version: 1.0.1+1
+version: 1.0.3+3
 
 environment:
   sdk: ^3.9.2
@@ -43,6 +43,11 @@ dependencies:
   logger: ^2.5.0
   shared_preferences: ^2.2.2
   share_plus: ^10.1.4
+
+  # PDF Generation
+  pdf: ^3.11.1
+  printing: ^5.14.2
+  path_provider: ^2.1.5
 
   # Icons
   cupertino_icons: ^1.0.8
@@ -92,6 +97,7 @@ flutter:
     - assets/alojamientos/
     - assets/alojamientos/habitaciones/
     - assets/alojamientos/zonas_comunes/
+    - assets/fonts/
 
   # Usamos google_fonts en lugar de fuentes locales
   # fonts:

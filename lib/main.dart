@@ -9,7 +9,7 @@ import 'core/config/url_strategy.dart'
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/services/app_update_service.dart';
-import 'core/services/fcm_service.dart';
+import 'core/services/fcm_service/fcm_service_factory.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/cubit/theme_cubit.dart';
 import 'features/auth/domain/bloc/auth_bloc.dart';
@@ -65,7 +65,7 @@ class _BFStayAppState extends State<BFStayApp> {
     await configureDependencies();
 
     // Initialize FCM Service
-    await FcmService().initialize();
+    await fcmService.initialize();
     debugPrint('✅ FCM Service initialized');
 
     // Initialize App Update Service

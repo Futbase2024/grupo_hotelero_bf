@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/enums/enums.dart';
+import '../../../guest/alojamientos/domain/entities/unit_entity.dart';
 
 /// Entity para reservas con datos completos para el panel de administración
 class AdminBookingEntity extends Equatable {
@@ -40,6 +41,7 @@ class AdminBookingEntity extends Equatable {
     this.checkoutNotes,
     this.createdAt,
     this.updatedAt,
+    this.unitType = UnitType.apartment,
   });
 
   final String id;
@@ -47,6 +49,7 @@ class AdminBookingEntity extends Equatable {
   final String? keyboxCode;
   final String unitId;
   final String unitName;
+  final UnitType unitType;
   final String propertyId;
   final String propertyName;
   final DateTime checkInDate;
@@ -279,6 +282,10 @@ class AdminBookingEntity extends Equatable {
       final guestFirstNameFinal = guestFirstName ?? '';
       final guestLastNameFinal = guestLastNameRaw ?? '';
 
+      // Unit type
+      final unitTypeStr = getStringField(['unit_type']) ?? 'apartment';
+      final unitType = UnitTypeExtension.fromString(unitTypeStr);
+
       // Otros campos
       final guestPhone = getStringField(['guest_phone', 'phone']);
       final staffNotes = getStringField(['staff_notes']);
@@ -306,6 +313,7 @@ class AdminBookingEntity extends Equatable {
         keyboxCode: keyboxCode,
         unitId: unitId,
         unitName: unitName,
+        unitType: unitType,
         propertyId: propertyId,
         propertyName: propertyName,
         checkInDate: checkInDate,
@@ -396,6 +404,7 @@ class AdminBookingEntity extends Equatable {
       'keybox_code': keyboxCode,
       'unit_id': unitId,
       'unit_name': unitName,
+      'unit_type': unitType.value,
       'property_id': propertyId,
       'property_name': propertyName,
       'check_in_date': checkInDate.toIso8601String(),
@@ -436,6 +445,7 @@ class AdminBookingEntity extends Equatable {
     String? keyboxCode,
     String? unitId,
     String? unitName,
+    UnitType? unitType,
     String? propertyId,
     String? propertyName,
     DateTime? checkInDate,
@@ -473,6 +483,7 @@ class AdminBookingEntity extends Equatable {
       keyboxCode: keyboxCode ?? this.keyboxCode,
       unitId: unitId ?? this.unitId,
       unitName: unitName ?? this.unitName,
+      unitType: unitType ?? this.unitType,
       propertyId: propertyId ?? this.propertyId,
       propertyName: propertyName ?? this.propertyName,
       checkInDate: checkInDate ?? this.checkInDate,
@@ -513,6 +524,7 @@ class AdminBookingEntity extends Equatable {
         keyboxCode,
         unitId,
         unitName,
+        unitType,
         propertyId,
         propertyName,
         checkInDate,

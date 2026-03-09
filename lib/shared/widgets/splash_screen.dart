@@ -166,97 +166,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   Widget _buildContent() {
     return SafeArea(
-      child: Column(
-        children: [
-          const Spacer(flex: 2),
-
-          // Logo de BF Stay
-          _buildLogo(),
-
-          const Spacer(flex: 3),
-
-          // Indicador de carga y texto
-          _buildLoadingSection(),
-
-          const SizedBox(height: 48),
-        ],
+      child: Center(
+        child: _buildLoadingSection(),
       ),
-    );
-  }
-
-  Widget _buildLogo() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Logo container con efecto de brillo gold
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.goldWithAlpha20,
-                AppColors.goldWithAlpha10,
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.goldWithAlpha30,
-                blurRadius: 30,
-                spreadRadius: 10,
-              ),
-            ],
-          ),
-          child: Image.asset(
-            'assets/icons/logoBF.png',
-            width: 100,
-            height: 100,
-            fit: BoxFit.contain,
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // Nombre de la app
-        const Text(
-          'BF Stay',
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.w700,
-            color: AppColors.white,
-            letterSpacing: 2,
-            shadows: [
-              Shadow(
-                color: AppColors.blackWithAlpha50,
-                blurRadius: 10,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Tagline
-        Text(
-          'Tu estancia en Jerez',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: AppColors.goldLight,
-            letterSpacing: 1.5,
-            shadows: [
-              Shadow(
-                color: AppColors.blackWithAlpha50,
-                blurRadius: 8,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

@@ -342,7 +342,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         route: '/guest/reviews/bf000000-0000-0000-0000-000000000001',
         imageAsset: 'assets/images/reseña.png',
         overlayColor: const Color(0xFFEF6C00),
-      ),
+      ),      
     ];
 
     return Container(
@@ -425,15 +425,19 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           ),
           const SizedBox(height: AppTheme.spacing12),
 
-          // Contacto
+          // Contacto - Teléfonos
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildFooterContactItem(context, Icons.phone_outlined, '+34 674 27 70 16'),
+              _buildFooterContactItem(context, Icons.phone_outlined, '+34 656 61 80 65'),
               const SizedBox(width: AppTheme.spacing16),
-              _buildFooterContactItem(context, Icons.email_outlined, 'info@bfstay.com'),
+              _buildFooterContactItem(context, Icons.phone_outlined, '+34 674 27 70 16'),
             ],
           ),
+          const SizedBox(height: AppTheme.spacing8),
+
+          // Contacto - Email
+          _buildFooterContactItem(context, Icons.email_outlined, 'Info@boutiquejerez.es'),
           const SizedBox(height: AppTheme.spacing12),
 
           // Copyright
