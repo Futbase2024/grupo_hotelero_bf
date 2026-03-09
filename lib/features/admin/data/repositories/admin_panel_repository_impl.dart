@@ -752,6 +752,28 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     }
   }
 
+  /// Actualiza el código KeyBox de una reserva
+  @override
+  Future<void> updateBookingKeyboxCode({
+    required String bookingId,
+    required String keyboxCode,
+  }) async {
+    try {
+      debugPrint('🔑 [updateBookingKeyboxCode] Actualizando KeyBox de reserva: $bookingId');
+
+      await _client
+          .from('bookings')
+          .update({'keybox_code': keyboxCode})
+          .eq('id', bookingId);
+
+      debugPrint('✅ [updateBookingKeyboxCode] KeyBox actualizado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [updateBookingKeyboxCode] Error: $e');
+      debugPrint('❌ [updateBookingKeyboxCode] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   // Obtener notificaciones directamente desde la base de datos
   @override
   Future<List<StaffNotificationEntity>> getNotifications({

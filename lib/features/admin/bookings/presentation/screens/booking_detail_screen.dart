@@ -30,6 +30,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   bool _isResending = false;
   bool _isValidating = false;
   bool _isValidatingCheckout = false;
+  bool _isUpdatingKeybox = false;
 
   @override
   void initState() {
@@ -350,6 +351,116 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     HapticFeedback.lightImpact();
     Share.share(message);
+  }
+
+  Future<void> _updateKeyboxCode() async {
+    if (_booking == null) return;
+
+    final controller = TextEditingController(text: _booking!.keyboxCode ?? '');
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.edit_outlined, color: AppColors.gold, size: 22),
+            SizedBox(width: 10),
+            Text('Editar Código KeyBox', style: TextStyle(color: AppColors.white, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Introduce el nuevo código del KeyBox:',
+              style: TextStyle(color: AppColors.gray300, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              style: const TextStyle(
+                color: AppColors.white,
+                fontFamily: 'JetBrains Mono',
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 4,
+              ),
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              maxLength: 8,
+              decoration: InputDecoration(
+                hintText: '00000000',
+                hintStyle: TextStyle(
+                  color: AppColors.gray600,
+                  fontFamily: 'JetBrains Mono',
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 4,
+                ),
+                filled: true,
+                fillColor: AppColors.darkBackground,
+                counterStyle: const TextStyle(color: AppColors.gray500, fontSize: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.gold),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.goldWithAlpha40),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.gold, width: 2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.gold,
+              foregroundColor: AppColors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null) return;
+
+    setState(() => _isUpdatingKeybox = true);
+
+    try {
+      await widget.repository.updateBookingKeyboxCode(
+        bookingId: _booking!.id,
+        keyboxCode: result,
+      );
+
+      if (mounted) {
+        _showSnackBar('Código KeyBox actualizado', isError: false);
+        await _loadBooking();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Error al actualizar: $e', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingKeybox = false);
+      }
+    }
   }
 
   String _formatDate(DateTime date) {
@@ -809,15 +920,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             _booking!.bookingCode,
             Icons.confirmation_number_outlined,
           ),
-          if (_booking!.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _buildCodeRow(
-              'Código KeyBox',
-              _booking!.keyboxCode!,
-              Icons.lock_outline,
-              isKeybox: true,
-            ),
-          ],
+          const SizedBox(height: 12),
+          _buildKeyboxCodeRow(),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -830,6 +934,102 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeyboxCodeRow() {
+    final hasKeyboxCode = _booking!.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty;
+    final displayCode = hasKeyboxCode ? _booking!.keyboxCode! : 'Sin configurar';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: hasKeyboxCode ? AppColors.blackWithAlpha20 : AppColors.darkBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasKeyboxCode ? AppColors.silver : AppColors.goldWithAlpha30,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.lock_outline,
+            color: hasKeyboxCode ? AppColors.silver : AppColors.gray500,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Código KeyBox',
+                  style: TextStyle(
+                    color: AppColors.getTextSecondaryColor(context),
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  displayCode,
+                  style: TextStyle(
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: hasKeyboxCode ? 24 : 16,
+                    fontWeight: FontWeight.w700,
+                    color: hasKeyboxCode ? AppColors.silver : AppColors.gray500,
+                    letterSpacing: hasKeyboxCode ? 6 : 0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Botón de copiar (solo si tiene código)
+          if (hasKeyboxCode) ...[
+            GestureDetector(
+              onTap: () => _copyToClipboard(displayCode, 'Código KeyBox'),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.silver),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.copy_outlined,
+                  size: 18,
+                  color: AppColors.silver,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Botón de editar
+          GestureDetector(
+            onTap: _isUpdatingKeybox ? null : _updateKeyboxCode,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.goldWithAlpha20,
+                border: Border.all(color: AppColors.gold),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: _isUpdatingKeybox
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.gold,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: AppColors.gold,
+                    ),
+            ),
           ),
         ],
       ),

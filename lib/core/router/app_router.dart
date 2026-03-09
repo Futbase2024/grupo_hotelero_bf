@@ -37,6 +37,7 @@ import '../../features/guest/que_ver/presentation/screens/place_detail_screen.da
 import '../../features/guest/que_ver/domain/entities/place_entity.dart';
 import '../../features/guest/parkings/presentation/screens/parkings_screen.dart';
 import '../../features/guest/my_accommodation/presentation/screens/my_accommodation_screen.dart';
+import '../../features/guest/my_accommodation/presentation/screens/access_instructions_wrapper_screen.dart';
 import '../../features/guest/extras/presentation/screens/romantic_pack_screen.dart';
 import '../../features/guest/extras/presentation/screens/physical_registration_screen.dart';
 import '../../features/guest/reviews/domain/bloc/reviews_bloc.dart';
@@ -76,6 +77,7 @@ class AppRoutes {
   static const String checkout = '/guest/checkout/:bookingId';
   static const String accessBox = '/guest/access-box';
   static const String myAccommodation = '/guest/my-accommodation';
+  static const String accessInstructions = '/guest/access-instructions';
   static const String stayGuide = '/guest/guide';
   static const String chat = '/guest/chat';
   static const String alojamientos = '/guest/alojamientos';
@@ -253,6 +255,11 @@ class AppRouter {
           path: AppRoutes.myAccommodation,
           name: 'my-accommodation',
           builder: (context, state) => const MyAccommodationScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.accessInstructions,
+          name: 'access-instructions',
+          builder: (context, state) => const AccessInstructionsWrapperScreen(),
         ),
         GoRoute(
           path: AppRoutes.stayGuide,
@@ -526,6 +533,7 @@ class AppRouter {
       AppRoutes.checkout,
       AppRoutes.accessBox,
       AppRoutes.myAccommodation,
+      AppRoutes.accessInstructions,
       AppRoutes.stayGuide,
       AppRoutes.chat,
       AppRoutes.alojamientos,

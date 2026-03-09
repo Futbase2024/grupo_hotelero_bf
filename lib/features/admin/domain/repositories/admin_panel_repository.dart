@@ -127,6 +127,12 @@ abstract class AdminPanelRepository {
     required String keycode,
   });
 
+  /// Actualiza el código KeyBox de una reserva
+  Future<void> updateBookingKeyboxCode({
+    required String bookingId,
+    required String keyboxCode,
+  });
+
   /// Obtiene notificaciones
   Future<List<StaffNotificationEntity>> getNotifications({
     String? propertyId,

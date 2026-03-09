@@ -692,10 +692,10 @@ class GuestHomeScreen extends StatelessWidget {
         onTap: bookingId != null ? () => context.push('/guest/normas/$bookingId') : null,
       ),
       _ServiceItem(
-        icon: Icons.room_service_outlined,
-        title: 'Servicios',
+        icon: Icons.info_outline,
+        title: 'Instrucciones',
         imagePath: 'assets/images/servicios.png',
-        onTap: () => context.go('/guest/servicios'),
+        onTap: () => context.push('/guest/access-instructions'),
       ),
       _ServiceItem(
         icon: Icons.chat_bubble_outline,

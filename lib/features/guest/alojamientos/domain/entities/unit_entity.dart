@@ -50,7 +50,9 @@ class UnitEntity extends Equatable {
     required this.unitType,
     this.boxLocationText,
     this.boxCode,
+    this.lockerNumber,
     this.accessInstructions,
+    this.welcomeInstructions,
     // Campos de WiFi
     this.wifiNetwork,
     this.wifiPassword,
@@ -74,7 +76,9 @@ class UnitEntity extends Equatable {
   final UnitType unitType;
   final String? boxLocationText;
   final String? boxCode;
+  final String? lockerNumber;
   final String? accessInstructions;
+  final String? welcomeInstructions;
 
   // Campos de WiFi
   final String? wifiNetwork;
@@ -101,7 +105,9 @@ class UnitEntity extends Equatable {
     UnitType? unitType,
     String? boxLocationText,
     String? boxCode,
+    String? lockerNumber,
     String? accessInstructions,
+    String? welcomeInstructions,
     // WiFi
     String? wifiNetwork,
     String? wifiPassword,
@@ -125,7 +131,9 @@ class UnitEntity extends Equatable {
       unitType: unitType ?? this.unitType,
       boxLocationText: boxLocationText ?? this.boxLocationText,
       boxCode: boxCode ?? this.boxCode,
+      lockerNumber: lockerNumber ?? this.lockerNumber,
       accessInstructions: accessInstructions ?? this.accessInstructions,
+      welcomeInstructions: welcomeInstructions ?? this.welcomeInstructions,
       // WiFi
       wifiNetwork: wifiNetwork ?? this.wifiNetwork,
       wifiPassword: wifiPassword ?? this.wifiPassword,
@@ -153,7 +161,9 @@ class UnitEntity extends Equatable {
       unitType: UnitTypeExtension.fromString(json['unit_type'] as String),
       boxLocationText: json['box_location_text'] as String?,
       boxCode: json['box_code'] as String?,
+      lockerNumber: json['locker_number'] as String?,
       accessInstructions: json['access_instructions'] as String?,
+      welcomeInstructions: json['welcome_instructions'] as String?,
       // Campos de WiFi
       wifiNetwork: json['wifi_network'] as String?,
       wifiPassword: json['wifi_password'] as String?,
@@ -181,7 +191,9 @@ class UnitEntity extends Equatable {
       'unit_type': unitType.value,
       'box_location_text': boxLocationText,
       'box_code': boxCode,
+      'locker_number': lockerNumber,
       'access_instructions': accessInstructions,
+      'welcome_instructions': welcomeInstructions,
       // Campos de WiFi
       'wifi_network': wifiNetwork,
       'wifi_password': wifiPassword,
@@ -208,7 +220,9 @@ class UnitEntity extends Equatable {
         unitType,
         boxLocationText,
         boxCode,
+        lockerNumber,
         accessInstructions,
+        welcomeInstructions,
         // WiFi
         wifiNetwork,
         wifiPassword,

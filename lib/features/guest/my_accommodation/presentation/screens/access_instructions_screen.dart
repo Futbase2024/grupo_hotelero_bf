@@ -86,6 +86,319 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Si hay instrucciones de bienvenida personalizadas, mostrarlas directamente
+    if (unit.welcomeInstructions != null && unit.welcomeInstructions!.isNotEmpty) {
+      return _buildWelcomeInstructionsView(context);
+    }
+
+    // Si no, mostrar la vista estructurada por secciones
+    return _buildStructuredView(context);
+  }
+
+  /// Vista con las instrucciones de bienvenida personalizadas
+  Widget _buildWelcomeInstructionsView(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.getSurfaceColor(context),
+      appBar: AppBar(
+        backgroundColor: AppColors.getSurfaceColor(context),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.getTextPrimaryColor(context),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Instrucciones de Acceso',
+          style: TextStyle(
+            color: AppColors.getTextPrimaryColor(context),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: ResponsiveContent(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tarjeta con el código de acceso destacado
+                _buildKeyCodeHighlightCard(context),
+                const SizedBox(height: AppTheme.spacing20),
+
+                // Instrucciones completas formateadas
+                _buildFormattedInstructions(context, unit.welcomeInstructions!),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tarjeta destacada con los códigos de acceso
+  Widget _buildKeyCodeHighlightCard(BuildContext context) {
+    final mainDoorCode = property.mainDoorKeycode;
+    final boxCode = booking.keyboxCode;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing20),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: AppColors.gold, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.gold,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.vpn_key_outlined,
+                  color: AppColors.black,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  'Tus Códigos de Acceso',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.getTextPrimaryColor(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+
+          // Código puerta principal
+          if (mainDoorCode != null && mainDoorCode.isNotEmpty) ...[
+            _buildCodeRow(context, 'Puerta Principal', mainDoorCode, Icons.door_front_door_outlined),
+            const SizedBox(height: AppTheme.spacing12),
+          ],
+
+          // Código del casillero/caja
+          if (boxCode != null && boxCode.isNotEmpty)
+            _buildCodeRow(context, 'Casillero de Llaves', boxCode, Icons.lock_open_outlined),
+        ],
+      ),
+    );
+  }
+
+  /// Fila con código de acceso
+  Widget _buildCodeRow(BuildContext context, String label, String code, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.goldWithAlpha20,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: AppColors.gold, size: 20),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+              ),
+              Text(
+                code,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.gold,
+                  letterSpacing: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: () => _copyToClipboard(context, code, label),
+          icon: const Icon(Icons.copy, size: 22),
+          color: AppColors.gold,
+        ),
+      ],
+    );
+  }
+
+  /// Formatea y muestra las instrucciones de bienvenida
+  Widget _buildFormattedInstructions(BuildContext context, String instructions) {
+    // Dividir las instrucciones en secciones
+    final lines = instructions.split('\n');
+    final sections = <Widget>[];
+
+    for (final line in lines) {
+      final trimmedLine = line.trim();
+      if (trimmedLine.isEmpty) continue;
+
+      // Detectar títulos (líneas en mayúsculas o entre comillas)
+      if (_isTitle(trimmedLine)) {
+        sections.add(_buildInstructionTitle(context, _cleanTitle(trimmedLine)));
+      } else if (trimmedLine.startsWith('•') || trimmedLine.startsWith('-')) {
+        sections.add(_buildBulletPoint(context, trimmedLine.substring(1).trim()));
+      } else if (trimmedLine.startsWith('http') || trimmedLine.contains('maps.google')) {
+        sections.add(_buildLinkCard(context, trimmedLine));
+      } else {
+        sections.add(_buildInstructionText(context, trimmedLine));
+      }
+      sections.add(const SizedBox(height: AppTheme.spacing8));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: sections,
+    );
+  }
+
+  /// Detecta si una línea es un título
+  bool _isTitle(String line) {
+    // Títulos en mayúsculas o entre comillas
+    final upperCaseRatio = line.toUpperCase() == line && line.length > 3;
+    final isQuoted = line.startsWith('"') && line.endsWith('"');
+    return upperCaseRatio || isQuoted;
+  }
+
+  /// Limpia el título de comillas
+  String _cleanTitle(String title) {
+    if (title.startsWith('"') && title.endsWith('"')) {
+      return title.substring(1, title.length - 1);
+    }
+    return title;
+  }
+
+  /// Widget para título de sección
+  Widget _buildInstructionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing16, bottom: AppTheme.spacing8),
+      child: Row(
+        children: [
+          Icon(
+            _getIconForTitle(title),
+            size: 20,
+            color: AppColors.gold,
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.getTextPrimaryColor(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Obtiene el icono según el título
+  IconData _getIconForTitle(String title) {
+    final lowerTitle = title.toLowerCase();
+    if (lowerTitle.contains('localización') || lowerTitle.contains('direccion')) {
+      return Icons.location_on_outlined;
+    } else if (lowerTitle.contains('edificio') || lowerTitle.contains('portal')) {
+      return Icons.door_front_door_outlined;
+    } else if (lowerTitle.contains('apartamento') || lowerTitle.contains('acceso')) {
+      return Icons.vpn_key_outlined;
+    } else if (lowerTitle.contains('wifi')) {
+      return Icons.wifi_outlined;
+    } else if (lowerTitle.contains('norma')) {
+      return Icons.rule_outlined;
+    } else if (lowerTitle.contains('check-out') || lowerTitle.contains('checkout')) {
+      return Icons.logout_outlined;
+    } else if (lowerTitle.contains('contacto')) {
+      return Icons.phone_outlined;
+    }
+    return Icons.info_outline;
+  }
+
+  /// Widget para punto de lista
+  Widget _buildBulletPoint(BuildContext context, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: AppTheme.spacing8, bottom: AppTheme.spacing4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.circle,
+            size: 6,
+            color: AppColors.gold,
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.getTextSecondaryColor(context),
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Widget para texto de instrucción normal
+  Widget _buildInstructionText(BuildContext context, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          color: AppColors.getTextSecondaryColor(context),
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+
+  /// Widget para tarjeta con enlace
+  Widget _buildLinkCard(BuildContext context, String url) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+      child: ElevatedButton.icon(
+        onPressed: () => _openMaps(),
+        icon: const Icon(Icons.map_outlined, size: 20),
+        label: const Text('Abrir en Google Maps'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.gold,
+          foregroundColor: AppColors.black,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Vista estructurada por secciones (cuando no hay welcome_instructions)
+  Widget _buildStructuredView(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.getSurfaceColor(context),
       appBar: AppBar(
