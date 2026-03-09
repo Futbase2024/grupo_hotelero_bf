@@ -598,6 +598,7 @@ class ChatDatasource {
 
   /// Suscribe a cambios en las conversaciones de un usuario en tiempo real
   /// Incluye actualización de unread_count y último mensaje
+  /// ✅ OPTIMIZADO: Batch queries para evitar N+1
   Stream<List<ConversationEntity>> watchUserConversations({
     required String userId,
     String? propertyId,
@@ -618,30 +619,163 @@ class ChatDatasource {
 
           _log('watchUserConversations - ${conversationIds.length} conversaciones');
 
-          // Cargar conversaciones completas
-          final conversations = <ConversationEntity>[];
-          for (final convId in conversationIds) {
-            final conv = await getConversation(convId);
-            if (conv != null) {
-              // Filtrar por propertyId si se especifica
-              if (propertyId == null || conv.propertyId == propertyId) {
-                conversations.add(conv);
-              }
-            }
-          }
-
-          // Ordenar por último mensaje
-          conversations.sort((a, b) {
-            if (a.lastMessage != null && b.lastMessage != null) {
-              return b.lastMessage!.createdAt.compareTo(a.lastMessage!.createdAt);
-            }
-            if (a.lastMessage != null) return -1;
-            if (b.lastMessage != null) return 1;
-            return b.createdAt.compareTo(a.createdAt);
-          });
-
-          return conversations;
+          // ✅ OPTIMIZACIÓN: Batch queries en lugar de N+1
+          return await _getConversationsBatch(conversationIds, propertyId);
         });
+  }
+
+  /// ✅ OPTIMIZACIÓN: Obtiene múltiples conversaciones en batch (4 queries en lugar de N*3)
+  Future<List<ConversationEntity>> _getConversationsBatch(
+    List<String> conversationIds,
+    String? propertyId,
+  ) async {
+    if (conversationIds.isEmpty) return [];
+
+    try {
+      // 1. Obtener todas las conversaciones en un solo query
+      var conversationsQuery = _client
+          .from(SupabaseTables.conversations)
+          .select('''
+            id,
+            property_id,
+            booking_id,
+            created_at
+          ''')
+          .inFilter('id', conversationIds);
+
+      // Filtrar por propertyId si se especifica
+      if (propertyId != null) {
+        conversationsQuery = conversationsQuery.eq('property_id', propertyId);
+      }
+
+      final conversationsResponse = await conversationsQuery;
+
+      if (conversationsResponse.isEmpty) return [];
+
+      final filteredConversationIds = (conversationsResponse as List)
+          .map((c) => c['id'] as String)
+          .toList();
+
+      // 2. Obtener todos los participantes de todas las conversaciones en un solo query
+      final participantsResponse = await _client
+          .from(SupabaseTables.conversationParticipants)
+          .select('''
+            conversation_id,
+            user_id,
+            role,
+            created_at
+          ''')
+          .inFilter('conversation_id', filteredConversationIds);
+
+      // 3. Obtener todos los user_ids únicos para buscar sus nombres
+      final userIds = (participantsResponse as List)
+          .map((p) => p['user_id'] as String)
+          .toSet()
+          .toList();
+
+      // 4. Obtener info de todos los usuarios en batch
+      final usersInfo = await _getSendersInfo(userIds);
+
+      // 5. Agrupar participantes por conversation_id
+      final participantsByConversation = <String, List<Map<String, dynamic>>>{};
+      for (final p in participantsResponse) {
+        final convId = p['conversation_id'] as String;
+        participantsByConversation.putIfAbsent(convId, () => []).add(p);
+      }
+
+      // 6. Obtener últimos mensajes de todas las conversaciones en un solo query
+      // Usamos una subquery para obtener el mensaje más reciente de cada conversación
+      final lastMessagesResponse = await _client
+          .from(SupabaseTables.messages)
+          .select('''
+            id,
+            conversation_id,
+            sender_user_id,
+            msg_type,
+            content,
+            created_at,
+            read_at
+          ''')
+          .inFilter('conversation_id', filteredConversationIds)
+          .order('created_at', ascending: false);
+
+      // Filtrar para mantener solo el último mensaje de cada conversación
+      final lastMessagesByConversation = <String, Map<String, dynamic>>{};
+      final seenConversationIds = <String>{};
+      for (final msg in lastMessagesResponse) {
+        final convId = msg['conversation_id'] as String;
+        if (!seenConversationIds.contains(convId)) {
+          seenConversationIds.add(convId);
+          lastMessagesByConversation[convId] = msg;
+        }
+      }
+
+      // 7. Construir las entidades de conversación
+      final conversations = <ConversationEntity>[];
+      for (final convData in conversationsResponse) {
+        final convId = convData['id'] as String;
+
+        // Construir participantes con nombres
+        final participantsRaw = participantsByConversation[convId] ?? [];
+        final participants = participantsRaw.map((p) {
+          final userId = p['user_id'] as String;
+          final info = usersInfo[userId];
+
+          return ParticipantEntity.fromJson({
+            'conversation_id': p['conversation_id'],
+            'user_id': userId,
+            'role': p['role'],
+            'created_at': p['created_at'],
+            'user_name': info?['full_name'],
+            'user_email': null,
+          });
+        }).toList();
+
+        // Construir último mensaje si existe
+        MessageEntity? lastMessage;
+        final lastMsgData = lastMessagesByConversation[convId];
+        if (lastMsgData != null) {
+          final senderUserId = lastMsgData['sender_user_id'] as String;
+          final senderInfo = usersInfo[senderUserId];
+
+          lastMessage = MessageEntity.fromJson({
+            'id': lastMsgData['id'],
+            'conversation_id': lastMsgData['conversation_id'],
+            'sender_user_id': senderUserId,
+            'msg_type': lastMsgData['msg_type'],
+            'content': lastMsgData['content'],
+            'created_at': lastMsgData['created_at'],
+            'read_at': lastMsgData['read_at'],
+            'sender_name': senderInfo?['full_name'],
+            'sender_role': senderInfo?['role'],
+          });
+        }
+
+        conversations.add(ConversationEntity(
+          id: convId,
+          propertyId: convData['property_id'] as String,
+          bookingId: convData['booking_id'] as String?,
+          createdAt: DateTime.parse(convData['created_at'] as String),
+          participants: participants,
+          lastMessage: lastMessage,
+        ));
+      }
+
+      // Ordenar por último mensaje
+      conversations.sort((a, b) {
+        if (a.lastMessage != null && b.lastMessage != null) {
+          return b.lastMessage!.createdAt.compareTo(a.lastMessage!.createdAt);
+        }
+        if (a.lastMessage != null) return -1;
+        if (b.lastMessage != null) return 1;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
+      return conversations;
+    } catch (e) {
+      _logError('Error en _getConversationsBatch', e);
+      rethrow;
+    }
   }
 
   /// Marca mensajes como leídos

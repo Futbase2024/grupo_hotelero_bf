@@ -140,10 +140,11 @@ class DocumentStorageService {
   /// Obtiene URL firmada para acceder a un documento
   ///
   /// [storagePath] - Ruta del archivo en el bucket
-  /// [expiresIn] - Segundos hasta que expire la URL (default: 1 hora)
+  /// [expiresIn] - Segundos hasta que expire la URL (default: 1 año)
+  /// ✅ OPTIMIZACIÓN: Aumentado a 1 año para evitar regeneración de URLs
   Future<String> getSignedUrl(
     String storagePath, {
-    int expiresIn = 3600,
+    int expiresIn = 31536000, // 1 año
   }) async {
     final url = await _supabase.storage
         .from(_bucketId)

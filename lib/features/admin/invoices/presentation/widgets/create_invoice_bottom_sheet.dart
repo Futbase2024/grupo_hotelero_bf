@@ -6,7 +6,15 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
 import '../../../domain/entities/invoice_entity.dart';
 import '../bloc/invoices_bloc.dart';
+import '../bloc/invoices_event.dart';
+import '../bloc/invoices_state.dart';
 import 'booking_selector_dialog.dart';
+
+/// Modo de creación de factura
+enum InvoiceCreationMode {
+  fromBooking,
+  manual,
+}
 
 /// Bottom sheet para crear una nueva factura
 class CreateInvoiceBottomSheet extends StatefulWidget {
@@ -27,17 +35,30 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  // Reserva seleccionada
+  // Modo de creación
+  InvoiceCreationMode _creationMode = InvoiceCreationMode.fromBooking;
+
+  // Reserva seleccionada (modo fromBooking)
   AdminBookingEntity? _selectedBooking;
 
-  // Controladores
+  // Propiedad seleccionada (modo manual)
+  Map<String, dynamic>? _selectedProperty;
+
+  // Controladores comunes
   final _amountController = TextEditingController();
+  final _notesController = TextEditingController();
+
+  // Controladores de cliente (ambos modos, pero editables en manual)
   final _clientNameController = TextEditingController();
   final _clientNifController = TextEditingController();
   final _clientEmailController = TextEditingController();
   final _clientPhoneController = TextEditingController();
   final _clientAddressController = TextEditingController();
-  final _notesController = TextEditingController();
+  final _clientCityController = TextEditingController();
+  final _clientPostalCodeController = TextEditingController();
+
+  // Controladores adicionales para modo manual
+  final _conceptController = TextEditingController();
 
   // Tipo de IVA - 10% por defecto para alojamientos turísticos
   double _selectedTaxRate = 10.0;
@@ -50,14 +71,24 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Cargar propiedades al iniciar
+    context.read<InvoicesBloc>().add(const InvoicesLoadPropertiesRequested());
+  }
+
+  @override
   void dispose() {
     _amountController.dispose();
+    _notesController.dispose();
     _clientNameController.dispose();
     _clientNifController.dispose();
     _clientEmailController.dispose();
     _clientPhoneController.dispose();
     _clientAddressController.dispose();
-    _notesController.dispose();
+    _clientCityController.dispose();
+    _clientPostalCodeController.dispose();
+    _conceptController.dispose();
     super.dispose();
   }
 
@@ -70,6 +101,26 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       _clientEmailController.text = booking?.guestEmail ?? '';
       _clientPhoneController.text = booking?.guestPhone ?? '';
       _clientAddressController.clear();
+      _clientCityController.clear();
+      _clientPostalCodeController.clear();
+    });
+  }
+
+  void _onModeChanged(InvoiceCreationMode mode) {
+    setState(() {
+      _creationMode = mode;
+      // Limpiar selección anterior
+      _selectedBooking = null;
+      _selectedProperty = null;
+      _clientNameController.clear();
+      _clientNifController.clear();
+      _clientEmailController.clear();
+      _clientPhoneController.clear();
+      _clientAddressController.clear();
+      _clientCityController.clear();
+      _clientPostalCodeController.clear();
+      _conceptController.clear();
+      _amountController.clear();
     });
   }
 
@@ -79,7 +130,6 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
 
     // Si está cargando bookings, mostrar diálogo de espera
     if (state.isLoadingBookings) {
-      // Mostrar loading dialog mientras se cargan las reservas
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -88,22 +138,18 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
         ),
       );
 
-      // Esperar a que termine de cargar
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Verificar cada 100ms si ya terminó de cargar
       for (int i = 0; i < 50; i++) {
         await Future.delayed(const Duration(milliseconds: 100));
         state = bloc.state;
         if (!state.isLoadingBookings) break;
       }
 
-      // Cerrar loading dialog
       if (!mounted) return;
       Navigator.of(context).pop();
     }
 
-    // Volver a obtener el estado actualizado
     state = bloc.state;
     final bookings = state.bookings;
 
@@ -142,15 +188,47 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
 
   Future<void> _onSavePressed() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedBooking == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona una reserva'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
+
+    if (_creationMode == InvoiceCreationMode.fromBooking) {
+      if (_selectedBooking == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Selecciona una reserva'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+    } else {
+      if (_selectedProperty == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Selecciona una propiedad'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      if (_clientNameController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El nombre del cliente es obligatorio'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      if (_conceptController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El concepto es obligatorio'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
     }
+
     if (_baseAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -164,9 +242,31 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     setState(() => _isLoading = true);
 
     try {
-      // Crear línea de factura única con el importe total
+      final String concept;
+      final String? bookingId;
+      final String propertyId;
+      final String? bookingCode;
+      final String? unitName;
+
+      if (_creationMode == InvoiceCreationMode.fromBooking) {
+        concept = 'Alojamiento turístico';
+        bookingId = _selectedBooking!.id;
+        propertyId = _selectedBooking!.propertyId;
+        bookingCode = _selectedBooking!.bookingCode;
+        unitName = _selectedBooking!.unitName;
+      } else {
+        concept = _conceptController.text.trim();
+        bookingId = null;
+        propertyId = _selectedProperty!['id'] as String;
+        bookingCode = null;
+        unitName = null;
+      }
+
+      // Crear línea de factura
       final lineItem = InvoiceLineItem(
-        description: 'Alojamiento ${_selectedBooking!.unitName} - ${_selectedBooking!.bookingCode}',
+        description: _creationMode == InvoiceCreationMode.fromBooking
+            ? 'Alojamiento ${_selectedBooking!.unitName} - ${_selectedBooking!.bookingCode}'
+            : concept,
         quantity: 1,
         unitPrice: _baseAmount,
         taxRate: _selectedTaxRate,
@@ -175,27 +275,33 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       final invoice = InvoiceEntity(
         id: const Uuid().v4(),
         invoiceNumber: '', // Se generará en el repositorio
-        bookingId: _selectedBooking!.id,
-        propertyId: _selectedBooking!.propertyId,
+        bookingId: bookingId,
+        propertyId: propertyId,
         issuerName: 'BF Stay',
-        issuerNif: '', // TODO: Configurar datos del emisor
+        issuerNif: '', // TODO: Configurar desde settings
         clientName: _clientNameController.text.trim().isNotEmpty
             ? _clientNameController.text.trim()
-            : _selectedBooking!.guestFullName,
+            : _selectedBooking?.guestFullName ?? '',
         clientNif: _clientNifController.text.trim().isNotEmpty
             ? _clientNifController.text.trim()
             : null,
         clientEmail: _clientEmailController.text.trim().isNotEmpty
             ? _clientEmailController.text.trim()
-            : _selectedBooking!.guestEmail,
+            : _selectedBooking?.guestEmail,
         clientPhone: _clientPhoneController.text.trim().isNotEmpty
             ? _clientPhoneController.text.trim()
-            : _selectedBooking!.guestPhone,
+            : _selectedBooking?.guestPhone,
         clientAddress: _clientAddressController.text.trim().isNotEmpty
             ? _clientAddressController.text.trim()
             : null,
+        clientCity: _clientCityController.text.trim().isNotEmpty
+            ? _clientCityController.text.trim()
+            : null,
+        clientPostalCode: _clientPostalCodeController.text.trim().isNotEmpty
+            ? _clientPostalCodeController.text.trim()
+            : null,
         issueDate: DateTime.now(),
-        concept: 'Alojamiento turístico',
+        concept: concept,
         lineItems: [lineItem],
         subtotalExcludingTax: _baseAmount,
         taxBase: _baseAmount,
@@ -207,8 +313,8 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
             ? _notesController.text.trim()
             : null,
         createdAt: DateTime.now(),
-        bookingCode: _selectedBooking!.bookingCode,
-        unitName: _selectedBooking!.unitName,
+        bookingCode: bookingCode,
+        unitName: unitName,
       );
 
       if (widget.onSave != null) {
@@ -292,22 +398,54 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Paso 1: Seleccionar reserva
-                    _buildSectionTitle('1. Seleccionar reserva'),
-                    _buildBookingSelector(),
-                    if (_selectedBooking != null) ...[
-                      const SizedBox(height: 12),
-                      _buildBookingInfo(),
+                    // Paso 0: Selección de modo
+                    _buildSectionTitle('Tipo de factura'),
+                    _buildModeSelector(),
+                    const SizedBox(height: 24),
+
+                    // Contenido según modo
+                    if (_creationMode == InvoiceCreationMode.fromBooking) ...[
+                      // Paso 1: Seleccionar reserva
+                      _buildSectionTitle('1. Seleccionar reserva'),
+                      _buildBookingSelector(),
+                      if (_selectedBooking != null) ...[
+                        const SizedBox(height: 12),
+                        _buildBookingInfo(),
+                      ],
+                    ] else ...[
+                      // Modo manual
+                      _buildSectionTitle('1. Propiedad'),
+                      _buildPropertySelector(),
+                      const SizedBox(height: 16),
+                      _buildSectionTitle('2. Concepto de factura'),
+                      _buildConceptField(),
                     ],
                     const SizedBox(height: 24),
 
-                    // Paso 2: Importe
-                    _buildSectionTitle('2. Importe de la factura'),
+                    // Datos del cliente
+                    _buildSectionTitle(
+                      _creationMode == InvoiceCreationMode.fromBooking
+                          ? 'Datos del cliente'
+                          : '3. Datos del cliente',
+                    ),
+                    _buildClientFields(),
+                    const SizedBox(height: 24),
+
+                    // Importe
+                    _buildSectionTitle(
+                      _creationMode == InvoiceCreationMode.fromBooking
+                          ? '2. Importe de la factura'
+                          : '4. Importe de la factura',
+                    ),
                     _buildAmountField(),
                     const SizedBox(height: 24),
 
-                    // Paso 3: Tipo de IVA
-                    _buildSectionTitle('3. Tipo de IVA'),
+                    // Tipo de IVA
+                    _buildSectionTitle(
+                      _creationMode == InvoiceCreationMode.fromBooking
+                          ? '3. Tipo de IVA'
+                          : '5. Tipo de IVA',
+                    ),
                     _buildTaxRateSelector(),
                     const SizedBox(height: 24),
 
@@ -346,6 +484,71 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     );
   }
 
+  Widget _buildModeSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.darkBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildModeOption(
+              mode: InvoiceCreationMode.fromBooking,
+              icon: Icons.hotel_outlined,
+              label: 'Desde reserva',
+            ),
+          ),
+          Expanded(
+            child: _buildModeOption(
+              mode: InvoiceCreationMode.manual,
+              icon: Icons.edit_document,
+              label: 'Manual',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeOption({
+    required InvoiceCreationMode mode,
+    required IconData icon,
+    required String label,
+  }) {
+    final isSelected = _creationMode == mode;
+
+    return InkWell(
+      onTap: () => _onModeChanged(mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.goldWithAlpha10 : null,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.gold : AppColors.gray500,
+              size: 24,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppColors.gold : AppColors.gray400,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBookingSelector() {
     return InkWell(
       onTap: _showBookingSelectorDialog,
@@ -357,7 +560,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: _selectedBooking != null
-                ? AppColors.gold.withValues(alpha: 0.5)
+                ? AppColors.goldWithAlpha50
                 : AppColors.darkBorder,
           ),
         ),
@@ -366,7 +569,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.gold.withValues(alpha: 0.1),
+                color: AppColors.goldWithAlpha10,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -413,10 +616,118 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
             Icon(
               Icons.arrow_forward_ios,
               size: 16,
-              color: AppColors.gold.withValues(alpha: 0.7),
+              color: AppColors.goldWithAlpha50,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPropertySelector() {
+    return BlocBuilder<InvoicesBloc, InvoicesState>(
+      builder: (context, state) {
+        if (state.isLoadingProperties) {
+          return Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.darkBorder),
+            ),
+            child: const Center(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(color: AppColors.gold, strokeWidth: 2),
+              ),
+            ),
+          );
+        }
+
+        if (state.properties.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.warning),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'No hay propiedades disponibles',
+                    style: TextStyle(color: AppColors.gray400, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.darkSurface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _selectedProperty != null
+                  ? AppColors.goldWithAlpha50
+                  : AppColors.darkBorder,
+            ),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<Map<String, dynamic>>(
+              value: _selectedProperty,
+              isExpanded: true,
+              hint: const Text(
+                'Seleccionar propiedad',
+                style: TextStyle(color: AppColors.gray500),
+              ),
+              icon: Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: AppColors.goldWithAlpha50,
+              ),
+              dropdownColor: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(8),
+              items: state.properties.map((property) {
+                return DropdownMenuItem(
+                  value: property,
+                  child: Text(
+                    property['name'] ?? 'Sin nombre',
+                    style: const TextStyle(color: AppColors.white),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() => _selectedProperty = value);
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildConceptField() {
+    return TextFormField(
+      controller: _conceptController,
+      style: const TextStyle(color: AppColors.white),
+      decoration: InputDecoration(
+        labelText: 'Concepto de la factura',
+        labelStyle: const TextStyle(color: AppColors.gray500),
+        hintText: 'Ej: Limpieza, Servicios extra, etc.',
+        hintStyle: const TextStyle(color: AppColors.gray600),
+        filled: true,
+        fillColor: AppColors.darkSurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
     );
   }
@@ -435,18 +746,18 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       decoration: BoxDecoration(
         color: AppColors.darkSurface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.goldWithAlpha30),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header con info de la reserva (no editable)
+          // Header con info de la reserva
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.15),
+                  color: AppColors.goldWithAlpha10,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -476,26 +787,29 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
               fontSize: 13,
             ),
           ),
-          const SizedBox(height: 16),
-          const Divider(color: AppColors.darkBorder, height: 1),
-          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
 
-          // Datos del cliente (editables)
-          const Text(
-            'Datos del cliente (editables)',
-            style: TextStyle(
-              color: AppColors.gold,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
+  Widget _buildClientFields() {
+    final isManual = _creationMode == InvoiceCreationMode.manual;
 
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.darkBorder),
+      ),
+      child: Column(
+        children: [
           // Nombre
           _buildEditableField(
             controller: _clientNameController,
-            label: 'Nombre completo',
+            label: 'Nombre completo ${isManual ? '*' : ''}',
             icon: Icons.person_outline,
+            isRequired: isManual,
           ),
           const SizedBox(height: 12),
 
@@ -532,6 +846,29 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
             label: 'Dirección',
             icon: Icons.home_outlined,
           ),
+          const SizedBox(height: 12),
+
+          // Ciudad y CP en fila
+          Row(
+            children: [
+              Expanded(
+                child: _buildEditableField(
+                  controller: _clientCityController,
+                  label: 'Ciudad',
+                  icon: Icons.location_city_outlined,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildEditableField(
+                  controller: _clientPostalCodeController,
+                  label: 'C.P.',
+                  icon: Icons.markunread_mailbox_outlined,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -543,12 +880,21 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     TextCapitalization textCapitalization = TextCapitalization.none,
+    bool isRequired = false,
   }) {
     return TextFormField(
       controller: controller,
       style: const TextStyle(color: AppColors.white, fontSize: 14),
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
+      validator: isRequired
+          ? (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Campo obligatorio';
+              }
+              return null;
+            }
+          : null,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: AppColors.gray500, fontSize: 12),
@@ -561,6 +907,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         isDense: true,
+        errorStyle: const TextStyle(color: AppColors.error, fontSize: 11),
       ),
     );
   }
@@ -631,7 +978,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.gold.withValues(alpha: 0.1) : null,
+                color: isSelected ? AppColors.goldWithAlpha10 : null,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -664,7 +1011,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       decoration: BoxDecoration(
         color: AppColors.darkSurface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.goldWithAlpha30),
       ),
       child: Column(
         children: [

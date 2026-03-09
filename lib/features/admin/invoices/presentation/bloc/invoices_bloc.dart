@@ -25,6 +25,7 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
     on<InvoiceSelected>(_onSelected);
     on<InvoiceSelectionCleared>(_onSelectionCleared);
     on<InvoicesLoadBookingsRequested>(_onLoadBookingsRequested);
+    on<InvoicesLoadPropertiesRequested>(_onLoadPropertiesRequested);
   }
 
   final InvoicesRepository _repository;
@@ -307,6 +308,40 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
       emit(state.copyWith(
         isLoadingBookings: false,
         error: 'Error al cargar reservas: $e',
+      ));
+    }
+  }
+
+  Future<void> _onLoadPropertiesRequested(
+    InvoicesLoadPropertiesRequested event,
+    Emitter<InvoicesState> emit,
+  ) async {
+    debugPrint('🔵 [InvoicesBloc] _onLoadPropertiesRequested');
+    emit(state.copyWith(isLoadingProperties: true, clearError: true));
+
+    try {
+      // Extraer propiedades únicas de las reservas existentes
+      final propertyMap = <String, Map<String, dynamic>>{};
+
+      for (final booking in state.bookings) {
+        if (!propertyMap.containsKey(booking.propertyId)) {
+          propertyMap[booking.propertyId] = {
+            'id': booking.propertyId,
+            'name': booking.propertyName,
+          };
+        }
+      }
+
+      debugPrint('🔵 [InvoicesBloc] Extracted ${propertyMap.length} properties from bookings');
+      emit(state.copyWith(
+        properties: propertyMap.values.toList(),
+        isLoadingProperties: false,
+      ));
+    } catch (e) {
+      debugPrint('🔴 [InvoicesBloc] Error loading properties: $e');
+      emit(state.copyWith(
+        isLoadingProperties: false,
+        error: 'Error al cargar propiedades: $e',
       ));
     }
   }

@@ -87,7 +87,7 @@ class InvoiceEntity extends Equatable {
   const InvoiceEntity({
     required this.id,
     required this.invoiceNumber,
-    required this.bookingId,
+    this.bookingId, // Nullable para facturas sin reserva
     required this.propertyId,
 
     // Datos del emisor
@@ -141,7 +141,7 @@ class InvoiceEntity extends Equatable {
 
   final String id;
   final String invoiceNumber;
-  final String bookingId;
+  final String? bookingId; // Nullable para facturas sin reserva
   final String propertyId;
 
   // Datos del emisor
@@ -236,7 +236,7 @@ class InvoiceEntity extends Equatable {
     return InvoiceEntity(
       id: json['id'] as String? ?? '',
       invoiceNumber: json['invoice_number'] as String? ?? '',
-      bookingId: json['booking_id'] as String? ?? '',
+      bookingId: json['booking_id'] as String?, // Nullable
       propertyId: json['property_id'] as String? ?? '',
 
       issuerName: json['issuer_name'] as String? ?? '',
@@ -302,7 +302,7 @@ class InvoiceEntity extends Equatable {
 
   /// Crea una factura vacía para formularios
   static InvoiceEntity empty({
-    required String bookingId,
+    String? bookingId,
     required String propertyId,
     required String clientName,
     String? clientEmail,
@@ -334,6 +334,34 @@ class InvoiceEntity extends Equatable {
       unitName: unitName,
     );
   }
+
+  /// Crea una factura vacía sin reserva (modo manual)
+  static InvoiceEntity emptyManual({
+    required String propertyId,
+  }) {
+    return InvoiceEntity(
+      id: '',
+      invoiceNumber: '',
+      bookingId: null, // Sin reserva
+      propertyId: propertyId,
+      issuerName: 'BF Stay',
+      issuerNif: '',
+      clientName: '',
+      issueDate: DateTime.now(),
+      concept: '',
+      lineItems: const [],
+      subtotalExcludingTax: 0,
+      taxBase: 0,
+      taxRate: 10,
+      taxAmount: 0,
+      totalIncludingTax: 0,
+      status: InvoiceStatus.draft,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  /// Indica si la factura está asociada a una reserva
+  bool get hasBooking => bookingId != null && bookingId!.isNotEmpty;
 
   Map<String, dynamic> toJson() {
     return {

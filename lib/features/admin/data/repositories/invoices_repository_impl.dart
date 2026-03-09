@@ -16,7 +16,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .from(_tableName)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -38,7 +38,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .from(_tableName)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -61,7 +61,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .from(_tableName)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -84,7 +84,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .from(_tableName)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -110,7 +110,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .from(_tableName)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -144,24 +144,40 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
     // Eliminar campos null que puedan causar problemas
     data.removeWhere((key, value) => value == null);
 
-    debugPrint('🔵 [InvoicesRepository] create - Data keys: ${data.keys.toList()}');
+    debugPrint('🔵 [InvoicesRepository] create - Data to insert:');
+    debugPrint('   ├── id: ${data['id']}');
+    debugPrint('   ├── invoice_number: ${data['invoice_number']}');
+    debugPrint('   ├── booking_id: ${data['booking_id']}');
+    debugPrint('   ├── property_id: ${data['property_id']}');
+    debugPrint('   ├── client_name: ${data['client_name']}');
+    debugPrint('   ├── concept: ${data['concept']}');
+    debugPrint('   ├── total: ${data['total_including_tax']}');
+    debugPrint('   └── status: ${data['status']}');
+    debugPrint('🔵 [InvoicesRepository] create - Full data keys: ${data.keys.toList()}');
 
-    final response = await _client
-        .from(_tableName)
-        .insert(data)
-        .select('''
-          *,
-          bookings!inner(
-            booking_code,
-            unit_id,
-            units(name)
-          )
-        ''')
-        .single();
+    try {
+      final response = await _client
+          .from(_tableName)
+          .insert(data)
+          .select('''
+            *,
+            bookings(
+              booking_code,
+              unit_id,
+              units(name)
+            )
+          ''')
+          .single();
 
-    final created = _mapToEntity(response);
-    debugPrint('🔵 [InvoicesRepository] create - Invoice created: ${created.invoiceNumber}');
-    return created;
+      debugPrint('🟢 [InvoicesRepository] create - Response received from Supabase');
+      final created = _mapToEntity(response);
+      debugPrint('🟢 [InvoicesRepository] create - Invoice created: ${created.invoiceNumber}');
+      return created;
+    } catch (e, s) {
+      debugPrint('🔴 [InvoicesRepository] create - Error: $e');
+      debugPrint('🔴 [InvoicesRepository] create - StackTrace: $s');
+      rethrow;
+    }
   }
 
   @override
@@ -173,7 +189,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .eq('id', invoice.id)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -198,7 +214,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .eq('id', invoiceId)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -223,7 +239,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .eq('id', invoiceId)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -249,7 +265,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .eq('id', invoiceId)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -281,7 +297,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
         .from(_tableName)
         .select('''
           *,
-          bookings!inner(
+          bookings(
             booking_code,
             unit_id,
             units(name)
@@ -308,10 +324,20 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
 
   /// Mapea la respuesta de Supabase a InvoiceEntity
   InvoiceEntity _mapToEntity(Map<String, dynamic> json) {
+    debugPrint('🔵 [_mapToEntity] Mapping JSON to InvoiceEntity');
+    debugPrint('   ├── invoice_number: ${json['invoice_number']}');
+    debugPrint('   ├── booking_id: ${json['booking_id']}');
+    debugPrint('   ├── property_id: ${json['property_id']}');
+    debugPrint('   ├── client_name: ${json['client_name']}');
+    debugPrint('   └── status: ${json['status']}');
+
     // Extraer datos de la reserva relacionada
     final booking = json['bookings'] as Map<String, dynamic>?;
     final bookingCode = booking?['booking_code'] as String?;
     final unitName = (booking?['units'] as Map<String, dynamic>?)?['name'] as String?;
+
+    debugPrint('   ├── booking_code (from join): $bookingCode');
+    debugPrint('   └── unit_name (from join): $unitName');
 
     return InvoiceEntity.fromJson({
       ...json,

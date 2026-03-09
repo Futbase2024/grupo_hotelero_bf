@@ -79,6 +79,9 @@ class SupabaseTables {
 
   // Incidents
   static const String incidents = 'incidents';
+
+  // Common Areas Photos
+  static const String commonAreasPhotos = 'common_areas_photos';
 }
 
 /// Nombres de funciones RPC en Supabase

@@ -5,9 +5,11 @@ class InvoicesState extends Equatable {
   const InvoicesState({
     this.invoices = const [],
     this.bookings = const [],
+    this.properties = const [],
     this.isLoading = false,
     this.isRefreshing = false,
     this.isLoadingBookings = false,
+    this.isLoadingProperties = false,
     this.error,
     this.statusFilter,
     this.searchQuery,
@@ -16,9 +18,11 @@ class InvoicesState extends Equatable {
 
   final List<InvoiceEntity> invoices;
   final List<AdminBookingEntity> bookings;
+  final List<Map<String, dynamic>> properties;
   final bool isLoading;
   final bool isRefreshing;
   final bool isLoadingBookings;
+  final bool isLoadingProperties;
   final String? error;
   final InvoiceStatus? statusFilter;
   final String? searchQuery;
@@ -89,9 +93,11 @@ class InvoicesState extends Equatable {
   InvoicesState copyWith({
     List<InvoiceEntity>? invoices,
     List<AdminBookingEntity>? bookings,
+    List<Map<String, dynamic>>? properties,
     bool? isLoading,
     bool? isRefreshing,
     bool? isLoadingBookings,
+    bool? isLoadingProperties,
     String? error,
     InvoiceStatus? statusFilter,
     String? searchQuery,
@@ -104,9 +110,11 @@ class InvoicesState extends Equatable {
     return InvoicesState(
       invoices: invoices ?? this.invoices,
       bookings: bookings ?? this.bookings,
+      properties: properties ?? this.properties,
       isLoading: isLoading ?? this.isLoading,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       isLoadingBookings: isLoadingBookings ?? this.isLoadingBookings,
+      isLoadingProperties: isLoadingProperties ?? this.isLoadingProperties,
       error: clearError ? null : (error ?? this.error),
       statusFilter: clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
       searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
@@ -118,9 +126,11 @@ class InvoicesState extends Equatable {
   List<Object?> get props => [
         invoices,
         bookings,
+        properties,
         isLoading,
         isRefreshing,
         isLoadingBookings,
+        isLoadingProperties,
         error,
         statusFilter,
         searchQuery,

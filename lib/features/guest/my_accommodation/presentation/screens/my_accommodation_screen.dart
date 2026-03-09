@@ -857,15 +857,16 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       final filePath = 'Normas/$fileName';
       debugPrint('📁 Ruta completa del archivo: $filePath');
 
-      // Obtener URL firmada del archivo en Supabase Storage
-      debugPrint('🔗 Obteniendo URL firmada del bucket: unit-photos');
-      final signedUrl = await Supabase.instance.client.storage
+      // ✅ OPTIMIZACIÓN: Usar URL pública (el bucket unit-photos es público)
+      // Las URLs públicas nunca caducan
+      debugPrint('🔗 Obteniendo URL pública del bucket: unit-photos');
+      final publicUrl = Supabase.instance.client.storage
           .from('unit-photos')
-          .createSignedUrl(filePath, 3600); // URL válida por 1 hora
+          .getPublicUrl(filePath);
 
-      debugPrint('✅ URL firmada obtenida: ${signedUrl.substring(0, 50)}...');
+      debugPrint('✅ URL pública obtenida: ${publicUrl.substring(0, 50)}...');
 
-      final uri = Uri.parse(signedUrl);
+      final uri = Uri.parse(publicUrl);
       debugPrint('🌐 Intentando abrir URL...');
 
       if (await canLaunchUrl(uri)) {

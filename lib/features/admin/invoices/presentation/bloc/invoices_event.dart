@@ -118,3 +118,8 @@ class InvoiceSelectionCleared extends InvoicesEvent {
 class InvoicesLoadBookingsRequested extends InvoicesEvent {
   const InvoicesLoadBookingsRequested();
 }
+
+/// Cargar propiedades disponibles para crear factura manual
+class InvoicesLoadPropertiesRequested extends InvoicesEvent {
+  const InvoicesLoadPropertiesRequested();
+}

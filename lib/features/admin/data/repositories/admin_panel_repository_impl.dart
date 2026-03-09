@@ -39,106 +39,32 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     return response.data as Map<String, dynamic>;
   }
 
-  // Consulta directa a la base de datos (más robusto que Edge Function)
+  // ✅ OPTIMIZADO: Usar RPC para consolidar 5 queries en 1
+  // Reduce tráfico de red y carga en la base de datos
   @override
   Future<DashboardSummaryEntity> getDashboardSummary({
     String? propertyId,
   }) async {
     try {
-      debugPrint('📊 [getDashboardSummary] Iniciando consulta...');
+      debugPrint('📊 [getDashboardSummary] Iniciando consulta RPC...');
 
-      // 1. Contar check-ins pendientes (status: draft o submitted)
-      var pendingCheckinsQuery = _client.from('checkins').select('id');
-      if (propertyId != null) {
-        pendingCheckinsQuery = pendingCheckinsQuery.eq('property_id', propertyId);
+      // Llamar a la función RPC optimizada
+      final response = await _client.rpc(
+        'get_dashboard_summary',
+        params: {'p_property_id': propertyId},
+      );
+
+      if (response == null) {
+        throw Exception('No se recibió respuesta del dashboard');
       }
-      final pendingCheckinsResponse = await pendingCheckinsQuery.inFilter('status', ['draft', 'submitted']);
-      final pendingCheckins = (pendingCheckinsResponse as List).length;
 
-      // 2. Contar llegadas próximas (check-in en los próximos 7 días)
-      final now = DateTime.now();
-      final sevenDaysLater = now.add(const Duration(days: 7));
-      var upcomingQuery = _client.from('bookings').select('id');
-      if (propertyId != null) {
-        upcomingQuery = upcomingQuery.eq('property_id', propertyId);
-      }
-      final upcomingResponse = await upcomingQuery
-          .gte('checkin_date', now.toIso8601String().split('T').first)
-          .lte('checkin_date', sevenDaysLater.toIso8601String().split('T').first)
-          .not('status', 'in', '(cancelled,closed)');
-      final upcomingCheckins = (upcomingResponse as List).length;
+      final data = response as Map<String, dynamic>;
+      debugPrint('📊 [getDashboardSummary] Datos recibidos: pending=${data['pending_checkins']}, upcoming=${data['upcoming_checkins']}');
 
-      // 3. Contar unidades activas
-      var unitsQuery = _client.from('units').select('id');
-      if (propertyId != null) {
-        unitsQuery = unitsQuery.eq('property_id', propertyId);
-      }
-      final unitsResponse = await unitsQuery;
-      final totalUnits = (unitsResponse as List).length;
-
-      // 4. Contar notificaciones no leídas
-      var notificationsQuery = _client.from('staff_notifications').select('id');
-      if (propertyId != null) {
-        notificationsQuery = notificationsQuery.eq('property_id', propertyId);
-      }
-      final notificationsResponse = await notificationsQuery.eq('is_read', false);
-      final unreadNotifications = (notificationsResponse as List).length;
-
-      // 5. Obtener últimos 5 check-ins con información completa
-      var recentCheckinsQuery = _client.from('checkins').select('''
-            id,
-            status,
-            submitted_at,
-            booking_id,
-            bookings (
-              id,
-              booking_code,
-              guest_first_name,
-              last_name,
-              unit_id,
-              units (
-                name
-              )
-            )
-          ''');
-      if (propertyId != null) {
-        recentCheckinsQuery = recentCheckinsQuery.eq('property_id', propertyId);
-      }
-      final recentCheckinsResponse = await recentCheckinsQuery
-          .not('submitted_at', 'is', null)
-          .order('submitted_at', ascending: false)
-          .limit(5);
-
-      // Mapear recent_checkins al formato esperado
-      final recentCheckins = (recentCheckinsResponse as List).map((row) {
-        final booking = row['bookings'] as Map<String, dynamic>?;
-        final unit = booking?['units'] as Map<String, dynamic>?;
-        final guestFirstName = (booking?['guest_first_name'] as String?) ?? '';
-        final lastName = (booking?['last_name'] as String?) ?? '';
-        final guestName = '$guestFirstName $lastName'.trim();
-
-        return {
-          'booking_id': booking?['id'] ?? row['booking_id'],
-          'booking_code': booking?['booking_code'] ?? '',
-          'guest_name': guestName.isNotEmpty ? guestName : 'Huésped',
-          'unit_name': unit?['name'] ?? '',
-          'checkin_status': row['status'] ?? 'draft',
-          'submitted_at': row['submitted_at'],
-        };
-      }).toList();
-
-      debugPrint('📊 [getDashboardSummary] pendientes: $pendingCheckins, próximos: $upcomingCheckins, unidades: $totalUnits, recientes: ${recentCheckins.length}');
-
-      return DashboardSummaryEntity.fromJson({
-        'pending_checkins': pendingCheckins,
-        'upcoming_checkins': upcomingCheckins,
-        'unread_notifications': unreadNotifications,
-        'total_units': totalUnits,
-        'recent_checkins': recentCheckins,
-      });
+      return DashboardSummaryEntity.fromJson(data);
     } catch (e, s) {
       debugPrint('❌ [getDashboardSummary] Error: $e');
-      debugPrint('❌ [getDashboardSummary] StackTrace: $s');
+    debugPrint('❌ [getDashboardSummary] StackTrace: $s');
       rethrow;
     }
   }
@@ -901,15 +827,25 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         .map((row) => StaffNotificationEntity.fromJson(row));
   }
 
+  // ✅ OPTIMIZADO: Filtrar por estado 'submitted' para reducir tráfico de Realtime
+  // Solo escucha cambios en checkins que son relevantes para el dashboard
   @override
   Stream<void> watchCheckins({
     String? propertyId,
   }) {
-    // Stream que emite cuando hay cambios en la tabla checkins
-    // Solo nos interesa saber que hubo un cambio, no los datos específicos
-    return _client
+    // Solo escuchar cambios en checkins con status: submitted o draft
+    // Reduce drásticamente el tráfico comparado con escuchar TODOS los cambios
+    var stream = _client
         .from('checkins')
         .stream(primaryKey: ['id'])
+        .inFilter('status', ['submitted', 'draft']);
+
+    // Filtrar por propertyId usando where después del map
+    return stream
+        .where((rows) {
+          if (propertyId == null) return true;
+          return rows.any((row) => row['property_id'] == propertyId);
+        })
         .map((_) {});
   }
 

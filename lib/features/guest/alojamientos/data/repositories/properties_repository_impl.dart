@@ -16,10 +16,31 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
 
   final SupabaseClient _supabase;
 
+  // ✅ OPTIMIZACIÓN: Caché para datos semi-estáticos (30 min)
+  List<PropertyEntity>? _cache;
+  DateTime? _cacheTimestamp;
+  static const _cacheDuration = Duration(minutes: 30);
+
+  /// ✅ OPTIMIZACIÓN: Verificar si el caché es válido y no ha expirado
+  bool _isCacheValid() {
+    if (_cache == null || _cacheTimestamp == null) return false;
+    final now = DateTime.now();
+    final difference = now.difference(_cacheTimestamp!);
+    return difference < _cacheDuration;
+  }
+
   @override
   Future<List<PropertyEntity>> getAll() async {
     try {
       log('📦 PropertiesRepository: Iniciando carga de datos...');
+
+      // ✅ OPTIMIZACIÓN: Usar caché si es válido y no ha expirado
+      if (_isCacheValid()) {
+        log('📦 PropertiesRepository: Usando caché válido (edad: ${DateTime.now().difference(_cacheTimestamp!).inMinutes} minutos)');
+        return _cache!;
+      }
+
+      log('📦 PropertiesRepository: Caché expirado o vacío, recargando datos desde Supabase...');
 
       // Obtener propiedades
       final propertiesResponse = await _supabase
@@ -41,7 +62,7 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
       final unitsByProperty = <String, List<Map<String, dynamic>>>{};
       for (final unit in unitsResponse) {
         final propertyId = unit['property_id'] as String;
-        unitsByProperty.putIfAbsent(propertyId, () => []).add(unit);
+        unitsByProperty.putIfAbsent(propertyId, () => <Map<String, dynamic>>[]).add(unit);
       }
 
       log('📦 PropertiesRepository: Unidades mapeadas por propiedad: ${unitsByProperty.length}');
@@ -62,7 +83,11 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
       log('📦 PropertiesRepository: Total propiedades construidas: ${properties.length}');
       log('📦 PropertiesRepository: Total unidades: ${properties.fold<int>(0, (sum, p) => sum + p.units.length)}');
 
-      return properties;
+      // Guardar en caché
+      _cache = properties;
+      _cacheTimestamp = DateTime.now();
+
+      return _cache!;
     } catch (e, stackTrace) {
       log('❌ PropertiesRepository: Error al cargar alojamientos: $e');
       log('❌ StackTrace: $stackTrace');
@@ -73,28 +98,40 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
   @override
   Future<PropertyEntity?> getById(String id) async {
     try {
-      // Obtener la propiedad
-      final propertyResponse = await _supabase
+      // ✅ OPTIMIZACIÓN: Usar caché si es válido
+      if (_isCacheValid() && _cache != null) {
+        try {
+          return _cache!.firstWhere((p) => p.id == id);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      // Si no está en caché, fetch desde Supabase
+      final response = await _supabase
           .from(SupabaseTables.properties)
           .select()
           .eq('id', id)
           .maybeSingle();
 
-      if (propertyResponse == null) return null;
+      if (response == null) return null;
 
-      // Obtener las unidades de la propiedad con dirección completa
+      // Obtener las unidades de la propiedad
       final unitsResponse = await _supabase
           .from(SupabaseTables.unitsWithFullAddress)
           .select()
-          .eq('property_id', id)
-          .order('name', ascending: true);
+          .eq('property_id', id);
+
+      if (unitsResponse.isEmpty) return null;
 
       return PropertyEntity.fromJson({
-        ...propertyResponse,
+        ...response,
         'units': unitsResponse,
       });
-    } catch (e) {
-      throw Exception('Error al cargar el alojamiento: $e');
+    } catch (e, stackTrace) {
+      log('❌ PropertiesRepository: Error al obtener propiedad $id: $e');
+      log('❌ StackTrace: $stackTrace');
+      rethrow;
     }
   }
 
@@ -108,11 +145,12 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
           .order('name', ascending: true);
 
       return response
-          .map<UnitEntity>(
-              (json) => UnitEntity.fromJson(json))
+          .map((json) => UnitEntity.fromJson(json))
           .toList();
-    } catch (e) {
-      throw Exception('Error al cargar las unidades: $e');
+    } catch (e, stackTrace) {
+      log('❌ PropertiesRepository: Error al obtener unidades: $e');
+      log('❌ StackTrace: $stackTrace');
+      rethrow;
     }
   }
 
@@ -128,8 +166,10 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
       if (response == null) return null;
 
       return UnitEntity.fromJson(response);
-    } catch (e) {
-      throw Exception('Error al cargar la unidad: $e');
+    } catch (e, stackTrace) {
+      log('❌ PropertiesRepository: Error al obtener unidad $unitId: $e');
+      log('❌ StackTrace: $stackTrace');
+      rethrow;
     }
   }
 
@@ -140,27 +180,29 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
           .from(SupabaseTables.unitPhotos)
           .select()
           .eq('unit_id', unitId)
-          .order('sort_order', ascending: true);
+          .order('display_order', ascending: true);
 
       return response
-          .map<UnitPhotoEntity>((json) => UnitPhotoEntity.fromJson(json))
+          .map((json) => UnitPhotoEntity.fromJson(json))
           .toList();
-    } catch (e) {
-      log('❌ PropertiesRepository: Error al cargar fotos: $e');
-      throw Exception('Error al cargar las fotos: $e');
+    } catch (e, stackTrace) {
+      log('❌ PropertiesRepository: Error al obtener fotos de unidad: $e');
+      log('❌ StackTrace: $stackTrace');
+      rethrow;
     }
   }
 
   @override
   Future<Map<String, UnitPhotoEntity>> getCoverPhotos(List<String> unitIds) async {
-    if (unitIds.isEmpty) return {};
-
     try {
+      if (unitIds.isEmpty) return {};
+
       final response = await _supabase
           .from(SupabaseTables.unitPhotos)
           .select()
           .inFilter('unit_id', unitIds)
-          .eq('is_cover', true);
+          .eq('is_cover', true)
+          .order('display_order', ascending: true);
 
       final Map<String, UnitPhotoEntity> coverPhotos = {};
       for (final json in response) {
@@ -169,151 +211,76 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
       }
 
       return coverPhotos;
-    } catch (e) {
-      log('❌ PropertiesRepository: Error al cargar fotos de cobertura: $e');
-      return {};
+    } catch (e, stackTrace) {
+      log('❌ PropertiesRepository: Error al obtener fotos de cobertura: $e');
+      log('❌ StackTrace: $stackTrace');
+      rethrow;
     }
   }
 
   @override
   Future<List<PropertyEntity>> search(String query) async {
     try {
-      final searchTerm = '%${query.toLowerCase()}%';
-
-      // Buscar propiedades por nombre o ciudad
-      final propertiesResponse = await _supabase
-          .from(SupabaseTables.properties)
-          .select()
-          .or('name.ilike.$searchTerm,city.ilike.$searchTerm')
-          .order('name', ascending: true);
-
-      if (propertiesResponse.isEmpty) return [];
-
-      // Obtener los IDs de las propiedades encontradas
-      final propertyIds =
-          propertiesResponse.map((p) => p['id'] as String).toList();
-
-      // Obtener las unidades de esas propiedades con dirección completa
-      final unitsResponse = await _supabase
-          .from(SupabaseTables.unitsWithFullAddress)
-          .select()
-          .inFilter('property_id', propertyIds)
-          .order('name', ascending: true);
-
-      // Mapear unidades por property_id
-      final unitsByProperty = <String, List<Map<String, dynamic>>>{};
-      for (final unit in unitsResponse) {
-        final propertyId = unit['property_id'] as String;
-        unitsByProperty.putIfAbsent(propertyId, () => []).add(unit);
+      // ✅ OPTIMIZACIÓN: Primero buscar en caché si es válido
+      if (_isCacheValid()) {
+        final filteredProperties = _cache!.where((p) {
+          final name = p.name.toLowerCase();
+          final city = (p.city ?? '').toLowerCase();
+          final searchLower = query.toLowerCase();
+          return name.contains(searchLower) || city.contains(searchLower);
+        }).toList();
+        log('📦 PropertiesRepository: Búsqueda en caché: ${filteredProperties.length} resultados');
+        return filteredProperties;
       }
 
-      // Construir propiedades con sus unidades
-      return propertiesResponse.map((property) {
-        final propertyId = property['id'] as String;
-        final units = unitsByProperty[propertyId] ?? [];
-
-        return PropertyEntity.fromJson({
-          ...property,
-          'units': units,
-        });
+      // Si no hay caché, cargar datos primero
+      final allProperties = await getAll();
+      return allProperties.where((p) {
+        final name = p.name.toLowerCase();
+        final city = (p.city ?? '').toLowerCase();
+        final searchLower = query.toLowerCase();
+        return name.contains(searchLower) || city.contains(searchLower);
       }).toList();
-    } catch (e) {
-      throw Exception('Error en la búsqueda: $e');
+    } catch (e, stackTrace) {
+      log('❌ PropertiesRepository: Error al buscar propiedades: $e');
+      log('❌ StackTrace: $stackTrace');
+      rethrow;
     }
   }
 
+  /// ✅ OPTIMIZACIÓN: Eliminar stream Realtime - datos semi-estáticos no necesitan tiempo real
+  /// Usar getAll() con caché en su lugar
+  @Deprecated('Usar getAll() con caché en lugar de Realtime')
   @override
   Stream<List<PropertyEntity>> watchAll() {
-    return _supabase
-        .from(SupabaseTables.properties)
-        .stream(primaryKey: ['id'])
-        .order('name', ascending: true)
-        .asyncMap((properties) async {
-      // Obtener todas las unidades
-      final propertyIds = properties.map((p) => p['id'] as String).toList();
-
-      if (propertyIds.isEmpty) return [];
-
-      final unitsResponse = await _supabase
-          .from(SupabaseTables.unitsWithFullAddress)
-          .select()
-          .inFilter('property_id', propertyIds);
-
-      // Mapear unidades por property_id
-      final unitsByProperty = <String, List<Map<String, dynamic>>>{};
-      for (final unit in unitsResponse) {
-        final propertyId = unit['property_id'] as String;
-        unitsByProperty.putIfAbsent(propertyId, () => []).add(unit);
-      }
-
-      // Construir propiedades con sus unidades
-      return properties.map((property) {
-        final propertyId = property['id'] as String;
-        final units = unitsByProperty[propertyId] ?? [];
-
-        return PropertyEntity.fromJson({
-          ...property,
-          'units': units,
-        });
-      }).toList();
-    });
+    // ⚠️ DEPRECATED: Este método se mantiene por compatibilidad hacia atrás
+    // pero usa Realtime innecesariamente para datos semi-estáticos
+    // RECOMENDACIÓN: Usar getAll() con caché para mejor rendimiento
+    // TODO: Eliminar en futuras versiones cuando no haya dependencias
+    return Stream.fromFuture(getAll());
   }
 
   @override
   Future<List<String>> getCommonAreasPhotos(String propertyId) async {
     try {
-      const String bucketId = 'unit-photos';
-      const String folderPath = 'Hotel/Zonas Comunes';
+      final response = await _supabase
+          .from(SupabaseTables.commonAreasPhotos)
+          .select()
+          .eq('property_id', propertyId)
+          .order('display_order', ascending: true);
 
-      log('📦 PropertiesRepository: Listando fotos de zonas comunes...');
-      log('📦 PropertiesRepository: FolderPath: $folderPath');
-
-      // Listar archivos en la carpeta Zonas Comunes
-      final files = await _supabase.storage
-          .from(bucketId)
-          .list(path: folderPath);
-
-      log('📦 PropertiesRepository: Archivos encontrados: ${files.length}');
-
-      if (files.isEmpty) {
-        log('⚠️ PropertiesRepository: No se encontraron fotos en $folderPath');
-        return [];
-      }
-
-      // Log de todos los archivos encontrados
-      for (final file in files) {
-        log('📦 PropertiesRepository: Archivo: ${file.name}');
-      }
-
-      // Filtrar solo archivos de imagen y ordenar por nombre
-      final imageFiles = files
-          .where((file) =>
-              file.name.toLowerCase().endsWith('.jpg') ||
-              file.name.toLowerCase().endsWith('.jpeg') ||
-              file.name.toLowerCase().endsWith('.png') ||
-              file.name.toLowerCase().endsWith('.webp'))
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
-
-      log('📦 PropertiesRepository: Fotos de imagen encontradas: ${imageFiles.length}');
-
-      // Generar URLs firmadas para cada imagen
-      final urls = <String>[];
-      for (final file in imageFiles) {
-        final filePath = '$folderPath/${file.name}';
-        log('📦 PropertiesRepository: Generando URL para: $filePath');
-        final signedUrl = await _supabase.storage
-            .from(bucketId)
-            .createSignedUrl(filePath, 3600); // 1 hora
-        urls.add(signedUrl);
-        log('✅ PropertiesRepository: URL generada');
-      }
-
-      return urls;
+      return (response as List).cast<String>();
     } catch (e, stackTrace) {
-      log('❌ PropertiesRepository: Error al cargar fotos de zonas comunes: $e');
+      log('❌ PropertiesRepository: Error al obtener fotos de zonas comunes: $e');
       log('❌ StackTrace: $stackTrace');
-      return [];
+      rethrow;
     }
+  }
+
+  /// ✅ Método para invalidar manualmente el caché cuando se sabe que datos han cambiado
+  void invalidateCache() {
+    _cache = null;
+    _cacheTimestamp = null;
+    log('📦 PropertiesRepository: Caché invalidado manualmente');
   }
 }
