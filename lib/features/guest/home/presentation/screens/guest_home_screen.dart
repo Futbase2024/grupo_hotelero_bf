@@ -109,15 +109,16 @@ class GuestHomeScreen extends StatelessWidget {
                             const SizedBox(height: AppTheme.spacing16),
                             BlocBuilder<GuestHomeBloc, GuestHomeState>(
                               builder: (context, state) {
-                                // Solo obtener unitName y unitType si el estado es GuestHomeLoaded
+                                // Solo obtener unitName, unitType y unitId si el estado es GuestHomeLoaded
                                 // Si está cargando, usar null (se mostrará loading en _StayInfoCard)
                                 final unitName = state is GuestHomeLoaded ? state.booking.unitName : null;
                                 final unitType = state is GuestHomeLoaded ? state.booking.unitType : UnitType.apartment;
+                                final unitId = state is GuestHomeLoaded ? state.booking.unitId : null;
                                 // Si está cargando, no llamar a UnitImageHelper todavía
                                 if (state is GuestHomeInitial || state is GuestHomeLoading) {
-                                  return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null, UnitType.apartment);
+                                  return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null, UnitType.apartment, null);
                                 }
-                                return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName, unitType);
+                                return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName, unitType, unitId);
                               },
                             ),
                           ],
@@ -617,7 +618,7 @@ class GuestHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId, String? unitName, UnitType unitType) {
+  Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId, String? unitName, UnitType unitType, String? unitId) {
     // Si está submitted, el check-in está deshabilitado (ya enviado)
     final canDoCheckin = !isCheckinSubmitted && !isCheckinValidated;
     // Obtener imagen dinámica del alojamiento
@@ -730,7 +731,7 @@ class GuestHomeScreen extends StatelessWidget {
         icon: Icons.local_parking_outlined,
         title: 'Parkings',
         imagePath: 'assets/images/parking.png',
-        onTap: () => context.go('/guest/parkings'),
+        onTap: unitId != null ? () => context.go('/guest/parkings/$unitId') : null,
       ),
       _ServiceItem(
         icon: Icons.explore_outlined,

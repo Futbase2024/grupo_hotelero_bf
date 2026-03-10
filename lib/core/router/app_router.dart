@@ -39,6 +39,7 @@ import '../../features/guest/parkings/presentation/screens/parkings_screen.dart'
 import '../../features/guest/my_accommodation/presentation/screens/my_accommodation_screen.dart';
 import '../../features/guest/my_accommodation/presentation/screens/access_instructions_wrapper_screen.dart';
 import '../../features/guest/extras/presentation/screens/romantic_pack_screen.dart';
+import '../../features/guest/extras/presentation/screens/jacuzzi_rules_screen.dart';
 import '../../features/guest/extras/presentation/screens/physical_registration_screen.dart';
 import '../../features/guest/reviews/domain/bloc/reviews_bloc.dart';
 import '../../features/guest/reviews/domain/entities/review_entity.dart';
@@ -94,6 +95,7 @@ class AppRoutes {
   static const String parkings = '/guest/parkings';
   static const String parkingsByUnit = '/guest/parkings/:unitId';
   static const String romanticPack = '/guest/romantic-pack';
+  static const String jacuzziRules = '/guest/jacuzzi-rules';
   static const String physicalRegistration = '/guest/physical-registration';
 
   // Reviews routes
@@ -380,6 +382,11 @@ class AppRouter {
           builder: (context, state) => const RomanticPackScreen(),
         ),
         GoRoute(
+          path: AppRoutes.jacuzziRules,
+          name: 'jacuzzi-rules',
+          builder: (context, state) => const JacuzziRulesScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.physicalRegistration,
           name: 'physical-registration',
           builder: (context, state) => const PhysicalRegistrationScreen(),
@@ -540,6 +547,7 @@ class AppRouter {
       AppRoutes.queVer,
       AppRoutes.parkings,
       AppRoutes.romanticPack,
+      AppRoutes.jacuzziRules,
       AppRoutes.physicalRegistration,
     ];
 

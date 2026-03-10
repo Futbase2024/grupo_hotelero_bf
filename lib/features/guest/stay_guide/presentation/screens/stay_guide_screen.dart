@@ -258,6 +258,14 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
   }
 
   Widget _buildServicesSection(BuildContext context) {
+    // Verificar si the unit has jacuzzi by checking the name
+    final unitName = _bookingData?['unitName'] as String? ?? '';
+    final hasJacuzzi = unitName.toUpperCase().contains('JACUZZI');
+
+    // Verificar si es hotel (las habitaciones del hotel no tienen lavadero)
+    final unitType = _bookingData?['unitType'] as UnitType?;
+    final isHotel = unitType == UnitType.hotelRoom;
+
     return _InfoSection(
       title: 'Servicios',
       icon: Icons.room_service_outlined,
@@ -272,26 +280,27 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
                 label: 'WiFi',
                 onTap: () => _showWifiInfo(context),
               ),
-              _ServiceIcon(
-                icon: Icons.local_laundry_service_outlined,
-                label: 'Lavadero',
-                onTap: () => _showServiceInfo(
-                  context: context,
-                  title: 'Lavadero',
+              // Solo mostrar lavadero si NO es hotel (apartamentos tienen lavadero)
+              if (!isHotel) ...[
+                _ServiceIcon(
                   icon: Icons.local_laundry_service_outlined,
-                  description: 'Lavadora y secadora disponibles.\n\nUbicación: Cuarto de servicio\nHorario: 8:00 - 22:00',
+                  label: 'Lavadero',
+                  onTap: () => _showServiceInfo(
+                    context: context,
+                    title: 'Lavadero',
+                    icon: Icons.local_laundry_service_outlined,
+                    description: 'Lavadora y secadora disponibles.\n\nUbicación: Cuarto de servicio\nHorario: 8:00 - 22:00',
+                  ),
                 ),
-              ),
-              _ServiceIcon(
-                icon: Icons.hot_tub_outlined,
-                label: 'Jacuzzi',
-                onTap: () => _showServiceInfo(
-                  context: context,
-                  title: 'Jacuzzi',
+              ],
+              // Solo mostrar Jacuzzi si the unit has it
+              if (hasJacuzzi) ...[
+                _ServiceIcon(
                   icon: Icons.hot_tub_outlined,
-                  description: 'Jacuzzi privado disponible.\n\nTemperatura: 38°C\nHorario: 10:00 - 22:00\nMáx. 4 personas',
+                  label: 'Jacuzzi',
+                  onTap: () => context.go('/guest/jacuzzi-rules'),
                 ),
-              ),
+              ],
               _ServiceIcon(
                 icon: Icons.ac_unit_outlined,
                 label: 'A/C',
@@ -314,7 +323,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
               ),
             ],
           ),
-        ),
+        )
       ],
     );
   }

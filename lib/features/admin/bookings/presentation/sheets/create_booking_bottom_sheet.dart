@@ -677,6 +677,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       Debug.log('submitForm - Reserva creada: ${bookingResult.bookingCode}');
 
       // Enviar email al huésped con el código de acceso
+      bool emailSent = false;
       if (emailController.text.trim().isNotEmpty) {
         try {
           Debug.log('submitForm - Enviando email al huésped: ${emailController.text.trim()}');
@@ -685,7 +686,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
             orElse: () => units.first,
           );
 
-          await EmailService().sendBookingCreatedEmail(
+          emailSent = await EmailService().sendBookingCreatedEmail(
             toEmail: emailController.text.trim(),
             guestName: '${firstNameController.text.trim()} ${lastNameController.text.trim()}',
             propertyName: 'BF Stay',
@@ -697,15 +698,26 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
             bookingId: bookingResult.bookingId,
             unitId: selectedUnitId,
           );
-          Debug.log('submitForm - Email enviado correctamente');
+          Debug.log('submitForm - Email enviado: $emailSent');
         } catch (e) {
           // No bloquear el flujo si el email falla
           Debug.error('submitForm - Error enviando email (no crítico)', e);
+          emailSent = false;
         }
       }
 
+      // Crear resultado actualizado con el estado real del envío de email
+      final updatedResult = CreateBookingResult(
+        bookingId: bookingResult.bookingId,
+        bookingCode: bookingResult.bookingCode,
+        keyboxCode: bookingResult.keyboxCode,
+        emailSent: emailSent,
+        emailError: emailSent ? null : 'No se pudo enviar el email',
+        simulated: bookingResult.simulated,
+      );
+
       setState(() {
-        result = bookingResult;
+        result = updatedResult;
         currentStep = 1;
         isLoading = false;
       });

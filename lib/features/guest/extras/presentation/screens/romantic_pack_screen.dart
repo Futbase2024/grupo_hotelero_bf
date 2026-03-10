@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bf_stay/core/theme/app_colors.dart';
 
@@ -10,7 +11,6 @@ class RomanticPackScreen extends StatelessWidget {
   // Colores románticos locales
   static const Color _romanticPink = Color(0xFFFF69B4);
   static const Color _romanticRed = Color(0xFFE91E63);
-  static const Color _romanticPurple = Color(0xFF9C27B0);
 
   @override
   Widget build(BuildContext context) {
@@ -80,36 +80,15 @@ class RomanticPackScreen extends StatelessWidget {
               _buildInclusionCard(
                 context,
                 icon: Icons.local_florist,
-                title: 'Pétalos de rosas',
-                description: 'Decoración romántica con pétalos frescos en la habitación',
+                title: 'Punto decoración romántica',
+                description: 'Decoración con pétalos de rosas artificiales en la habitación',
               ),
               const SizedBox(height: 12),
               _buildInclusionCard(
                 context,
-                icon: Icons.wine_bar_outlined,
-                title: 'Botella de Cava',
-                description: 'Selección de cava premium para brindar juntos',
-              ),
-              const SizedBox(height: 12),
-              _buildInclusionCard(
-                context,
-                icon: Icons.cookie_outlined,
-                title: 'Fresas con chocolate',
-                description: 'Deliciosas fresas bañadas en chocolate belga',
-              ),
-              const SizedBox(height: 12),
-              _buildInclusionCard(
-                context,
-                icon: Icons.cake_outlined,
-                title: 'Detalle dulce',
-                description: 'Selección de bombones artesanales',
-              ),
-              const SizedBox(height: 12),
-              _buildInclusionCard(
-                context,
-                icon: Icons.star_outline,
-                title: 'Velitas aromáticas',
-                description: 'Ambientación con velas perfumadas',
+                icon: Icons.card_giftcard,
+                title: 'A elegir: Champán o Bombones',
+                description: 'Puedes elegir entre una botella de champán o una caja de bombones artesanales. Si deseas ambos, consulta el precio adicional en recepción.',
               ),
               const SizedBox(height: 32),
 
@@ -138,93 +117,27 @@ class RomanticPackScreen extends StatelessWidget {
       width: double.infinity,
       height: 200,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _romanticPink,
-            _romanticRed,
-            _romanticPurple,
-          ],
-        ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.gold,
+          width: 3,
+        ),
         boxShadow: [
           BoxShadow(
-            color: _romanticPink.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: AppColors.gold.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Iconos decorativos de fondo
-          Positioned(
-            top: 20,
-            left: 20,
-            child: Icon(
-              Icons.favorite,
-              color: AppColors.white.withValues(alpha: 0.2),
-              size: 40,
-            ),
-          ),
-          Positioned(
-            bottom: 30,
-            right: 30,
-            child: Icon(
-              Icons.favorite_border,
-              color: AppColors.white.withValues(alpha: 0.2),
-              size: 50,
-            ),
-          ),
-          Positioned(
-            top: 40,
-            right: 50,
-            child: Icon(
-              Icons.local_florist,
-              color: AppColors.white.withValues(alpha: 0.15),
-              size: 35,
-            ),
-          ),
-          // Contenido central
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.favorite,
-                  color: AppColors.white,
-                  size: 48,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Pack Romántico',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Crea momentos mágicos',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.white.withValues(alpha: 0.9),
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(17),
+        child: Image.asset(
+          'assets/images/packromantico.png',
+          width: double.infinity,
+          height: 200,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
@@ -365,7 +278,7 @@ class RomanticPackScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Precio del Pack',
+                'Pack Básico',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -376,22 +289,88 @@ class RomanticPackScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Consultar en recepción',
+            '15€',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 36,
               fontWeight: FontWeight.bold,
               color: _romanticPink,
             ),
           ),
+          const SizedBox(height: 16),
+          // Botón de compra
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _showPurchaseDialog(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _romanticPink,
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Reservar ahora',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
-            'El precio puede variar según la personalización',
+            'O consulta en recepción para personalizar tu pack',
             style: TextStyle(
               fontSize: 13,
               color: AppColors.getTextSecondaryColor(context),
               fontStyle: FontStyle.italic,
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPurchaseDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.isDarkMode(context) ? AppColors.darkSurface : AppColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.favorite, color: _romanticPink),
+            const SizedBox(width: 8),
+            const Text('Pack Romántico'),
+          ],
+        ),
+        content: const Text(
+          'Serás redirigido a nuestra web para completar el pago de forma segura.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              final uri = Uri.parse('https://www.boutiquejerez.es/producto/pack-romantico/');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _romanticPink,
+              foregroundColor: AppColors.white,
+            ),
+            child: const Text('Continuar'),
           ),
         ],
       ),

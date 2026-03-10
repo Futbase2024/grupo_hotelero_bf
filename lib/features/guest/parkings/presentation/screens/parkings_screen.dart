@@ -17,7 +17,7 @@ class ParkingsScreen extends StatelessWidget {
     this.unitId,
   });
 
-  /// ID de la unidad para filtrar parkings (opcional)
+  /// ID de la unidad para filtrar parkings (obligatorio para huéspedes)
   final String? unitId;
 
   @override
@@ -27,12 +27,16 @@ class ParkingsScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => ParkingsBloc(
         parkingsRepository: getIt<ParkingsRepository>(),
-      )..add(const ParkingsStarted()),
+      )..add(
+          unitId != null
+              ? ParkingsByUnitRequested(unitId: unitId!)
+              : const ParkingsStarted(),
+        ),
       child: Scaffold(
         backgroundColor: isDark ? AppColors.black : AppColors.gray50,
-        body: const SafeArea(
+        body: SafeArea(
           top: false,
-          child: _ParkingsBody(),
+          child: _ParkingsBody(unitId: unitId),
         ),
       ),
     );
@@ -41,7 +45,10 @@ class ParkingsScreen extends StatelessWidget {
 
 /// Body de la pantalla con acceso al BLoC
 class _ParkingsBody extends StatelessWidget {
-  const _ParkingsBody();
+  const _ParkingsBody({this.unitId});
+
+  /// ID de la unidad para filtrar (si aplica)
+  final String? unitId;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +84,18 @@ class _ParkingsBody extends StatelessWidget {
                   onRetry: () => _onRetry(context),
                 ),
               )
+            else if (state is UnitParkingsLoaded)
+              // Vista para una unidad específica (huésped)
+              state.unitParkings.isEmpty
+                  ? const SliverFillRemaining(
+                      child: _EmptyView(),
+                    )
+                  : _UnitParkingsList(
+                      unitParkings: state.unitParkings,
+                      unitName: state.unitParkings.first.unitName ?? 'Tu Alojamiento',
+                    )
             else if (state is AllUnitParkingsLoaded)
+              // Vista para admin/todos los parkings
               state.unitParkings.isEmpty
                   ? const SliverFillRemaining(
                       child: _EmptyView(),
@@ -227,6 +245,72 @@ class _GroupedParkingsList extends StatelessWidget {
             );
           },
           childCount: totalItems,
+        ),
+      ),
+    );
+  }
+}
+
+/// Lista simple de parkings para una unidad específica (vista de huésped)
+class _UnitParkingsList extends StatelessWidget {
+  const _UnitParkingsList({
+    required this.unitParkings,
+    required this.unitName,
+  });
+
+  final List<UnitParkingEntity> unitParkings;
+  final String unitName;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.only(bottom: 24),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            // Índice 0: Información de parking del hotel
+            if (index == 0) {
+              return const _HotelParkingInfoCard();
+            }
+
+            // Índice 1: Parkings de la unidad
+            if (index == 1) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Título de la sección
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      'Parkings para $unitName',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.getTextPrimaryColor(context),
+                      ),
+                    ),
+                  ),
+                  // Lista de parkings
+                  ...unitParkings.map((unitParking) {
+                    final parking = unitParking.parking;
+                    if (parking == null) return const SizedBox.shrink();
+
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      child: ParkingCard(
+                        parking: parking,
+                        priority: unitParking.priority,
+                        notes: unitParking.notes,
+                      ),
+                    );
+                  }),
+                ],
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
+          childCount: 2,
         ),
       ),
     );
