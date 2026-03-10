@@ -14,6 +14,7 @@ import '../widgets/dashboard_tab.dart';
 import '../widgets/bookings_tab.dart';
 import '../widgets/checkins_tab.dart';
 import '../widgets/properties_tab.dart';
+import '../../../marketing/presentation/widgets/marketing_tab.dart';
 
 // ignore: avoid_classes_with_only_static_members
 class _Debug {
@@ -204,7 +205,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
 
     // Construir lista de tabs según permisos
-    // Orden: Resumen (0), Reservas (1), Check-ins (2), Facturas (3), Alojamientos (4)
+    // Orden: Resumen (0), Reservas (1), Check-ins (2), Facturas (3), Marketing (4), Alojamientos (5)
     final tabs = <Widget>[
       const DashboardTab(),
       const BookingsTab(),
@@ -214,6 +215,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     // Tab de facturas solo visible para admin
     if (isAdmin) {
       tabs.add(const InvoicesTab());
+    }
+
+    // Tab de marketing solo visible para admin
+    if (isAdmin) {
+      tabs.add(const MarketingTab());
     }
 
     // Tab de alojamientos solo visible para admin
@@ -234,7 +240,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final authState = _authBloc.state;
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
 
-    final tabNames = ['Resumen', 'Reservas', 'Check-ins', 'Facturas', 'Alojamientos'];
+    final tabNames = ['Resumen', 'Reservas', 'Check-ins', 'Facturas', 'Marketing', 'Alojamientos'];
 
     return Container(
       decoration: const BoxDecoration(
@@ -246,8 +252,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: BottomNavigationBar(
         currentIndex: state.currentTabIndex,
         onTap: (index) {
-          // Si no es admin y trata de acceder a tabs de admin (3 o 4), ignorar
-          if (!isAdmin && (index == 3 || index == 4)) return;
+          // Si no es admin y trata de acceder a tabs de admin (3, 4 o 5), ignorar
+          if (!isAdmin && (index == 3 || index == 4 || index == 5)) return;
           _Debug.log('Tab pulsado: $index (${tabNames[index]})');
           _bloc.add(AdminDashboardTabChanged(index));
         },
@@ -279,6 +285,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: Icon(Icons.receipt_long_outlined),
               activeIcon: Icon(Icons.receipt_long),
               label: 'Facturas',
+            ),
+          // Tab de marketing solo visible para admin
+          if (isAdmin)
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.campaign_outlined),
+              activeIcon: Icon(Icons.campaign),
+              label: 'Marketing',
             ),
           // Tab de alojamientos solo visible para admin
           if (isAdmin)

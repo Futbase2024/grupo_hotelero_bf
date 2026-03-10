@@ -2,91 +2,95 @@ import 'package:flutter/services.dart';
 
 /// TextInputFormatter para formatear códigos de reserva BF-XXXX-XXXX
 ///
-/// Funcionalidades:
-/// - Convierte automáticamente a mayúsculas
-/// - Añade guiones automáticamente en posiciones 2 y 7
-/// - Limita a 12 caracteres visibles (BF-XXXX-XXXX)
-/// - Solo permite letras A-Z y números 0-9
+/// Formato: BF-XXXX-XXXX (12 caracteres)
+/// - Prefijo fijo: BF-
+/// - Grupo 1: 4 caracteres alfanuméricos
+/// - Grupo 2: 4 caracteres alfanuméricos
 ///
-/// Ejemplo de uso:
-/// ```dart
-/// TextFormField(
-///   inputFormatters: [BfCodeFormatter()],
-///   ...
-/// )
-/// ```
+/// Funcionalidades:
+/// - Prefijo BF- siempre presente
+/// - Convierte automáticamente a mayúsculas
+/// - Añade guiones automáticamente mientras escribe
+/// - Detecta pegado de código completo y lo formatea
+/// - Solo permite letras A-Z y números 0-9
 class BfCodeFormatter extends TextInputFormatter {
-  /// Patrón del código: BF-XXXX-XXXX
-  static const String _prefix = 'BF';
+  /// Prefijo fijo del código
+  static const String prefix = 'BF-';
 
-  /// Longitud total del código formateado
-  static const int _totalLength = 12;
+  /// Longitud total del código formateado: BF-XXXX-XXXX
+  static const int totalLength = 12;
 
-  /// Posiciones donde insertar guiones (después del carácter en esa posición)
-  static const Set<int> _hyphenPositions = {2, 7};
+  /// Valor inicial del campo (solo el prefijo)
+  static String get initialValue => prefix;
 
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    // Obtener el texto sin formato (solo alfanuméricos)
-    final rawText = newValue.text.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+    // Si está borrando y queda menos que el prefijo, mantener prefijo
+    if (newValue.text.length < oldValue.text.length) {
+      if (newValue.text.length < prefix.length) {
+        return TextEditingValue(
+          text: prefix,
+          selection: const TextSelection.collapsed(offset: prefix.length),
+        );
+      }
+    }
 
-    // Convertir a mayúsculas
-    final upperText = rawText.toUpperCase();
+    // Obtener solo caracteres alfanuméricos del nuevo texto
+    final rawChars = newValue.text.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
 
-    // Construir el texto formateado
-    final formatted = _formatCode(upperText);
+    // Si no hay caracteres después de limpiar, mostrar solo prefijo
+    if (rawChars.isEmpty) {
+      return TextEditingValue(
+        text: prefix,
+        selection: const TextSelection.collapsed(offset: prefix.length),
+      );
+    }
 
-    // Calcular la nueva posición del cursor
-    final selectionIndex = _calculateSelectionIndex(
-      formatted,
-      newValue.selection.baseOffset,
-      rawText.length,
-    );
+    // Extraer solo los caracteres después del prefijo BF
+    // (en caso de que hayan pegado "BFABC1234" o "BF-ABC-1234")
+    String charsAfterPrefix = rawChars;
+    if (charsAfterPrefix.toUpperCase().startsWith('BF')) {
+      charsAfterPrefix = charsAfterPrefix.substring(2);
+    }
+
+    // Convertir a mayúsculas y limitar a 8 caracteres (4 + 4)
+    final upperChars = charsAfterPrefix.toUpperCase();
+    final limitedChars = upperChars.length > 8 ? upperChars.substring(0, 8) : upperChars;
+
+    // Construir el código formateado: BF-XXXX-XXXX
+    final formatted = _buildFormattedCode(limitedChars);
+
+    // Calcular la posición del cursor
+    final cursorPosition = _calculateCursorPosition(formatted, limitedChars.length);
 
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: selectionIndex),
+      selection: TextSelection.collapsed(offset: cursorPosition),
     );
   }
 
-  /// Formatea el texto crudo añadiendo guiones en las posiciones correctas
-  String _formatCode(String rawText) {
+  /// Construye el código formateado: BF-XXXX-XXXX
+  String _buildFormattedCode(String chars) {
+    if (chars.isEmpty) {
+      return prefix;
+    }
+
     final buffer = StringBuffer();
+    buffer.write(prefix);
 
-    // Añadir prefijo BF si hay al menos 1 carácter
-    if (rawText.isNotEmpty) {
-      // Asegurar que empieza con BF
-      String processedText = rawText;
+    // Añadir primeros 4 caracteres (grupo 1)
+    for (int i = 0; i < chars.length && i < 4; i++) {
+      buffer.write(chars[i]);
+    }
 
-      // Si el usuario empieza escribiendo sin BF, lo añadimos
-      if (!processedText.startsWith(_prefix)) {
-        if (processedText.length >= 2) {
-          processedText = '$_prefix${processedText.substring(2)}';
-        } else {
-          // Si solo hay 1 carácter, mantenerlo (el usuario está escribiendo)
-          processedText = rawText;
-        }
-      }
-
-      // Procesar carácter por carácter
-      for (int i = 0; i < processedText.length && buffer.length < _totalLength; i++) {
-        final char = processedText[i];
-
-        // Añadir guion antes de ciertas posiciones
-        if (_hyphenPositions.contains(buffer.length)) {
-          buffer.write('-');
-        }
-
-        // Solo añadir caracteres alfanuméricos
-        if (RegExp(r'[A-Za-z0-9]').hasMatch(char)) {
-          buffer.write(char.toUpperCase());
-        }
-
-        // Parar si alcanzamos la longitud máxima
-        if (buffer.length >= _totalLength) break;
+    // Si hay más de 4 caracteres, añadir guion y el resto (grupo 2)
+    if (chars.length > 4) {
+      buffer.write('-');
+      for (int i = 4; i < chars.length; i++) {
+        buffer.write(chars[i]);
       }
     }
 
@@ -94,30 +98,24 @@ class BfCodeFormatter extends TextInputFormatter {
   }
 
   /// Calcula la posición del cursor después del formateo
-  int _calculateSelectionIndex(String formatted, int originalPosition, int rawLength) {
-    // Si el cursor estaba al final, mantenerlo al final
-    if (originalPosition >= rawLength) {
-      return formatted.length;
-    }
-
-    // Calcular la posición considerando los guiones añadidos
-    int hyphensBefore = 0;
-    for (final pos in _hyphenPositions) {
-      if (pos <= originalPosition + hyphensBefore) {
-        hyphensBefore++;
-      }
-    }
-
-    return (originalPosition + hyphensBefore).clamp(0, formatted.length);
+  int _calculateCursorPosition(String formatted, int charCount) {
+    // El cursor siempre al final del texto ingresado
+    return formatted.length;
   }
 
-  /// Valida si un código tiene el formato correcto
-  static bool isValidFormat(String code) {
+  /// Valida si un código tiene el formato correcto y está completo
+  /// Formato esperado: BF-XXXX-XXXX (12 caracteres)
+  static bool isValid(String code) {
     return RegExp(r'^BF-[A-Z0-9]{4}-[A-Z0-9]{4}$').hasMatch(code.toUpperCase());
   }
 
   /// Valida si un código está completo (12 caracteres)
   static bool isComplete(String code) {
-    return code.length == _totalLength;
+    return code.length == totalLength;
+  }
+
+  /// Extrae el código limpio sin formato (solo alfanuméricos, incluyendo BF)
+  static String extractCleanCode(String formattedCode) {
+    return formattedCode.replaceAll('-', '').toUpperCase();
   }
 }

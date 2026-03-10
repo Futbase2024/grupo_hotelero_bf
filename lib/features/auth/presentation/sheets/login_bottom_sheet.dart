@@ -80,7 +80,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
 
   void _validateCode() {
     final code = _codeController.text;
-    final isValid = BfCodeFormatter.isValidFormat(code);
+    final isValid = BfCodeFormatter.isValid(code);
     if (_isCodeValid != isValid) {
       setState(() => _isCodeValid = isValid);
     }

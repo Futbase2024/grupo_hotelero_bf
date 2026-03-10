@@ -11,6 +11,7 @@ import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/shared/utils/unit_image_helper.dart';
+import 'package:bf_stay/shared/widgets/logout_confirmation_dialog.dart';
 import '../../domain/bloc/guest_home_bloc.dart';
 import '../../domain/bloc/guest_home_event.dart';
 import '../../domain/bloc/guest_home_state.dart';
@@ -592,8 +593,11 @@ class GuestHomeScreen extends StatelessWidget {
         ),
         // Logout button
         IconButton(
-          onPressed: () {
-            context.read<AuthBloc>().add(const AuthLogoutRequested());
+          onPressed: () async {
+            final confirmed = await LogoutConfirmationDialog.show(context);
+            if (confirmed && context.mounted) {
+              context.read<AuthBloc>().add(const AuthLogoutRequested());
+            }
           },
           icon: const Icon(Icons.logout_outlined),
           color: AppColors.getTextSecondaryColor(context),

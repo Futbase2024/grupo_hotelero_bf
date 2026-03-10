@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/responsive.dart';
 import '../../domain/bloc/auth_bloc.dart';
+import '../formatters/bf_code_formatter.dart';
 
 /// Pantalla de acceso para huéspedes mediante código de reserva
 class BookingAccessScreen extends StatefulWidget {
@@ -17,7 +18,7 @@ class BookingAccessScreen extends StatefulWidget {
 
 class _BookingAccessScreenState extends State<BookingAccessScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _bookingCodeController = TextEditingController();
+  final _bookingCodeController = TextEditingController(text: BfCodeFormatter.initialValue);
 
   @override
   void dispose() {
@@ -359,6 +360,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
           // Booking code field
           TextFormField(
             controller: _bookingCodeController,
+            inputFormatters: [BfCodeFormatter()],
             textCapitalization: TextCapitalization.characters,
             textInputAction: TextInputAction.done,
             enabled: !isLoading,
@@ -366,15 +368,19 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
             decoration: const InputDecoration(
               labelText: 'Código de Reserva',
               prefixIcon: Icon(Icons.confirmation_number_outlined),
-              hintText: 'BF-XXXXX',
+              hintText: 'BF-XXXX-XXXX',
             ),
-            style: TextStyle(fontSize: ResponsiveFontSize.bodyMedium(context)),
+            style: TextStyle(
+              fontSize: ResponsiveFontSize.bodyMedium(context),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Por favor ingresa tu código de reserva';
               }
-              if (value.length < 4) {
-                return 'El código debe tener al menos 4 caracteres';
+              if (!BfCodeFormatter.isValid(value)) {
+                return 'El formato del código no es válido';
               }
               return null;
             },
