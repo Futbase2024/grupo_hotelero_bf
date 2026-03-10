@@ -656,6 +656,28 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     }
   }
 
+  /// Actualiza el código de la caja/keybox de una unidad
+  @override
+  Future<void> updateUnitBoxCode({
+    required String unitId,
+    required String boxCode,
+  }) async {
+    try {
+      debugPrint('📦 [updateUnitBoxCode] Actualizando código de caja de unidad: $unitId');
+
+      await _client
+          .from('units')
+          .update({'box_code': boxCode})
+          .eq('id', unitId);
+
+      debugPrint('✅ [updateUnitBoxCode] Código de caja actualizado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [updateUnitBoxCode] Error: $e');
+      debugPrint('❌ [updateUnitBoxCode] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   /// Actualiza el código de la puerta principal de una propiedad
   @override
   Future<void> updatePropertyMainDoorKeycode({

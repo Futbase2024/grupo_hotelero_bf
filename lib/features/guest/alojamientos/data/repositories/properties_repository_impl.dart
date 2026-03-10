@@ -180,7 +180,7 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
           .from(SupabaseTables.unitPhotos)
           .select()
           .eq('unit_id', unitId)
-          .order('display_order', ascending: true);
+          .order('sort_order', ascending: true);
 
       return response
           .map((json) => UnitPhotoEntity.fromJson(json))
@@ -202,7 +202,7 @@ class PropertiesRepositoryImpl implements PropertiesRepository {
           .select()
           .inFilter('unit_id', unitIds)
           .eq('is_cover', true)
-          .order('display_order', ascending: true);
+          .order('sort_order', ascending: true);
 
       final Map<String, UnitPhotoEntity> coverPhotos = {};
       for (final json in response) {

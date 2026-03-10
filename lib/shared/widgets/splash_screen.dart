@@ -1,11 +1,15 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
 /// Splash screen profesional con imágenes aleatorias de Jerez
 /// Muestra animación de fade mientras la app se inicializa
+///
+/// En web NO se muestra este widget, solo el splash HTML nativo
+/// para evitar el efecto de "doble splash"
 class SplashScreen extends StatefulWidget {
   const SplashScreen({
     super.key,
@@ -20,7 +24,7 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-/// Lista de imágenes de splash disponibles
+/// Lista de imágenes de splash disponibles (solo para móvil)
 const List<String> _splashImages = [
   'assets/splash/splash.png',
   'assets/splash/splash1.png',
@@ -111,6 +115,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // En web NO mostramos el splash widget, solo el splash HTML nativo
+    // Esto evita el efecto de "doble splash"
+    if (kIsWeb) {
+      return const SizedBox.shrink();
+    }
+
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {

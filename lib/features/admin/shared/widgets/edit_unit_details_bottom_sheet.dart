@@ -5,9 +5,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/admin_unit_entity.dart';
 import '../../domain/repositories/admin_panel_repository.dart';
 
-/// Bottom sheet para editar los datos de WiFi de una unidad
-class EditWifiBottomSheet extends StatefulWidget {
-  const EditWifiBottomSheet({
+/// Bottom sheet para editar los datos de WiFi y Box Code de una unidad
+class EditUnitDetailsBottomSheet extends StatefulWidget {
+  const EditUnitDetailsBottomSheet({
     super.key,
     required this.unit,
     required this.repository,
@@ -26,7 +26,7 @@ class EditWifiBottomSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => EditWifiBottomSheet(
+      builder: (context) => EditUnitDetailsBottomSheet(
         unit: unit,
         repository: repository,
       ),
@@ -34,12 +34,13 @@ class EditWifiBottomSheet extends StatefulWidget {
   }
 
   @override
-  State<EditWifiBottomSheet> createState() => _EditWifiBottomSheetState();
+  State<EditUnitDetailsBottomSheet> createState() => _EditUnitDetailsBottomSheetState();
 }
 
-class _EditWifiBottomSheetState extends State<EditWifiBottomSheet> {
+class _EditUnitDetailsBottomSheetState extends State<EditUnitDetailsBottomSheet> {
   late final TextEditingController _networkController;
   late final TextEditingController _passwordController;
+  late final TextEditingController _boxCodeController;
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -52,43 +53,49 @@ class _EditWifiBottomSheetState extends State<EditWifiBottomSheet> {
     _passwordController = TextEditingController(
       text: widget.unit.wifiPassword ?? '',
     );
+    _boxCodeController = TextEditingController(
+      text: widget.unit.boxCode ?? '',
+    );
   }
 
   @override
   void dispose() {
     _networkController.dispose();
     _passwordController.dispose();
+    _boxCodeController.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     final network = _networkController.text.trim();
     final password = _passwordController.text.trim();
-
-    if (network.isEmpty) {
-      _showError('El nombre de la red es obligatorio');
-      return;
-    }
-
-    if (password.isEmpty) {
-      _showError('La contraseña es obligatoria');
-      return;
-    }
+    final boxCode = _boxCodeController.text.trim();
 
     setState(() => _isLoading = true);
 
     try {
-      await widget.repository.updateUnitWifi(
-        unitId: widget.unit.id,
-        wifiNetwork: network,
-        wifiPassword: password,
-      );
+      // Actualizar WiFi si se proporcionó
+      if (network.isNotEmpty && password.isNotEmpty) {
+        await widget.repository.updateUnitWifi(
+          unitId: widget.unit.id,
+          wifiNetwork: network,
+          wifiPassword: password,
+        );
+      }
+
+      // Actualizar código de caja si se proporcionó
+      if (boxCode.isNotEmpty) {
+        await widget.repository.updateUnitBoxCode(
+          unitId: widget.unit.id,
+          boxCode: boxCode,
+        );
+      }
 
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('WiFi actualizado correctamente'),
+            content: Text('Datos actualizados correctamente'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -156,7 +163,7 @@ class _EditWifiBottomSheetState extends State<EditWifiBottomSheet> {
                         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                       ),
                       child: const Icon(
-                        Icons.wifi,
+                        Icons.edit,
                         color: AppColors.gold,
                         size: 24,
                       ),
@@ -167,7 +174,7 @@ class _EditWifiBottomSheetState extends State<EditWifiBottomSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Configurar WiFi',
+                            'Editar Detalles',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -187,6 +194,66 @@ class _EditWifiBottomSheetState extends State<EditWifiBottomSheet> {
                   ],
                 ),
                 const SizedBox(height: AppTheme.spacing24),
+
+                // Box Code field
+                const Text(
+                  'Código de Caja (Keybox)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.gray300,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                TextField(
+                  controller: _boxCodeController,
+                  style: const TextStyle(color: AppColors.white),
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'Ej: 1234',
+                    hintStyle: TextStyle(color: AppColors.gray500),
+                    filled: true,
+                    fillColor: AppColors.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      borderSide: const BorderSide(color: AppColors.darkBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      borderSide: const BorderSide(color: AppColors.darkBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      borderSide: const BorderSide(color: AppColors.gold),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.lock_open_outlined,
+                      color: AppColors.gray500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+
+                // WiFi Section Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.wifi,
+                      color: AppColors.gray400,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'WiFi',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gray300,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing12),
 
                 // Network name field
                 const Text(

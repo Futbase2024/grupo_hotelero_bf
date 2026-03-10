@@ -131,10 +131,6 @@ class PhysicalRegistrationScreen extends StatelessWidget {
               _buildSectionTitle(context, 'Documentos Aceptados'),
               const SizedBox(height: 16),
               _buildDocumentsCard(context),
-              const SizedBox(height: 32),
-
-              // Nota importante
-              _buildImportantNoteCard(context),
               const SizedBox(height: 24),
             ],
           ),
@@ -274,11 +270,7 @@ class PhysicalRegistrationScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildScheduleRow(context, 'Lunes - Viernes', '08:00 - 22:00'),
-          const Divider(height: 24),
-          _buildScheduleRow(context, 'Sábados', '09:00 - 21:00'),
-          const Divider(height: 24),
-          _buildScheduleRow(context, 'Domingos y Festivos', '10:00 - 20:00'),
+          _buildScheduleRow(context, 'Lunes - Domingos', '09:30 - 13:30'),
         ],
       ),
     );
@@ -369,52 +361,4 @@ class PhysicalRegistrationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImportantNoteCard(BuildContext context) {
-    final isDark = AppColors.isDarkMode(context);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.info.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.info,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Información importante',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.info,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '• El registro físico es obligatorio según la normativa vigente.\n'
-            '• Todos los huéspedes mayores de 16 años deben registrarse.\n'
-            '• Si llegas fuera del horario de recepción, contacta con antelación para organizar tu llegada.',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? AppColors.white : AppColors.gray700,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

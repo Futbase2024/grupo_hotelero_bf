@@ -77,6 +77,13 @@ class SupabaseTables {
   static const String reviewsWithGuest = 'reviews_with_guest';
 
   // ============================================
+  // MARKETING
+  // ============================================
+
+  /// Tabla de campañas de marketing
+  static const String marketingCampaigns = 'marketing_campaigns';
+
+  // ============================================
   // USUARIOS Y AUTENTICACIÓN
   // ============================================
 

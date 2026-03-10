@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -187,14 +188,21 @@ class _GroupedParkingsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final unitIds = groupedParkings.keys.toList();
     final hasHotel = hotelParkings.isNotEmpty;
+    // Siempre mostrar la info del hotel primero, luego hotel parkings, luego unidades
+    final totalItems = 1 + (hasHotel ? 1 : 0) + unitIds.length;
 
     return SliverPadding(
       padding: const EdgeInsets.only(bottom: 24),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            // Si hay hotel, mostrarlo primero (índice 0)
-            if (hasHotel && index == 0) {
+            // Índice 0: Información de parking del hotel (siempre visible)
+            if (index == 0) {
+              return const _HotelParkingInfoCard();
+            }
+
+            // Índice 1: Parkings del hotel (si existen)
+            if (hasHotel && index == 1) {
               return _UnitParkingSection(
                 unitName: hotelName ?? 'Hotel',
                 parkings: hotelParkings,
@@ -202,8 +210,8 @@ class _GroupedParkingsList extends StatelessWidget {
               );
             }
 
-            // Ajustar índice para las unidades normales
-            final adjustedIndex = hasHotel ? index - 1 : index;
+            // Resto: Unidades normales
+            final adjustedIndex = index - 1 - (hasHotel ? 1 : 0);
             if (adjustedIndex < 0 || adjustedIndex >= unitIds.length) {
               return const SizedBox.shrink();
             }
@@ -218,7 +226,7 @@ class _GroupedParkingsList extends StatelessWidget {
               isHotel: false,
             );
           },
-          childCount: unitIds.length + (hasHotel ? 1 : 0),
+          childCount: totalItems,
         ),
       ),
     );
@@ -473,5 +481,296 @@ class _EmptyView extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Widget con la información de parking del Hotel BF Boutique Jerez
+class _HotelParkingInfoCard extends StatefulWidget {
+  const _HotelParkingInfoCard();
+
+  @override
+  State<_HotelParkingInfoCard> createState() => _HotelParkingInfoCardState();
+}
+
+class _HotelParkingInfoCardState extends State<_HotelParkingInfoCard> {
+  bool _isExpanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDarkMode(context);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.gray900 : AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.gray800 : AppColors.gray200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header (clickeable para expandir/contraer)
+          InkWell(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.goldWithAlpha20,
+                    AppColors.goldWithAlpha10,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.vertical(
+                  top: const Radius.circular(16),
+                  bottom: _isExpanded ? Radius.zero : const Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.local_parking,
+                      size: 22,
+                      color: AppColors.black,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'INFORMACIÓN ZONAS DE APARCAMIENTO',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.gold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'BF BOUTIQUE JEREZ',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.getTextPrimaryColor(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: AppColors.gold,
+                    size: 28,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Contenido expandible
+          if (_isExpanded)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // PARKING PLAZA ARENAL
+                  _ParkingInfoSection(
+                    icon: Icons.local_parking,
+                    iconColor: AppColors.gold,
+                    title: 'PARKING PLAZA ARENAL',
+                    subtitle: 'A unos 5 minutos andando',
+                    content: '''
+• Abonando la estancia a través de la app El Parking: 6,95€/24h
+• Reservando a través de su web: 8€/24h (mínimo 24h)
+• Abonando el ticket en la máquina: 16€/24h''',
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // PARKING ZONA CENTRO
+                  _ParkingInfoSection(
+                    icon: Icons.directions_car,
+                    iconColor: AppColors.info,
+                    title: 'PARKING EN ZONA CENTRO',
+                    subtitle: 'O.R.A AZUL',
+                    content: '''
+• Lunes a Viernes: 9:00 - 13:30 y 17:00 - 20:00
+• Sábados: 9:00 - 14:00
+• Julio y Agosto: 9:00 - 14:00''',
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // PARKING ZONA GRATUITA
+                  _ParkingInfoSection(
+                    icon: Icons.directions_walk,
+                    iconColor: AppColors.success,
+                    title: 'PARKING ZONA GRATUITA',
+                    subtitle: 'A unos 10 minutos andando',
+                    content: 'Zona libre de estacionamiento rotativo.',
+                    showGpsLink: true,
+                    gpsLabel: 'Calzada del Arroyo',
+                    gpsUrl: 'https://www.google.com/maps/search/?api=1&query=Calzada+del+Arroyo+Jerez+de+la+Frontera',
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sección individual de información de parking
+class _ParkingInfoSection extends StatelessWidget {
+  const _ParkingInfoSection({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.content,
+    this.showGpsLink = false,
+    this.gpsLabel,
+    this.gpsUrl,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final String content;
+  final bool showGpsLink;
+  final String? gpsLabel;
+  final String? gpsUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDarkMode(context);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.blackWithAlpha20 : AppColors.gray50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.gray800 : AppColors.gray200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: iconColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.getTextPrimaryColor(context),
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.getTextSecondaryColor(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: AppColors.getTextSecondaryColor(context),
+            ),
+          ),
+          if (showGpsLink && gpsUrl != null) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => _openMapsUrl(gpsUrl!),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.gps_fixed,
+                      size: 16,
+                      color: AppColors.success,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'GPS: $gpsLabel',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.success,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.open_in_new,
+                      size: 14,
+                      color: AppColors.success,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _openMapsUrl(String url) {
+    final uri = Uri.parse(url);
+    launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }

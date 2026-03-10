@@ -6,7 +6,7 @@ import '../../../../../core/di/injection.dart';
 import '../../../domain/entities/admin_unit_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../shared/widgets/admin_widgets.dart';
-import '../../../shared/widgets/edit_wifi_bottom_sheet.dart';
+import '../../../shared/widgets/edit_unit_details_bottom_sheet.dart';
 import '../../../shared/widgets/edit_main_door_keycode_bottom_sheet.dart';
 
 /// Tab de propiedades del dashboard de administración
@@ -266,7 +266,7 @@ class _PropertiesTabState extends State<PropertiesTab> {
                   child: _UnitCard(
                     unit: unit,
                     propertyName: propertyName,
-                    onEditWifi: () => _showEditWifiSheet(unit),
+                    onEditDetails: () => _showEditDetailsSheet(unit),
                   ),
                 );
               },
@@ -281,8 +281,8 @@ class _PropertiesTabState extends State<PropertiesTab> {
     );
   }
 
-  void _showEditWifiSheet(AdminUnitEntity unit) {
-    EditWifiBottomSheet.show(
+  void _showEditDetailsSheet(AdminUnitEntity unit) {
+    EditUnitDetailsBottomSheet.show(
       context: context,
       unit: unit,
       repository: getIt<AdminPanelRepository>(),
@@ -310,12 +310,12 @@ class _UnitCard extends StatelessWidget {
   const _UnitCard({
     required this.unit,
     required this.propertyName,
-    required this.onEditWifi,
+    required this.onEditDetails,
   });
 
   final AdminUnitEntity unit;
   final String propertyName;
-  final VoidCallback onEditWifi;
+  final VoidCallback onEditDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -388,6 +388,30 @@ class _UnitCard extends StatelessWidget {
           const Divider(color: AppColors.darkBorder),
           const SizedBox(height: 12),
 
+          // Box Code info
+          Row(
+            children: [
+              Icon(
+                Icons.lock_open_outlined,
+                color: unit.hasBoxCode ? AppColors.success : AppColors.gray500,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  unit.hasBoxCode
+                      ? 'Código: ${unit.boxCode}'
+                      : 'Código de caja no configurado',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: unit.hasBoxCode ? AppColors.gray300 : AppColors.gray500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
           // WiFi info
           Row(
             children: [
@@ -409,14 +433,14 @@ class _UnitCard extends StatelessWidget {
                 ),
               ),
               TextButton.icon(
-                onPressed: onEditWifi,
+                onPressed: onEditDetails,
                 icon: Icon(
-                  unit.hasWifi ? Icons.edit : Icons.add,
+                  Icons.edit,
                   color: AppColors.gold,
                   size: 18,
                 ),
                 label: Text(
-                  unit.hasWifi ? 'Editar' : 'Añadir',
+                  'Editar',
                   style: const TextStyle(color: AppColors.gold, fontSize: 13),
                 ),
               ),

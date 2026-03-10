@@ -97,6 +97,8 @@ class HouseRuleCard extends StatelessWidget {
         return Icons.no_accounts;
       case 'checkout_time':
         return Icons.schedule;
+      case 'checkin_time':
+        return Icons.login;
       case 'garbage':
         return Icons.delete_outline;
       case 'air_conditioning':

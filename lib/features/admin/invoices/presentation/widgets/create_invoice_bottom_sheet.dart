@@ -174,16 +174,21 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     }
   }
 
-  double get _baseAmount {
+  /// El usuario introduce el TOTAL (con IVA incluido)
+  double get _totalAmount {
     return double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
   }
 
-  double get _taxAmount {
-    return _baseAmount * (_selectedTaxRate / 100);
+  /// Calculamos la base imponible desde el total
+  /// Fórmula: Base = Total / (1 + IVA/100)
+  double get _baseAmount {
+    if (_totalAmount <= 0) return 0;
+    return _totalAmount / (1 + (_selectedTaxRate / 100));
   }
 
-  double get _totalAmount {
-    return _baseAmount + _taxAmount;
+  /// El IVA es la diferencia entre total y base
+  double get _taxAmount {
+    return _totalAmount - _baseAmount;
   }
 
   Future<void> _onSavePressed() async {
@@ -229,10 +234,10 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       }
     }
 
-    if (_baseAmount <= 0) {
+    if (_totalAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('El importe debe ser mayor que 0'),
+          content: Text('El importe total debe ser mayor que 0'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -450,7 +455,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
                     const SizedBox(height: 24),
 
                     // Resumen de totales
-                    if (_baseAmount > 0) _buildTotals(),
+                    if (_totalAmount > 0) _buildTotals(),
                     const SizedBox(height: 16),
 
                     // Notas internas
@@ -719,7 +724,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       decoration: InputDecoration(
         labelText: 'Concepto de la factura',
         labelStyle: const TextStyle(color: AppColors.gray500),
-        hintText: 'Ej: Limpieza, Servicios extra, etc.',
+        hintText: 'Importe total con IVA incluido',
         hintStyle: const TextStyle(color: AppColors.gray600),
         filled: true,
         fillColor: AppColors.darkSurface,
@@ -925,7 +930,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
-        labelText: 'Base imponible (€)',
+        labelText: 'Importe total (€)',
         labelStyle: const TextStyle(color: AppColors.gray500),
         prefixIcon: const Padding(
           padding: EdgeInsets.only(left: 12, right: 8),

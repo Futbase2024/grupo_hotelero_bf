@@ -134,17 +134,6 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                           Color(0xFFE8E8E8),
                         ],
                       ),
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/hero_background.jpg'),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    isDark ? AppColors.darkBackgroundWithAlpha50 : AppColors.silverLight,
-                    isDark ? BlendMode.darken : BlendMode.srcATop,
-                  ),
-                  onError: (exception, stackTrace) {
-                    // Si no hay imagen, el gradiente actúa como fallback
-                  },
-                ),
               ),
               child: Container(
                 decoration: BoxDecoration(

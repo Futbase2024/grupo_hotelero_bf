@@ -206,6 +206,9 @@ class InvoiceEntity extends Equatable {
   /// Si la factura puede ser cancelada
   bool get canBeCancelled => status == InvoiceStatus.draft || status == InvoiceStatus.issued;
 
+  /// Si la factura puede ser eliminada (cualquier estado excepto cancelada)
+  bool get canBeDeleted => status != InvoiceStatus.cancelled;
+
   /// Si la factura está pagada
   bool get isPaid => status == InvoiceStatus.paid;
 

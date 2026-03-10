@@ -202,7 +202,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildBody(AdminDashboardState state) {
     final authState = _authBloc.state;
-    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+    final isAuthenticated = authState is AuthAuthenticated;
+    final isAdmin = isAuthenticated && authState.user.isAdmin;
+    final user = isAuthenticated ? authState.user : null;
 
     // Construir lista de tabs según permisos
     // Orden: Resumen (0), Reservas (1), Check-ins (2), Facturas (3), Marketing (4), Alojamientos (5)
@@ -218,8 +220,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
 
     // Tab de marketing solo visible para admin
-    if (isAdmin) {
-      tabs.add(const MarketingTab());
+    if (isAdmin && user != null) {
+      tabs.add(MarketingTab(
+        propertyId: user.propertyId ?? '',
+        userId: user.id,
+      ));
     }
 
     // Tab de alojamientos solo visible para admin

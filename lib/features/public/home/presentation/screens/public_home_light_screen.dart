@@ -94,17 +94,6 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
       decoration: BoxDecoration(
         color: AppColors.gold,
         borderRadius: BorderRadius.circular(AppTheme.radiusXXLarge),
-        image: DecorationImage(
-          image: const AssetImage('assets/images/hero_background.jpg'),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            AppColors.gold.withValues(alpha: 0.85),
-            BlendMode.srcATop,
-          ),
-          onError: (exception, stackTrace) {
-            // Si no hay imagen, el color gold actúa como fallback
-          },
-        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.gold.withValues(alpha: 0.3),

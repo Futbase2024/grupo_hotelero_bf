@@ -42,6 +42,8 @@ class AdminBookingEntity extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.unitType = UnitType.apartment,
+    this.wifiNetwork,
+    this.wifiPassword,
   });
 
   final String id;
@@ -52,6 +54,8 @@ class AdminBookingEntity extends Equatable {
   final UnitType unitType;
   final String propertyId;
   final String propertyName;
+  final String? wifiNetwork;
+  final String? wifiPassword;
   final DateTime checkInDate;
   final DateTime checkOutDate;
   final int numGuests;
@@ -295,6 +299,8 @@ class AdminBookingEntity extends Equatable {
       final signatureSvg = getStringField(['signature_svg']);
       final validationNotes = getStringField(['validation_notes']);
       final checkoutNotes = getStringField(['checkout_notes']);
+      final wifiNetwork = getStringField(['wifi_network']);
+      final wifiPassword = getStringField(['wifi_password']);
 
       // Timestamps
       final codeFirstUsedAt = getDateTimeField(['code_first_used_at']);
@@ -344,6 +350,8 @@ class AdminBookingEntity extends Equatable {
         checkoutNotes: checkoutNotes,
         createdAt: createdAt,
         updatedAt: updatedAt,
+        wifiNetwork: wifiNetwork,
+        wifiPassword: wifiPassword,
       );
 
       debugPrint('🟢 [AdminBookingEntity.fromJson] Parse completed successfully');

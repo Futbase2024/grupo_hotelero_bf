@@ -121,6 +121,12 @@ abstract class AdminPanelRepository {
     required String wifiPassword,
   });
 
+  /// Actualiza el código de caja (keybox) de una unidad
+  Future<void> updateUnitBoxCode({
+    required String unitId,
+    required String boxCode,
+  });
+
   /// Actualiza el código de la puerta principal de una propiedad
   Future<void> updatePropertyMainDoorKeycode({
     required String propertyId,

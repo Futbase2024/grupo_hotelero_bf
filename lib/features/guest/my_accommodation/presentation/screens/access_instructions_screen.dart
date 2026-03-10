@@ -22,8 +22,17 @@ class AccessInstructionsScreen extends StatelessWidget {
   final UnitEntity unit;
   final PropertyEntity property;
 
-  /// Hora límite de check-out
-  static const String _checkoutTime = '11:30';
+  /// Hora de check-in (misma para todos)
+  static const String _checkinTime = '14:00';
+
+  /// Determina si es un hotel basado en el nombre de la propiedad
+  bool get _isHotel {
+    final name = property.name.toLowerCase();
+    return name.contains('hotel') || name.contains('grupo hotelero');
+  }
+
+  /// Hora límite de check-out según tipo de propiedad
+  String get _checkoutTime => _isHotel ? '12:00' : '11:30';
 
   /// Obtiene la dirección completa formateada
   String get _fullAddress {
@@ -128,8 +137,14 @@ class AccessInstructionsScreen extends StatelessWidget {
                 _buildKeyCodeHighlightCard(context),
                 const SizedBox(height: AppTheme.spacing20),
 
-                // Instrucciones completas formateadas
-                _buildFormattedInstructions(context, unit.welcomeInstructions!),
+                // Tarjeta WiFi destacada (si hay datos en la base de datos)
+                if (unit.wifiNetwork != null && unit.wifiNetwork!.isNotEmpty) ...[
+                  _buildWifiHighlightCard(context),
+                  const SizedBox(height: AppTheme.spacing20),
+                ],
+
+                // Instrucciones completas formateadas (sin sección WiFi)
+                _buildFormattedInstructions(context, _removeWifiSection(unit.welcomeInstructions!)),
               ],
             ),
           ),
@@ -138,10 +153,130 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
+  /// Elimina la sección WiFi del texto de instrucciones
+  String _removeWifiSection(String instructions) {
+    // Patrón para detectar y eliminar la sección WiFi completa
+    final wifiPattern = RegExp(
+      r'\"WIFI\"[\s\S]*?(?=OS RECORDAMOS|EL INCUMPLIMIENTO|La hora del Check-out|$)',
+      caseSensitive: false,
+    );
+    return instructions.replaceAll(wifiPattern, '').trim();
+  }
+
+  /// Tarjeta destacada con los datos de WiFi
+  Widget _buildWifiHighlightCard(BuildContext context) {
+    final wifiNetwork = unit.wifiNetwork ?? '';
+    final wifiPassword = unit.wifiPassword ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing20),
+      decoration: BoxDecoration(
+        color: AppColors.getCardColor(context),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: AppColors.gold, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.gold,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.wifi_outlined,
+                  color: AppColors.black,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  'WiFi',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.getTextPrimaryColor(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+
+          // Red WiFi
+          Row(
+            children: [
+              Text(
+                'Red:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  wifiNetwork,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _copyToClipboard(context, wifiNetwork, 'Red WiFi'),
+                icon: const Icon(Icons.copy, size: 22),
+                color: AppColors.gold,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+
+          // Contraseña
+          Row(
+            children: [
+              Text(
+                'Contraseña:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  wifiPassword,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.getTextPrimaryColor(context),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _copyToClipboard(context, wifiPassword, 'Contraseña WiFi'),
+                icon: const Icon(Icons.copy, size: 22),
+                color: AppColors.gold,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Tarjeta destacada con los códigos de acceso
   Widget _buildKeyCodeHighlightCard(BuildContext context) {
     final mainDoorCode = property.mainDoorKeycode;
     final boxCode = booking.keyboxCode;
+
+    // Apartamento Bandera solo tiene código de puerta principal (sin casillero)
+    final isApartamentoBandera = unit.name == 'Apartamento Bandera';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
@@ -188,8 +323,8 @@ class AccessInstructionsScreen extends StatelessWidget {
             const SizedBox(height: AppTheme.spacing12),
           ],
 
-          // Código del casillero/caja
-          if (boxCode != null && boxCode.isNotEmpty)
+          // Código del casillero/caja (no mostrar para Apartamento Bandera)
+          if (boxCode != null && boxCode.isNotEmpty && !isApartamentoBandera)
             _buildCodeRow(context, 'Casillero de Llaves', boxCode, Icons.lock_open_outlined),
         ],
       ),
@@ -835,6 +970,24 @@ class AccessInstructionsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Horarios de Check-in y Check-out
+          _buildScheduleRow(
+            context,
+            'Check-in',
+            _checkinTime,
+            Icons.login,
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          _buildScheduleRow(
+            context,
+            'Check-out',
+            _checkoutTime,
+            Icons.logout,
+          ),
+          const SizedBox(height: AppTheme.spacing20),
+          Divider(color: AppColors.getBorderColor(context)),
+          const SizedBox(height: AppTheme.spacing16),
+
           _buildRuleItem(
             context,
             'Somos alojamiento 100% libre de humos.',
@@ -886,6 +1039,58 @@ class AccessInstructionsScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Fila con horario de check-in o check-out
+  Widget _buildScheduleRow(BuildContext context, String label, String time, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.gold,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            color: AppColors.black,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.getTextPrimaryColor(context),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  time,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

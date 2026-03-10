@@ -269,7 +269,7 @@ class _InvoicesTabState extends State<InvoicesTab> {
             invoice: invoice,
             bloc: context.read<InvoicesBloc>(),
             onEdit: invoice.isEditable ? () => _showEditInvoiceSheet(context, invoice) : null,
-            onDelete: invoice.isEditable ? () => _confirmDelete(context, invoice) : null,
+            onDelete: invoice.canBeDeleted ? () => _confirmDelete(context, invoice) : null,
           );
         },
       ),
@@ -563,7 +563,7 @@ class _InvoiceListTile extends StatelessWidget {
                         },
                       ),
                     ],
-                    if (invoice.isEditable) ...[
+                    if (invoice.canBeDeleted) ...[
                       const SizedBox(width: 12),
                       _MenuActionButton(
                         icon: Icons.delete_outline,

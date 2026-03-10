@@ -284,8 +284,7 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
     await _client
         .from(_tableName)
         .delete()
-        .eq('id', invoiceId)
-        .eq('status', 'draft'); // Solo se pueden eliminar borradores
+        .eq('id', invoiceId);
     debugPrint('🔵 [InvoicesRepository] delete - Invoice deleted');
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +9,7 @@ import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
+import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 
 /// Pantalla de Información para el huésped
 class StayGuideScreen extends StatefulWidget {
@@ -51,6 +53,9 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
             'checkIn': booking?.checkInDate,
             'checkOut': booking?.checkOutDate,
             'guests': booking?.numGuests ?? 1,
+            'unitType': booking?.unitType,
+            'wifiNetwork': booking?.wifiNetwork,
+            'wifiPassword': booking?.wifiPassword,
           };
           _isLoading = false;
         });
@@ -204,15 +209,21 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
       children: [
         _ContactItem(
           icon: Icons.phone_outlined,
-          label: 'Teléfono',
-          value: '+34 900 123 456',
-          onTap: () => _makePhoneCall('+34900123456'),
+          label: 'Teléfono 1',
+          value: '+34 656 61 80 65',
+          onTap: () => _makePhoneCall('+34656618065'),
+        ),
+        _ContactItem(
+          icon: Icons.phone_outlined,
+          label: 'Teléfono 2',
+          value: '+34 674 27 70 16',
+          onTap: () => _makePhoneCall('+34674277016'),
         ),
         _ContactItem(
           icon: Icons.email_outlined,
           label: 'Email',
-          value: 'info@bfstay.com',
-          onTap: () => _sendEmail('info@bfstay.com'),
+          value: 'Info@boutiquejerez.es',
+          onTap: () => _sendEmail('Info@boutiquejerez.es'),
         ),
       ],
     );
@@ -256,10 +267,51 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _ServiceIcon(icon: Icons.wifi_outlined, label: 'WiFi'),
-              _ServiceIcon(icon: Icons.ac_unit_outlined, label: 'A/C'),
-              _ServiceIcon(icon: Icons.tv_outlined, label: 'TV'),
-              _ServiceIcon(icon: Icons.local_parking_outlined, label: 'Parking'),
+              _ServiceIcon(
+                icon: Icons.wifi_outlined,
+                label: 'WiFi',
+                onTap: () => _showWifiInfo(context),
+              ),
+              _ServiceIcon(
+                icon: Icons.local_laundry_service_outlined,
+                label: 'Lavadero',
+                onTap: () => _showServiceInfo(
+                  context: context,
+                  title: 'Lavadero',
+                  icon: Icons.local_laundry_service_outlined,
+                  description: 'Lavadora y secadora disponibles.\n\nUbicación: Cuarto de servicio\nHorario: 8:00 - 22:00',
+                ),
+              ),
+              _ServiceIcon(
+                icon: Icons.hot_tub_outlined,
+                label: 'Jacuzzi',
+                onTap: () => _showServiceInfo(
+                  context: context,
+                  title: 'Jacuzzi',
+                  icon: Icons.hot_tub_outlined,
+                  description: 'Jacuzzi privado disponible.\n\nTemperatura: 38°C\nHorario: 10:00 - 22:00\nMáx. 4 personas',
+                ),
+              ),
+              _ServiceIcon(
+                icon: Icons.ac_unit_outlined,
+                label: 'A/C',
+                onTap: () => _showServiceInfo(
+                  context: context,
+                  title: 'Aire Acondicionado',
+                  icon: Icons.ac_unit_outlined,
+                  description: 'Aire acondicionado en todas las estancias.\n\nControl por termostato\nTemperatura recomendada: 22-24°C',
+                ),
+              ),
+              _ServiceIcon(
+                icon: Icons.tv_outlined,
+                label: 'TV',
+                onTap: () => _showServiceInfo(
+                  context: context,
+                  title: 'Smart TV',
+                  icon: Icons.tv_outlined,
+                  description: 'Smart TV con Netflix, Prime Video y YouTube.\n\nControl remoto disponible\nCanales locales incluidos',
+                ),
+              ),
             ],
           ),
         ),
@@ -267,15 +319,301 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
     );
   }
 
+  void _showServiceInfo({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required String description,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.getCardColor(context),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppTheme.radiusLarge),
+          ),
+        ),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.getBorderColor(context),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing20),
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.goldWithAlpha10,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.gold, size: 32),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            // Title
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.getTextPrimaryColor(context),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            // Description
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.getTextSecondaryColor(context),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing24),
+            // Close button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: AppColors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Cerrar',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Modal específico para WiFi con botones de copiar
+  void _showWifiInfo(BuildContext context) {
+    final wifiNetwork = _bookingData?['wifiNetwork'] as String? ?? 'No disponible';
+    final wifiPassword = _bookingData?['wifiPassword'] as String? ?? 'No disponible';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.getCardColor(context),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppTheme.radiusLarge),
+            ),
+          ),
+          padding: const EdgeInsets.all(AppTheme.spacing24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.getBorderColor(context),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing20),
+
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.goldWithAlpha10,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.wifi_outlined, color: AppColors.gold, size: 32),
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+
+              // Title
+              Text(
+                'WiFi',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.getTextPrimaryColor(context),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+
+              // Subtitle
+              Text(
+                'Conexión a internet de alta velocidad',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing24),
+
+              // Network card
+              _wifiCredentialCard(
+                icon: Icons.wifi,
+                label: 'Red',
+                value: wifiNetwork,
+                onCopy: () => _copyToClipboard(sheetContext, wifiNetwork, 'Red WiFi'),
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+
+              // Password card
+              _wifiCredentialCard(
+                icon: Icons.lock_outline,
+                label: 'Contraseña',
+                value: wifiPassword,
+                onCopy: () => _copyToClipboard(sheetContext, wifiPassword, 'Contraseña WiFi'),
+              ),
+              const SizedBox(height: AppTheme.spacing24),
+
+              // Close button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: AppColors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cerrar',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _copyToClipboard(BuildContext context, String text, String label) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$label copiado'),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  /// Widget para tarjetas de credenciales WiFi con botón de copiar
+  Widget _wifiCredentialCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onCopy,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: AppColors.goldWithAlpha10,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(color: AppColors.goldWithAlpha30),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.gold,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: AppColors.black, size: 20),
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.getTextSecondaryColor(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.getTextPrimaryColor(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Copy button
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onCopy,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.gold,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.copy, color: AppColors.black, size: 20),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRulesSection(BuildContext context) {
+    // Determinar el check-out según el tipo de unidad
+    final unitType = _bookingData?['unitType'] as UnitType?;
+    final isHotel = unitType == UnitType.hotelRoom;
+    final checkOutTime = isHotel ? '12:00' : '11:30';
+
     return _InfoSection(
       title: 'Normas de la casa',
       icon: Icons.rule_outlined,
       children: [
-        _RuleItem(icon: Icons.access_time_outlined, text: 'Check-in: 15:00 - Check-out: 11:00'),
+        _RuleItem(icon: Icons.access_time_outlined, text: 'Check-in: 14:00'),
+        _RuleItem(icon: Icons.access_time_filled, text: 'Check-out: $checkOutTime'),
         _RuleItem(icon: Icons.smoke_free_outlined, text: 'No fumar en el alojamiento'),
         _RuleItem(icon: Icons.party_mode_outlined, text: 'No se permiten fiestas'),
-        _RuleItem(icon: Icons.pets_outlined, text: 'Consultar mascotas'),
+        _RuleItem(icon: Icons.pets_outlined, text: 'No se admiten mascotas'),
       ],
     );
   }
@@ -472,34 +810,39 @@ class _ServiceIcon extends StatelessWidget {
   const _ServiceIcon({
     required this.icon,
     required this.label,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.goldWithAlpha10,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.goldWithAlpha30),
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.goldWithAlpha10,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.goldWithAlpha30),
+            ),
+            child: Icon(icon, color: AppColors.gold, size: 24),
           ),
-          child: Icon(icon, color: AppColors.gold, size: 24),
-        ),
-        const SizedBox(height: AppTheme.spacing8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.getTextSecondaryColor(context),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.getTextSecondaryColor(context),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
