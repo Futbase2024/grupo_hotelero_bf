@@ -15,6 +15,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     try {
       debugPrint('📋 [CheckoutRepository] Obteniendo datos de reserva: $bookingId');
 
+      // Consulta base sin JOINs problemáticos (en web causan aserción si son null)
       final response = await _supabase
           .from('bookings')
           .select('''
@@ -27,32 +28,58 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
             guest_first_name,
             last_name,
             guest_email,
-            property_id,
-            unit:units!bookings_unit_id_fkey (
-              name,
-              property:properties!units_property_id_fkey (
-                id,
-                name
-              )
-            )
+            unit_id,
+            property_id
           ''')
           .eq('id', bookingId)
           .single();
 
-      final unitData = response['unit'] as Map<String, dynamic>?;
-      final propertyData = unitData?['property'] as Map<String, dynamic>?;
+      // Obtener datos de unit y property por separado
+      String? unitName;
+      String? propertyName;
+      String? propertyId;
+
+      final unitId = response['unit_id'] as String?;
+      final propId = response['property_id'] as String?;
+
+      if (unitId != null) {
+        try {
+          final unitResponse = await _supabase
+              .from('units')
+              .select('name')
+              .eq('id', unitId)
+              .maybeSingle();
+          unitName = unitResponse?['name'] as String?;
+        } catch (e) {
+          debugPrint('⚠️ [CheckoutRepository] Error obteniendo unit: $e');
+        }
+      }
+
+      if (propId != null) {
+        try {
+          final propertyResponse = await _supabase
+              .from('properties')
+              .select('id, name')
+              .eq('id', propId)
+              .maybeSingle();
+          propertyId = propertyResponse?['id'] as String?;
+          propertyName = propertyResponse?['name'] as String?;
+        } catch (e) {
+          debugPrint('⚠️ [CheckoutRepository] Error obteniendo property: $e');
+        }
+      }
 
       return CheckoutBookingData(
         bookingId: response['id'] as String,
         bookingCode: response['booking_code'] as String,
-        unitName: unitData?['name'] as String? ?? '',
-        propertyName: propertyData?['name'] as String? ?? '',
+        unitName: unitName ?? '',
+        propertyName: propertyName ?? '',
         checkInDate: DateTime.parse(response['checkin_date'] as String),
         checkOutDate: DateTime.parse(response['checkout_date'] as String),
         numGuests: (response['num_adults'] as int? ?? 1) + (response['num_children'] as int? ?? 0),
         guestFullName: '${response['guest_first_name'] ?? ''} ${response['last_name'] ?? ''}'.trim(),
         guestEmail: response['guest_email'] as String? ?? '',
-        propertyId: propertyData?['id'] as String?,
+        propertyId: propertyId ?? propId,
       );
     } catch (e) {
       debugPrint('❌ [CheckoutRepository] Error obteniendo reserva: $e');

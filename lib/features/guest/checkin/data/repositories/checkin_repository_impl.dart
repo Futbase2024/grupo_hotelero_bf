@@ -210,11 +210,14 @@ class CheckinRepositoryImpl implements CheckinRepository {
     try {
       debugPrint('📋 [getBookingForCheckin] Obteniendo datos de reserva: $bookingId');
 
+      // Consulta base sin JOINs problemáticos (en web causan aserción si son null)
       final response = await _client
           .from('bookings')
           .select('''
             id,
             booking_code,
+            unit_id,
+            property_id,
             checkin_date,
             checkout_date,
             num_adults,
@@ -224,13 +227,6 @@ class CheckinRepositoryImpl implements CheckinRepository {
             last_name,
             guest_email,
             guest_phone,
-            units!bookings_unit_id_fkey (
-              name
-            ),
-            properties!bookings_property_id_fkey (
-              id,
-              name
-            ),
             checkins (
               id,
               status
@@ -241,13 +237,54 @@ class CheckinRepositoryImpl implements CheckinRepository {
 
       debugPrint('📋 [getBookingForCheckin] Reserva obtenida');
 
+      // Obtener datos de unit y property por separado
+      String? unitName;
+      String? propertyId;
+      String? propertyName;
+
+      final unitId = response['unit_id'] as String?;
+      final propId = response['property_id'] as String?;
+
+      if (unitId != null) {
+        try {
+          final unitResponse = await _client
+              .from('units')
+              .select('name')
+              .eq('id', unitId)
+              .maybeSingle();
+          unitName = unitResponse?['name'] as String?;
+        } catch (e) {
+          debugPrint('⚠️ [getBookingForCheckin] Error obteniendo unit: $e');
+        }
+      }
+
+      if (propId != null) {
+        try {
+          final propertyResponse = await _client
+              .from('properties')
+              .select('id, name')
+              .eq('id', propId)
+              .maybeSingle();
+          propertyId = propertyResponse?['id'] as String?;
+          propertyName = propertyResponse?['name'] as String?;
+        } catch (e) {
+          debugPrint('⚠️ [getBookingForCheckin] Error obteniendo property: $e');
+        }
+      }
+
+      // checkins puede ser un Map (relación uno-a-uno) o null
+      final checkinRaw = response['checkins'];
+      final checkin = checkinRaw != null && checkinRaw is Map<String, dynamic>
+          ? checkinRaw
+          : null;
+
       return CheckinBookingData.fromJson({
         ...response,
-        'unit_name': (response['units'] as Map<String, dynamic>?)?['name'],
-        'property_id': (response['properties'] as Map<String, dynamic>?)?['id'],
-        'property_name': (response['properties'] as Map<String, dynamic>?)?['name'],
-        'checkin_id': (response['checkins'] as Map<String, dynamic>?)?['id'],
-        'checkin_status': (response['checkins'] as Map<String, dynamic>?)?['status'],
+        'unit_name': unitName ?? '',
+        'property_id': propertyId ?? propId ?? '',
+        'property_name': propertyName ?? '',
+        'checkin_id': checkin?['id'],
+        'checkin_status': checkin?['status'],
       });
     } catch (e, s) {
       debugPrint('❌ [getBookingForCheckin] Error: $e');

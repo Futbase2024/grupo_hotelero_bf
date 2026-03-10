@@ -86,6 +86,8 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       // status, primary_guest_user_id, created_at, num_guests, staff_notes,
       // code_first_used_at, guest_first_name, guest_email, guest_phone, code_sent_at,
       // keybox_code, num_adults, num_children, children_ages
+      // Consulta base sin JOINs problemáticos
+      // En web, los JOINs con relaciones null lanzan aserción
       var query = _client
           .from('bookings')
           .select('''
@@ -107,12 +109,6 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
             code_first_used_at,
             code_sent_at,
             created_at,
-            units!bookings_unit_id_fkey (
-              name
-            ),
-            properties!bookings_property_id_fkey (
-              name
-            ),
             checkins (
               id,
               status
@@ -142,34 +138,66 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
 
       debugPrint('📋 [listBookings] Respuesta recibida: ${response.length} registros');
 
+      // Cargar nombres de units y properties por separado para evitar errores de JOIN en web
+      final unitIds = <String>{};
+      final propertyIds = <String>{};
+      for (final row in response as List) {
+        if (row['unit_id'] != null) unitIds.add(row['unit_id'] as String);
+        if (row['property_id'] != null) propertyIds.add(row['property_id'] as String);
+      }
+
+      // Obtener nombres de units
+      final unitNames = <String, String>{};
+      if (unitIds.isNotEmpty) {
+        try {
+          final unitsResponse = await _client
+              .from('units')
+              .select('id, name')
+              .inFilter('id', unitIds.toList());
+          for (final u in unitsResponse) {
+            unitNames[u['id'] as String] = u['name'] as String? ?? '';
+          }
+        } catch (e) {
+          debugPrint('⚠️ [listBookings] Error cargando units: $e');
+        }
+      }
+
+      // Obtener nombres de properties
+      final propertyNames = <String, String>{};
+      if (propertyIds.isNotEmpty) {
+        try {
+          final propertiesResponse = await _client
+              .from('properties')
+              .select('id, name')
+              .inFilter('id', propertyIds.toList());
+          for (final p in propertiesResponse) {
+            propertyNames[p['id'] as String] = p['name'] as String? ?? '';
+          }
+        } catch (e) {
+          debugPrint('⚠️ [listBookings] Error cargando properties: $e');
+        }
+      }
+
       // Mapear respuesta a entidades
-      return (response as List).map((row) {
-        // units y properties pueden ser Map o null
-        final unitRaw = row['units'];
-        final unit = unitRaw != null && unitRaw is Map<String, dynamic>
-            ? unitRaw
-            : null;
-
-        final propertyRaw = row['properties'];
-        final property = propertyRaw != null && propertyRaw is Map<String, dynamic>
-            ? propertyRaw
-            : null;
-
+      return response.map((row) {
         // checkins puede ser un Map (relación uno-a-uno) o null
         final checkinRaw = row['checkins'];
         final checkin = checkinRaw != null && checkinRaw is Map<String, dynamic>
             ? checkinRaw
             : null;
 
-        debugPrint('📋 [listBookings] Procesando booking: ${row['booking_code']}, unit: ${unit?['name']}, property: ${property?['name']}');
+        final unitId = row['unit_id'] as String?;
+        final propertyId = row['property_id'] as String?;
+
+        debugPrint('📋 [listBookings] Procesando booking: ${row['booking_code']}');
 
         return AdminBookingEntity.fromJson({
           'id': row['id'],
           'booking_code': row['booking_code'],
-          'unit_id': row['unit_id'],
-          'unit_name': unit?['name'] ?? '',
-          'property_id': row['property_id'],
-          'property_name': property?['name'] ?? '',
+          'unit_id': unitId ?? '',
+          'unit_name': unitId != null ? (unitNames[unitId] ?? '') : '',
+          'property_id': propertyId ?? '',
+          'property_name': propertyId != null ? (propertyNames[propertyId] ?? '') : '',
           'check_in_date': row['checkin_date'],
           'check_out_date': row['checkout_date'],
           'num_guests': row['num_guests'] ?? 1,
