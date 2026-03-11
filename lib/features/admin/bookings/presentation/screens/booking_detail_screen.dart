@@ -214,53 +214,119 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final controller = TextEditingController();
     return showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Rechazar Check-out', style: TextStyle(color: AppColors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Indica las incidencias detectadas:',
-              style: TextStyle(color: AppColors.gray300),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              style: const TextStyle(color: AppColors.white),
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Descripción de las incidencias...',
-                hintStyle: const TextStyle(color: AppColors.gray500),
-                filled: true,
-                fillColor: AppColors.darkBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.gold),
+      barrierColor: AppColors.blackWithAlpha80,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.getCardColor(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono de advertencia
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.errorLight,
+                  shape: BoxShape.circle,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.gold),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 48,
+                  color: AppColors.error,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+
+              // Título
+              const Text(
+                'Rechazar Check-out',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Descripción
+              Text(
+                'Indica las incidencias detectadas para notificar al huésped:',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // Campo de texto
+              TextField(
+                controller: controller,
+                style: TextStyle(
+                  color: AppColors.getTextPrimaryColor(context),
+                ),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Descripción de las incidencias...',
+                  hintStyle: TextStyle(
+                    color: AppColors.getTextSecondaryColor(context),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.getInputBackgroundColor(context),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.gold, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.getTextPrimaryColor(context),
+                        side: BorderSide(color: AppColors.getBorderColor(context)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Rechazar',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Rechazar'),
-          ),
-        ],
       ),
     );
   }
@@ -269,53 +335,119 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final controller = TextEditingController();
     return showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Rechazar Check-in', style: TextStyle(color: AppColors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Indica el motivo del rechazo (opcional):',
-              style: TextStyle(color: AppColors.gray300),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              style: const TextStyle(color: AppColors.white),
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Motivo del rechazo...',
-                hintStyle: const TextStyle(color: AppColors.gray500),
-                filled: true,
-                fillColor: AppColors.darkBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.gold),
+      barrierColor: AppColors.blackWithAlpha80,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.getCardColor(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono de advertencia
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.errorLight,
+                  shape: BoxShape.circle,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.gold),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 48,
+                  color: AppColors.error,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+
+              // Título
+              const Text(
+                'Rechazar Check-in',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Descripción
+              Text(
+                'Indica el motivo del rechazo (opcional):',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // Campo de texto
+              TextField(
+                controller: controller,
+                style: TextStyle(
+                  color: AppColors.getTextPrimaryColor(context),
+                ),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Motivo del rechazo...',
+                  hintStyle: TextStyle(
+                    color: AppColors.getTextSecondaryColor(context),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.getInputBackgroundColor(context),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.gold, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.getTextPrimaryColor(context),
+                        side: BorderSide(color: AppColors.getBorderColor(context)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Rechazar',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Rechazar'),
-          ),
-        ],
       ),
     );
   }

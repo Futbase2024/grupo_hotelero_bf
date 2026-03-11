@@ -8,7 +8,8 @@ import 'package:flutter/services.dart';
 /// - Grupo 2: 4 caracteres alfanuméricos
 ///
 /// Funcionalidades:
-/// - Prefijo BF- siempre presente
+/// - Campo vacío al inicio (placeholder: BF-XXXX-XXXX)
+/// - Prefijo BF- se añade automáticamente al escribir
 /// - Convierte automáticamente a mayúsculas
 /// - Añade guiones automáticamente mientras escribe
 /// - Detecta pegado de código completo y lo formatea
@@ -20,32 +21,30 @@ class BfCodeFormatter extends TextInputFormatter {
   /// Longitud total del código formateado: BF-XXXX-XXXX
   static const int totalLength = 12;
 
-  /// Valor inicial del campo (solo el prefijo)
-  static String get initialValue => prefix;
+  /// Valor inicial del campo (vacío, el placeholder muestra el formato)
+  static String get initialValue => '';
 
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    // Si está borrando y queda menos que el prefijo, mantener prefijo
-    if (newValue.text.length < oldValue.text.length) {
-      if (newValue.text.length < prefix.length) {
-        return TextEditingValue(
-          text: prefix,
-          selection: const TextSelection.collapsed(offset: prefix.length),
-        );
-      }
+    // Si el campo está vacío, dejarlo vacío (mostrará el placeholder)
+    if (newValue.text.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
     }
 
     // Obtener solo caracteres alfanuméricos del nuevo texto
     final rawChars = newValue.text.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
 
-    // Si no hay caracteres después de limpiar, mostrar solo prefijo
+    // Si no hay caracteres alfanuméricos, dejar vacío (mostrará placeholder)
     if (rawChars.isEmpty) {
-      return TextEditingValue(
-        text: prefix,
-        selection: const TextSelection.collapsed(offset: prefix.length),
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
       );
     }
 

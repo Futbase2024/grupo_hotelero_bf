@@ -190,7 +190,7 @@ class DashboardTab extends StatelessWidget {
                   label: 'Alojamientos activos',
                   onTap: () {
                     context.read<AdminDashboardBloc>().add(
-                          const AdminDashboardTabChanged(3),
+                          const AdminDashboardTabChanged(5),
                         );
                   },
                 ),

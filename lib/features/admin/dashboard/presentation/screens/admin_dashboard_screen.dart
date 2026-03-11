@@ -342,39 +342,94 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
+      barrierDismissible: false,
+      barrierColor: AppColors.blackWithAlpha80,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.getCardColor(dialogContext),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.darkBorder),
+          borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          'Cerrar sesión',
-          style: TextStyle(color: AppColors.white),
-        ),
-        content: const Text(
-          '¿Estás seguro de que quieres cerrar sesión?',
-          style: TextStyle(color: AppColors.gray400),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.gray400),
-            ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono decorativo
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.goldWithAlpha20,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  size: 48,
+                  color: AppColors.gold,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Título
+              const Text(
+                'Cerrar sesión',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Descripción
+              Text(
+                '¿Estás seguro de que quieres cerrar sesión?\n\nPodrás volver a acceder con tu código de reserva cuando lo necesites.',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.getTextSecondaryColor(dialogContext),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.getTextPrimaryColor(dialogContext),
+                        side: BorderSide(color: AppColors.getBorderColor(dialogContext)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                        _authBloc.add(const AuthLogoutRequested());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.gold,
+                        foregroundColor: AppColors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Cerrar sesión',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              _authBloc.add(const AuthLogoutRequested());
-            },
-            child: const Text(
-              'Cerrar sesión',
-              style: TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -8,7 +8,11 @@
     "description": "BF Stay - Gestión de alojamientos y huéspedes. Acceso a reservas, check-in digital, guías locales y más.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
-    "categories": ["travel", "lifestyle", "business"],
+    "categories": [
+        "travel",
+        "lifestyle",
+        "business"
+    ],
     "lang": "es",
     "icons": [
         {
