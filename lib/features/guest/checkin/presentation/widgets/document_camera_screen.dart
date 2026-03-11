@@ -362,7 +362,8 @@ class ScanGuideOverlay extends StatelessWidget {
         final frameHeight = frameWidth * 0.63; // Ratio aproximado de DNI
 
         final left = (screenWidth - frameWidth) / 2;
-        final top = (screenHeight - frameHeight) / 2 - 40;
+        // Centrar verticalmente sin offset fijo
+        final top = (screenHeight - frameHeight) / 2;
 
         final frameRect = Rect.fromLTWH(left, top, frameWidth, frameHeight);
         final screenSize = Size(screenWidth, screenHeight);
@@ -397,9 +398,9 @@ class ScanGuideOverlay extends StatelessWidget {
               ),
             ),
 
-            // Etiqueta superior
+            // Etiqueta superior (posicionada encima del recuadro)
             Positioned(
-              top: top - 40,
+              top: top - 44,
               left: 0,
               right: 0,
               child: Center(

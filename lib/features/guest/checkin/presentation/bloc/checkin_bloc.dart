@@ -403,6 +403,18 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
             unitName: currentState.bookingData.unitName,
           );
           debugPrint('✅ [CheckinBloc] Admin notificado');
+
+          // Enviar email de notificación de check-in completado
+          debugPrint('📧 [CheckinBloc] Enviando email de notificación...');
+          await NotificationService().sendCheckinCompletedEmail(
+            bookingId: currentState.bookingData.bookingId,
+            guestName: currentState.bookingData.guestFullName,
+            propertyName: currentState.bookingData.propertyName,
+            bookingCode: currentState.bookingData.bookingCode,
+            checkInDate: currentState.bookingData.checkInDate,
+            checkOutDate: currentState.bookingData.checkOutDate,
+          );
+          debugPrint('✅ [CheckinBloc] Email de notificación enviado');
         }
 
         emit(const CheckinSuccess());

@@ -497,79 +497,61 @@ class ChatDatasource {
   }
 
   /// Suscribe a nuevos mensajes en tiempo real usando Supabase Realtime
+  /// Usa el stream nativo de Supabase con filtro por conversation_id
   /// Emite SOLO cuando llega un mensaje nuevo (no re-emite mensajes existentes)
-  /// Cada suscripción mantiene su propio estado de tracking local
   Stream<MessageEntity> watchMessages(String conversationId) {
     _log('watchMessages - Iniciando stream para conversación: $conversationId');
 
-    // Estado local para esta suscripción específica
-    // Cada listener tiene su propio timestamp tracking
-    DateTime? lastSeenCreatedAt;
-    bool isFirstEmission = true;
+    // Trackear IDs de mensajes ya emitidos para evitar duplicados
+    final emittedMessageIds = <String>{};
 
     return _client
         .from(SupabaseTables.messages)
         .stream(primaryKey: ['id'])
         .eq('conversation_id', conversationId)
         .order('created_at', ascending: true)
-        .asyncMap((data) async {
-          if (data.isEmpty) return null;
+        .asyncMap((messages) async {
+          if (messages.isEmpty) return <MessageEntity>[];
 
-          // Primera emisión: inicializar timestamp SIN emitir nada
-          // Los mensajes iniciales ya se cargaron con getMessages()
-          if (isFirstEmission) {
-            isFirstEmission = false;
-            if (data.isNotEmpty) {
-              lastSeenCreatedAt = DateTime.parse(
-                data.last['created_at'] as String,
-              );
-              _log('watchMessages - Timestamp inicial: $lastSeenCreatedAt');
-            }
-            return null;
-          }
-
-          // Si no hay timestamp previo (edge case), no emitir
-          if (lastSeenCreatedAt == null) {
-            return null;
-          }
-
-          // Buscar mensajes nuevos comparando con el último timestamp visto
-          final newMessages = data.where((record) {
-            final createdAt = DateTime.parse(record['created_at'] as String);
-            return createdAt.isAfter(lastSeenCreatedAt!);
-          }).toList();
-
-          if (newMessages.isEmpty) return null;
-
-          // Actualizar el último timestamp visto al más reciente de los nuevos
-          final newestMessage = newMessages.last;
-          lastSeenCreatedAt = DateTime.parse(
-            newestMessage['created_at'] as String,
-          );
-
-          // Obtener IDs únicos de remitentes de los mensajes nuevos
-          final senderIds = newMessages
+          // Obtener IDs únicos de remitentes para consulta batch
+          final senderIds = messages
               .map((m) => m['sender_user_id'] as String)
               .toSet()
               .toList();
 
-          // Obtener info de remitentes en batch
+          // Obtener información de todos los remitentes en batch
           final sendersInfo = await _getSendersInfo(senderIds);
 
-          // Devolver el mensaje más reciente (el stream emite uno a uno)
-          final record = newestMessage;
-          final senderUserId = record['sender_user_id'] as String;
-          final senderInfo = sendersInfo[senderUserId];
+          // Filtrar solo mensajes NUEVOS (no emitidos previamente)
+          final newMessages = <MessageEntity>[];
 
-          final flattenedMap = Map<String, dynamic>.from(record);
-          flattenedMap['sender_name'] = senderInfo?['full_name'];
-          flattenedMap['sender_role'] = senderInfo?['role'];
+          for (final m in messages) {
+            final messageId = m['id'] as String;
 
-          _log('watchMessages - Nuevo mensaje detectado: ${record['id']}');
-          return MessageEntity.fromJson(flattenedMap);
+            // Si ya emitimos este mensaje, lo saltamos
+            if (emittedMessageIds.contains(messageId)) {
+              continue;
+            }
+
+            // Marcar como emitido
+            emittedMessageIds.add(messageId);
+
+            // Construir el mensaje con info del remitente
+            final senderUserId = m['sender_user_id'] as String;
+            final senderInfo = sendersInfo[senderUserId];
+
+            final flattenedMap = Map<String, dynamic>.from(m);
+            flattenedMap['sender_name'] = senderInfo?['full_name'];
+            flattenedMap['sender_role'] = senderInfo?['role'];
+
+            newMessages.add(MessageEntity.fromJson(flattenedMap));
+            _log('watchMessages - Nuevo mensaje emitido: $messageId');
+          }
+
+          return newMessages;
         })
-        .where((message) => message != null)
-        .cast<MessageEntity>();
+        // Expandir la lista de mensajes nuevos en mensajes individuales
+        .expand((messages) => messages);
   }
 
   /// Obtiene información del remitente (nombre y rol) usando RPC

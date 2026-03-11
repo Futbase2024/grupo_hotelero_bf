@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../../../core/services/notification_service.dart';
 import '../entities/conversation_entity.dart';
 import '../entities/message_entity.dart';
 import '../repositories/chat_repository.dart';
@@ -202,7 +203,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           event.conversationId!,
         );
         if (existingConversation == null) {
-          emit(ChatError(message: 'Conversación no encontrada'));
+          emit(const ChatError(message: 'Conversación no encontrada'));
           return;
         }
         conversation = existingConversation;
@@ -319,9 +320,41 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         currentUserId: currentState.currentUserId,
       ));
 
-      // Disparar procesamiento de notificaciones push
-      _triggerPushNotificationProcessing();
+      // ========== NUEVO: Encolar notificación push para el destinatario ==========
+      final currentUserId = currentState.currentUserId;
+      final recipient = currentState.conversation.participants
+          .where((p) => p.userId != currentUserId)
+          .firstOrNull;
+
+      if (recipient == null) {
+        debugPrint('⚠️ [ChatBloc] No se encontró destinatario');
+        return;
+      }
+
+      // Obtener info del remitente para mostrar en la notificación
+      final senderInfo = await _getSenderInfo(currentUserId);
+      final senderName = senderInfo['full_name'] ?? 'Usuario';
+
+      // Truncar el contenido si es muy largo
+      final body = content.length > 50
+          ? '📷 Imagen'
+          : content;
+
+      // ========== NUEVO: Encolar notificación push usando NotificationService
+      await NotificationService().queuePushNotification(
+        userId: recipient.userId,
+        title: 'Nuevo mensaje de $senderName',
+        body: body,
+        data: {
+          'conversation_id': currentState.conversation.id,
+          'sender_user_id': currentState.currentUserId,
+          'type': 'new_chat_message',
+        },
+      );
+
+      debugPrint('✅ [ChatBloc] Push notification queued for recipient: ${recipient.userName}');
     } catch (e) {
+      debugPrint('❌ [ChatBloc] Error enviando push notification: $e');
       // Volver al estado anterior con error
       emit(ChatLoaded(
         conversation: currentState.conversation,
@@ -336,6 +369,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         messages: currentState.messages,
         currentUserId: currentState.currentUserId,
       ));
+    }
+  }
+
+  /// Obtiene información del remitente para mostrar en la notificación
+  Future<Map<String, String?>> _getSenderInfo(String userId) async {
+    try {
+      final response = await Supabase.instance.client.rpc(
+        'get_senders_info',
+        params: {'user_ids': [userId]},
+      );
+
+      if (response != null && response is List && response.isNotEmpty) {
+        final data = response.first;
+        return {
+          'full_name': data['full_name'] as String?,
+          'role': data['role'] as String?,
+        };
+      }
+
+      return {'full_name': null, 'role': null};
+    } catch (e) {
+      debugPrint('❌ [ChatBloc] Error obteniendo info del remitente: $e');
+      return {'full_name': null, 'role': null};
     }
   }
 
@@ -405,21 +461,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     return 'Ha ocurrido un error. Por favor, intenta de nuevo.';
-  }
-
-  /// Dispara el procesamiento de notificaciones push en background
-  /// Llama a la Edge Function para procesar la cola de notificaciones
-  void _triggerPushNotificationProcessing() {
-    try {
-      // Llamar a la Edge Function de forma no bloqueante
-      unawaited(
-        Supabase.instance.client.functions.invoke('send-fcm-notifications'),
-      );
-      debugPrint('📬 Push notification processing triggered');
-    } catch (e) {
-      // No es crítico si falla, las notificaciones se procesarán después
-      debugPrint('⚠️ Error triggering push notification processing: $e');
-    }
   }
 
   @override

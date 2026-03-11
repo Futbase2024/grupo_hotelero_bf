@@ -9,9 +9,52 @@ class NotificationService {
 
   SupabaseClient get _client => Supabase.instance.client;
 
+  /// Obtiene el token FCM de un usuario usando la función RPC segura
+  /// Esta función usa SECURITY DEFINER para evitar problemas de RLS
+  Future<String?> _getFcmTokenSecure(String userId) async {
+    try {
+      final response = await _client.rpc(
+        'get_fcm_token_for_user',
+        params: {'target_user_id': userId},
+      );
+      return response as String?;
+    } catch (e) {
+      debugPrint('⚠️ [NotificationService] Error obteniendo token FCM seguro: $e');
+      return null;
+    }
+  }
+
+  /// Obtiene los tokens FCM de múltiples usuarios usando la función RPC segura
+  /// Retorna un mapa de user_id -> token
+  Future<Map<String, String>> _getFcmTokensSecure(List<String> userIds) async {
+    try {
+      final response = await _client.rpc(
+        'get_fcm_tokens_for_users',
+        params: {'target_user_ids': userIds},
+      );
+
+      final tokens = <String, String>{};
+      if (response is List) {
+        for (final row in response) {
+          if (row is Map) {
+            final userId = row['user_id'] as String?;
+            final token = row['token'] as String?;
+            if (userId != null && token != null) {
+              tokens[userId] = token;
+            }
+          }
+        }
+      }
+      return tokens;
+    } catch (e) {
+      debugPrint('⚠️ [NotificationService] Error obteniendo tokens FCM seguros: $e');
+      return {};
+    }
+  }
+
   /// Encola una notificación push para ser enviada vía FCM
   /// La notificación será procesada por la Edge Function send-fcm-notifications
-  /// Si no se pasa el token, se obtendrá desde la base de datos (requiere permisos RLS)
+  /// Si no se pasa el token, se obtendrá usando la función RPC segura (sin problemas de RLS)
   Future<bool> queuePushNotification({
     required String userId,
     required String title,
@@ -22,27 +65,21 @@ class NotificationService {
     try {
       debugPrint('📬 [NotificationService] Encolando push para usuario: $userId');
 
-      // 1. Usar el token pasado o intentar obtenerlo de la base de datos
+      // 1. Usar el token pasado o obtenerlo usando la función RPC segura
       String token;
       if (fcmToken != null && fcmToken.isNotEmpty) {
         token = fcmToken;
         debugPrint('📬 [NotificationService] Usando token proporcionado directamente');
       } else {
-        // Intentar obtener el token FCM activo del usuario
-        // NOTA: Esto puede fallar por RLS si el usuario no tiene permisos para leer tokens ajenos
-        final tokenResponse = await _client
-            .from('fcm_tokens')
-            .select('token')
-            .eq('user_id', userId)
-            .eq('is_active', true)
-            .maybeSingle();
+        // Obtener el token FCM usando la función RPC segura (SECURITY DEFINER)
+        // Esto evita problemas de RLS cuando un usuario necesita obtener tokens de otros
+        token = await _getFcmTokenSecure(userId) ?? '';
 
-        if (tokenResponse == null) {
+        if (token.isEmpty) {
           debugPrint('⚠️ [NotificationService] Usuario sin token FCM: $userId');
           return false;
         }
-
-        token = tokenResponse['token'] as String;
+        debugPrint('📬 [NotificationService] Token obtenido vía RPC segura');
       }
 
       // 2. Insertar en la cola de notificaciones
@@ -104,6 +141,7 @@ class NotificationService {
 
   /// Notifica a todos los administradores de una propiedad
   /// Envía tanto notificación push como in-app
+  /// Usa la función RPC segura para obtener tokens FCM
   Future<void> notifyAdmins({
     required String propertyId,
     required String type,
@@ -134,20 +172,11 @@ class NotificationService {
         return;
       }
 
-      // 3. Obtener los tokens FCM de los admins
+      // 3. Obtener los tokens FCM de los admins usando la función RPC segura
       final adminUserIds = adminsList.map((a) => a['user_id'] as String).toList();
-      final tokensResponse = await _client
-          .from('fcm_tokens')
-          .select('user_id, token')
-          .inFilter('user_id', adminUserIds)
-          .eq('is_active', true);
+      final userTokens = await _getFcmTokensSecure(adminUserIds);
 
-      // Crear mapa de user_id -> token
-      final userTokens = <String, String>{};
-      for (final row in tokensResponse) {
-        userTokens[row['user_id'] as String] = row['token'] as String;
-      }
-      debugPrint('📬 [NotificationService] Tokens FCM encontrados: ${userTokens.length}');
+      debugPrint('📬 [NotificationService] Tokens FCM encontrados vía RPC: ${userTokens.length}');
 
       // 4. Crear notificación in-app (una sola vez, visible para todos los admins)
       await createStaffNotification(
@@ -227,26 +256,26 @@ class NotificationService {
 
       switch (status) {
         case 'validated':
-          title = 'Check-in Validado';
+          title = '✅ Check-in Validado';
           body = 'Tu check-in ha sido validado correctamente. ¡Bienvenido!';
           notificationType = 'checkin_validated';
           break;
         case 'rejected':
-          title = 'Check-in Rechazado';
+          title = '❌ Check-in Rechazado';
           body = reason != null
               ? 'Tu check-in ha sido rechazado: $reason'
               : 'Tu check-in ha sido rechazado. Por favor, revisa tu documentación.';
           notificationType = 'checkin_rejected';
           break;
         case 'cancelled':
-          title = 'Reserva Cancelada';
+          title = '🚫 Reserva Cancelada';
           body = reason != null
               ? 'Tu reserva ha sido cancelada: $reason'
               : 'Tu reserva ha sido cancelada. Contacta con recepción.';
           notificationType = 'booking_cancelled';
           break;
         default:
-          title = 'Actualización de Check-in';
+          title = '📋 Actualización de Check-in';
           body = 'El estado de tu check-in ha cambiado a: $status';
           notificationType = 'checkin_status_update';
       }
@@ -264,7 +293,7 @@ class NotificationService {
         },
       );
 
-      // 4. Encolar push notification
+      // 4. Encolar push notification usando la función RPC segura
       final notificationData = <String, dynamic>{
         'type': 'checkin_status_update',
         'status': status,
@@ -324,13 +353,56 @@ class NotificationService {
     await notifyAdmins(
       propertyId: propertyId,
       type: 'checkin_submitted',
-      title: 'Nuevo Check-in Pendiente',
+      title: '📝 Nuevo Check-in Pendiente',
       body: '$guestName ha enviado su check-in para $unitName. Pendiente de revisión.',
       bookingId: bookingId,
       data: {
         'action': 'review_checkin',
       },
     );
+  }
+
+  /// Envía email de notificación al admin cuando un huésped completa el check-in
+  /// El email va a ghotelerobf@gmail.com vía Brevo
+  Future<bool> sendCheckinCompletedEmail({
+    required String bookingId,
+    required String guestName,
+    required String propertyName,
+    required String bookingCode,
+    required DateTime checkInDate,
+    required DateTime checkOutDate,
+  }) async {
+    try {
+      debugPrint('📧 [NotificationService] Enviando email de check-in completado...');
+      debugPrint('📧 [NotificationService] Huésped: $guestName');
+      debugPrint('📧 [NotificationService] Propiedad: $propertyName');
+      debugPrint('📧 [NotificationService] Reserva: $bookingCode');
+
+      final response = await _client.functions.invoke(
+        'send-checkin-notification',
+        body: {
+          'checkin_id': bookingId,
+          'guest_name': guestName,
+          'property_name': propertyName,
+          'booking_code': bookingCode,
+          'check_in_date': checkInDate.toIso8601String(),
+          'check_out_date': checkOutDate.toIso8601String(),
+        },
+      );
+
+      if (response.status == 200) {
+        debugPrint('✅ [NotificationService] Email de check-in completado enviado');
+        return true;
+      } else {
+        debugPrint('❌ [NotificationService] Error enviando email: ${response.status}');
+        debugPrint('❌ [NotificationService] Response: ${response.data}');
+        return false;
+      }
+    } catch (e, s) {
+      debugPrint('❌ [NotificationService] Excepción enviando email: $e');
+      debugPrint('❌ [NotificationService] StackTrace: $s');
+      return false;
+    }
   }
 
   /// Dispara el procesamiento de la cola de notificaciones
