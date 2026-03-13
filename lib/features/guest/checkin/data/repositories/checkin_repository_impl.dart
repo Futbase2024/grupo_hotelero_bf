@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/config/supabase_config.dart';
+import '../../../../../core/services/crashlytics_service.dart';
 import '../../domain/entities/guest_entity.dart';
 import '../../domain/repositories/checkin_repository.dart';
 
@@ -289,6 +290,12 @@ class CheckinRepositoryImpl implements CheckinRepository {
     } catch (e, s) {
       debugPrint('❌ [getBookingForCheckin] Error: $e');
       debugPrint('❌ [getBookingForCheckin] StackTrace: $s');
+      await CrashlyticsService.recordError(
+        e,
+        s,
+        reason: 'getBookingForCheckin - Error obteniendo reserva',
+        information: ['bookingId: $bookingId'],
+      );
       rethrow;
     }
   }
@@ -346,6 +353,12 @@ class CheckinRepositoryImpl implements CheckinRepository {
     } catch (e, s) {
       debugPrint('❌ [getBookingGuests] Error: $e');
       debugPrint('❌ [getBookingGuests] StackTrace: $s');
+      await CrashlyticsService.recordError(
+        e,
+        s,
+        reason: 'getBookingGuests - Error obteniendo huéspedes',
+        information: ['bookingId: $bookingId'],
+      );
       rethrow;
     }
   }
@@ -408,6 +421,12 @@ class CheckinRepositoryImpl implements CheckinRepository {
     } catch (e, s) {
       debugPrint('❌ [saveGuest] Error: $e');
       debugPrint('❌ [saveGuest] StackTrace: $s');
+      await CrashlyticsService.recordError(
+        e,
+        s,
+        reason: 'saveGuest - Error guardando huésped',
+        information: ['bookingId: $bookingId', 'guestId: ${guest.id}'],
+      );
       rethrow;
     }
   }
@@ -424,6 +443,12 @@ class CheckinRepositoryImpl implements CheckinRepository {
     } catch (e, s) {
       debugPrint('❌ [deleteGuest] Error: $e');
       debugPrint('❌ [deleteGuest] StackTrace: $s');
+      await CrashlyticsService.recordError(
+        e,
+        s,
+        reason: 'deleteGuest - Error eliminando huésped',
+        information: ['guestId: $guestId'],
+      );
       rethrow;
     }
   }
@@ -480,6 +505,12 @@ class CheckinRepositoryImpl implements CheckinRepository {
     } catch (e, s) {
       debugPrint('❌ [uploadDocument] Error: $e');
       debugPrint('❌ [uploadDocument] StackTrace: $s');
+      await CrashlyticsService.recordError(
+        e,
+        s,
+        reason: 'uploadDocument - Error subiendo documento',
+        information: ['bookingId: $bookingId', 'guestId: $guestId', 'docKind: $docKind'],
+      );
       rethrow;
     }
   }

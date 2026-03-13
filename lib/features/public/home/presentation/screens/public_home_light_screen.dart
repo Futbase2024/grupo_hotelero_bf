@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
@@ -356,15 +357,27 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildFooterContactItem(Icons.phone_outlined, '+34 656 61 80 65'),
+              _buildFooterContactItem(
+                Icons.phone_outlined,
+                '+34 656 61 80 65',
+                phone: '+34656618065',
+              ),
               const SizedBox(width: AppTheme.spacing16),
-              _buildFooterContactItem(Icons.phone_outlined, '+34 674 27 70 16'),
+              _buildFooterContactItem(
+                Icons.phone_outlined,
+                '+34 674 27 70 16',
+                phone: '+34674277016',
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spacing8),
 
           // Contacto - Email
-          _buildFooterContactItem(Icons.email_outlined, 'Info@boutiquejerez.es'),
+          _buildFooterContactItem(
+            Icons.email_outlined,
+            'Info@boutiquejerez.es',
+            email: 'Info@boutiquejerez.es',
+          ),
           const SizedBox(height: AppTheme.spacing12),
 
           // Copyright
@@ -462,21 +475,52 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
     );
   }
 
-  /// Item de contacto del footer
-  Widget _buildFooterContactItem(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: AppColors.gold, size: 16),
-        const SizedBox(width: AppTheme.spacing8),
-        Text(
-          text,
-          style: TextStyle(
-            color: AppColors.silver.withValues(alpha: 0.7),
-            fontSize: 13,
-          ),
+  /// Item de contacto del footer pulsable
+  Widget _buildFooterContactItem(
+    IconData icon,
+    String text, {
+    String? phone,
+    String? email,
+  }) {
+    // Determinar la acción según el tipo de contacto
+    VoidCallback? onTap;
+    if (phone != null) {
+      onTap = () async {
+        final uri = Uri(scheme: 'tel', path: phone);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        }
+      };
+    } else if (email != null) {
+      onTap = () async {
+        final uri = Uri(scheme: 'mailto', path: email);
+        if (await launchUrl(uri)) {
+          await launchUrl(uri);
+        }
+      };
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppColors.gold, size: 16),
+            const SizedBox(width: AppTheme.spacing8),
+            Text(
+              text,
+              style: TextStyle(
+                color: AppColors.silver.withValues(alpha: 0.7),
+                fontSize: 13,
+                decoration: onTap != null ? TextDecoration.underline : null,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

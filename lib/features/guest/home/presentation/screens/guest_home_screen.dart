@@ -12,6 +12,7 @@ import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repositor
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/shared/utils/unit_image_helper.dart';
 import 'package:bf_stay/shared/widgets/logout_confirmation_dialog.dart';
+import 'package:bf_stay/shared/widgets/exit_confirmation_dialog.dart';
 import '../../domain/bloc/guest_home_bloc.dart';
 import '../../domain/bloc/guest_home_event.dart';
 import '../../domain/bloc/guest_home_state.dart';
@@ -65,7 +66,13 @@ class GuestHomeScreen extends StatelessWidget {
           )
             ..add(GuestHomeLoadBooking(user.bookingId ?? ''))
             ..add(GuestHomeLoadNotifications(user.id)),
-          child: Scaffold(
+          child: PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) async {
+              if (didPop) return;
+              await ExitConfirmationDialog.show(context);
+            },
+            child: Scaffold(
             backgroundColor: AppColors.getSurfaceColor(context),
             body: SafeArea(
               child: ResponsiveContent(
@@ -130,7 +137,8 @@ class GuestHomeScreen extends StatelessWidget {
               ),
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }

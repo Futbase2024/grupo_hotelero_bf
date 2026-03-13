@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/supabase_config.dart';
+import '../../../../core/services/crashlytics_service.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../services/guest_session_service.dart';
@@ -144,8 +145,14 @@ class AuthRepositoryImpl implements AuthRepository {
         checkInCompleted: checkInCompleted,
         checkinStatus: checkinStatus,
       );
-    } catch (e) {
-      // Si hay error, retornar entity básico
+    } catch (e, stackTrace) {
+      // Si hay error, reportar pero retornar entity básico
+      await CrashlyticsService.recordError(
+        e,
+        stackTrace,
+        reason: 'getCurrentUser - Error fetching user role',
+        information: ['userId: ${user.id}'],
+      );
       return UserEntity(
         id: user.id,
         email: user.email ?? '',
@@ -300,14 +307,26 @@ class AuthRepositoryImpl implements AuthRepository {
         bookingId: bookingId,
         propertyId: propertyId,
       );
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, stackTrace) {
       debugPrint('❌ [loginWithBookingCode] PostgrestException: ${e.message}');
       debugPrint('❌ [loginWithBookingCode] Code: ${e.code}');
       debugPrint('❌ [loginWithBookingCode] Details: ${e.details}');
+      await CrashlyticsService.recordError(
+        e,
+        stackTrace,
+        reason: 'loginWithBookingCode - PostgrestException: code=${e.code}',
+        information: ['bookingCode: $bookingCode'],
+      );
       rethrow;
     } catch (e, stackTrace) {
       debugPrint('❌ [loginWithBookingCode] Error: $e');
       debugPrint('❌ [loginWithBookingCode] StackTrace: $stackTrace');
+      await CrashlyticsService.recordError(
+        e,
+        stackTrace,
+        reason: 'loginWithBookingCode - Unexpected error',
+        information: ['bookingCode: $bookingCode'],
+      );
       rethrow;
     }
   }
@@ -321,87 +340,107 @@ class AuthRepositoryImpl implements AuthRepository {
     final normalizedCode = bookingCode.toUpperCase().trim();
     final normalizedEmail = email.toLowerCase().trim();
 
-    // Buscar la reserva por código único
-    final bookingResponse = await _supabase
-        .from(SupabaseTables.bookings)
-        .select('''
-          id,
-          property_id,
-          unit_id,
-          booking_code,
-          guest_first_name,
-          last_name,
-          guest_email,
-          num_guests,
-          checkin_date,
-          checkout_date,
-          status,
-          code_expires_at
-        ''')
-        .eq('booking_code', normalizedCode)
-        .maybeSingle();
+    try {
+      // Buscar la reserva por código único
+      final bookingResponse = await _supabase
+          .from(SupabaseTables.bookings)
+          .select('''
+            id,
+            property_id,
+            unit_id,
+            booking_code,
+            guest_first_name,
+            last_name,
+            guest_email,
+            num_guests,
+            checkin_date,
+            checkout_date,
+            status,
+            code_expires_at
+          ''')
+          .eq('booking_code', normalizedCode)
+          .maybeSingle();
 
-    // Código no encontrado
-    if (bookingResponse == null) {
-      throw Exception('code_not_found');
-    }
+      // Código no encontrado
+      if (bookingResponse == null) {
+        throw Exception('code_not_found');
+      }
 
-    // Verificar si el código ha expirado
-    final codeExpiresAt = bookingResponse['code_expires_at'];
-    if (codeExpiresAt != null) {
-      final expiresAt = DateTime.parse(codeExpiresAt as String);
-      if (DateTime.now().isAfter(expiresAt)) {
+      // Verificar si el código ha expirado
+      final codeExpiresAt = bookingResponse['code_expires_at'];
+      if (codeExpiresAt != null) {
+        final expiresAt = DateTime.parse(codeExpiresAt as String);
+        if (DateTime.now().isAfter(expiresAt)) {
+          throw Exception('code_expired');
+        }
+      }
+
+      // Verificar que el estado es válido
+      final status = bookingResponse['status'] as String?;
+      if (status != null && !['confirmed', 'checked_in'].contains(status)) {
         throw Exception('code_expired');
       }
+
+      // Verificar que el email coincide con el de la reserva
+      final bookingEmail = (bookingResponse['guest_email'] as String?)?.toLowerCase().trim();
+      if (bookingEmail != null && bookingEmail != normalizedEmail) {
+        throw Exception('email_mismatch');
+      }
+
+      // Crear sesión anónima para el huésped
+      final anonSession = await _supabase.auth.signInAnonymously();
+      final userId = anonSession.user!.id;
+
+      // Asignar rol de guest al usuario
+      await _supabase.from(SupabaseTables.userRoles).upsert({
+        'user_id': userId,
+        'role': 'guest',
+        'property_id': bookingResponse['property_id'],
+      });
+
+      // Actualizar la reserva con el user_id del huésped y marcar primer uso
+      final updateData = <String, dynamic>{
+        'primary_guest_user_id': userId,
+        'guest_email': normalizedEmail,
+      };
+
+      // Marcar código como usado si es la primera vez
+      if (bookingResponse['code_first_used_at'] == null) {
+        updateData['code_first_used_at'] = DateTime.now().toIso8601String();
+      }
+
+      await _supabase
+          .from(SupabaseTables.bookings)
+          .update(updateData)
+          .eq('id', bookingResponse['id']);
+
+      return UserEntity(
+        id: userId,
+        email: normalizedEmail,
+        role: UserRole.guest,
+        name: '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim(),
+        bookingId: bookingResponse['id'] as String,
+        propertyId: bookingResponse['property_id'] as String?,
+      );
+    } on PostgrestException catch (e, stackTrace) {
+      debugPrint('❌ [loginWithBookingCodeAndEmail] PostgrestException: ${e.message}');
+      await CrashlyticsService.recordError(
+        e,
+        stackTrace,
+        reason: 'loginWithBookingCodeAndEmail - PostgrestException',
+        information: ['bookingCode: $normalizedCode', 'email: $normalizedEmail'],
+      );
+      rethrow;
+    } catch (e, stackTrace) {
+      debugPrint('❌ [loginWithBookingCodeAndEmail] Error: $e');
+      await CrashlyticsService.recordError(
+        e,
+        stackTrace,
+        reason: 'loginWithBookingCodeAndEmail - Unexpected error',
+        information: ['bookingCode: $normalizedCode', 'email: $normalizedEmail'],
+      );
+      rethrow;
     }
-
-    // Verificar que el estado es válido
-    final status = bookingResponse['status'] as String?;
-    if (status != null && !['confirmed', 'checked_in'].contains(status)) {
-      throw Exception('code_expired');
-    }
-
-    // Verificar que el email coincide con el de la reserva
-    final bookingEmail = (bookingResponse['guest_email'] as String?)?.toLowerCase().trim();
-    if (bookingEmail != null && bookingEmail != normalizedEmail) {
-      throw Exception('email_mismatch');
-    }
-
-    // Crear sesión anónima para el huésped
-    final anonSession = await _supabase.auth.signInAnonymously();
-    final userId = anonSession.user!.id;
-
-    // Asignar rol de guest al usuario
-    await _supabase.from(SupabaseTables.userRoles).upsert({
-      'user_id': userId,
-      'role': 'guest',
-      'property_id': bookingResponse['property_id'],
-    });
-
-    // Actualizar la reserva con el user_id del huésped y marcar primer uso
-    final updateData = <String, dynamic>{
-      'primary_guest_user_id': userId,
-      'guest_email': normalizedEmail,
-    };
-
-    // Marcar código como usado si es la primera vez
-    if (bookingResponse['code_first_used_at'] == null) {
-      updateData['code_first_used_at'] = DateTime.now().toIso8601String();
-    }
-
-    await _supabase
-        .from(SupabaseTables.bookings)
-        .update(updateData)
-        .eq('id', bookingResponse['id']);
-
-    return UserEntity(
-      id: userId,
-      email: normalizedEmail,
-      role: UserRole.guest,
-      name: '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim(),
-      bookingId: bookingResponse['id'] as String,
-      propertyId: bookingResponse['property_id'] as String?,
-    );
   }
 
   @override

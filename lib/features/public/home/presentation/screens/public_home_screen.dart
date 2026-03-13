@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
@@ -418,15 +420,30 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildFooterContactItem(context, Icons.phone_outlined, '+34 656 61 80 65'),
+              _buildFooterContactItem(
+                context,
+                Icons.phone_outlined,
+                '+34 656 61 80 65',
+                phone: '+34656618065',
+              ),
               const SizedBox(width: AppTheme.spacing16),
-              _buildFooterContactItem(context, Icons.phone_outlined, '+34 674 27 70 16'),
+              _buildFooterContactItem(
+                context,
+                Icons.phone_outlined,
+                '+34 674 27 70 16',
+                phone: '+34674277016',
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spacing8),
 
           // Contacto - Email
-          _buildFooterContactItem(context, Icons.email_outlined, 'Info@boutiquejerez.es'),
+          _buildFooterContactItem(
+            context,
+            Icons.email_outlined,
+            'Info@boutiquejerez.es',
+            email: 'Info@boutiquejerez.es',
+          ),
           const SizedBox(height: AppTheme.spacing12),
 
           // Copyright
@@ -599,23 +616,78 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
     );
   }
 
-  /// Item de contacto del footer
-  Widget _buildFooterContactItem(BuildContext context, IconData icon, String text) {
+  /// Item de contacto del footer pulsable
+  Widget _buildFooterContactItem(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    String? phone,
+    String? email,
+  }) {
     final isDark = AppColors.isDarkMode(context);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: isDark ? AppColors.gold : AppColors.black, size: 16),
-        const SizedBox(width: AppTheme.spacing8),
-        Text(
-          text,
-          style: TextStyle(
-            color: isDark ? AppColors.darkTextSecondary : AppColors.black,
-            fontSize: 13,
+    // Función helper para mostrar feedback
+    void showCopiedSnackBar(String value, String type) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$type copiado al portapapeles'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'OK',
+            onPressed: () {},
           ),
         ),
-      ],
+      );
+    }
+
+    // Determinar la acción según el tipo de contacto
+    VoidCallback? onTap;
+    if (phone != null) {
+      onTap = () async {
+        final uri = Uri(scheme: 'tel', path: phone);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          // Si no se puede abrir (ej: emulador sin app de teléfono), copiar al portapapeles
+          await Clipboard.setData(ClipboardData(text: phone));
+          if (context.mounted) showCopiedSnackBar(phone, 'Teléfono');
+        }
+      };
+    } else if (email != null) {
+      onTap = () async {
+        final uri = Uri(scheme: 'mailto', path: email);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          // Si no se puede abrir, copiar al portapapeles
+          await Clipboard.setData(ClipboardData(text: email));
+          if (context.mounted) showCopiedSnackBar(email, 'Email');
+        }
+      };
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isDark ? AppColors.gold : AppColors.black, size: 16),
+            const SizedBox(width: AppTheme.spacing8),
+            Text(
+              text,
+              style: TextStyle(
+                color: isDark ? AppColors.darkTextSecondary : AppColors.black,
+                fontSize: 13,
+                decoration: onTap != null ? TextDecoration.underline : null,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

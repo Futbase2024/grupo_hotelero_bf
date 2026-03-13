@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:ui';
+
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -20,13 +24,36 @@ import 'firebase_options.dart';
 import 'shared/widgets/splash_screen.dart';
 import 'shared/widgets/update_dialog.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Configurar URL strategy para web (hash URLs)
   configureUrlStrategy();
 
-  runApp(const BFStayApp());
+  // Inicializar Firebase primero
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Configurar Crashlytics
+  // Capturar errores de Flutter
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // Capturar errores asíncronos no manejados
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // Ejecutar la app dentro de una zona protegida para capturar errores
+  runZonedGuarded<Future<void>>(
+    () async {
+      runApp(const BFStayApp());
+    },
+    (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
+  );
 }
 
 /// App principal con splash screen integrado
@@ -43,6 +70,8 @@ class _BFStayAppState extends State<BFStayApp> {
 
   /// Inicializa todos los servicios de la aplicación
   Future<void> _initializeApp() async {
+    final crashlytics = FirebaseCrashlytics.instance;
+
     // Load environment variables (with fallback for web production)
     try {
       await dotenv.load(fileName: '.env');
@@ -50,27 +79,51 @@ class _BFStayAppState extends State<BFStayApp> {
       // En web production, el archivo .env no existe
       // Las variables se obtienen de compile-time constants en AppConfig
       debugPrint('dotenv not available, using compile-time variables');
+      // No reportar esto como error, es esperado en producción web
     }
 
-    // Initialize Firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('✅ Firebase initialized');
+    // Firebase ya fue inicializado en main()
+    debugPrint('✅ Firebase already initialized');
 
     // Initialize Supabase
-    await SupabaseConfig.initialize();
+    try {
+      await SupabaseConfig.initialize();
+      debugPrint('✅ Supabase initialized');
+    } catch (e, s) {
+      debugPrint('❌ Error initializing Supabase: $e');
+      crashlytics.recordError(e, s, reason: 'Supabase initialization failed');
+      rethrow;
+    }
 
     // Configure dependencies
-    await configureDependencies();
+    try {
+      await configureDependencies();
+      debugPrint('✅ Dependencies configured');
+    } catch (e, s) {
+      debugPrint('❌ Error configuring dependencies: $e');
+      crashlytics.recordError(e, s, reason: 'DI configuration failed');
+      rethrow;
+    }
 
     // Initialize FCM Service
-    await fcmService.initialize();
-    debugPrint('✅ FCM Service initialized');
+    try {
+      await fcmService.initialize();
+      debugPrint('✅ FCM Service initialized');
+    } catch (e, s) {
+      debugPrint('❌ Error initializing FCM: $e');
+      crashlytics.recordError(e, s, reason: 'FCM initialization failed');
+      // No rethrow - FCM no es crítico para la app
+    }
 
     // Initialize App Update Service
-    await AppUpdateService.instance.initialize();
-    debugPrint('✅ App Update Service initialized');
+    try {
+      await AppUpdateService.instance.initialize();
+      debugPrint('✅ App Update Service initialized');
+    } catch (e, s) {
+      debugPrint('❌ Error initializing App Update Service: $e');
+      crashlytics.recordError(e, s, reason: 'App Update Service initialization failed');
+      // No rethrow - no es crítico
+    }
 
     // Marcar como inicializado
     if (mounted) {

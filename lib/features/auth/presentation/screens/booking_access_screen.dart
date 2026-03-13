@@ -41,12 +41,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppColors.error,
-                ),
-              );
+              _showErrorDialog(context, state.message);
             }
 
             if (state is AuthAuthenticated) {
@@ -357,33 +352,49 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
           ),
           SizedBox(height: context.responsive(mobile: AppTheme.spacing32, tablet: AppTheme.spacing40)),
 
-          // Booking code field
-          TextFormField(
-            controller: _bookingCodeController,
-            inputFormatters: [BfCodeFormatter()],
-            textCapitalization: TextCapitalization.characters,
-            textInputAction: TextInputAction.done,
-            enabled: !isLoading,
-            onFieldSubmitted: (_) => _handleAccess(),
-            decoration: const InputDecoration(
-              labelText: 'Código de Reserva',
-              prefixIcon: Icon(Icons.confirmation_number_outlined),
-              hintText: 'BF-XXXX-XXXX',
-            ),
-            style: TextStyle(
-              fontSize: ResponsiveFontSize.bodyMedium(context),
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.2,
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor ingresa tu código de reserva';
-              }
-              if (!BfCodeFormatter.isValid(value)) {
-                return 'El formato del código no es válido';
-              }
-              return null;
-            },
+          // Booking code field with real-time validation
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _bookingCodeController,
+                  inputFormatters: [BfCodeFormatter()],
+                  textCapitalization: TextCapitalization.characters,
+                  textInputAction: TextInputAction.done,
+                  enabled: !isLoading,
+                  onChanged: (_) => setState(() {}),
+                  onFieldSubmitted: (_) => _handleAccess(),
+                  decoration: const InputDecoration(
+                    labelText: 'Código de Reserva',
+                    prefixIcon: Icon(Icons.confirmation_number_outlined),
+                    hintText: 'XX-XXXX-XXXX',
+                  ),
+                  style: TextStyle(
+                    fontSize: ResponsiveFontSize.bodyMedium(context),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa tu código de reserva';
+                    }
+                    if (!BfCodeFormatter.isValid(value)) {
+                      return 'El formato del código no es válido';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              // Real-time validation indicator
+              if (_bookingCodeController.text.isNotEmpty) ...[
+                const SizedBox(width: AppTheme.spacing12),
+                Padding(
+                  padding: const EdgeInsets.only(top: AppTheme.spacing16),
+                  child: _buildValidationIndicator(),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: AppTheme.spacing32),
 
@@ -467,6 +478,164 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
             textAlign: TextAlign.center,
           ),
         ],
+      ),
+    );
+  }
+
+  /// Muestra un diálogo de error profesional
+  void _showErrorDialog(BuildContext context, String message) {
+    final isDark = AppColors.isDarkMode(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spacing24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            color: isDark ? AppColors.darkSurface : AppColors.white,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing20),
+              Text(
+                'Error de Acceso',
+                style: TextStyle(
+                  fontSize: ResponsiveFontSize.titleLarge(dialogContext),
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.white : AppColors.gray900,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+              Text(
+                _getErrorMessage(message),
+                style: TextStyle(
+                  fontSize: ResponsiveFontSize.bodyMedium(dialogContext),
+                  color: isDark ? AppColors.gray400 : AppColors.gray700,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppTheme.spacing24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                    ),
+                  ),
+                  child: const Text(
+                    'Entendido',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Traduce los mensajes de error técnicos a mensajes amigables
+  String _getErrorMessage(String technicalMessage) {
+    if (technicalMessage.contains('booking not found') ||
+        technicalMessage.contains('code_not_found')) {
+      return 'El código de reserva no existe. Por favor, verifica que lo hayas escrito correctamente.';
+    }
+    if (technicalMessage.contains('code_expired')) {
+      return 'Este código de reserva ha expirado. Contacta con recepción para obtener uno nuevo.';
+    }
+    if (technicalMessage.contains('email_mismatch')) {
+      return 'El email no coincide con el de la reserva. Verifica que sea el mismo email que usaste al reservar.';
+    }
+    // Mensaje genérico para otros errores
+    return 'No se pudo verificar el código de reserva. Por favor, inténtalo de nuevo.';
+  }
+
+  /// Indicador de validación en tiempo real
+  Widget _buildValidationIndicator() {
+    final code = _bookingCodeController.text;
+    final isValid = BfCodeFormatter.isValid(code);
+    final isComplete = BfCodeFormatter.isComplete(code);
+
+    if (!isComplete) {
+      // Código incompleto - mostrar progreso
+      final cleanCode = code.replaceAll('-', '');
+      final progress = cleanCode.length / BfCodeFormatter.rawLength;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 2,
+              color: AppColors.gold.withValues(alpha: 0.6),
+              backgroundColor: AppColors.gray200,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (isValid) {
+      // Código válido
+      return Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: AppColors.success.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.check_circle,
+          color: AppColors.success,
+          size: 24,
+        ),
+      );
+    }
+
+    // Código completo pero inválido
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        Icons.cancel,
+        color: AppColors.error,
+        size: 24,
       ),
     );
   }
