@@ -35,9 +35,15 @@ android {
     defaultConfig {
         applicationId = "com.bfstay.app"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35  // Android 15 (SDK 35) - Edge-to-edge obligatorio
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Incluir x86_64 para emuladores (solo para desarrollo/testing)
+        // NOTA: Eliminar esto para producción para reducir tamaño del APK
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+        }
     }
 
     signingConfigs {

@@ -46,6 +46,7 @@ import '../../features/guest/reviews/domain/entities/review_entity.dart';
 import '../../features/guest/reviews/domain/repositories/reviews_repository.dart';
 import '../../features/guest/reviews/presentation/screens/reviews_screen.dart';
 import '../../features/guest/reviews/presentation/screens/review_form_screen.dart';
+import '../../features/guest/settings/presentation/screens/settings_screen.dart';
 import '../../features/staff/dashboard/presentation/screens/staff_dashboard_screen.dart';
 import '../../features/staff/checkins/presentation/screens/staff_checkins_screen.dart';
 import '../../features/admin/dashboard/presentation/screens/admin_dashboard_screen.dart';
@@ -97,6 +98,7 @@ class AppRoutes {
   static const String romanticPack = '/guest/romantic-pack';
   static const String jacuzziRules = '/guest/jacuzzi-rules';
   static const String physicalRegistration = '/guest/physical-registration';
+  static const String settings = '/guest/settings';
 
   // Reviews routes
   static const String reviews = '/guest/reviews/:propertyId';
@@ -391,6 +393,11 @@ class AppRouter {
           name: 'physical-registration',
           builder: (context, state) => const PhysicalRegistrationScreen(),
         ),
+        GoRoute(
+          path: AppRoutes.settings,
+          name: 'settings',
+          builder: (context, state) => const SettingsScreen(),
+        ),
 
         // Reviews Routes
         GoRoute(
@@ -549,6 +556,7 @@ class AppRouter {
       AppRoutes.romanticPack,
       AppRoutes.jacuzziRules,
       AppRoutes.physicalRegistration,
+      AppRoutes.settings,
     ];
 
     // Rutas que empiezan por cierto patrón también son permitidas

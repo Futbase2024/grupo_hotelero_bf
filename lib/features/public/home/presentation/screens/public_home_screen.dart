@@ -455,6 +455,26 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: AppTheme.spacing8),
+
+          // Enlace a Política de Privacidad
+          GestureDetector(
+            onTap: () async {
+              const privacyUrl = 'https://legal-grupobf.pages.dev/privacidad';
+              final uri = Uri.parse(privacyUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Text(
+              'Política de Privacidad',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? AppColors.gold : AppColors.gray600,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -600,6 +600,14 @@ class GuestHomeScreen extends StatelessWidget {
             );
           },
         ),
+        // Settings button
+        IconButton(
+          onPressed: () => context.go('/guest/settings'),
+          icon: Icon(
+            Icons.settings_outlined,
+            color: AppColors.getTextSecondaryColor(context),
+          ),
+        ),
         // Logout button
         IconButton(
           onPressed: () async {
