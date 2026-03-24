@@ -198,6 +198,53 @@ class EmailService {
     }
   }
 
+  /// Notifica al huésped que la habitación está disponible antes de la hora de entrada
+  /// Usa la Edge Function send-early-checkin-email
+  Future<bool> sendRoomReadyEmail({
+    required String toEmail,
+    required String guestName,
+    required String propertyName,
+    required String unitName,
+    required DateTime checkinDate,
+    required DateTime checkoutDate,
+    String? bookingId,
+    String? unitId,
+  }) async {
+    try {
+      debugPrint('📧 [EmailService] Enviando notificación habitación lista a: $toEmail');
+
+      final response = await _client.functions.invoke(
+        'send-early-checkin-email',
+        body: {
+          'to_email': toEmail,
+          'to_name': guestName,
+          'params': {
+            'nombre_huesped': guestName,
+            'nombre_propiedad': '$propertyName - $unitName',
+            'fecha_entrada': DateFormat('dd/MM/yyyy').format(checkinDate),
+            'fecha_salida': DateFormat('dd/MM/yyyy').format(checkoutDate),
+            'hora_original': '14:00', // Hora oficial de check-in
+            if (bookingId != null) 'link_abrir_app': 'https://bf-stay.pages.dev/booking/$bookingId',
+          },
+          'booking_id': bookingId,
+          'unit_id': unitId,
+        },
+      );
+
+      if (response.status == 200) {
+        debugPrint('✅ [EmailService] Notificación habitación lista enviada');
+        return true;
+      } else {
+        debugPrint('❌ [EmailService] Error enviando notificación: ${response.status}');
+        return false;
+      }
+    } catch (e, s) {
+      debugPrint('❌ [EmailService] Excepción: $e');
+      debugPrint('❌ [EmailService] StackTrace: $s');
+      return false;
+    }
+  }
+
   /// Envía email cuando el admin crea una reserva
   /// Este email incluye el código de acceso y enlace a la app
   /// Usa la Edge Function send-new-booking-email existente

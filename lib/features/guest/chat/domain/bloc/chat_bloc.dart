@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../../../core/services/notification_service.dart';
 import '../entities/conversation_entity.dart';
 import '../entities/message_entity.dart';
 import '../repositories/chat_repository.dart';
@@ -320,41 +319,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         currentUserId: currentState.currentUserId,
       ));
 
-      // ========== NUEVO: Encolar notificación push para el destinatario ==========
-      final currentUserId = currentState.currentUserId;
-      final recipient = currentState.conversation.participants
-          .where((p) => p.userId != currentUserId)
-          .firstOrNull;
-
-      if (recipient == null) {
-        debugPrint('⚠️ [ChatBloc] No se encontró destinatario');
-        return;
-      }
-
-      // Obtener info del remitente para mostrar en la notificación
-      final senderInfo = await _getSenderInfo(currentUserId);
-      final senderName = senderInfo['full_name'] ?? 'Usuario';
-
-      // Truncar el contenido si es muy largo
-      final body = content.length > 50
-          ? '📷 Imagen'
-          : content;
-
-      // ========== NUEVO: Encolar notificación push usando NotificationService
-      await NotificationService().queuePushNotification(
-        userId: recipient.userId,
-        title: 'Nuevo mensaje de $senderName',
-        body: body,
-        data: {
-          'conversation_id': currentState.conversation.id,
-          'sender_user_id': currentState.currentUserId,
-          'type': 'new_chat_message',
-        },
-      );
-
-      debugPrint('✅ [ChatBloc] Push notification queued for recipient: ${recipient.userName}');
+      // Procesar cola de notificaciones para enviar push
+      await _triggerNotificationProcessing();
+      debugPrint('✅ [ChatBloc] Mensaje enviado y cola de notificaciones procesada');
     } catch (e) {
-      debugPrint('❌ [ChatBloc] Error enviando push notification: $e');
+      debugPrint('❌ [ChatBloc] Error enviando mensaje: $e');
       // Volver al estado anterior con error
       emit(ChatLoaded(
         conversation: currentState.conversation,
@@ -369,29 +338,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         messages: currentState.messages,
         currentUserId: currentState.currentUserId,
       ));
-    }
-  }
-
-  /// Obtiene información del remitente para mostrar en la notificación
-  Future<Map<String, String?>> _getSenderInfo(String userId) async {
-    try {
-      final response = await Supabase.instance.client.rpc(
-        'get_senders_info',
-        params: {'user_ids': [userId]},
-      );
-
-      if (response != null && response is List && response.isNotEmpty) {
-        final data = response.first;
-        return {
-          'full_name': data['full_name'] as String?,
-          'role': data['role'] as String?,
-        };
-      }
-
-      return {'full_name': null, 'role': null};
-    } catch (e) {
-      debugPrint('❌ [ChatBloc] Error obteniendo info del remitente: $e');
-      return {'full_name': null, 'role': null};
     }
   }
 
@@ -440,6 +386,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _messagesSubscription?.cancel();
     _messagesSubscription = null;
     _chatRepository.dispose();
+  }
+
+  /// Invoca la Edge Function para procesar la cola de notificaciones
+  Future<void> _triggerNotificationProcessing() async {
+    try {
+      await Supabase.instance.client.functions.invoke('send-fcm-notifications');
+      debugPrint('✅ [ChatBloc] Edge Function send-fcm-notifications invocada');
+    } catch (e) {
+      debugPrint('⚠️ [ChatBloc] No se pudo invocar Edge Function: $e');
+      // No es crítico, la cola se procesará después
+    }
   }
 
   /// Obtiene un mensaje de error amigable

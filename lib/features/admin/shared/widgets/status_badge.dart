@@ -145,18 +145,23 @@ class StatusBadge extends StatelessWidget {
       backgroundColor: Color(0x26737373), // gris 15%
       textColor: Color(0xFF737373),
     ),
-    BookingStatus.active: _StatusConfig(
-      label: 'Activa',
-      backgroundColor: Color(0x2627AE60), // verde 15%
-      textColor: Color(0xFF27AE60),
-    ),
     BookingStatus.confirmed: _StatusConfig(
       label: 'Confirmada',
       backgroundColor: Color(0x262980B9), // azul 15%
       textColor: Color(0xFF2980B9),
     ),
-    BookingStatus.checkedIn: _StatusConfig(
+    BookingStatus.active: _StatusConfig(
+      label: 'Activa',
+      backgroundColor: Color(0x2627AE60), // verde 15%
+      textColor: Color(0xFF27AE60),
+    ),
+    BookingStatus.inHouse: _StatusConfig(
       label: 'En casa',
+      backgroundColor: Color(0x2627AE60), // verde 15%
+      textColor: Color(0xFF27AE60),
+    ),
+    BookingStatus.checkedIn: _StatusConfig(
+      label: 'Activa', // Legacy - mostrar como Activa
       backgroundColor: Color(0x2627AE60), // verde 15%
       textColor: Color(0xFF27AE60),
     ),

@@ -137,6 +137,15 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
+  Future<void> deleteConversation({
+    required String conversationId,
+  }) async {
+    return await _datasource.deleteConversation(
+      conversationId: conversationId,
+    );
+  }
+
+  @override
   void dispose() {
     _datasource.dispose();
   }

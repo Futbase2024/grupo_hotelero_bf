@@ -76,6 +76,9 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
 
+    // AndroidX Core para Edge-to-Edge (WindowCompat, WindowInsetsCompat)
+    implementation("androidx.core:core:1.15.0")
+
     // Desugaring para flutter_local_notifications
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

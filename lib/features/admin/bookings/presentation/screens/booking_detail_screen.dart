@@ -8,6 +8,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
+import '../../../domain/services/email_service.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   final String bookingId;
@@ -31,6 +32,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   bool _isValidating = false;
   bool _isValidatingCheckout = false;
   bool _isUpdatingKeybox = false;
+  bool _isSendingRoomReady = false;
+  bool _isClosingBooking = false;
+  final _emailService = EmailService();
 
   @override
   void initState() {
@@ -80,6 +84,45 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _notifyRoomReady() async {
+    if (_booking == null || _booking!.guestEmail.isEmpty) return;
+
+    setState(() => _isSendingRoomReady = true);
+    try {
+      // 1. Guardar el timestamp en la base de datos
+      await widget.repository.setEarlyCheckinAvailable(bookingId: _booking!.id);
+
+      // 2. Enviar el email al huésped
+      final success = await _emailService.sendRoomReadyEmail(
+        toEmail: _booking!.guestEmail,
+        guestName: _booking!.guestFullName,
+        propertyName: _booking!.propertyName,
+        unitName: _booking!.unitName,
+        checkinDate: _booking!.checkInDate,
+        checkoutDate: _booking!.checkOutDate,
+        bookingId: _booking!.id,
+      );
+
+      // 3. Recargar la reserva para actualizar el estado
+      await _loadBooking();
+
+      if (mounted) {
+        _showSnackBar(
+          success ? 'Notificación enviada al huésped' : 'Error al enviar la notificación',
+          isError: !success,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Error: $e', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingRoomReady = false);
+      }
     }
   }
 
@@ -208,6 +251,238 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         setState(() => _isValidatingCheckout = false);
       }
     }
+  }
+
+  /// Cierra la reserva manualmente (cuando el huésped no hace check-out)
+  Future<void> _closeBooking() async {
+    if (_booking == null) return;
+
+    // Verificar si ya está cerrada usando bookingStatus
+    final isAlreadyClosed = _booking!.bookingStatus == BookingStatus.closed ||
+        _booking!.checkoutStatus == CheckoutStatus.validated;
+
+    if (isAlreadyClosed) {
+      _showInfoDialog(
+        title: 'Reserva ya cerrada',
+        message: 'Esta reserva ya ha sido cerrada anteriormente.',
+        icon: Icons.info_outline,
+        color: AppColors.info,
+      );
+      return;
+    }
+
+    final notes = await _showCloseBookingDialog();
+    if (notes == null) return; // Usuario canceló
+
+    setState(() => _isClosingBooking = true);
+    try {
+      await widget.repository.closeBooking(
+        bookingId: _booking!.id,
+        notes: notes.isNotEmpty ? notes : null,
+      );
+      if (mounted) {
+        _showSnackBar('Reserva cerrada correctamente', isError: false);
+        await _loadBooking();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Error al cerrar reserva: $e', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isClosingBooking = false);
+      }
+    }
+  }
+
+  void _showInfoDialog({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color color,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.getCardColor(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 48, color: color),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Entendido'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _showCloseBookingDialog() async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierColor: AppColors.blackWithAlpha80,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.getCardColor(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.exit_to_app,
+                  size: 48,
+                  color: AppColors.warning,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Título
+              const Text(
+                'Cerrar Reserva',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Descripción
+              Text(
+                'El huésped no ha realizado el check-out.\n¿Deseas cerrar la reserva manualmente?',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.getTextSecondaryColor(context),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // Campo de notas opcional
+              TextField(
+                controller: controller,
+                style: TextStyle(
+                  color: AppColors.getTextPrimaryColor(context),
+                ),
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'Notas (opcional)...',
+                  hintStyle: TextStyle(
+                    color: AppColors.getTextSecondaryColor(context),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.getInputBackgroundColor(context),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.gold, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.getTextPrimaryColor(context),
+                        side: BorderSide(color: AppColors.getBorderColor(context)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.warning,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Cerrar Reserva',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<String?> _showRejectCheckoutDialog() async {
@@ -1447,8 +1722,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
 
     final checkoutStatus = _booking!.checkoutStatus;
+    final isBookingClosed = _booking!.status == 'checked_out' || _booking!.status == 'closed';
     final isRequested = checkoutStatus == CheckoutStatus.requested;
-    final isValidated = checkoutStatus == CheckoutStatus.validated;
+    final isValidated = checkoutStatus == CheckoutStatus.validated || isBookingClosed;
     final isRejected = checkoutStatus == CheckoutStatus.rejected;
 
     Color statusColor;
@@ -1457,7 +1733,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     if (isValidated) {
       statusColor = AppColors.success;
-      statusText = 'Check-out validado';
+      statusText = isBookingClosed ? 'Reserva cerrada' : 'Check-out validado';
       statusIcon = Icons.verified;
     } else if (isRejected) {
       statusColor = AppColors.error;
@@ -1586,6 +1862,27 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               ],
             ),
           ],
+          // Botón para cerrar reserva manualmente si NO hay solicitud de check-out
+          // y el check-in está validado
+          if (!isRequested && !isValidated && !isRejected) ...[
+            const SizedBox(height: 16),
+            _buildCodeButton(
+              'Cerrar Reserva',
+              Icons.exit_to_app,
+              _isClosingBooking ? () {} : () => _closeBooking(),
+              isPrimary: true,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'El huésped no ha solicitado check-out. Puedes cerrar la reserva manualmente.',
+              style: TextStyle(
+                color: AppColors.getTextSecondaryColor(context),
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ],
       ),
     );
@@ -1683,6 +1980,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             onTap: _isResending ? null : _resendCode,
             isLoading: _isResending,
           ),
+          const SizedBox(height: 12),
+          _buildActionTile(
+            icon: Icons.door_front_door_outlined,
+            title: 'Habitación disponible',
+            subtitle: 'Notifica al huésped que la habitación está lista y puede acceder',
+            onTap: _isSendingRoomReady ? null : _notifyRoomReady,
+            isLoading: _isSendingRoomReady,
+            color: AppColors.success,
+          ),
         ],
       ),
     );
@@ -1694,7 +2000,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     required String subtitle,
     VoidCallback? onTap,
     bool isLoading = false,
+    Color? color,
   }) {
+    final tileColor = color ?? AppColors.gold;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -1709,16 +2017,16 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.goldWithAlpha20,
+                color: tileColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: tileColor),
                     )
-                  : Icon(icon, color: AppColors.gold, size: 20),
+                  : Icon(icon, color: tileColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1746,7 +2054,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             ),
             Icon(
               Icons.chevron_right,
-              color: onTap == null ? AppColors.gray600 : AppColors.gold,
+              color: onTap == null ? AppColors.gray600 : tileColor,
             ),
           ],
         ),

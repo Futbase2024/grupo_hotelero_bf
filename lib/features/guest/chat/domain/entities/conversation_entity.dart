@@ -114,6 +114,7 @@ class ConversationEntity extends Equatable {
     // Campos joined desde otras tablas
     this.propertyName,
     this.bookingCode,
+    this.guestName,
   });
 
   final String id;
@@ -127,6 +128,7 @@ class ConversationEntity extends Equatable {
   // Campos de relaciones
   final String? propertyName;
   final String? bookingCode;
+  final String? guestName;
 
   // ============================================
   // GETTERS
@@ -206,6 +208,18 @@ class ConversationEntity extends Equatable {
     return 'Chat';
   }
 
+  /// Devuelve el nombre para mostrar en la lista de conversaciones del admin
+  /// Formato: "Nombre Huésped - #CODIGO" o "Huésped" si no hay datos
+  String get displayNameForAdmin {
+    // Priorizar el nombre del booking (guestName), luego el del participante
+    final name = guestName ?? guestParticipant?.displayName ?? 'Huésped';
+
+    if (bookingCode != null && bookingCode!.isNotEmpty) {
+      return '$name - #$bookingCode';
+    }
+    return name;
+  }
+
   // ============================================
   // FACTORY METHODS
   // ============================================
@@ -227,6 +241,7 @@ class ConversationEntity extends Equatable {
       unreadCount: json['unread_count'] as int? ?? 0,
       propertyName: json['property_name'] as String?,
       bookingCode: json['booking_code'] as String?,
+      guestName: json['guest_name'] as String?,
     );
   }
 
@@ -244,6 +259,7 @@ class ConversationEntity extends Equatable {
     int? unreadCount,
     String? propertyName,
     String? bookingCode,
+    String? guestName,
   }) {
     return ConversationEntity(
       id: id ?? this.id,
@@ -255,6 +271,7 @@ class ConversationEntity extends Equatable {
       unreadCount: unreadCount ?? this.unreadCount,
       propertyName: propertyName ?? this.propertyName,
       bookingCode: bookingCode ?? this.bookingCode,
+      guestName: guestName ?? this.guestName,
     );
   }
 
@@ -285,5 +302,6 @@ class ConversationEntity extends Equatable {
         unreadCount,
         propertyName,
         bookingCode,
+        guestName,
       ];
 }

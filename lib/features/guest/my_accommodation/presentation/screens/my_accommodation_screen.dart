@@ -33,19 +33,28 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   bool _isLoading = true;
   String? _error;
 
-  /// Hora a partir de la cual están disponibles las llaves/códigos (14:00)
-  static const int _keysAvailableHour = 14;
+  /// Hora a partir de la cual están disponibles las llaves/códigos por defecto (14:00)
+  static const int _defaultKeysAvailableHour = 14;
 
-  /// Verifica si las llaves y códigos están disponibles (a partir de las 14:00 del día de check-in)
+  /// Verifica si las llaves y códigos están disponibles
+  /// Si el admin ha marcado early check-in disponible, usa ese timestamp
+  /// Si no, usa la hora por defecto (14:00 del día de check-in)
   bool get _areKeysAvailable {
     if (_booking == null) return false;
 
+    // Si el admin ha marcado que la habitación está disponible antes
+    if (_booking!.earlyCheckinAvailableAt != null) {
+      return DateTime.now().isAfter(_booking!.earlyCheckinAvailableAt!) ||
+          DateTime.now().isAtSameMomentAs(_booking!.earlyCheckinAvailableAt!);
+    }
+
+    // Comportamiento por defecto: 14:00 del día de check-in
     final checkInDate = _booking!.checkInDate;
     final keysAvailableTime = DateTime(
       checkInDate.year,
       checkInDate.month,
       checkInDate.day,
-      _keysAvailableHour,
+      _defaultKeysAvailableHour,
       0,
       0,
     );
@@ -55,15 +64,23 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   /// Calcula cuándo estarán disponibles las llaves
+  /// Si el admin ha marcado early check-in, devuelve ese timestamp
+  /// Si no, devuelve las 14:00 del día de check-in
   DateTime get _keysAvailableTime {
     if (_booking == null) return DateTime.now();
 
+    // Si el admin ha marcado que la habitación está disponible antes
+    if (_booking!.earlyCheckinAvailableAt != null) {
+      return _booking!.earlyCheckinAvailableAt!;
+    }
+
+    // Comportamiento por defecto: 14:00 del día de check-in
     final checkInDate = _booking!.checkInDate;
     return DateTime(
       checkInDate.year,
       checkInDate.month,
       checkInDate.day,
-      _keysAvailableHour,
+      _defaultKeysAvailableHour,
       0,
       0,
     );
@@ -328,7 +345,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     final formattedDate =
         '${keysAvailableTime.day.toString().padLeft(2, '0')}/${keysAvailableTime.month.toString().padLeft(2, '0')}/${keysAvailableTime.year}';
     final formattedTime =
-        '${_keysAvailableHour.toString().padLeft(2, '0')}:00';
+        '${keysAvailableTime.hour.toString().padLeft(2, '0')}:${keysAvailableTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),

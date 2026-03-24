@@ -200,6 +200,7 @@ class ChatDatasource {
 
   Future<ConversationEntity> _enrichConversation(Map<String, dynamic> data) async {
     final conversationId = data['id'] as String;
+    final bookingId = data['booking_id'] as String?;
 
     // Obtener participantes
     final participantsResponse = await _client
@@ -263,13 +264,39 @@ class ChatDatasource {
       lastMessage = MessageEntity.fromJson(flattenedMap);
     }
 
+    // Obtener información del booking si existe
+    String? bookingCode;
+    String? guestName;
+    if (bookingId != null) {
+      try {
+        final bookingResponse = await _client
+            .from(SupabaseTables.bookings)
+            .select('booking_code, guest_first_name, last_name')
+            .eq('id', bookingId)
+            .maybeSingle();
+
+        if (bookingResponse != null) {
+          bookingCode = bookingResponse['booking_code'] as String?;
+          final firstName = bookingResponse['guest_first_name'] as String?;
+          final lastName = bookingResponse['last_name'] as String?;
+          if (firstName != null || lastName != null) {
+            guestName = '${firstName ?? ''} ${lastName ?? ''}'.trim();
+          }
+        }
+      } catch (e) {
+        _logError('Error obteniendo info del booking', e);
+      }
+    }
+
     return ConversationEntity(
       id: conversationId,
       propertyId: data['property_id'] as String,
-      bookingId: data['booking_id'] as String?,
+      bookingId: bookingId,
       createdAt: DateTime.parse(data['created_at'] as String),
       participants: participants,
       lastMessage: lastMessage,
+      bookingCode: bookingCode,
+      guestName: guestName,
     );
   }
 
@@ -692,10 +719,34 @@ class ChatDatasource {
         }
       }
 
-      // 7. Construir las entidades de conversación
+      // 7. Obtener información de bookings en batch
+      final bookingIds = (conversationsResponse as List)
+          .map((c) => c['booking_id'] as String?)
+          .whereType<String>()
+          .toSet()
+          .toList();
+
+      final bookingsInfo = <String, Map<String, dynamic>>{};
+      if (bookingIds.isNotEmpty) {
+        try {
+          final bookingsResponse = await _client
+              .from(SupabaseTables.bookings)
+              .select('id, booking_code, guest_first_name, last_name')
+              .inFilter('id', bookingIds);
+
+          for (final b in bookingsResponse) {
+            bookingsInfo[b['id'] as String] = b;
+          }
+        } catch (e) {
+          _logError('Error obteniendo info de bookings', e);
+        }
+      }
+
+      // 8. Construir las entidades de conversación
       final conversations = <ConversationEntity>[];
       for (final convData in conversationsResponse) {
         final convId = convData['id'] as String;
+        final bookingId = convData['booking_id'] as String?;
 
         // Construir participantes con nombres
         final participantsRaw = participantsByConversation[convId] ?? [];
@@ -733,13 +784,30 @@ class ChatDatasource {
           });
         }
 
+        // Obtener info del booking si existe
+        String? bookingCode;
+        String? guestName;
+        if (bookingId != null) {
+          final bookingInfo = bookingsInfo[bookingId];
+          if (bookingInfo != null) {
+            bookingCode = bookingInfo['booking_code'] as String?;
+            final firstName = bookingInfo['guest_first_name'] as String?;
+            final lastName = bookingInfo['last_name'] as String?;
+            if (firstName != null || lastName != null) {
+              guestName = '${firstName ?? ''} ${lastName ?? ''}'.trim();
+            }
+          }
+        }
+
         conversations.add(ConversationEntity(
           id: convId,
           propertyId: convData['property_id'] as String,
-          bookingId: convData['booking_id'] as String?,
+          bookingId: bookingId,
           createdAt: DateTime.parse(convData['created_at'] as String),
           participants: participants,
           lastMessage: lastMessage,
+          bookingCode: bookingCode,
+          guestName: guestName,
         ));
       }
 
@@ -813,6 +881,40 @@ class ChatDatasource {
     } catch (e) {
       _logError('Error en getUnreadCount', e);
       return 0;
+    }
+  }
+
+  /// Elimina una conversación completa (mensajes, participantes y conversación)
+  /// Solo disponible para admin/staff
+  Future<void> deleteConversation({
+    required String conversationId,
+  }) async {
+    _log('deleteConversation - conversationId: $conversationId');
+
+    try {
+      // 1. Eliminar mensajes de la conversación
+      await _client
+          .from(SupabaseTables.messages)
+          .delete()
+          .eq('conversation_id', conversationId);
+      _log('deleteConversation - mensajes eliminados');
+
+      // 2. Eliminar participantes de la conversación
+      await _client
+          .from(SupabaseTables.conversationParticipants)
+          .delete()
+          .eq('conversation_id', conversationId);
+      _log('deleteConversation - participantes eliminados');
+
+      // 3. Eliminar la conversación
+      await _client
+          .from(SupabaseTables.conversations)
+          .delete()
+          .eq('id', conversationId);
+      _log('deleteConversation - conversación eliminada');
+    } catch (e) {
+      _logError('Error en deleteConversation', e);
+      rethrow;
     }
   }
 

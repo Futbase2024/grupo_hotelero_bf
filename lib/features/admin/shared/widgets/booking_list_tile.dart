@@ -36,9 +36,10 @@ class BookingListTile extends StatelessWidget {
   Color _getStatusColor() {
     return switch (status) {
       BookingStatus.created => AppColors.gray500,
-      BookingStatus.active => AppColors.success,
       BookingStatus.confirmed => AppColors.info,
-      BookingStatus.checkedIn => AppColors.success,
+      BookingStatus.active => AppColors.success,
+      BookingStatus.inHouse => AppColors.success,
+      BookingStatus.checkedIn => AppColors.success, // Legacy
       BookingStatus.checkedOut => AppColors.gray500,
       BookingStatus.closed => AppColors.gray500,
       BookingStatus.cancelled => AppColors.error,
@@ -48,9 +49,10 @@ class BookingListTile extends StatelessWidget {
   IconData _getStatusIcon() {
     return switch (status) {
       BookingStatus.created => Icons.add_circle_outline,
-      BookingStatus.active => Icons.home_rounded,
       BookingStatus.confirmed => Icons.event_available_rounded,
-      BookingStatus.checkedIn => Icons.home_rounded,
+      BookingStatus.active => Icons.home_work_rounded,
+      BookingStatus.inHouse => Icons.home_rounded,
+      BookingStatus.checkedIn => Icons.home_rounded, // Legacy
       BookingStatus.checkedOut => Icons.luggage_rounded,
       BookingStatus.closed => Icons.check_circle_outline,
       BookingStatus.cancelled => Icons.cancel_rounded,
@@ -421,9 +423,10 @@ class BookingListTile extends StatelessWidget {
   String _getStatusText() {
     return switch (status) {
       BookingStatus.created => 'Creada',
-      BookingStatus.active => 'Activa',
       BookingStatus.confirmed => 'Confirmada',
-      BookingStatus.checkedIn => 'En casa',
+      BookingStatus.active => 'Activa',
+      BookingStatus.inHouse => 'En casa',
+      BookingStatus.checkedIn => 'Activa', // Legacy - mostrar como Activa
       BookingStatus.checkedOut => 'Finalizada',
       BookingStatus.closed => 'Cerrada',
       BookingStatus.cancelled => 'Cancelada',

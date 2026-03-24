@@ -10,6 +10,7 @@ import '../../../../guest/chat/domain/bloc/chat_bloc.dart';
 import '../../../../guest/chat/domain/repositories/chat_repository.dart';
 import '../../../../guest/chat/presentation/widgets/chat_input.dart';
 import '../../../../guest/chat/presentation/widgets/message_bubble.dart';
+import '../../../shared/widgets/confirmation_dialog.dart';
 
 /// Pantalla de Chat para Admin/Staff
 class AdminChatScreen extends StatefulWidget {
@@ -142,24 +143,101 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                 ),
               ),
               const SizedBox(width: AppTheme.spacing12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title),
-                  if (state is ChatLoaded)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      'En línea',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.success,
-                          ),
+                      title,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                ],
+                    if (state is ChatLoaded)
+                      Text(
+                        'En línea',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.success,
+                            ),
+                      ),
+                  ],
+                ),
               ),
             ],
           );
         },
       ),
+      actions: [
+        BlocBuilder<ChatBloc, ChatState>(
+          builder: (context, state) {
+            if (state is! ChatLoaded) return const SizedBox.shrink();
+
+            return PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _showDeleteConfirmation(context);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: AppColors.error),
+                      SizedBox(width: 12),
+                      Text('Eliminar conversación'),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
     );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    ConfirmationDialog.show(
+      context: context,
+      title: 'Eliminar conversación',
+      body: '¿Estás seguro de que quieres eliminar esta conversación? '
+          'Se eliminarán todos los mensajes y no se podrá recuperar.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDestructive: true,
+    ).then((confirmed) {
+      if (confirmed && mounted) {
+        _deleteConversation();
+      }
+    });
+  }
+
+  void _deleteConversation() {
+    // Navegar hacia atrás antes de eliminar para evitar errores
+    context.go('/admin/chat');
+
+    // Usar el ChatRepository directamente para eliminar
+    getIt<ChatRepository>().deleteConversation(
+      conversationId: widget.conversationId,
+    ).then((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Conversación eliminada'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    }).catchError((error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar: $error'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    });
   }
 
   Widget _buildMessagesList(BuildContext context, ChatState state) {

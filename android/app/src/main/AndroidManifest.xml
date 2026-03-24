@@ -1,9 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Permisos para image_picker y camera -->
+    <!-- Permiso de cámara para capturar documentos (DNI/pasaporte) durante check-in -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- WRITE_EXTERNAL_STORAGE solo para Android 9 y anteriores (API 28-) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+
+    <!-- NOTA: No declaramos READ_MEDIA_IMAGES ni READ_EXTERNAL_STORAGE porque
+         usamos el Photo Picker de Android para selección de imágenes desde galería.
+         El Photo Picker NO requiere permisos de runtime en Android 13+ (API 33+). -->
 
     <!-- Permisos para notificaciones FCM -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

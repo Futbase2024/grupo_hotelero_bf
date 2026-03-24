@@ -34,11 +34,16 @@ void main() async {
     SystemUiMode.edgeToEdge,
   );
 
-  // ✅ Configurar estilo de barras de sistema transparentes
+  // ✅ Configurar estilo de barras de sistema para Android 15
+  // NOTA: En Android 15, statusBarColor y systemNavigationBarColor están deprecados
+  // Con edgeToEdge habilitado, las barras son automáticamente transparentes
+  // Solo configuramos el brillo de los iconos
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
+      // ❌ DEPRECATED en Android 15 - NO USAR:
+      // statusBarColor: Colors.transparent,
+      // systemNavigationBarColor: Colors.transparent,
+      // ✅ Solo configurar brillo de iconos:
       statusBarIconBrightness: Brightness.light,
       systemNavigationBarIconBrightness: Brightness.light,
     ),

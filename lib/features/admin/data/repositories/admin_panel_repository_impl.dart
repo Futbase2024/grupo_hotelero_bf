@@ -750,6 +750,27 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     }
   }
 
+  /// Marca que el early check-in está disponible para una reserva
+  @override
+  Future<void> setEarlyCheckinAvailable({
+    required String bookingId,
+  }) async {
+    try {
+      debugPrint('🏨 [setEarlyCheckinAvailable] Marcando early check-in disponible para reserva: $bookingId');
+
+      await _client
+          .from('bookings')
+          .update({'early_checkin_available_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', bookingId);
+
+      debugPrint('✅ [setEarlyCheckinAvailable] Early check-in marcado correctamente');
+    } catch (e, s) {
+      debugPrint('❌ [setEarlyCheckinAvailable] Error: $e');
+      debugPrint('❌ [setEarlyCheckinAvailable] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   // Obtener notificaciones directamente desde la base de datos
   @override
   Future<List<StaffNotificationEntity>> getNotifications({

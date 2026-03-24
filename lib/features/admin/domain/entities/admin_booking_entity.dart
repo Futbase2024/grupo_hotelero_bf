@@ -44,6 +44,7 @@ class AdminBookingEntity extends Equatable {
     this.unitType = UnitType.apartment,
     this.wifiNetwork,
     this.wifiPassword,
+    this.earlyCheckinAvailableAt,
   });
 
   final String id;
@@ -84,6 +85,7 @@ class AdminBookingEntity extends Equatable {
   final String? checkoutNotes;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? earlyCheckinAvailableAt;
 
   // ==================== GETTERS BÁSICOS ====================
 
@@ -154,6 +156,9 @@ class AdminBookingEntity extends Equatable {
 
   /// Si la reserva está pendiente de activación
   bool get isPending => bookingStatus.isPending;
+
+  /// Si el huésped está físicamente en el alojamiento
+  bool get isInHouse => bookingStatus.isInHouse;
 
   /// Si el check-in puede ser editado por el huésped
   bool get canEditCheckin => checkinStatusEnum.isEditable;
@@ -311,6 +316,7 @@ class AdminBookingEntity extends Equatable {
       final closedAt = getDateTimeField(['closed_at']);
       final checkoutRequestedAt = getDateTimeField(['checkout_requested_at']);
       final checkoutValidatedAt = getDateTimeField(['checkout_validated_at']);
+      final earlyCheckinAvailableAt = getDateTimeField(['early_checkin_available_at']);
 
       debugPrint('🟢 [AdminBookingEntity.fromJson] Creating entity...');
       final entity = AdminBookingEntity(
@@ -352,6 +358,7 @@ class AdminBookingEntity extends Equatable {
         updatedAt: updatedAt,
         wifiNetwork: wifiNetwork,
         wifiPassword: wifiPassword,
+        earlyCheckinAvailableAt: earlyCheckinAvailableAt,
       );
 
       debugPrint('🟢 [AdminBookingEntity.fromJson] Parse completed successfully');
@@ -401,6 +408,7 @@ class AdminBookingEntity extends Equatable {
       checkoutNotes: null,
       createdAt: null,
       updatedAt: null,
+      earlyCheckinAvailableAt: null,
     );
   }
 
@@ -443,6 +451,7 @@ class AdminBookingEntity extends Equatable {
       'checkout_notes': checkoutNotes,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'early_checkin_available_at': earlyCheckinAvailableAt?.toIso8601String(),
     };
   }
 
@@ -484,6 +493,7 @@ class AdminBookingEntity extends Equatable {
     String? checkoutNotes,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? earlyCheckinAvailableAt,
   }) {
     return AdminBookingEntity(
       id: id ?? this.id,
@@ -522,6 +532,7 @@ class AdminBookingEntity extends Equatable {
       checkoutNotes: checkoutNotes ?? this.checkoutNotes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      earlyCheckinAvailableAt: earlyCheckinAvailableAt ?? this.earlyCheckinAvailableAt,
     );
   }
 
@@ -563,5 +574,6 @@ class AdminBookingEntity extends Equatable {
         checkoutNotes,
         createdAt,
         updatedAt,
+        earlyCheckinAvailableAt,
       ];
 }

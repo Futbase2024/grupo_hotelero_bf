@@ -70,6 +70,16 @@ class ConversationsSelected extends ConversationsEvent {
   List<Object?> get props => [conversation];
 }
 
+/// Evento para eliminar una conversación (solo admin/staff)
+class ConversationsDeleteRequested extends ConversationsEvent {
+  const ConversationsDeleteRequested({required this.conversationId});
+
+  final String conversationId;
+
+  @override
+  List<Object?> get props => [conversationId];
+}
+
 /// Evento interno cuando el realtime actualiza las conversaciones
 class _ConversationsUpdated extends ConversationsEvent {
   const _ConversationsUpdated(this.conversations);
@@ -182,6 +192,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     on<ConversationsLoadForUser>(_onLoadForUser);
     on<ConversationsRefreshRequested>(_onRefreshRequested);
     on<ConversationsSelected>(_onSelected);
+    on<ConversationsDeleteRequested>(_onDeleteRequested);
     on<_ConversationsUpdated>(_onConversationsUpdated);
   }
 
@@ -380,6 +391,47 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     }
 
     return 'Ha ocurrido un error al cargar las conversaciones.';
+  }
+
+  /// Maneja la solicitud de eliminar una conversación
+  Future<void> _onDeleteRequested(
+    ConversationsDeleteRequested event,
+    Emitter<ConversationsState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ConversationsLoaded) return;
+
+    try {
+      _Debug.log('Eliminando conversación: ${event.conversationId}');
+
+      // Eliminar la conversación
+      await _chatRepository.deleteConversation(
+        conversationId: event.conversationId,
+      );
+
+      _Debug.log('Conversación eliminada correctamente');
+
+      // Actualizar la lista localmente removiendo la conversación eliminada
+      final updatedConversations = currentState.conversations
+          .where((c) => c.id != event.conversationId)
+          .toList();
+
+      emit(ConversationsLoaded(
+        conversations: updatedConversations,
+        propertyId: currentState.propertyId,
+        userId: currentState.userId,
+        selectedConversation: currentState.selectedConversation?.id == event.conversationId
+            ? null
+            : currentState.selectedConversation,
+      ));
+    } catch (e) {
+      _Debug.error('Error en _onDeleteRequested', e);
+      // Re-emitir el estado actual con error
+      emit(ConversationsError(message: 'Error al eliminar la conversación: ${e.toString()}'));
+      // Restaurar el estado anterior después del error
+      await Future.delayed(const Duration(milliseconds: 100));
+      emit(currentState);
+    }
   }
 
   @override

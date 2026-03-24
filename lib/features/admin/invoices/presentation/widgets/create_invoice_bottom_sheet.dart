@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +15,34 @@ import 'booking_selector_dialog.dart';
 enum InvoiceCreationMode {
   fromBooking,
   manual,
+}
+
+/// Línea de factura temporal para el formulario
+class InvoiceLineItemDraft {
+  InvoiceLineItemDraft({
+    String? id,
+    this.description = '',
+    this.quantity = 1,
+    this.unitPrice = 0.0,
+    this.taxRate = 10.0,
+  }) : id = id ?? const Uuid().v4();
+
+  final String id;
+  String description;
+  int quantity;
+  double unitPrice;
+  double taxRate;
+
+  double get subtotal => quantity * unitPrice;
+  double get taxAmount => subtotal * (taxRate / 100);
+  double get total => subtotal + taxAmount;
+
+  InvoiceLineItem toEntity() => InvoiceLineItem(
+        description: description,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        taxRate: taxRate,
+      );
 }
 
 /// Bottom sheet para crear una nueva factura
@@ -36,7 +65,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
   bool _isLoading = false;
 
   // Modo de creación
-  InvoiceCreationMode _creationMode = InvoiceCreationMode.fromBooking;
+  InvoiceCreationMode _creationMode = InvoiceCreationMode.manual;
 
   // Reserva seleccionada (modo fromBooking)
   AdminBookingEntity? _selectedBooking;
@@ -44,8 +73,10 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
   // Propiedad seleccionada (modo manual)
   Map<String, dynamic>? _selectedProperty;
 
+  // Líneas de factura
+  final List<InvoiceLineItemDraft> _lineItems = [];
+
   // Controladores comunes
-  final _amountController = TextEditingController();
   final _notesController = TextEditingController();
 
   // Controladores de cliente (ambos modos, pero editables en manual)
@@ -57,11 +88,12 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
   final _clientCityController = TextEditingController();
   final _clientPostalCodeController = TextEditingController();
 
-  // Controladores adicionales para modo manual
-  final _conceptController = TextEditingController();
+  // Fechas de estancia (modo manual)
+  DateTime? _checkInDate;
+  DateTime? _checkOutDate;
 
-  // Tipo de IVA - 10% por defecto para alojamientos turísticos
-  double _selectedTaxRate = 10.0;
+  // Tipo de IVA global - 10% por defecto para alojamientos turísticos
+  double _globalTaxRate = 10.0;
 
   final List<Map<String, dynamic>> _taxRates = [
     {'rate': 10.0, 'label': '10% - Alojamiento turístico'},
@@ -75,11 +107,12 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     super.initState();
     // Cargar propiedades al iniciar
     context.read<InvoicesBloc>().add(const InvoicesLoadPropertiesRequested());
+    // Añadir una línea vacía por defecto
+    _addLineItem();
   }
 
   @override
   void dispose() {
-    _amountController.dispose();
     _notesController.dispose();
     _clientNameController.dispose();
     _clientNifController.dispose();
@@ -88,8 +121,21 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     _clientAddressController.dispose();
     _clientCityController.dispose();
     _clientPostalCodeController.dispose();
-    _conceptController.dispose();
     super.dispose();
+  }
+
+  void _addLineItem() {
+    setState(() {
+      _lineItems.add(InvoiceLineItemDraft(taxRate: _globalTaxRate));
+    });
+  }
+
+  void _removeLineItem(int index) {
+    if (_lineItems.length > 1) {
+      setState(() {
+        _lineItems.removeAt(index);
+      });
+    }
   }
 
   void _onBookingSelected(AdminBookingEntity? booking) {
@@ -103,6 +149,15 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       _clientAddressController.clear();
       _clientCityController.clear();
       _clientPostalCodeController.clear();
+
+      // Crear línea de factura con los datos de la reserva
+      _lineItems.clear();
+      _lineItems.add(InvoiceLineItemDraft(
+        description: 'Alojamiento ${booking?.unitName ?? ""} - ${booking?.bookingCode ?? ""}',
+        quantity: 1,
+        unitPrice: 0,
+        taxRate: _globalTaxRate,
+      ));
     });
   }
 
@@ -112,6 +167,8 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       // Limpiar selección anterior
       _selectedBooking = null;
       _selectedProperty = null;
+      _checkInDate = null;
+      _checkOutDate = null;
       _clientNameController.clear();
       _clientNifController.clear();
       _clientEmailController.clear();
@@ -119,8 +176,8 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       _clientAddressController.clear();
       _clientCityController.clear();
       _clientPostalCodeController.clear();
-      _conceptController.clear();
-      _amountController.clear();
+      _lineItems.clear();
+      _addLineItem();
     });
   }
 
@@ -174,25 +231,41 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     }
   }
 
-  /// El usuario introduce el TOTAL (con IVA incluido)
-  double get _totalAmount {
-    return double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
+  /// Suma de todos los subtotales (base imponible)
+  double get _totalBaseAmount {
+    return _lineItems.fold(0.0, (sum, item) => sum + item.subtotal);
   }
 
-  /// Calculamos la base imponible desde el total
-  /// Fórmula: Base = Total / (1 + IVA/100)
-  double get _baseAmount {
-    if (_totalAmount <= 0) return 0;
-    return _totalAmount / (1 + (_selectedTaxRate / 100));
+  /// Suma de todos los importes de IVA
+  double get _totalTaxAmount {
+    return _lineItems.fold(0.0, (sum, item) => sum + item.taxAmount);
   }
 
-  /// El IVA es la diferencia entre total y base
-  double get _taxAmount {
-    return _totalAmount - _baseAmount;
+  /// Total de la factura (base + IVA)
+  double get _grandTotal {
+    return _totalBaseAmount + _totalTaxAmount;
+  }
+
+  /// Cierra el teclado
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
   }
 
   Future<void> _onSavePressed() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validar que hay al menos una línea con descripción y precio
+    final validLines = _lineItems.where((l) => l.description.trim().isNotEmpty && l.unitPrice > 0).toList();
+
+    if (validLines.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Añade al menos una línea con descripción e importe'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     if (_creationMode == InvoiceCreationMode.fromBooking) {
       if (_selectedBooking == null) {
@@ -223,59 +296,30 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
         );
         return;
       }
-      if (_conceptController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('El concepto es obligatorio'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        return;
-      }
-    }
-
-    if (_totalAmount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El importe total debe ser mayor que 0'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final String concept;
-      final String? bookingId;
       final String propertyId;
+      final String? bookingId;
       final String? bookingCode;
       final String? unitName;
 
       if (_creationMode == InvoiceCreationMode.fromBooking) {
-        concept = 'Alojamiento turístico';
-        bookingId = _selectedBooking!.id;
         propertyId = _selectedBooking!.propertyId;
+        bookingId = _selectedBooking!.id;
         bookingCode = _selectedBooking!.bookingCode;
         unitName = _selectedBooking!.unitName;
       } else {
-        concept = _conceptController.text.trim();
-        bookingId = null;
         propertyId = _selectedProperty!['id'] as String;
+        bookingId = null;
         bookingCode = null;
         unitName = null;
       }
 
-      // Crear línea de factura
-      final lineItem = InvoiceLineItem(
-        description: _creationMode == InvoiceCreationMode.fromBooking
-            ? 'Alojamiento ${_selectedBooking!.unitName} - ${_selectedBooking!.bookingCode}'
-            : concept,
-        quantity: 1,
-        unitPrice: _baseAmount,
-        taxRate: _selectedTaxRate,
-      );
+      // Convertir líneas a entidades
+      final lineItemsEntities = validLines.map((l) => l.toEntity()).toList();
 
       final invoice = InvoiceEntity(
         id: const Uuid().v4(),
@@ -306,13 +350,20 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
             ? _clientPostalCodeController.text.trim()
             : null,
         issueDate: DateTime.now(),
-        concept: concept,
-        lineItems: [lineItem],
-        subtotalExcludingTax: _baseAmount,
-        taxBase: _baseAmount,
-        taxRate: _selectedTaxRate,
-        taxAmount: _taxAmount,
-        totalIncludingTax: _totalAmount,
+        concept: validLines.length == 1 ? validLines.first.description : 'Factura múltiple',
+        // Fechas de estancia: usar fechas de reserva o las seleccionadas manualmente
+        periodStart: _creationMode == InvoiceCreationMode.fromBooking
+            ? _selectedBooking?.checkInDate
+            : _checkInDate,
+        periodEnd: _creationMode == InvoiceCreationMode.fromBooking
+            ? _selectedBooking?.checkOutDate
+            : _checkOutDate,
+        lineItems: lineItemsEntities,
+        subtotalExcludingTax: _totalBaseAmount,
+        taxBase: _totalBaseAmount,
+        taxRate: _globalTaxRate,
+        taxAmount: _totalTaxAmount,
+        totalIncludingTax: _grandTotal,
         status: InvoiceStatus.draft,
         notes: _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
@@ -353,123 +404,174 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.darkBackground,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.gray600,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = keyboardHeight > 0;
 
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+    return Stack(
+      children: [
+        // Contenido principal
+        GestureDetector(
+          onTap: _dismissKeyboard,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: AppColors.darkBackground,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Nueva Factura',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.white,
+                // Handle
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.gray600,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: AppColors.gray400),
+
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Nueva Factura',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close, color: AppColors.gray400),
+                      ),
+                    ],
+                  ),
                 ),
+
+                // Form
+                Flexible(
+                  child: Form(
+                    key: _formKey,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Paso 0: Selección de modo
+                          _buildSectionTitle('Tipo de factura'),
+                          _buildModeSelector(),
+                          const SizedBox(height: 24),
+
+                          // Contenido según modo
+                          if (_creationMode == InvoiceCreationMode.fromBooking) ...[
+                            // Paso 1: Seleccionar reserva
+                            _buildSectionTitle('1. Seleccionar reserva'),
+                            _buildBookingSelector(),
+                            if (_selectedBooking != null) ...[
+                              const SizedBox(height: 12),
+                              _buildBookingInfo(),
+                            ],
+                          ] else ...[
+                            // Modo manual
+                            _buildSectionTitle('1. Propiedad'),
+                            _buildPropertySelector(),
+                            const SizedBox(height: 16),
+                            _buildSectionTitle('2. Datos del cliente'),
+                            _buildClientFields(),
+                            const SizedBox(height: 16),
+                            _buildSectionTitle('3. Fechas de estancia'),
+                            _buildDateFields(),
+                          ],
+                          const SizedBox(height: 24),
+
+                          // Líneas de factura
+                          _buildSectionTitle(
+                            _creationMode == InvoiceCreationMode.fromBooking
+                                ? '2. Conceptos de factura'
+                                : '4. Conceptos de factura',
+                          ),
+                          _buildLineItems(),
+                          const SizedBox(height: 16),
+
+                          // Botón añadir línea
+                          _buildAddLineButton(),
+                          const SizedBox(height: 24),
+
+                          // Tipo de IVA global
+                          _buildSectionTitle(
+                            _creationMode == InvoiceCreationMode.fromBooking
+                                ? '3. Tipo de IVA'
+                                : '5. Tipo de IVA',
+                          ),
+                          _buildTaxRateSelector(),
+                          const SizedBox(height: 24),
+
+                          // Resumen de totales
+                          if (_grandTotal > 0) _buildTotals(),
+                          const SizedBox(height: 16),
+
+                          // Notas internas
+                          _buildSectionTitle('Notas internas'),
+                          _buildNotesField(),
+                          const SizedBox(height: 30),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Botón de guardar
+                _buildSaveButton(),
               ],
             ),
           ),
+        ),
 
-          // Form
-          Flexible(
-            child: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Paso 0: Selección de modo
-                    _buildSectionTitle('Tipo de factura'),
-                    _buildModeSelector(),
-                    const SizedBox(height: 24),
+        // Botón de "Hecho" encima del teclado
+        if (isKeyboardVisible)
+          Positioned(
+            bottom: keyboardHeight,
+            left: 0,
+            right: 0,
+            child: _buildKeyboardDoneButton(),
+          ),
+      ],
+    );
+  }
 
-                    // Contenido según modo
-                    if (_creationMode == InvoiceCreationMode.fromBooking) ...[
-                      // Paso 1: Seleccionar reserva
-                      _buildSectionTitle('1. Seleccionar reserva'),
-                      _buildBookingSelector(),
-                      if (_selectedBooking != null) ...[
-                        const SizedBox(height: 12),
-                        _buildBookingInfo(),
-                      ],
-                    ] else ...[
-                      // Modo manual
-                      _buildSectionTitle('1. Propiedad'),
-                      _buildPropertySelector(),
-                      const SizedBox(height: 16),
-                      _buildSectionTitle('2. Concepto de factura'),
-                      _buildConceptField(),
-                    ],
-                    const SizedBox(height: 24),
-
-                    // Datos del cliente
-                    _buildSectionTitle(
-                      _creationMode == InvoiceCreationMode.fromBooking
-                          ? 'Datos del cliente'
-                          : '3. Datos del cliente',
-                    ),
-                    _buildClientFields(),
-                    const SizedBox(height: 24),
-
-                    // Importe
-                    _buildSectionTitle(
-                      _creationMode == InvoiceCreationMode.fromBooking
-                          ? '2. Importe de la factura'
-                          : '4. Importe de la factura',
-                    ),
-                    _buildAmountField(),
-                    const SizedBox(height: 24),
-
-                    // Tipo de IVA
-                    _buildSectionTitle(
-                      _creationMode == InvoiceCreationMode.fromBooking
-                          ? '3. Tipo de IVA'
-                          : '5. Tipo de IVA',
-                    ),
-                    _buildTaxRateSelector(),
-                    const SizedBox(height: 24),
-
-                    // Resumen de totales
-                    if (_totalAmount > 0) _buildTotals(),
-                    const SizedBox(height: 16),
-
-                    // Notas internas
-                    _buildSectionTitle('Notas internas'),
-                    _buildNotesField(),
-                    const SizedBox(height: 30),
-                  ],
-                ),
+  /// Botón para cerrar el teclado (especialmente útil en iOS)
+  Widget _buildKeyboardDoneButton() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: const BoxDecoration(
+        color: AppColors.darkSurface,
+        border: Border(
+          bottom: BorderSide(color: AppColors.darkBorder),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: _dismissKeyboard,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            child: const Text(
+              'Hecho',
+              style: TextStyle(
+                color: AppColors.gold,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
-
-          // Botón de guardar
-          _buildSaveButton(),
         ],
       ),
     );
@@ -717,26 +819,6 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     );
   }
 
-  Widget _buildConceptField() {
-    return TextFormField(
-      controller: _conceptController,
-      style: const TextStyle(color: AppColors.white),
-      decoration: InputDecoration(
-        labelText: 'Concepto de la factura',
-        labelStyle: const TextStyle(color: AppColors.gray500),
-        hintText: 'Importe total con IVA incluido',
-        hintStyle: const TextStyle(color: AppColors.gray600),
-        filled: true,
-        fillColor: AppColors.darkSurface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      ),
-    );
-  }
-
   String _formatDateRange(AdminBookingEntity booking) {
     final checkIn = '${booking.checkInDate.day}/${booking.checkInDate.month}';
     final checkOut = '${booking.checkOutDate.day}/${booking.checkOutDate.month}';
@@ -798,8 +880,6 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
   }
 
   Widget _buildClientFields() {
-    final isManual = _creationMode == InvoiceCreationMode.manual;
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -812,9 +892,9 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
           // Nombre
           _buildEditableField(
             controller: _clientNameController,
-            label: 'Nombre completo ${isManual ? '*' : ''}',
+            label: 'Nombre completo *',
             icon: Icons.person_outline,
-            isRequired: isManual,
+            isRequired: true,
           ),
           const SizedBox(height: 12),
 
@@ -879,6 +959,196 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     );
   }
 
+  /// Campos de fecha de check-in y check-out
+  Widget _buildDateFields() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.darkBorder),
+      ),
+      child: Row(
+        children: [
+          // Check-in
+          Expanded(
+            child: _buildDateField(
+              label: 'Check-in',
+              date: _checkInDate,
+              onTap: () => _selectDate(isCheckIn: true),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Check-out
+          Expanded(
+            child: _buildDateField(
+              label: 'Check-out',
+              date: _checkOutDate,
+              onTap: () => _selectDate(isCheckIn: false),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateField({
+    required String label,
+    required DateTime? date,
+    required VoidCallback onTap,
+  }) {
+    final hasDate = date != null;
+    final formattedDate = hasDate
+        ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
+        : 'Seleccionar';
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.darkBackground,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: hasDate ? AppColors.goldWithAlpha50 : Colors.transparent,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.calendar_today_outlined,
+              color: hasDate ? AppColors.gold : AppColors.gray500,
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.gray500,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(
+                      color: hasDate ? AppColors.white : AppColors.gray500,
+                      fontSize: 14,
+                      fontWeight: hasDate ? FontWeight.w500 : FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hasDate)
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    if (label == 'Check-in') {
+                      _checkInDate = null;
+                    } else {
+                      _checkOutDate = null;
+                    }
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close,
+                    color: AppColors.gray500,
+                    size: 16,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDate({required bool isCheckIn}) async {
+    final now = DateTime.now();
+    DateTime tempDate = isCheckIn ? _checkInDate ?? now : _checkOutDate ?? now;
+
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (modalContext) => Container(
+        height: 300,
+        padding: const EdgeInsets.only(top: 6),
+        decoration: const BoxDecoration(
+          color: AppColors.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          children: [
+            // Header con botones
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => Navigator.of(modalContext).pop(),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(color: AppColors.gray400),
+                    ),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      Navigator.of(modalContext).pop();
+                      setState(() {
+                        if (isCheckIn) {
+                          _checkInDate = tempDate;
+                          // Si check-out es anterior al nuevo check-in, limpiarlo
+                          if (_checkOutDate != null &&
+                              _checkOutDate!.isBefore(tempDate)) {
+                            _checkOutDate = null;
+                          }
+                        } else {
+                          _checkOutDate = tempDate;
+                        }
+                      });
+                    },
+                    child: const Text(
+                      'Confirmar',
+                      style: TextStyle(
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: AppColors.darkBorder, height: 1),
+            // Date picker
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: tempDate,
+                minimumDate: DateTime(2020),
+                maximumDate: DateTime(2030),
+                backgroundColor: AppColors.darkSurface,
+                onDateTimeChanged: (DateTime newDate) {
+                  tempDate = newDate;
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEditableField({
     required TextEditingController controller,
     required String label,
@@ -892,6 +1162,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       style: const TextStyle(color: AppColors.white, fontSize: 14),
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
+      textInputAction: TextInputAction.next,
       validator: isRequired
           ? (value) {
               if (value == null || value.trim().isEmpty) {
@@ -917,50 +1188,214 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
     );
   }
 
-  Widget _buildAmountField() {
-    return TextFormField(
-      controller: _amountController,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+  Widget _buildLineItems() {
+    return Column(
+      children: [
+        for (int i = 0; i < _lineItems.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          _buildLineItemCard(i),
+        ],
       ],
-      style: const TextStyle(
-        color: AppColors.white,
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
+    );
+  }
+
+  Widget _buildLineItemCard(int index) {
+    final item = _lineItems[index];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.darkBorder),
       ),
-      decoration: InputDecoration(
-        labelText: 'Importe total (€)',
-        labelStyle: const TextStyle(color: AppColors.gray500),
-        prefixIcon: const Padding(
-          padding: EdgeInsets.only(left: 12, right: 8),
-          child: Text(
-            '€',
-            style: TextStyle(
-              color: AppColors.gold,
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header con número de línea y botón eliminar
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.goldWithAlpha10,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Línea ${index + 1}',
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (_lineItems.length > 1)
+                InkWell(
+                  onTap: () => _removeLineItem(index),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ),
-        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-        filled: true,
-        fillColor: AppColors.darkSurface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.darkBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.darkBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.gold),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          const SizedBox(height: 12),
+
+          // Descripción
+          TextFormField(
+            initialValue: item.description,
+            style: const TextStyle(color: AppColors.white, fontSize: 14),
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Concepto',
+              labelStyle: TextStyle(color: AppColors.gray500, fontSize: 12),
+              filled: true,
+              fillColor: AppColors.darkBackground,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              isDense: true,
+            ),
+            onChanged: (value) {
+              item.description = value;
+              setState(() {});
+            },
+          ),
+          const SizedBox(height: 10),
+
+          // Cantidad y Precio en fila
+          Row(
+            children: [
+              // Cantidad
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  initialValue: item.quantity.toString(),
+                  style: const TextStyle(color: AppColors.white, fontSize: 14),
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: 'Uds.',
+                    labelStyle: TextStyle(color: AppColors.gray500, fontSize: 12),
+                    filled: true,
+                    fillColor: AppColors.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    isDense: true,
+                  ),
+                  onChanged: (value) {
+                    item.quantity = int.tryParse(value) ?? 1;
+                    setState(() {});
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+
+              // Precio unitario
+              Expanded(
+                flex: 3,
+                child: TextFormField(
+                  initialValue: item.unitPrice > 0 ? item.unitPrice.toStringAsFixed(2) : '',
+                  style: const TextStyle(color: AppColors.white, fontSize: 14),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Precio unitario (€)',
+                    labelStyle: TextStyle(color: AppColors.gray500, fontSize: 12),
+                    filled: true,
+                    fillColor: AppColors.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    isDense: true,
+                  ),
+                  onChanged: (value) {
+                    item.unitPrice = double.tryParse(value.replaceAll(',', '.')) ?? 0;
+                    setState(() {});
+                  },
+                  onFieldSubmitted: (_) => _dismissKeyboard(),
+                ),
+              ),
+            ],
+          ),
+
+          // Subtotal de la línea
+          if (item.subtotal > 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'IVA ${item.taxRate.toStringAsFixed(0)}%',
+                  style: const TextStyle(
+                    color: AppColors.gray500,
+                    fontSize: 11,
+                  ),
+                ),
+                Text(
+                  'Subtotal: ${item.subtotal.toStringAsFixed(2)} €',
+                  style: const TextStyle(
+                    color: AppColors.gray400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
-      onChanged: (_) => setState(() {}),
+    );
+  }
+
+  Widget _buildAddLineButton() {
+    return InkWell(
+      onTap: _addLineItem,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.darkSurface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.goldWithAlpha30, style: BorderStyle.solid),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_circle_outline,
+              color: AppColors.gold,
+              size: 20,
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Añadir otra línea',
+              style: TextStyle(
+                color: AppColors.gold,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -975,10 +1410,18 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
         children: _taxRates.map((taxRate) {
           final rate = taxRate['rate'] as double;
           final label = taxRate['label'] as String;
-          final isSelected = _selectedTaxRate == rate;
+          final isSelected = _globalTaxRate == rate;
 
           return InkWell(
-            onTap: () => setState(() => _selectedTaxRate = rate),
+            onTap: () {
+              setState(() {
+                _globalTaxRate = rate;
+                // Actualizar todas las líneas
+                for (final item in _lineItems) {
+                  item.taxRate = rate;
+                }
+              });
+            },
             borderRadius: BorderRadius.circular(8),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -1020,11 +1463,11 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       ),
       child: Column(
         children: [
-          _buildTotalRow('Base imponible', _baseAmount),
+          _buildTotalRow('Base imponible', _totalBaseAmount),
           const SizedBox(height: 8),
-          _buildTotalRow('IVA (${_selectedTaxRate.toStringAsFixed(0)}%)', _taxAmount),
+          _buildTotalRow('IVA (${_globalTaxRate.toStringAsFixed(0)}%)', _totalTaxAmount),
           const Divider(color: AppColors.darkBorder, height: 24),
-          _buildTotalRow('Total factura', _totalAmount, isTotal: true),
+          _buildTotalRow('Total factura', _grandTotal, isTotal: true),
         ],
       ),
     );
@@ -1059,6 +1502,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       controller: _notesController,
       style: const TextStyle(color: AppColors.white),
       maxLines: 2,
+      textInputAction: TextInputAction.done,
       decoration: InputDecoration(
         labelText: 'Notas internas (opcional)',
         labelStyle: const TextStyle(color: AppColors.gray500),
@@ -1078,6 +1522,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
+      onFieldSubmitted: (_) => _dismissKeyboard(),
     );
   }
 

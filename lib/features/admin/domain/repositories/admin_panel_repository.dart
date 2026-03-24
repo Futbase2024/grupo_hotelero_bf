@@ -139,6 +139,12 @@ abstract class AdminPanelRepository {
     required String keyboxCode,
   });
 
+  /// Marca que el early check-in está disponible para una reserva
+  /// Esto actualiza early_checkin_available_at con el timestamp actual
+  Future<void> setEarlyCheckinAvailable({
+    required String bookingId,
+  });
+
   /// Obtiene notificaciones
   Future<List<StaffNotificationEntity>> getNotifications({
     String? propertyId,

@@ -76,6 +76,12 @@ abstract class ChatRepository {
     required String userId,
   });
 
+  /// Elimina una conversación completa (mensajes, participantes y conversación)
+  /// Solo disponible para admin/staff
+  Future<void> deleteConversation({
+    required String conversationId,
+  });
+
   /// Dispose de recursos (cancelar suscripciones)
   void dispose();
 }

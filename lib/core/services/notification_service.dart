@@ -9,52 +9,63 @@ class NotificationService {
 
   SupabaseClient get _client => Supabase.instance.client;
 
-  /// Obtiene el token FCM de un usuario usando la función RPC segura
-  /// Esta función usa SECURITY DEFINER para evitar problemas de RLS
-  Future<String?> _getFcmTokenSecure(String userId) async {
-    try {
-      final response = await _client.rpc(
-        'get_fcm_token_for_user',
-        params: {'target_user_id': userId},
-      );
-      return response as String?;
-    } catch (e) {
-      debugPrint('⚠️ [NotificationService] Error obteniendo token FCM seguro: $e');
-      return null;
-    }
-  }
-
-  /// Obtiene los tokens FCM de múltiples usuarios usando la función RPC segura
-  /// Retorna un mapa de user_id -> token
-  Future<Map<String, String>> _getFcmTokensSecure(List<String> userIds) async {
+  /// Obtiene TODOS los tokens FCM de un usuario usando la función RPC segura
+  /// Retorna una lista de tokens (un usuario puede tener múltiples dispositivos)
+  Future<List<String>> _getFcmTokensForUser(String userId) async {
     try {
       final response = await _client.rpc(
         'get_fcm_tokens_for_users',
-        params: {'target_user_ids': userIds},
+        params: {'target_user_ids': [userId]},
       );
 
-      final tokens = <String, String>{};
+      final tokens = <String>[];
       if (response is List) {
         for (final row in response) {
           if (row is Map) {
-            final userId = row['user_id'] as String?;
             final token = row['token'] as String?;
-            if (userId != null && token != null) {
-              tokens[userId] = token;
+            if (token != null && token.isNotEmpty) {
+              tokens.add(token);
             }
           }
         }
       }
       return tokens;
     } catch (e) {
+      debugPrint('⚠️ [NotificationService] Error obteniendo tokens FCM: $e');
+      return [];
+    }
+  }
+
+  /// Obtiene los tokens FCM de múltiples usuarios usando la función RPC segura
+  /// Retorna un mapa de user_id -> lista de tokens (soporta múltiples dispositivos por usuario)
+  Future<Map<String, List<String>>> _getFcmTokensSecure(List<String> userIds) async {
+    try {
+      final response = await _client.rpc(
+        'get_fcm_tokens_for_users',
+        params: {'target_user_ids': userIds},
+      );
+
+      final tokensMap = <String, List<String>>{};
+      if (response is List) {
+        for (final row in response) {
+          if (row is Map) {
+            final userId = row['user_id'] as String?;
+            final token = row['token'] as String?;
+            if (userId != null && token != null && token.isNotEmpty) {
+              tokensMap.putIfAbsent(userId, () => []).add(token);
+            }
+          }
+        }
+      }
+      return tokensMap;
+    } catch (e) {
       debugPrint('⚠️ [NotificationService] Error obteniendo tokens FCM seguros: $e');
       return {};
     }
   }
 
-  /// Encola una notificación push para ser enviada vía FCM
+  /// Encola una notificación push para ser enviada vía FCM a TODOS los dispositivos del usuario
   /// La notificación será procesada por la Edge Function send-fcm-notifications
-  /// Si no se pasa el token, se obtendrá usando la función RPC segura (sin problemas de RLS)
   Future<bool> queuePushNotification({
     required String userId,
     required String title,
@@ -65,40 +76,49 @@ class NotificationService {
     try {
       debugPrint('📬 [NotificationService] Encolando push para usuario: $userId');
 
-      // 1. Usar el token pasado o obtenerlo usando la función RPC segura
-      String token;
+      // 1. Determinar los tokens a usar
+      List<String> tokens;
       if (fcmToken != null && fcmToken.isNotEmpty) {
-        token = fcmToken;
+        tokens = [fcmToken];
         debugPrint('📬 [NotificationService] Usando token proporcionado directamente');
       } else {
-        // Obtener el token FCM usando la función RPC segura (SECURITY DEFINER)
-        // Esto evita problemas de RLS cuando un usuario necesita obtener tokens de otros
-        token = await _getFcmTokenSecure(userId) ?? '';
+        // Obtener TODOS los tokens del usuario (múltiples dispositivos)
+        tokens = await _getFcmTokensForUser(userId);
 
-        if (token.isEmpty) {
-          debugPrint('⚠️ [NotificationService] Usuario sin token FCM: $userId');
+        if (tokens.isEmpty) {
+          debugPrint('⚠️ [NotificationService] Usuario sin tokens FCM: $userId');
           return false;
         }
-        debugPrint('📬 [NotificationService] Token obtenido vía RPC segura');
+        debugPrint('📬 [NotificationService] ${tokens.length} tokens encontrados vía RPC');
       }
 
-      // 2. Insertar en la cola de notificaciones
-      await _client.from('notification_queue').insert({
-        'user_id': userId,
-        'token': token,
-        'title': title,
-        'body': body,
-        'data': data ?? {},
-        'processed': false,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+      // 2. Insertar en la cola una notificación por cada token
+      int successCount = 0;
+      for (final token in tokens) {
+        try {
+          await _client.from('notification_queue').insert({
+            'user_id': userId,
+            'token': token,
+            'title': title,
+            'body': body,
+            'data': data ?? {},
+            'processed': false,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          successCount++;
+        } catch (e) {
+          debugPrint('⚠️ [NotificationService] Error encolando para token ${token.substring(0, 10)}...: $e');
+        }
+      }
 
-      debugPrint('✅ [NotificationService] Push encolado: $title');
+      debugPrint('✅ [NotificationService] $successCount/${tokens.length} push encolados: $title');
 
       // 3. Disparar el procesamiento de la cola (llamar a Edge Function)
-      await _triggerNotificationProcessing();
+      if (successCount > 0) {
+        await _triggerNotificationProcessing();
+      }
 
-      return true;
+      return successCount > 0;
     } catch (e, s) {
       debugPrint('❌ [NotificationService] Error encolando push: $e');
       debugPrint('❌ [NotificationService] StackTrace: $s');
@@ -140,8 +160,7 @@ class NotificationService {
   }
 
   /// Notifica a todos los administradores de una propiedad
-  /// Envía tanto notificación push como in-app
-  /// Usa la función RPC segura para obtener tokens FCM
+  /// Envía tanto notificación push como in-app a TODOS sus dispositivos
   Future<void> notifyAdmins({
     required String propertyId,
     required String type,
@@ -151,7 +170,7 @@ class NotificationService {
     Map<String, dynamic>? data,
   }) async {
     try {
-      // 1. Obtener todos los admins y filtrar en Dart (más confiable que .filter() con null)
+      // 1. Obtener todos los admins y filtrar en Dart
       final allAdmins = await _client
           .from('user_roles')
           .select('user_id, property_id')
@@ -160,7 +179,6 @@ class NotificationService {
       // 2. Filtrar: admins de la propiedad O admins globales (property_id null)
       final adminsList = allAdmins.where((admin) {
         final adminPropertyId = admin['property_id'] as String?;
-        // Es admin global (property_id null) O es admin de esta propiedad
         return adminPropertyId == null || adminPropertyId == propertyId;
       }).toList();
 
@@ -172,11 +190,13 @@ class NotificationService {
         return;
       }
 
-      // 3. Obtener los tokens FCM de los admins usando la función RPC segura
+      // 3. Obtener TODOS los tokens FCM de los admins (soporta múltiples dispositivos por usuario)
       final adminUserIds = adminsList.map((a) => a['user_id'] as String).toList();
-      final userTokens = await _getFcmTokensSecure(adminUserIds);
+      final userTokensMap = await _getFcmTokensSecure(adminUserIds);
 
-      debugPrint('📬 [NotificationService] Tokens FCM encontrados vía RPC: ${userTokens.length}');
+      // Contar total de tokens
+      int totalTokens = userTokensMap.values.fold(0, (sum, list) => sum + list.length);
+      debugPrint('📬 [NotificationService] Total tokens FCM encontrados: $totalTokens');
 
       // 4. Crear notificación in-app (una sola vez, visible para todos los admins)
       await createStaffNotification(
@@ -188,41 +208,73 @@ class NotificationService {
         data: data,
       );
 
-      // 5. Encolar push notification para cada admin con token
+      // 5. Encolar push notification para CADA token de CADA admin
       int successCount = 0;
       for (final admin in adminsList) {
         final userId = admin['user_id'] as String;
-        final token = userTokens[userId];
+        final userTokens = userTokensMap[userId] ?? [];
 
-        if (token == null) {
-          debugPrint('⚠️ [NotificationService] Admin $userId sin token FCM, saltando push');
+        if (userTokens.isEmpty) {
+          debugPrint('⚠️ [NotificationService] Admin $userId sin tokens FCM, saltando push');
           continue;
         }
 
-        final success = await queuePushNotification(
-          userId: userId,
-          title: title,
-          body: body,
-          data: {
-            ...?data,
-            'type': type,
-            'booking_id': bookingId,
-            'property_id': propertyId,
-          },
-          fcmToken: token, // Pasar el token directamente para evitar problemas de RLS
-        );
-        if (success) successCount++;
+        // Enviar a TODOS los dispositivos del admin
+        for (final token in userTokens) {
+          final success = await _enqueueSinglePush(
+            userId: userId,
+            token: token,
+            title: title,
+            body: body,
+            data: {
+              ...?data,
+              'type': type,
+              'booking_id': bookingId,
+              'property_id': propertyId,
+            },
+          );
+          if (success) successCount++;
+        }
       }
 
-      debugPrint('✅ [NotificationService] $successCount/${adminsList.length} admins notificados con push');
+      // 6. Disparar procesamiento de la cola
+      if (successCount > 0) {
+        await _triggerNotificationProcessing();
+      }
+
+      debugPrint('✅ [NotificationService] $successCount push encolados para ${adminsList.length} admins');
     } catch (e, s) {
       debugPrint('❌ [NotificationService] Error notificando admins: $e');
       debugPrint('❌ [NotificationService] StackTrace: $s');
     }
   }
 
+  /// Encola una notificación push individual
+  Future<bool> _enqueueSinglePush({
+    required String userId,
+    required String token,
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      await _client.from('notification_queue').insert({
+        'user_id': userId,
+        'token': token,
+        'title': title,
+        'body': body,
+        'data': data ?? {},
+        'processed': false,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      return true;
+    } catch (e) {
+      debugPrint('⚠️ [NotificationService] Error encolando push: $e');
+      return false;
+    }
+  }
+
   /// Notifica al huésped del cambio de estado de su check-in
-  /// Envía push notification si tiene la app instalada y crea notificación in-app
   Future<void> notifyGuestCheckinStatus({
     required String bookingId,
     required String status,
@@ -293,7 +345,7 @@ class NotificationService {
         },
       );
 
-      // 4. Encolar push notification usando la función RPC segura
+      // 4. Encolar push notification (a todos los dispositivos del huésped)
       final notificationData = <String, dynamic>{
         'type': 'checkin_status_update',
         'status': status,
@@ -363,7 +415,6 @@ class NotificationService {
   }
 
   /// Envía email de notificación al admin cuando un huésped completa el check-in
-  /// El email va a ghotelerobf@gmail.com vía Brevo
   Future<bool> sendCheckinCompletedEmail({
     required String bookingId,
     required String guestName,
@@ -374,9 +425,6 @@ class NotificationService {
   }) async {
     try {
       debugPrint('📧 [NotificationService] Enviando email de check-in completado...');
-      debugPrint('📧 [NotificationService] Huésped: $guestName');
-      debugPrint('📧 [NotificationService] Propiedad: $propertyName');
-      debugPrint('📧 [NotificationService] Reserva: $bookingCode');
 
       final response = await _client.functions.invoke(
         'send-checkin-notification',
@@ -395,7 +443,6 @@ class NotificationService {
         return true;
       } else {
         debugPrint('❌ [NotificationService] Error enviando email: ${response.status}');
-        debugPrint('❌ [NotificationService] Response: ${response.data}');
         return false;
       }
     } catch (e, s) {
@@ -406,14 +453,11 @@ class NotificationService {
   }
 
   /// Dispara el procesamiento de la cola de notificaciones
-  /// Llama a la Edge Function que envía las notificaciones vía FCM
   Future<void> _triggerNotificationProcessing() async {
     try {
-      // Llamar a la Edge Function para procesar la cola
       await _client.functions.invoke('send-fcm-notifications');
       debugPrint('✅ [NotificationService] Procesamiento de cola disparado');
     } catch (e) {
-      // No es crítico si falla, la cola se procesará en el siguiente intento
       debugPrint('⚠️ [NotificationService] No se pudo disparar procesamiento: $e');
     }
   }

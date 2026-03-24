@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../domain/repositories/invoices_repository.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import 'invoices_event.dart';
@@ -9,8 +10,10 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
   InvoicesBloc({
     required InvoicesRepository repository,
     required AdminPanelRepository adminRepository,
+    SupabaseClient? supabaseClient,
   })  : _repository = repository,
         _adminRepository = adminRepository,
+        _supabaseClient = supabaseClient ?? Supabase.instance.client,
         super(const InvoicesState()) {
     on<InvoicesLoadRequested>(_onLoadRequested);
     on<InvoicesRefreshRequested>(_onRefreshRequested);
@@ -30,6 +33,7 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
 
   final InvoicesRepository _repository;
   final AdminPanelRepository _adminRepository;
+  final SupabaseClient _supabaseClient;
 
   Future<void> _onLoadRequested(
     InvoicesLoadRequested event,
@@ -320,21 +324,22 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
     emit(state.copyWith(isLoadingProperties: true, clearError: true));
 
     try {
-      // Extraer propiedades únicas de las reservas existentes
-      final propertyMap = <String, Map<String, dynamic>>{};
+      // Cargar propiedades directamente de la tabla properties
+      final response = await _supabaseClient
+          .from('properties')
+          .select('id, name')
+          .order('name');
 
-      for (final booking in state.bookings) {
-        if (!propertyMap.containsKey(booking.propertyId)) {
-          propertyMap[booking.propertyId] = {
-            'id': booking.propertyId,
-            'name': booking.propertyName,
-          };
-        }
-      }
+      final properties = (response as List)
+          .map((p) => {
+                'id': p['id'] as String,
+                'name': p['name'] as String,
+              })
+          .toList();
 
-      debugPrint('🔵 [InvoicesBloc] Extracted ${propertyMap.length} properties from bookings');
+      debugPrint('🔵 [InvoicesBloc] Loaded ${properties.length} properties from database');
       emit(state.copyWith(
-        properties: propertyMap.values.toList(),
+        properties: properties,
         isLoadingProperties: false,
       ));
     } catch (e) {

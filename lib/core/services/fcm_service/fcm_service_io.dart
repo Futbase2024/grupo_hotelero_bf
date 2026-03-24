@@ -169,16 +169,29 @@ class FcmServiceIo implements FcmService {
     debugPrint('   Body: ${notification?.body}');
     debugPrint('   Data: $data');
 
-    // Si hay notification payload, FCM ya mostrará la notificación
-    // Solo mostramos notificación local para data-only messages
-    if (notification?.title != null && notification?.body != null) {
-      debugPrint('📱 Notificación con payload - FCM la mostrará automáticamente');
+    // En iOS con setForegroundNotificationPresentationOptions(alert: true),
+    // FCM YA muestra la notificación automáticamente en foreground.
+    // No debemos mostrar notificación local para evitar duplicados.
+    if (Platform.isIOS && notification?.title != null && notification?.body != null) {
+      debugPrint('📱 iOS: FCM ya mostrará la notificación, no mostramos local');
       return;
     }
 
-    // Para data-only messages, el título y cuerpo vienen en data
-    final title = data['title'] as String? ?? 'BF Stay';
-    final body = data['body'] as String? ?? '';
+    // En Android y en iOS para data-only messages, mostramos notificación local
+    String title;
+    String body;
+
+    if (notification?.title != null && notification?.body != null) {
+      // Notificación con payload de notificación (Android)
+      title = notification!.title!;
+      body = notification.body!;
+      debugPrint('📱 Android: Mostrando notificación local');
+    } else {
+      // Data-only message: título y cuerpo vienen en data
+      title = data['title'] as String? ?? 'BF Stay';
+      body = data['body'] as String? ?? '';
+      debugPrint('📱 Data-only message: Mostrando notificación local');
+    }
 
     if (body.isEmpty) {
       debugPrint('⚠️ Notificación sin contenido');
@@ -235,8 +248,9 @@ class FcmServiceIo implements FcmService {
         'user_id': userId,
         'token': _fcmToken,
         'platform': Platform.isAndroid ? 'android' : 'ios',
+        'is_active': true,
         'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id');
+      }, onConflict: 'user_id,token');
       debugPrint('✅ Token FCM guardado en Supabase');
     } catch (e) {
       debugPrint('❌ Error guardando token FCM: $e');

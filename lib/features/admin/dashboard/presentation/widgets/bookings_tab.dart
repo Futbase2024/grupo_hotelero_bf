@@ -73,7 +73,8 @@ class _BookingsTabState extends State<BookingsTab> {
     final filters = [
       ('all', 'Todas'),
       ('confirmed', 'Confirmadas'),
-      ('checked_in', 'En casa'),
+      ('active', 'Activas'),
+      ('in_house', 'En casa'),
       ('checked_out', 'Finalizadas'),
       ('cancelled', 'Canceladas'),
     ];
@@ -214,17 +215,16 @@ class _BookingsTabState extends State<BookingsTab> {
   }
 
   BookingStatus _mapStatus(String status) {
-    switch (status) {
-      case 'confirmed':
-        return BookingStatus.confirmed;
-      case 'checked_in':
-        return BookingStatus.checkedIn;
-      case 'checked_out':
-        return BookingStatus.checkedOut;
-      case 'cancelled':
-        return BookingStatus.cancelled;
-      default:
-        return BookingStatus.confirmed;
-    }
+    return switch (status) {
+      'created' => BookingStatus.created,
+      'confirmed' => BookingStatus.confirmed,
+      'active' => BookingStatus.active,
+      'in_house' => BookingStatus.inHouse,
+      'checked_in' => BookingStatus.active, // Legacy - mapear a active
+      'checked_out' => BookingStatus.checkedOut,
+      'closed' => BookingStatus.closed,
+      'cancelled' => BookingStatus.cancelled,
+      _ => BookingStatus.created,
+    };
   }
 }

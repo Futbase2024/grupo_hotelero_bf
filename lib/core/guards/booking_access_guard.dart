@@ -23,7 +23,8 @@ class BookingAccessGuard {
   /// - Solicitar check-out
   static bool canAccessFullPanel(AdminBookingEntity booking) {
     return booking.checkinStatusEnum.isValidated &&
-        booking.bookingStatus == BookingStatus.active;
+        (booking.bookingStatus == BookingStatus.active ||
+            booking.bookingStatus == BookingStatus.inHouse);
   }
 
   /// Verifica si el huésped puede acceder a funcionalidades básicas
@@ -154,6 +155,13 @@ class BookingAccessGuard {
       return '¡Bienvenido! Tu estancia está activa. Disfruta tu alojamiento.';
     }
 
+    if (booking.bookingStatus == BookingStatus.inHouse) {
+      if (booking.checkoutStatus == CheckoutStatus.requested) {
+        return 'Tu solicitud de check-out está siendo procesada.';
+      }
+      return '¡Bienvenido! Disfruta tu estancia.';
+    }
+
     if (booking.checkinStatusEnum == CheckinStatus.inProgress) {
       return 'Por favor, completa tu check-in para acceder a todas las funcionalidades.';
     }
@@ -191,7 +199,9 @@ class BookingAccessGuard {
       return GuestAction.waitCheckinValidation;
     }
 
-    if (booking.checkinStatusEnum.isValidated && booking.bookingStatus == BookingStatus.active) {
+    if (booking.checkinStatusEnum.isValidated &&
+        (booking.bookingStatus == BookingStatus.active ||
+            booking.bookingStatus == BookingStatus.inHouse)) {
       if (booking.checkoutStatus == CheckoutStatus.notStarted && booking.isCheckoutDay) {
         return GuestAction.requestCheckout;
       }

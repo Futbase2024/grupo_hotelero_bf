@@ -19,6 +19,9 @@ class ConversationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final guestParticipant = conversation.guestParticipant;
 
+    // Usar el nuevo getter que muestra nombre + código de reserva
+    final displayName = conversation.displayNameForAdmin;
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -53,7 +56,7 @@ class ConversationTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          guestParticipant?.displayName ?? 'Huésped',
+                          displayName,
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: conversation.hasUnread
                                     ? FontWeight.w600
