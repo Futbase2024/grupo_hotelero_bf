@@ -73,9 +73,13 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
   bool isLoadingUnits = false;
   String? unitsError;
 
-  String? selectedUnitId;
+  /// Lista de IDs de unidades seleccionadas (soporte multi-unidad, 1-9 habitaciones)
+  List<String> selectedUnitIds = [];
   DateTime? checkInDate;
   DateTime? checkOutDate;
+
+  /// Getter para compatibilidad: devuelve la primera unidad seleccionada
+  String? get selectedUnitId => selectedUnitIds.isNotEmpty ? selectedUnitIds.first : null;
   int numAdults = 2;
   int numChildren = 0;
   List<int> childrenAges = [];
@@ -101,6 +105,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
         checkOutDate: checkOutDate,
       );
       Debug.log('loadUnits - ${loadedUnits.length} unidades cargadas');
+      loadedUnits.sort((a, b) => a.unit.name.compareTo(b.unit.name));
       setState(() {
         units = loadedUnits;
         isLoadingUnits = false;
@@ -428,30 +433,118 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
             ),
           )
         else
-          DropdownButtonFormField<String>(
-            style: const TextStyle(color: AppColors.white),
-            dropdownColor: AppColors.darkSurface,
-            decoration: buildInputDecoration('Alojamiento', Icons.apartment_outlined).copyWith(
-              hintText: 'Selecciona un alojamiento',
-              hintStyle: const TextStyle(color: AppColors.gray500),
-              helperText: 'Solo se muestran alojamientos disponibles',
-              helperStyle: TextStyle(fontSize: 11, color: AppColors.getTextSecondaryColor(context)),
-            ),
-            items: units.where((u) => u.isAvailable).map((unitWithAvail) {
-              final unit = unitWithAvail.unit;
-              return DropdownMenuItem<String>(
-                value: unit.id,
-                child: Text(
-                  unit.name,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    overflow: TextOverflow.ellipsis,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.apartment_outlined, color: AppColors.gray500, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Alojamientos disponibles',
+                    style: TextStyle(
+                      color: AppColors.getTextSecondaryColor(context),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: selectedUnitIds.isNotEmpty ? AppColors.gold : AppColors.darkSurface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${selectedUnitIds.length}/9 seleccionados',
+                      style: TextStyle(
+                        color: selectedUnitIds.isNotEmpty ? AppColors.black : AppColors.gray500,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                decoration: BoxDecoration(
+                  color: AppColors.darkSurface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.gold),
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  itemCount: units.where((u) => u.isAvailable).length,
+                  itemBuilder: (context, index) {
+                    final availableUnits = units.where((u) => u.isAvailable).toList();
+                    final unitWithAvail = availableUnits[index];
+                    final unit = unitWithAvail.unit;
+                    final isSelected = selectedUnitIds.contains(unit.id);
+
+                    return CheckboxListTile(
+                      value: isSelected,
+                      onChanged: (checked) => setState(() {
+                        if (checked == true) {
+                          if (unit.unitType == 'hotel_room') {
+                            // Hotel: eliminar cualquier apartamento previo y añadir
+                            selectedUnitIds.removeWhere((id) {
+                              final u = units.firstWhere((u) => u.unit.id == id);
+                              return u.unit.unitType != 'hotel_room';
+                            });
+                            if (selectedUnitIds.length < 9) {
+                              selectedUnitIds.add(unit.id);
+                            }
+                          } else {
+                            // Apartamento: solo selección única, limpiar todo
+                            selectedUnitIds
+                              ..clear()
+                              ..add(unit.id);
+                          }
+                        } else {
+                          selectedUnitIds.remove(unit.id);
+                        }
+                      }),
+                      title: Text(
+                        unit.name,
+                        style: TextStyle(
+                          color: isSelected ? AppColors.gold : AppColors.white,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _translateUnitType(unit.unitType),
+                        style: TextStyle(
+                          color: AppColors.getTextSecondaryColor(context),
+                          fontSize: 12,
+                        ),
+                      ),
+                      secondary: Icon(
+                        isSelected ? Icons.check_circle : Icons.circle_outlined,
+                        color: isSelected ? AppColors.gold : AppColors.gray500,
+                      ),
+                      activeColor: AppColors.gold,
+                      checkColor: AppColors.gold,
+                      tileColor: Colors.transparent,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    );
+                  },
+                ),
+              ),
+              if (selectedUnitIds.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Selecciona al menos un alojamiento',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              );
-            }).toList(),
-            onChanged: (value) => setState(() => selectedUnitId = value),
-            validator: (value) => value == null ? 'Selecciona un alojamiento' : null,
+            ],
           ),
         const SizedBox(height: 12),
         Row(
@@ -555,6 +648,19 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
     );
   }
 
+  String _translateUnitType(String unitType) {
+    switch (unitType) {
+      case 'apartment':
+        return 'Apartamento';
+      case 'hotel_room':
+        return 'Habitación de hotel';
+      case 'room':
+        return 'Habitación';
+      default:
+        return unitType;
+    }
+  }
+
   Widget buildCounter({required int value, required int min, required int max, required VoidCallback onDecrement, required VoidCallback onIncrement}) {
     return Container(
       decoration: BoxDecoration(border: Border.all(color: AppColors.gold), borderRadius: BorderRadius.circular(8)),
@@ -616,8 +722,8 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
         } else {
           checkOutDate = picked;
         }
-        // Limpiar alojamiento seleccionado cuando cambian las fechas
-        selectedUnitId = null;
+        // Limpiar alojamientos seleccionados cuando cambian las fechas
+        selectedUnitIds = [];
       });
       // Solo cargar unidades si ambas fechas están seleccionadas
       if (checkInDate != null && checkOutDate != null) {
@@ -637,9 +743,9 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       setState(() => error = 'Selecciona las fechas de entrada y salida');
       return;
     }
-    if (selectedUnitId == null) {
+    if (selectedUnitIds.isEmpty) {
       Debug.log('submitForm - Falta alojamiento');
-      setState(() => error = 'Selecciona un alojamiento');
+      setState(() => error = 'Selecciona al menos un alojamiento');
       return;
     }
 
@@ -649,17 +755,17 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
     });
 
     try {
-      Debug.log('submitForm - Llamando a createBooking');
+      Debug.log('submitForm - Llamando a createBooking con ${selectedUnitIds.length} unidades');
 
-      // Obtener el propertyId de la unidad seleccionada
-      final selectedUnitWithAvail = units.firstWhere(
-        (u) => u.unit.id == selectedUnitId,
+      // Obtener el propertyId de la primera unidad seleccionada
+      final firstUnitWithAvail = units.firstWhere(
+        (u) => u.unit.id == selectedUnitIds.first,
         orElse: () => units.first,
       );
-      final propertyId = selectedUnitWithAvail.unit.propertyId;
+      final propertyId = firstUnitWithAvail.unit.propertyId;
 
       final bookingResult = await widget.repository.createBooking(
-        unitId: selectedUnitId!,
+        unitIds: selectedUnitIds, // Multi-unidad: pasar lista de IDs
         guestFirstName: firstNameController.text.trim(),
         guestLastName: lastNameController.text.trim(),
         guestEmail: emailController.text.trim(),
@@ -681,22 +787,24 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       if (emailController.text.trim().isNotEmpty) {
         try {
           Debug.log('submitForm - Enviando email al huésped: ${emailController.text.trim()}');
-          final selectedUnit = units.firstWhere(
-            (u) => u.unit.id == selectedUnitId,
-            orElse: () => units.first,
-          );
+
+          // Obtener nombres de todas las unidades seleccionadas
+          final selectedUnitNames = selectedUnitIds.map((id) {
+            final unit = units.firstWhere((u) => u.unit.id == id, orElse: () => units.first);
+            return unit.unit.name;
+          }).join(', ');
 
           emailSent = await EmailService().sendBookingCreatedEmail(
             toEmail: emailController.text.trim(),
             guestName: '${firstNameController.text.trim()} ${lastNameController.text.trim()}',
             propertyName: 'BF Stay',
-            unitName: selectedUnit.unit.name,
+            unitName: selectedUnitNames, // Multi-unidad: todos los nombres
             checkinDate: checkInDate!,
             checkoutDate: checkOutDate!,
             bookingCode: bookingResult.bookingCode,
             numGuests: numAdults + numChildren,
             bookingId: bookingResult.bookingId,
-            unitId: selectedUnitId,
+            unitId: selectedUnitIds.first, // Primera unidad para compatibilidad
           );
           Debug.log('submitForm - Email enviado: $emailSent');
         } catch (e) {
@@ -932,7 +1040,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       emailController.clear();
       phoneController.clear();
       notesController.clear();
-      selectedUnitId = null;
+      selectedUnitIds = [];
       checkInDate = null;
       checkOutDate = null;
       numAdults = 2;

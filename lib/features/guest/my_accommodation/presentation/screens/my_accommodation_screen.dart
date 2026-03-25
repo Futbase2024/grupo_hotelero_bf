@@ -32,6 +32,8 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   PropertyEntity? _property;
   bool _isLoading = true;
   String? _error;
+  /// Lista de todas las unidades de la reserva (para multi-unidad)
+  List<UnitEntity> _units = [];
 
   /// Hora a partir de la cual están disponibles las llaves/códigos por defecto (14:00)
   static const int _defaultKeysAvailableHour = 14;
@@ -130,9 +132,24 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
         return;
       }
 
-      // Cargar la unidad
+      // Cargar la unidad principal
       final propertiesRepository = getIt<PropertiesRepository>();
       final unit = await propertiesRepository.getUnitById(booking.unitId);
+
+      // Cargar TODAS las unidades de la reserva
+      List<UnitEntity> allUnits = [];
+      if (booking.hasMultipleUnits && booking.units.isNotEmpty) {
+        // Cargar cada unidad desde la BD
+        for (final bookingUnit in booking.units) {
+          final u = await propertiesRepository.getUnitById(bookingUnit.unitId);
+          if (u != null) {
+            allUnits.add(u);
+          }
+        }
+      } else if (unit != null) {
+        // Reserva de una sola unidad
+        allUnits.add(unit);
+      }
 
       // Cargar la propiedad para obtener el keycode de la puerta principal
       PropertyEntity? property;
@@ -144,6 +161,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
         setState(() {
           _booking = booking;
           _unit = unit;
+          _units = allUnits;
           _property = property;
           _isLoading = false;
         });
@@ -214,28 +232,31 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
 
         // Sección de llaves y códigos - condicionada a las 14:00 del día de check-in
         if (_areKeysAvailable) ...[
-          // Código de la puerta principal de la propiedad
+          // Código de la puerta principal de la propiedad (común para todas las unidades)
           if (_property?.mainDoorKeycode != null &&
               _property!.mainDoorKeycode!.isNotEmpty) ...[
             _buildMainDoorKeycodeCard(),
             const SizedBox(height: AppTheme.spacing16),
           ],
 
-          // Box Code - mostrar si hay código de la reserva o de la unidad
-          if ((_booking?.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty) ||
-              (_unit?.boxCode != null && _unit!.boxCode!.isNotEmpty)) ...[
-            _buildBoxCodeCard(),
-            const SizedBox(height: AppTheme.spacing16),
-          ],
-
-          // Ubicación de la caja
-          if (_unit?.boxLocationText != null && _unit!.boxLocationText!.isNotEmpty) ...[
-            _buildInfoCard(
-              icon: Icons.place_outlined,
-              title: 'Ubicación de la caja',
-              content: _unit!.boxLocationText!,
-            ),
-            const SizedBox(height: AppTheme.spacing16),
+          // Si hay múltiples unidades, mostrar cada una con sus códigos
+          if (_booking?.hasMultipleUnits == true && _units.isNotEmpty) ...[
+            _buildMultipleUnitsCards(),
+          ] else ...[
+            // Reserva de una sola unidad - mostrar como antes
+            if ((_booking?.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty) ||
+                (_unit?.boxCode != null && _unit!.boxCode!.isNotEmpty)) ...[
+              _buildBoxCodeCard(),
+              const SizedBox(height: AppTheme.spacing16),
+            ],
+            if (_unit?.boxLocationText != null && _unit!.boxLocationText!.isNotEmpty) ...[
+              _buildInfoCard(
+                icon: Icons.place_outlined,
+                title: 'Ubicación de la caja',
+                content: _unit!.boxLocationText!,
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+            ],
           ],
 
           // Instrucciones de acceso - Botón para ver instrucciones completas
@@ -259,9 +280,240 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
+  /// Construye las tarjetas de cada unidad cuando hay múltiples
+  Widget _buildMultipleUnitsCards() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Título de sección
+        Text(
+          'HABITACIONES (${_units.length})',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.getTextSecondaryColor(context),
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+
+        // Tarjeta por cada unidad
+        ...List.generate(_units.length, (index) {
+          final unit = _units[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
+            child: _buildUnitCard(unit),
+          );
+        }),
+      ],
+    );
+  }
+
+  /// Tarjeta individual para cada unidad con sus códigos
+  Widget _buildUnitCard(UnitEntity unit) {
+    final hasBoxCode = unit.boxCode != null && unit.boxCode!.isNotEmpty;
+    final hasBoxLocation = unit.boxLocationText != null && unit.boxLocationText!.isNotEmpty;
+    final hasWifi = unit.wifiNetwork != null && unit.wifiNetwork!.isNotEmpty;
+    final hasWifiPassword = unit.wifiPassword != null && unit.wifiPassword!.isNotEmpty;
+    final hasAccessInstructions = unit.accessInstructions != null && unit.accessInstructions!.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: AppColors.getCardColor(context),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: AppColors.gold, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header de la unidad
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.gold,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  unit.unitType == UnitType.hotelRoom
+                      ? Icons.bed_outlined
+                      : Icons.home_outlined,
+                  color: AppColors.black,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  unit.name,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.getTextPrimaryColor(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          if (hasBoxCode || hasBoxLocation || hasWifi || hasAccessInstructions)
+            const SizedBox(height: AppTheme.spacing12),
+
+          // Box Code
+          if (hasBoxCode) ...[
+            _buildUnitCodeRow(
+              icon: Icons.lock_open_outlined,
+              label: 'Key Box Code',
+              code: unit.boxCode!,
+            ),
+          ],
+
+          // Ubicación de la caja
+          if (hasBoxLocation) ...[
+            if (hasBoxCode) const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.place_outlined,
+                  size: 18,
+                  color: AppColors.getTextSecondaryColor(context),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    unit.boxLocationText!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.getTextSecondaryColor(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // WiFi
+          if (hasWifi) ...[
+            if (hasBoxCode || hasBoxLocation) const SizedBox(height: 8),
+            _buildUnitCodeRow(
+              icon: Icons.wifi_outlined,
+              label: 'WiFi',
+              code: unit.wifiNetwork!,
+              showCopy: false,
+            ),
+          ],
+
+          if (hasWifiPassword) ...[
+            const SizedBox(height: 8),
+            _buildUnitCodeRow(
+              icon: Icons.key_outlined,
+              label: 'Contraseña WiFi',
+              code: unit.wifiPassword!,
+            ),
+          ],
+
+          // Instrucciones de acceso
+          if (hasAccessInstructions) ...[
+            if (hasBoxCode || hasBoxLocation || hasWifi) const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: AppColors.gold,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      unit.accessInstructions!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.getTextPrimaryColor(context),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Fila de código para una unidad
+  Widget _buildUnitCodeRow({
+    required IconData icon,
+    required String label,
+    required String code,
+    bool showCopy = true,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: AppColors.getTextSecondaryColor(context),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label:',
+          style: TextStyle(
+            fontSize: 13,
+            color: AppColors.getTextSecondaryColor(context),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            code,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.getTextPrimaryColor(context),
+            ),
+          ),
+        ),
+        if (showCopy)
+          InkWell(
+            onTap: () => _copyToClipboard(code, label),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(
+                Icons.copy,
+                size: 16,
+                color: AppColors.gold,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildHeader() {
     final imagePath = _localImagePath;
     debugPrint('🏠 _buildHeader - imagePath: "$imagePath"');
+
+    // Construir el título según si hay múltiples unidades
+    String titleText;
+    if (_booking?.hasMultipleUnits == true && _booking!.units.isNotEmpty) {
+      // Mostrar nombres de todas las unidades
+      titleText = _booking!.units.map((u) => u.name).join(' · ');
+    } else {
+      titleText = _unit?.name ?? _booking?.unitName ?? 'Mi Alojamiento';
+    }
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
@@ -315,13 +567,40 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _unit?.name ?? _booking?.unitName ?? 'Mi Alojamiento',
-                  style: TextStyle(
-                    fontSize: ResponsiveFontSize.titleLarge(context),
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.getTextPrimaryColor(context),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        titleText,
+                        style: TextStyle(
+                          fontSize: ResponsiveFontSize.titleLarge(context),
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.getTextPrimaryColor(context),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Badge con número de unidades si hay múltiples
+                    if (_booking?.hasMultipleUnits == true) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '×${_booking!.totalUnits}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(

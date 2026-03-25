@@ -2,13 +2,16 @@ import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/enums/enums.dart';
 import '../../../guest/alojamientos/domain/entities/unit_entity.dart';
+import 'booking_unit_entity.dart';
 
 /// Entity para reservas con datos completos para el panel de administración
+/// Soporta múltiples unidades/habitaciones por reserva
 class AdminBookingEntity extends Equatable {
   const AdminBookingEntity({
     required this.id,
     required this.bookingCode,
     this.keyboxCode,
+    // Campos de unidad principal (primera unidad para compatibilidad)
     required this.unitId,
     required this.unitName,
     required this.propertyId,
@@ -45,11 +48,16 @@ class AdminBookingEntity extends Equatable {
     this.wifiNetwork,
     this.wifiPassword,
     this.earlyCheckinAvailableAt,
+    // Nuevos campos para multi-unidad
+    this.totalUnits = 1,
+    this.units = const [],
   });
 
   final String id;
   final String bookingCode;
   final String? keyboxCode;
+
+  // Campos de la primera unidad (para compatibilidad con código existente)
   final String unitId;
   final String unitName;
   final UnitType unitType;
@@ -57,35 +65,65 @@ class AdminBookingEntity extends Equatable {
   final String propertyName;
   final String? wifiNetwork;
   final String? wifiPassword;
+
+  // Fechas y huéspedes
   final DateTime checkInDate;
   final DateTime checkOutDate;
   final int numGuests;
   final int numAdults;
   final int numChildren;
   final List<int> childrenAges;
+
+  // Estados
   final String status; // Legacy: confirmed, checked_in, checked_out, cancelled
   final BookingStatus bookingStatus; // Nuevo: created, active, closed, cancelled
   final CheckoutStatus checkoutStatus; // Nuevo: not_started, requested, validated, rejected
+
+  // Datos del huésped
   final String guestEmail;
   final String? guestFirstName;
   final String? guestLastName;
   final String? guestPhone;
   final String? staffNotes;
+
+  // Timestamps de código
   final DateTime? codeFirstUsedAt;
   final DateTime? codeSentAt;
+
+  // Check-in
   final String? checkinId;
   final String? checkinStatus; // not_started, in_progress, submitted, validated, rejected
   final String? signatureSvg; // SVG de la firma del titular
   final int? docsPending;
+
+  // Check-out
   final DateTime? activatedAt;
   final DateTime? closedAt;
   final DateTime? checkoutRequestedAt;
   final DateTime? checkoutValidatedAt;
   final String? validationNotes;
   final String? checkoutNotes;
+
+  // Generales
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? earlyCheckinAvailableAt;
+
+  // ==================== NUEVOS CAMPOS MULTI-UNIDAD ====================
+
+  /// Número total de unidades/habitaciones en la reserva
+  final int totalUnits;
+
+  /// Lista completa de todas las unidades de la reserva
+  final List<BookingUnitEntity> units;
+
+  /// Indica si la reserva tiene múltiples unidades
+  bool get hasMultipleUnits => totalUnits > 1;
+
+  /// Nombres de todas las unidades separados por coma
+  String get allUnitNames => units.isNotEmpty
+      ? units.map((u) => u.name).join(', ')
+      : unitName;
 
   // ==================== GETTERS BÁSICOS ====================
 
@@ -307,6 +345,17 @@ class AdminBookingEntity extends Equatable {
       final wifiNetwork = getStringField(['wifi_network']);
       final wifiPassword = getStringField(['wifi_password']);
 
+      // Multi-unidad: parsear total_units y units
+      final totalUnits = json['total_units'] as int? ?? 1;
+      List<BookingUnitEntity> units = [];
+      if (json['units'] != null && json['units'] is List) {
+        final unitsList = json['units'] as List;
+        units = unitsList
+            .map((u) => BookingUnitEntity.fromJson(u as Map<String, dynamic>))
+            .toList();
+        debugPrint('🟢 [AdminBookingEntity.fromJson] Parsed ${units.length} units');
+      }
+
       // Timestamps
       final codeFirstUsedAt = getDateTimeField(['code_first_used_at']);
       final codeSentAt = getDateTimeField(['code_sent_at']);
@@ -359,6 +408,9 @@ class AdminBookingEntity extends Equatable {
         wifiNetwork: wifiNetwork,
         wifiPassword: wifiPassword,
         earlyCheckinAvailableAt: earlyCheckinAvailableAt,
+        // Nuevos campos multi-unidad
+        totalUnits: totalUnits,
+        units: units,
       );
 
       debugPrint('🟢 [AdminBookingEntity.fromJson] Parse completed successfully');
@@ -452,6 +504,9 @@ class AdminBookingEntity extends Equatable {
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'early_checkin_available_at': earlyCheckinAvailableAt?.toIso8601String(),
+      // Multi-unidad
+      'total_units': totalUnits,
+      'units': units.map((u) => u.toJson()).toList(),
     };
   }
 
@@ -494,6 +549,9 @@ class AdminBookingEntity extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? earlyCheckinAvailableAt,
+    // Nuevos campos multi-unidad
+    int? totalUnits,
+    List<BookingUnitEntity>? units,
   }) {
     return AdminBookingEntity(
       id: id ?? this.id,
@@ -533,6 +591,9 @@ class AdminBookingEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       earlyCheckinAvailableAt: earlyCheckinAvailableAt ?? this.earlyCheckinAvailableAt,
+      // Nuevos campos multi-unidad
+      totalUnits: totalUnits ?? this.totalUnits,
+      units: units ?? this.units,
     );
   }
 
@@ -575,5 +636,8 @@ class AdminBookingEntity extends Equatable {
         createdAt,
         updatedAt,
         earlyCheckinAvailableAt,
+        // Nuevos campos multi-unidad
+        totalUnits,
+        units,
       ];
 }

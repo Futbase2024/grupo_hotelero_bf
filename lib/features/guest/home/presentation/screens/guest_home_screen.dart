@@ -949,15 +949,42 @@ class _StayInfoCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            booking.unitName.isNotEmpty ? booking.unitName : 'Alojamiento',
+                            booking.hasMultipleUnits && booking.units.isNotEmpty
+                                ? booking.units.map((u) => u.name).join(' · ')
+                                : booking.hasMultipleUnits
+                                    ? '${booking.totalUnits} habitaciones'
+                                    : booking.unitName.isNotEmpty
+                                        ? booking.unitName
+                                        : 'Alojamiento',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: AppColors.getTextPrimaryColor(context),
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (isRefreshing)
+                        if (booking.hasMultipleUnits) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '×${booking.totalUnits}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.black,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (isRefreshing) ...[
+                          const SizedBox(width: 8),
                           const SizedBox(
                             width: 16,
                             height: 16,
@@ -966,6 +993,7 @@ class _StayInfoCard extends StatelessWidget {
                               color: AppColors.gold,
                             ),
                           ),
+                        ],
                       ],
                     ),
                     Text(

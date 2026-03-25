@@ -22,8 +22,9 @@ abstract class AdminPanelRepository {
 
   /// Crea una nueva reserva
   /// Retorna el código BF generado y el estado del envío de email
+  /// [unitIds] Lista de IDs de unidades/habitaciones (soporte multi-unidad, 1-9 habitaciones)
   Future<CreateBookingResult> createBooking({
-    required String unitId,
+    required List<String> unitIds,
     required String guestFirstName,
     required String guestLastName,
     required String guestEmail,

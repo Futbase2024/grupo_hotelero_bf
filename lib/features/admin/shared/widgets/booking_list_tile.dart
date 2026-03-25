@@ -15,6 +15,7 @@ class BookingListTile extends StatelessWidget {
     required this.bookingCode,
     this.guestName,
     this.docsPending = 0,
+    this.totalUnits = 1,
     this.onTap,
   });
 
@@ -26,7 +27,11 @@ class BookingListTile extends StatelessWidget {
   final String bookingCode;
   final String? guestName;
   final int docsPending;
+  final int totalUnits;
   final VoidCallback? onTap;
+
+  /// Indica si la reserva tiene múltiples unidades
+  bool get hasMultipleUnits => totalUnits > 1;
 
   String _formatDateLong(DateTime date) {
     final months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -127,14 +132,39 @@ class BookingListTile extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    unitName,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.white,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          hasMultipleUnits ? '$totalUnits habitaciones' : unitName,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.white,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      // Badge con número de unidades si tiene múltiples
+                                      if (hasMultipleUnits) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.gold,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '×$totalUnits',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                   const SizedBox(height: 2),
                                   Text(

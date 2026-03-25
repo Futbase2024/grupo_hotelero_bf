@@ -139,9 +139,11 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       debugPrint('📋 [listBookings] Respuesta recibida: ${response.length} registros');
 
       // Cargar nombres de units y properties por separado para evitar errores de JOIN en web
+      final bookingIds = <String>[];
       final unitIds = <String>{};
       final propertyIds = <String>{};
       for (final row in response as List) {
+        bookingIds.add(row['id'] as String);
         if (row['unit_id'] != null) unitIds.add(row['unit_id'] as String);
         if (row['property_id'] != null) propertyIds.add(row['property_id'] as String);
       }
@@ -178,6 +180,23 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         }
       }
 
+      // Obtener conteo de unidades por reserva (soporte multi-unidad)
+      final unitsCounts = <String, int>{};
+      if (bookingIds.isNotEmpty) {
+        try {
+          final bookingUnitsResponse = await _client
+              .from('booking_units')
+              .select('booking_id')
+              .inFilter('booking_id', bookingIds);
+          for (final bu in bookingUnitsResponse) {
+            final bid = bu['booking_id'] as String;
+            unitsCounts[bid] = (unitsCounts[bid] ?? 0) + 1;
+          }
+        } catch (e) {
+          debugPrint('⚠️ [listBookings] Error cargando booking_units: $e');
+        }
+      }
+
       // Mapear respuesta a entidades
       return response.map((row) {
         // checkins puede ser un Map (relación uno-a-uno) o null
@@ -191,8 +210,9 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
 
         debugPrint('📋 [listBookings] Procesando booking: ${row['booking_code']}');
 
+        final bookingId = row['id'] as String;
         return AdminBookingEntity.fromJson({
-          'id': row['id'],
+          'id': bookingId,
           'booking_code': row['booking_code'],
           'unit_id': unitId ?? '',
           'unit_name': unitId != null ? (unitNames[unitId] ?? '') : '',
@@ -220,6 +240,7 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
           'checkout_validated_at': null, // No existe en la tabla
           'created_at': row['created_at'],
           'updated_at': null,
+          'total_units': unitsCounts[bookingId] ?? 1,
         });
       }).toList();
     } catch (e, s) {
@@ -246,8 +267,54 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       }
 
       debugPrint('📋 [getBooking] Datos recibidos, parseando entity...');
+
+      // Obtener las unidades asociadas a esta reserva con sus códigos e instrucciones
+      List<Map<String, dynamic>> unitsData = [];
+      try {
+        final bookingUnitsResponse = await _client
+            .from('booking_units')
+            .select('''
+              id,
+              unit_id,
+              units (
+                id,
+                name,
+                unit_type,
+                wifi_network,
+                wifi_password,
+                box_code,
+                access_instructions
+              )
+            ''')
+            .eq('booking_id', bookingId);
+
+        debugPrint('📋 [getBooking] Unidades encontradas: ${bookingUnitsResponse.length}');
+
+        for (final bu in bookingUnitsResponse) {
+          final unitData = bu['units'] as Map<String, dynamic>?;
+          if (unitData != null) {
+            unitsData.add({
+              'id': bu['id'],
+              'unit_id': bu['unit_id'],
+              'name': unitData['name'],
+              'unit_type': unitData['unit_type'],
+              'wifi_network': unitData['wifi_network'],
+              'wifi_password': unitData['wifi_password'],
+              'box_code': unitData['box_code'],
+              'access_instructions': unitData['access_instructions'],
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ [getBooking] Error cargando unidades: $e');
+      }
+
+      // Añadir las unidades al data antes de parsear
+      data['units'] = unitsData;
+      data['total_units'] = unitsData.length;
+
       final entity = AdminBookingEntity.fromJson(data);
-      debugPrint('📋 [getBooking] Entity creado: unitName=${entity.unitName}');
+      debugPrint('📋 [getBooking] Entity creado: unitName=${entity.unitName}, units=${entity.units.length}');
       return entity;
     } on PostgrestException catch (e) {
       debugPrint('❌ [getBooking] PostgrestException: ${e.message}');
@@ -264,7 +331,7 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
   // EF devuelve: { success, booking: {...}, email_sent, email_result }
   @override
   Future<CreateBookingResult> createBooking({
-    required String unitId,
+    required List<String> unitIds,
     required String guestFirstName,
     required String guestLastName,
     required String guestEmail,
@@ -283,7 +350,7 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       action: 'create_booking',
       params: {
         if (propertyId != null) 'property_id': propertyId,
-        'unit_id': unitId,
+        'unit_ids': unitIds,  // Soporte multi-unidad (1-9 habitaciones)
         'guest_first_name': guestFirstName,
         'last_name': guestLastName,           // EF usa 'last_name'
         'guest_email': guestEmail,

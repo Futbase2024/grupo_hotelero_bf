@@ -203,6 +203,7 @@ class _BookingsTabState extends State<BookingsTab> {
             bookingCode: booking.bookingCode,
             guestName: booking.guestFullName,
             docsPending: booking.docsPending ?? 0,
+            totalUnits: booking.totalUnits,
             onTap: () {
               context.push(
                 AppRoutes.adminBookingDetail.replaceFirst(':bookingId', booking.id),

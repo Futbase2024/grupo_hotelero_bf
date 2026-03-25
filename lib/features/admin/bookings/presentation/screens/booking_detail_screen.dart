@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
+import '../../../domain/entities/booking_unit_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../domain/services/email_service.dart';
 
@@ -100,7 +101,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         toEmail: _booking!.guestEmail,
         guestName: _booking!.guestFullName,
         propertyName: _booking!.propertyName,
-        unitName: _booking!.unitName,
+        unitName: _booking!.allUnitNames,
         checkinDate: _booking!.checkInDate,
         checkoutDate: _booking!.checkOutDate,
         bookingId: _booking!.id,
@@ -989,6 +990,10 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(height: 16),
           _buildBookingInfoCard(),
           const SizedBox(height: 16),
+          if (_booking!.units.isNotEmpty) ...[
+            _buildUnitsCard(),
+            const SizedBox(height: 16),
+          ],
           _buildCodesCard(),
           const SizedBox(height: 16),
           _buildCheckinCard(),
@@ -1013,6 +1018,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   Widget _buildStatusCard() {
     final statusColor = _getStatusColor(_booking!.status);
     final statusText = _getStatusText(_booking!.status);
+
+    // Texto de unidades: mostrar "X habitaciones" si tiene múltiples
+    final unitsText = _booking!.hasMultipleUnits
+        ? '${_booking!.totalUnits} habitaciones'
+        : _booking!.unitName;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1048,17 +1058,39 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      statusText,
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          statusText,
+                          style: const TextStyle(
+                            color: AppColors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (_booking!.hasMultipleUnits) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '×${_booking!.totalUnits}',
+                              style: const TextStyle(
+                                color: AppColors.black,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${_booking!.unitName} · ${_booking!.propertyName}',
+                      '$unitsText · ${_booking!.propertyName}',
                       style: TextStyle(
                         color: AppColors.getTextSecondaryColor(context),
                         fontSize: 14,
@@ -1292,6 +1324,317 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Card para mostrar todas las unidades de la reserva (soporte multi-unidad)
+  Widget _buildUnitsCard() {
+    debugPrint('🏗️ [_buildUnitsCard] Construyendo card de unidades...');
+    debugPrint('🏗️ [_buildUnitsCard] units.length = ${_booking!.units.length}');
+    debugPrint('🏗️ [_buildUnitsCard] units = ${_booking!.units.map((u) => u.name).toList()}');
+
+    if (_booking!.units.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.meeting_room_outlined, color: AppColors.gold, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'HABITACIONES (${_booking!.totalUnits})',
+                style: const TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Lista de unidades
+          ...(_booking!.units.asMap().entries.map((entry) {
+            final index = entry.key;
+            final unit = entry.value;
+            final isLast = index == _booking!.units.length - 1;
+
+            return Column(
+              children: [
+                _buildUnitItem(unit, index + 1),
+                if (!isLast) ...[
+                  const SizedBox(height: 12),
+                  Divider(color: AppColors.getBorderColor(context), height: 1),
+                  const SizedBox(height: 12),
+                ],
+              ],
+            );
+          })),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnitItem(BookingUnitEntity unit, int number) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.darkBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Nombre de la unidad
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.goldWithAlpha20,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '#$number',
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  unit.name,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (unit.unitType != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.getChipBackgroundColor(context),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    unit.unitType!,
+                    style: TextStyle(
+                      color: AppColors.getTextSecondaryColor(context),
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          // WiFi info
+          if (unit.wifiNetwork != null || unit.wifiPassword != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.blackWithAlpha20,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.wifi, color: AppColors.gold, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'WiFi',
+                        style: TextStyle(
+                          color: AppColors.getTextSecondaryColor(context),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (unit.wifiNetwork != null)
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 60,
+                          child: Text(
+                            'Red:',
+                            style: TextStyle(
+                              color: AppColors.getTextSecondaryColor(context),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            unit.wifiNetwork!,
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (unit.wifiPassword != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 60,
+                          child: Text(
+                            'Clave:',
+                            style: TextStyle(
+                              color: AppColors.getTextSecondaryColor(context),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(
+                                unit.wifiPassword!,
+                                style: const TextStyle(
+                                  color: AppColors.gold,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'JetBrains Mono',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => _copyToClipboard(unit.wifiPassword!, 'Clave WiFi'),
+                                child: Icon(
+                                  Icons.copy,
+                                  size: 14,
+                                  color: AppColors.getTextSecondaryColor(context),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          // Box code (código de acceso) - destacado
+          if (unit.boxCode != null && unit.boxCode!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.goldWithAlpha20,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.goldWithAlpha40),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.lock_outline, color: AppColors.gold, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Código de acceso',
+                          style: TextStyle(
+                            color: AppColors.getTextSecondaryColor(context),
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          unit.boxCode!,
+                          style: const TextStyle(
+                            color: AppColors.gold,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'JetBrains Mono',
+                            letterSpacing: 4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _copyToClipboard(unit.boxCode!, 'Código de acceso'),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.gold),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.copy,
+                        size: 18,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          // Instrucciones de acceso
+          if (unit.accessInstructions != null && unit.accessInstructions!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.blackWithAlpha20,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: AppColors.silver, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Instrucciones de acceso',
+                        style: TextStyle(
+                          color: AppColors.getTextSecondaryColor(context),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    unit.accessInstructions!,
+                    style: const TextStyle(
+                      color: AppColors.gray200,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

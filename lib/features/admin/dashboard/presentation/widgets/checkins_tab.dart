@@ -335,8 +335,12 @@ class _CheckinListTile extends StatelessWidget {
                           Expanded(
                             child: _InfoRow(
                               icon: Icons.apartment_outlined,
-                              label: 'Unidad',
-                              value: checkin.unitName,
+                              label: checkin.hasMultipleUnits ? 'Unidades' : 'Unidad',
+                              value: checkin.hasMultipleUnits && checkin.units.isNotEmpty
+                                  ? checkin.units.map((u) => u.name).join(' · ')
+                                  : checkin.hasMultipleUnits
+                                      ? '${checkin.totalUnits} habitaciones'
+                                      : checkin.unitName,
                             ),
                           ),
                           const SizedBox(width: 16),

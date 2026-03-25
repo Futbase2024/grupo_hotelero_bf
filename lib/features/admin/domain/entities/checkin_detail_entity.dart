@@ -174,6 +174,8 @@ class CheckinDetailEntity extends Equatable {
     this.wifiNetwork,
     this.wifiPassword,
     this.fullAddress,
+    this.unitNames = const [],
+    this.totalUnits = 1,
   });
 
   final String checkinId;
@@ -190,6 +192,15 @@ class CheckinDetailEntity extends Equatable {
   final String unitId;
   final String unitName;
   final String propertyName;
+  final List<String> unitNames;
+  final int totalUnits;
+
+  bool get hasMultipleUnits => totalUnits > 1;
+
+  String get allUnitNames {
+    if (unitNames.isNotEmpty) return unitNames.join(' · ');
+    return unitName;
+  }
   final DateTime checkinDate;
   final DateTime checkoutDate;
   final List<CheckinGuestEntity> guests;
@@ -225,6 +236,25 @@ class CheckinDetailEntity extends Equatable {
   /// Documentos de un huésped específico
   List<CheckinDocumentEntity> documentsForGuest(String guestId) {
     return documents.where((d) => d.guestId == guestId).toList();
+  }
+
+  static List<String> _parseUnitNames(Map<String, dynamic> json) {
+    // unit_names viene como lista de objetos {name: '...'} desde el RPC
+    if (json['unit_names'] is List) {
+      final list = json['unit_names'] as List;
+      final names = list
+          .whereType<Map<String, dynamic>>()
+          .map((u) => u['name'] as String? ?? '')
+          .where((n) => n.isNotEmpty)
+          .toList();
+      if (names.isNotEmpty) return names;
+      // También soportar lista de strings directos
+      final strNames = list.whereType<String>().toList();
+      if (strNames.isNotEmpty) return strNames;
+    }
+    // Fallback: solo la unidad principal
+    final unitName = json['unit_name'] as String? ?? '';
+    return unitName.isNotEmpty ? [unitName] : [];
   }
 
   factory CheckinDetailEntity.fromJson(Map<String, dynamic> json) {
@@ -263,6 +293,8 @@ class CheckinDetailEntity extends Equatable {
       unitId: json['unit_id'] as String? ?? '',
       unitName: json['unit_name'] as String? ?? '',
       propertyName: json['property_name'] as String? ?? '',
+      unitNames: _parseUnitNames(json),
+      totalUnits: json['total_units'] as int? ?? 1,
       checkinDate: json['checkin_date'] != null
           ? DateTime.parse(json['checkin_date'] as String)
           : DateTime.now(),
