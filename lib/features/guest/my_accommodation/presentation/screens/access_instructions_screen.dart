@@ -25,6 +25,9 @@ class AccessInstructionsScreen extends StatelessWidget {
   /// Hora de check-in (misma para todos)
   static const String _checkinTime = '14:00';
 
+  /// Hora a partir de la cual están disponibles las llaves/códigos por defecto (14:00)
+  static const int _defaultKeysAvailableHour = 14;
+
   /// Determina si es un hotel basado en el nombre de la propiedad
   bool get _isHotel {
     final name = property.name.toLowerCase();
@@ -33,6 +36,52 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   /// Hora límite de check-out según tipo de propiedad
   String get _checkoutTime => _isHotel ? '12:00' : '11:30';
+
+  /// Verifica si las llaves y códigos están disponibles
+  /// Si el admin ha marcado early check-in disponible, usa ese timestamp
+  /// Si no, usa la hora por defecto (14:00 del día de check-in)
+  bool get _areKeysAvailable {
+    // Si el admin ha marcado que la habitación está disponible antes
+    if (booking.earlyCheckinAvailableAt != null) {
+      return DateTime.now().isAfter(booking.earlyCheckinAvailableAt!) ||
+          DateTime.now().isAtSameMomentAs(booking.earlyCheckinAvailableAt!);
+    }
+
+    // Comportamiento por defecto: 14:00 del día de check-in
+    final checkInDate = booking.checkInDate;
+    final keysAvailableTime = DateTime(
+      checkInDate.year,
+      checkInDate.month,
+      checkInDate.day,
+      _defaultKeysAvailableHour,
+      0,
+      0,
+    );
+
+    return DateTime.now().isAfter(keysAvailableTime) ||
+        DateTime.now().isAtSameMomentAs(keysAvailableTime);
+  }
+
+  /// Calcula cuándo estarán disponibles las llaves
+  /// Si el admin ha marcado early check-in, devuelve ese timestamp
+  /// Si no, devuelve las 14:00 del día de check-in
+  DateTime get _keysAvailableTime {
+    // Si el admin ha marcado que la habitación está disponible antes
+    if (booking.earlyCheckinAvailableAt != null) {
+      return booking.earlyCheckinAvailableAt!;
+    }
+
+    // Comportamiento por defecto: 14:00 del día de check-in
+    final checkInDate = booking.checkInDate;
+    return DateTime(
+      checkInDate.year,
+      checkInDate.month,
+      checkInDate.day,
+      _defaultKeysAvailableHour,
+      0,
+      0,
+    );
+  }
 
   /// Obtiene la dirección completa formateada
   String get _fullAddress {
@@ -278,6 +327,11 @@ class AccessInstructionsScreen extends StatelessWidget {
     // Apartamento Bandera solo tiene código de puerta principal (sin casillero)
     final isApartamentoBandera = unit.name == 'Apartamento Bandera';
 
+    // Si las llaves no están disponibles, mostrar mensaje informativo
+    if (!_areKeysAvailable) {
+      return _buildKeysNotAvailableCard(context);
+    }
+
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
@@ -326,6 +380,97 @@ class AccessInstructionsScreen extends StatelessWidget {
           // Código del casillero/caja (no mostrar para Apartamento Bandera)
           if (boxCode != null && boxCode.isNotEmpty && !isApartamentoBandera)
             _buildCodeRow(context, 'Casillero de Llaves', boxCode, Icons.lock_open_outlined),
+        ],
+      ),
+    );
+  }
+
+  /// Tarjeta informativa cuando las llaves/códigos aún no están disponibles
+  Widget _buildKeysNotAvailableCard(BuildContext context) {
+    final keysAvailableTime = _keysAvailableTime;
+    final formattedDate =
+        '${keysAvailableTime.day.toString().padLeft(2, '0')}/${keysAvailableTime.month.toString().padLeft(2, '0')}/${keysAvailableTime.year}';
+    final formattedTime =
+        '${keysAvailableTime.hour.toString().padLeft(2, '0')}:${keysAvailableTime.minute.toString().padLeft(2, '0')}';
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing20),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(
+          color: AppColors.gold.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Icono
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.lock_clock_outlined,
+              size: 32,
+              color: AppColors.gold,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+
+          // Título
+          Text(
+            'Códigos de acceso',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.getTextPrimaryColor(context),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+
+          // Mensaje descriptivo
+          Text(
+            'Los códigos de acceso y llaves estarán disponibles el día de tu llegada a partir de las $formattedTime h.',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.getTextSecondaryColor(context),
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+
+          // Fecha destacada
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.gold,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.event_outlined,
+                  size: 18,
+                  color: AppColors.black,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$formattedDate a las $formattedTime h',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -754,7 +899,8 @@ class AccessInstructionsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          if (mainDoorCode != null && mainDoorCode.isNotEmpty) ...[
+          // Solo mostrar el código si está disponible
+          if (_areKeysAvailable && mainDoorCode != null && mainDoorCode.isNotEmpty) ...[
             Row(
               children: [
                 Text(
@@ -790,7 +936,16 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ] else
+          ] else if (!_areKeysAvailable)
+            Text(
+              'El código de acceso estará disponible a partir de las ${_keysAvailableTime.hour.toString().padLeft(2, '0')}:${_keysAvailableTime.minute.toString().padLeft(2, '0')} del día de tu llegada.',
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: AppColors.getTextSecondaryColor(context),
+              ),
+            )
+          else
             Text(
               'El código de acceso le será proporcionado por el personal.',
               style: TextStyle(
@@ -827,7 +982,8 @@ class AccessInstructionsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          if (boxCode != null && boxCode.isNotEmpty) ...[
+          // Solo mostrar el código si está disponible
+          if (_areKeysAvailable && boxCode != null && boxCode.isNotEmpty) ...[
             Row(
               children: [
                 Text(
@@ -863,7 +1019,16 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ] else
+          ] else if (!_areKeysAvailable)
+            Text(
+              'El código del casillero estará disponible a partir de las ${_keysAvailableTime.hour.toString().padLeft(2, '0')}:${_keysAvailableTime.minute.toString().padLeft(2, '0')} del día de tu llegada.',
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: AppColors.getTextSecondaryColor(context),
+              ),
+            )
+          else
             Text(
               'El código del casillero le será proporcionado por el personal.',
               style: TextStyle(

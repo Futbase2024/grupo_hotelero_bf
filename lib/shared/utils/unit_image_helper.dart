@@ -10,6 +10,7 @@ class UnitImageHelper {
     'Ático Jerez': 'assets/alojamientos/ApartamentoAticoJerez.jpeg',
     'BF Jacuzzi Jerez': 'assets/alojamientos/ApartamentoBFJacuzzi.jpeg',
     'Jacuzzi Jerez': 'assets/alojamientos/EstudioBFJacuzzi.jpeg',
+    'Estudio Bf Jacuzzi Jerez': 'assets/alojamientos/EstudioBFJacuzzi.jpeg',
   };
 
   /// Obtiene la ruta de la imagen local para una unidad
