@@ -66,6 +66,12 @@ abstract class AdminPanelRepository {
     String? reason,
   });
 
+  /// Valida un check-in manualmente sin datos del huésped
+  /// Útil cuando el check-in se ha hecho offline o en recepción
+  /// Si no existe check-in, lo crea directamente en estado validated
+  /// Retorna el ID del check-in creado/actualizado
+  Future<String> manualCheckinValidate(String bookingId);
+
   /// Obtiene el detalle completo de un check-in
   /// Incluye huéspedes, documentos y firma
   Future<CheckinDetailEntity> getCheckinDetail(String checkinId);

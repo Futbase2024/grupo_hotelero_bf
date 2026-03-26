@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/di/injection.dart';
 import '../../../domain/bloc/bloc.dart';
+import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../shared/widgets/admin_widgets.dart';
 import '../../../checkins/presentation/screens/checkin_detail_screen.dart';
 
@@ -149,10 +151,17 @@ class CheckinsTab extends StatelessWidget {
         itemCount: checkins.length,
         itemBuilder: (context, index) {
           final checkin = checkins[index];
+          // Determinar si se puede hacer check-in manual
+          final canDoManual = checkin.checkinId == null ||
+              ['not_started', 'draft', 'in_progress', null].contains(checkin.checkinStatus);
+
           return _CheckinListTile(
             checkin: checkin,
             onTap: checkin.checkinId != null
                 ? () => _navigateToDetail(context, checkin.checkinId!, checkin.bookingCode)
+                : null,
+            onManualCheckin: canDoManual
+                ? () => _showManualCheckinDialog(context, checkin)
                 : null,
           );
         },
@@ -177,6 +186,190 @@ class CheckinsTab extends StatelessWidget {
           );
     }
   }
+
+  /// Muestra diálogo de confirmación para check-in manual
+  Future<void> _showManualCheckinDialog(BuildContext context, dynamic checkin) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: AppColors.success),
+            const SizedBox(width: 12),
+            const Text(
+              'Check-in Manual',
+              style: TextStyle(color: AppColors.white),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Validar check-in manualmente?',
+              style: TextStyle(color: AppColors.gray300, fontSize: 15),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.darkBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.darkBorder),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.person, size: 16, color: AppColors.gray500),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          checkin.guestFullName ?? 'Huésped',
+                          style: const TextStyle(color: AppColors.white, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.apartment, size: 16, color: AppColors.gray500),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          checkin.unitName ?? 'Unidad',
+                          style: TextStyle(color: AppColors.gray300, fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.confirmation_number, size: 16, color: AppColors.gold),
+                      const SizedBox(width: 8),
+                      Text(
+                        checkin.bookingCode ?? '',
+                        style: const TextStyle(
+                          color: AppColors.gold,
+                          fontSize: 13,
+                          fontFamily: 'JetBrains Mono',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 18, color: AppColors.info),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'El huésped podrá acceder a todas las funciones de la app sin completar el check-in online.',
+                      style: TextStyle(color: AppColors.info, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.gray400),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: AppColors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Validar Check-in'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await _executeManualCheckin(context, checkin.id);
+    }
+  }
+
+  /// Ejecuta la validación manual del check-in
+  Future<void> _executeManualCheckin(BuildContext context, String bookingId) async {
+    try {
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.gold),
+        ),
+      );
+
+      // Llamar a la RPC
+      final repository = getIt<AdminPanelRepository>();
+      await repository.manualCheckinValidate(bookingId);
+
+      // Cerrar loading
+      if (context.mounted) Navigator.pop(context);
+
+      // Mostrar éxito
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Check-in manual validado correctamente'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.fixed,
+          ),
+        );
+
+        // Recargar lista
+        context.read<AdminDashboardBloc>().add(
+              const AdminDashboardCheckinsLoadRequested(),
+            );
+      }
+    } catch (e) {
+      // Cerrar loading si está abierto
+      if (context.mounted) Navigator.pop(context);
+
+      // Mostrar error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.fixed,
+          ),
+        );
+      }
+    }
+  }
 }
 
 /// Tarjeta profesional de check-in con diseño mejorado
@@ -184,10 +377,12 @@ class _CheckinListTile extends StatelessWidget {
   const _CheckinListTile({
     required this.checkin,
     this.onTap,
+    this.onManualCheckin,
   });
 
   final dynamic checkin;
   final VoidCallback? onTap;
+  final VoidCallback? onManualCheckin;
 
   Color _getStatusColor(String? status) {
     switch (status) {
@@ -232,6 +427,24 @@ class _CheckinListTile extends StatelessWidget {
       default:
         return Icons.edit_document;
     }
+  }
+
+  /// Determina si se puede hacer check-in manual
+  /// Retorna true si:
+  /// - No hay check-in (checkinId == null)
+  /// - El check-in está en estado not_started o draft
+  bool _canDoManualCheckin(dynamic checkin) {
+    // Si no hay check-in ID, se puede hacer manual
+    if (checkin.checkinId == null) return true;
+
+    // Si el estado es not_started, draft o in_progress, se puede validar manualmente
+    final status = checkin.checkinStatus;
+    if (status == null || status == 'not_started' || status == 'draft' || status == 'in_progress') {
+      return true;
+    }
+
+    // Para estados submitted, validated, rejected, cancelled no se permite manual
+    return false;
   }
 
   @override
@@ -415,26 +628,51 @@ class _CheckinListTile extends StatelessWidget {
                   ),
                 ),
 
-                // Footer con indicador de acción
+                // Footer con indicador de acción o botón de check-in manual
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(
-                        'Ver detalle',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.gold.withValues(alpha: 0.8),
+                      // Si el check-in no ha sido enviado (not_started, draft, in_progress), mostrar botón de check-in manual
+                      // Esto permite al admin validar manualmente check-ins que se hicieron offline/en recepción
+                      if (_canDoManualCheckin(checkin) && onManualCheckin != null)
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: onManualCheckin,
+                            icon: const Icon(Icons.check_circle_outline, size: 18),
+                            label: const Text('Check-in Manual'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.success,
+                              foregroundColor: AppColors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        )
+                      else if (checkin.checkinId != null)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Ver detalle',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.gold.withValues(alpha: 0.8),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: AppColors.gold.withValues(alpha: 0.8),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 12,
-                        color: AppColors.gold.withValues(alpha: 0.8),
-                      ),
                     ],
                   ),
                 ),

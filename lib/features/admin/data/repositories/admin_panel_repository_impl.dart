@@ -98,6 +98,7 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
             checkin_date,
             checkout_date,
             status,
+            booking_status,
             last_name,
             guest_first_name,
             guest_email,
@@ -211,6 +212,9 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         debugPrint('📋 [listBookings] Procesando booking: ${row['booking_code']}');
 
         final bookingId = row['id'] as String;
+        // Para booking_status, priorizar el campo 'status' (legacy) que tiene valores correctos
+        // sobre 'booking_status' que puede estar desactualizado en la BD
+        final statusValue = row['status'] ?? 'confirmed';
         return AdminBookingEntity.fromJson({
           'id': bookingId,
           'booking_code': row['booking_code'],
@@ -221,8 +225,8 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
           'check_in_date': row['checkin_date'],
           'check_out_date': row['checkout_date'],
           'num_guests': row['num_guests'] ?? 1,
-          'status': row['status'] ?? 'confirmed',
-          'booking_status': row['status'] ?? 'confirmed', // Usar status como booking_status
+          'status': statusValue,
+          'booking_status': statusValue, // Usar status para filtrado correcto
           'checkout_status': null, // No existe en la tabla
           'guest_email': row['guest_email'] ?? '',
           'guest_first_name': row['guest_first_name'],
@@ -448,6 +452,40 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     } catch (e, s) {
       debugPrint('❌ [cancelCheckin] Error: $e');
       debugPrint('❌ [cancelCheckin] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Valida un check-in manualmente sin datos del huésped
+  /// Útil cuando el check-in se ha hecho offline o en recepción
+  @override
+  Future<String> manualCheckinValidate(String bookingId) async {
+    try {
+      debugPrint('✅ [manualCheckinValidate] Validando check-in manual para reserva: $bookingId');
+
+      final response = await _client.rpc(
+        'manual_checkin_validate',
+        params: {'p_booking_id': bookingId},
+      );
+
+      if (response == null) {
+        throw Exception('No se recibió respuesta del servidor');
+      }
+
+      final data = response as Map<String, dynamic>;
+      final success = data['success'] as bool? ?? false;
+
+      if (!success) {
+        final error = data['error'] as String? ?? 'Error desconocido';
+        throw Exception(error);
+      }
+
+      final checkinId = data['checkin_id'] as String;
+      debugPrint('✅ [manualCheckinValidate] Check-in validado: $checkinId');
+      return checkinId;
+    } catch (e, s) {
+      debugPrint('❌ [manualCheckinValidate] Error: $e');
+      debugPrint('❌ [manualCheckinValidate] StackTrace: $s');
       rethrow;
     }
   }

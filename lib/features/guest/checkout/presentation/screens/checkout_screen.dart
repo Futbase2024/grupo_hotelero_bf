@@ -72,6 +72,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (state is CheckoutSuccess) {
       // Refrescar el estado del usuario
       context.read<AuthBloc>().add(const AuthCheckRequested());
+
+      // Redirigir automáticamente a la pantalla inicial
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (context.mounted) {
+          context.go('/guest');
+        }
+      });
     }
   }
 }

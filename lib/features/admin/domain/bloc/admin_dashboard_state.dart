@@ -130,8 +130,15 @@ class AdminDashboardState extends Equatable {
     var result = bookings;
 
     // Filtrar por estado
+    // Nota: Usar bookingStatus (enum normalizado) en lugar de status (legacy)
+    // porque en BD existe 'checked_in' pero en UI se usa 'active'
     if (bookingsStatusFilter != null && bookingsStatusFilter != 'all') {
-      result = result.where((b) => b.status == bookingsStatusFilter).toList();
+      result = result.where((b) {
+        // Mapear el filtro al valor de bookingStatus.toDbString()
+        final filterValue = bookingsStatusFilter!;
+        // El enum bookingStatus ya mapea 'checked_in' → 'active' correctamente
+        return b.bookingStatus.toDbString() == filterValue;
+      }).toList();
     }
 
     // Filtrar por búsqueda
