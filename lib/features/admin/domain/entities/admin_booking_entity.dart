@@ -51,6 +51,8 @@ class AdminBookingEntity extends Equatable {
     // Nuevos campos para multi-unidad
     this.totalUnits = 1,
     this.units = const [],
+    // ID del usuario del huésped principal (para chat)
+    this.primaryGuestUserId,
   });
 
   final String id;
@@ -85,6 +87,7 @@ class AdminBookingEntity extends Equatable {
   final String? guestLastName;
   final String? guestPhone;
   final String? staffNotes;
+  final String? primaryGuestUserId; // ID del usuario del huésped principal (para chat)
 
   // Timestamps de código
   final DateTime? codeFirstUsedAt;
@@ -411,6 +414,8 @@ class AdminBookingEntity extends Equatable {
         // Nuevos campos multi-unidad
         totalUnits: totalUnits,
         units: units,
+        // ID del usuario del huésped principal (para chat)
+        primaryGuestUserId: json['primary_guest_user_id'] as String?,
       );
 
       debugPrint('🟢 [AdminBookingEntity.fromJson] Parse completed successfully');
@@ -507,6 +512,8 @@ class AdminBookingEntity extends Equatable {
       // Multi-unidad
       'total_units': totalUnits,
       'units': units.map((u) => u.toJson()).toList(),
+      // ID del usuario del huésped principal
+      'primary_guest_user_id': primaryGuestUserId,
     };
   }
 
@@ -552,6 +559,8 @@ class AdminBookingEntity extends Equatable {
     // Nuevos campos multi-unidad
     int? totalUnits,
     List<BookingUnitEntity>? units,
+    // ID del usuario del huésped principal
+    String? primaryGuestUserId,
   }) {
     return AdminBookingEntity(
       id: id ?? this.id,
@@ -594,6 +603,8 @@ class AdminBookingEntity extends Equatable {
       // Nuevos campos multi-unidad
       totalUnits: totalUnits ?? this.totalUnits,
       units: units ?? this.units,
+      // ID del usuario del huésped principal
+      primaryGuestUserId: primaryGuestUserId ?? this.primaryGuestUserId,
     );
   }
 
@@ -639,5 +650,7 @@ class AdminBookingEntity extends Equatable {
         // Nuevos campos multi-unidad
         totalUnits,
         units,
+        // ID del usuario del huésped principal
+        primaryGuestUserId,
       ];
 }

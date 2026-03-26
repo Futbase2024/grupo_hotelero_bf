@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/router/app_router.dart';
 import '../../../../../core/enums/enums.dart';
+import '../../../../../core/di/injection.dart';
 import '../../../domain/bloc/bloc.dart';
+import '../../../domain/entities/admin_entities.dart';
 import '../../../shared/widgets/admin_widgets.dart';
+import '../../../../guest/chat/domain/repositories/chat_repository.dart';
 
 /// Tab de reservas del dashboard de administración
 class BookingsTab extends StatefulWidget {
@@ -204,15 +207,99 @@ class _BookingsTabState extends State<BookingsTab> {
             guestName: booking.guestFullName,
             docsPending: booking.docsPending ?? 0,
             totalUnits: booking.totalUnits,
+            canChat: booking.primaryGuestUserId != null && booking.primaryGuestUserId!.isNotEmpty,
             onTap: () {
               context.push(
                 AppRoutes.adminBookingDetail.replaceFirst(':bookingId', booking.id),
               );
             },
+            onChatTap: booking.primaryGuestUserId != null && booking.primaryGuestUserId!.isNotEmpty
+                ? () => _startConversationWithGuest(context, booking)
+                : null,
           );
         },
       ),
     );
+  }
+
+  /// Inicia o abre una conversación con el huésped de la reserva
+  Future<void> _startConversationWithGuest(
+    BuildContext context,
+    AdminBookingEntity booking,
+  ) async {
+    // Validar que el huésped tiene userId
+    final guestUserId = booking.primaryGuestUserId;
+    debugPrint('🔵 [BookingsTab] _startConversationWithGuest - booking.id: ${booking.id}');
+    debugPrint('🔵 [BookingsTab] _startConversationWithGuest - primaryGuestUserId: $guestUserId');
+
+    if (guestUserId == null || guestUserId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Este huésped no tiene cuenta de usuario asociada'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    // Usar el propertyId del booking (no del usuario admin)
+    final propertyId = booking.propertyId;
+    debugPrint('🔵 [BookingsTab] propertyId: $propertyId');
+
+    if (propertyId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La reserva no tiene propiedad asociada'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(
+          child: CircularProgressIndicator(color: AppColors.gold),
+        ),
+      );
+
+      // Obtener o crear conversación
+      final chatRepository = getIt<ChatRepository>();
+
+      debugPrint('🔵 [BookingsTab] Llamando a getOrCreateConversation...');
+      final conversation = await chatRepository.getOrCreateConversation(
+        propertyId: propertyId,
+        bookingId: booking.id,
+        guestUserId: guestUserId,
+        guestName: booking.guestFullName,
+      );
+
+      debugPrint('🔵 [BookingsTab] Conversación obtenida/creada: ${conversation.id}');
+
+      // Cerrar loading
+      if (context.mounted) Navigator.of(context).pop();
+
+      // Navegar al chat
+      if (context.mounted) {
+        context.go('/admin/chat/${conversation.id}');
+      }
+    } catch (e) {
+      // Cerrar loading si sigue montado
+      if (context.mounted) Navigator.of(context).pop();
+
+      // Mostrar error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al abrir chat: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   BookingStatus _mapStatus(String status) {

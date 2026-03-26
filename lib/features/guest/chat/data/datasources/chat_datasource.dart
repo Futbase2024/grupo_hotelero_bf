@@ -50,6 +50,16 @@ class ChatDatasource {
   }) async {
     _log('getOrCreateConversation - propertyId: $propertyId, bookingId: $bookingId, guestUserId: $guestUserId');
 
+    // Validar que propertyId no esté vacío
+    if (propertyId.isEmpty) {
+      throw ArgumentError('propertyId no puede estar vacío');
+    }
+
+    // Validar que guestUserId no esté vacío
+    if (guestUserId.isEmpty) {
+      throw ArgumentError('guestUserId no puede estar vacío');
+    }
+
     // Buscar conversación existente para este booking
     if (bookingId != null) {
       _log('Buscando conversación por bookingId...');
@@ -83,6 +93,8 @@ class ChatDatasource {
 
   Future<ConversationEntity?> _getConversationByBooking(String bookingId) async {
     try {
+      _log('_getConversationByBooking - buscando bookingId: $bookingId');
+
       final response = await _client
           .from(SupabaseTables.conversations)
           .select('''
@@ -94,8 +106,14 @@ class ChatDatasource {
           .eq('booking_id', bookingId)
           .maybeSingle();
 
-      if (response == null) return null;
+      _log('_getConversationByBooking - respuesta: $response');
 
+      if (response == null) {
+        _log('_getConversationByBooking - no se encontró conversación');
+        return null;
+      }
+
+      _log('_getConversationByBooking - conversación encontrada: ${response['id']}');
       return await _enrichConversation(response);
     } catch (e) {
       _logError('Error en _getConversationByBooking', e);
@@ -158,14 +176,7 @@ class ChatDatasource {
       // Asegurar que hay una sesión activa antes de hacer el insert
       await _ensureSession();
 
-      // IMPORTANTE: Usar el ID de la sesión ACTUAL de Supabase
-      // para que coincida con auth.uid() en las políticas RLS
-      final currentAuthUserId = _client.auth.currentUser?.id;
-      if (currentAuthUserId == null) {
-        throw Exception('No se pudo obtener el ID de usuario de la sesión actual');
-      }
-
-      _log('_createConversation - Usando auth.uid(): $currentAuthUserId (guestUserId pasado: $guestUserId)');
+      _log('_createConversation - guestUserId: $guestUserId, guestName: $guestName');
 
       // Crear la conversación
       _log('_createConversation - insertando en conversations...');
@@ -181,15 +192,15 @@ class ChatDatasource {
       final conversationId = conversationResponse['id'] as String;
       _log('_createConversation - conversación creada: $conversationId');
 
-      // Añadir al huésped como participante usando el ID de la sesión actual
+      // Añadir al huésped como participante usando el guestUserId pasado como parámetro
       // Nota: El trigger de BD añade automáticamente los staff/admin de la propiedad
-      _log('_createConversation - insertando huésped como participante...');
+      _log('_createConversation - insertando huésped como participante con ID: $guestUserId');
       await _client.from(SupabaseTables.conversationParticipants).insert({
         'conversation_id': conversationId,
-        'user_id': currentAuthUserId, // Usar el ID de la sesión actual
+        'user_id': guestUserId, // Usar el ID del huésped (no auth.uid())
         'role': 'guest',
       });
-      _log('_createConversation - participante insertado');
+      _log('_createConversation - participante huésped insertado');
 
       return await _enrichConversation(conversationResponse);
     } catch (e) {

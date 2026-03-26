@@ -170,8 +170,23 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           return ConversationTile(
             conversation: conversation,
             onTap: () => _openConversation(context, conversation.id),
+            onDelete: () => _deleteConversation(context, conversation.id),
           );
         },
+      ),
+    );
+  }
+
+  void _deleteConversation(BuildContext context, String conversationId) {
+    _conversationsBloc.add(ConversationsDeleteRequested(conversationId: conversationId));
+
+    // Mostrar feedback al usuario
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Conversación eliminada'),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
       ),
     );
   }

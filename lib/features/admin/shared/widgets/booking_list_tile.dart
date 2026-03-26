@@ -17,6 +17,8 @@ class BookingListTile extends StatelessWidget {
     this.docsPending = 0,
     this.totalUnits = 1,
     this.onTap,
+    this.onChatTap,
+    this.canChat = false,
   });
 
   final String unitName;
@@ -29,6 +31,12 @@ class BookingListTile extends StatelessWidget {
   final int docsPending;
   final int totalUnits;
   final VoidCallback? onTap;
+
+  /// Callback para iniciar chat con el huésped
+  final VoidCallback? onChatTap;
+
+  /// Indica si se puede chatear con el huésped (tiene primaryGuestUserId)
+  final bool canChat;
 
   /// Indica si la reserva tiene múltiples unidades
   bool get hasMultipleUnits => totalUnits > 1;
@@ -369,6 +377,26 @@ class BookingListTile extends StatelessWidget {
                             ],
 
                             const Spacer(),
+
+                            // Botón de chat (si se puede chatear)
+                            if (canChat && onChatTap != null) ...[
+                              GestureDetector(
+                                onTap: onChatTap,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.info.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    size: 16,
+                                    color: AppColors.info,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
 
                             // Flecha de navegación
                             Container(

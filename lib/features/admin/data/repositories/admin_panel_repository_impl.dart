@@ -110,6 +110,7 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
             code_first_used_at,
             code_sent_at,
             created_at,
+            primary_guest_user_id,
             checkins (
               id,
               status
@@ -245,6 +246,7 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
           'created_at': row['created_at'],
           'updated_at': null,
           'total_units': unitsCounts[bookingId] ?? 1,
+          'primary_guest_user_id': row['primary_guest_user_id'],
         });
       }).toList();
     } catch (e, s) {
