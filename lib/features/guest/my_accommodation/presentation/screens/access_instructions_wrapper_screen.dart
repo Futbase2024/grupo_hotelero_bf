@@ -24,6 +24,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
   AdminBookingEntity? _booking;
   UnitEntity? _unit;
   PropertyEntity? _property;
+  DateTime? _serverTime;
   bool _isLoading = true;
   String? _error;
 
@@ -47,9 +48,15 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
     }
 
     try {
-      // Cargar la reserva
+      // Cargar la reserva y la hora del servidor en paralelo
       final repository = getIt<AdminPanelRepository>();
-      final booking = await repository.getBooking(bookingId);
+      final results = await Future.wait([
+        repository.getBooking(bookingId),
+        repository.getServerTime(),
+      ]);
+
+      final booking = results[0] as AdminBookingEntity?;
+      final serverTime = results[1] as DateTime;
 
       if (booking == null) {
         setState(() {
@@ -74,6 +81,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
           _booking = booking;
           _unit = unit;
           _property = property;
+          _serverTime = serverTime;
           _isLoading = false;
         });
       }
@@ -192,6 +200,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
       booking: _booking!,
       unit: _unit!,
       property: _property!,
+      serverTime: _serverTime,
     );
   }
 }

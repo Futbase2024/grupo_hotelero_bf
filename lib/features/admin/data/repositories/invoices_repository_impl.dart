@@ -333,7 +333,15 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
     // Extraer datos de la reserva relacionada
     final booking = json['bookings'] as Map<String, dynamic>?;
     final bookingCode = booking?['booking_code'] as String?;
-    final unitName = (booking?['units'] as Map<String, dynamic>?)?['name'] as String?;
+
+    // La relación 'units' puede ser null, un Map, o una lista vacía
+    String? unitName;
+    final rawUnits = booking?['units'];
+    if (rawUnits is Map<String, dynamic>) {
+      unitName = rawUnits['name'] as String?;
+    } else if (rawUnits is List && rawUnits.isNotEmpty) {
+      unitName = (rawUnits.first as Map<String, dynamic>?)?['name'] as String?;
+    }
 
     debugPrint('   ├── booking_code (from join): $bookingCode');
     debugPrint('   └── unit_name (from join): $unitName');

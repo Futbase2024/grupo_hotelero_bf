@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../../../core/config/supabase_config.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
@@ -35,6 +36,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   bool _isUpdatingKeybox = false;
   bool _isSendingRoomReady = false;
   bool _isClosingBooking = false;
+  bool _isCancellingBooking = false;
+  bool _isDeletingBooking = false;
   final _emailService = EmailService();
 
   @override
@@ -294,6 +297,284 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         setState(() => _isClosingBooking = false);
       }
     }
+  }
+
+  /// Cancela la reserva (estado cancelled)
+  Future<void> _cancelBooking() async {
+    if (_booking == null) return;
+
+    // Verificar si ya está cancelada
+    if (_booking!.status == 'cancelled') {
+      _showInfoDialog(
+        title: 'Reserva ya cancelada',
+        message: 'Esta reserva ya ha sido cancelada anteriormente.',
+        icon: Icons.info_outline,
+        color: AppColors.info,
+      );
+      return;
+    }
+
+    final confirmed = await _showCancelBookingDialog();
+    if (!confirmed) return; // Usuario canceló
+
+    setState(() => _isCancellingBooking = true);
+    try {
+      await widget.repository.cancelBooking(bookingId: _booking!.id);
+      if (mounted) {
+        _showSnackBar('Reserva cancelada correctamente', isError: false);
+        await _loadBooking();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Error al cancelar reserva: $e', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCancellingBooking = false);
+      }
+    }
+  }
+
+  Future<bool> _showCancelBookingDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierColor: AppColors.blackWithAlpha80,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.getCardColor(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.errorLight,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.cancel_outlined,
+                  size: 48,
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Título
+              const Text(
+                'Cancelar Reserva',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Descripción
+              Text(
+                '¿Estás seguro de que deseas cancelar esta reserva?\n\nEsta acción cambiará el estado a "Cancelada" pero mantendrá el registro en el sistema.',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.getTextSecondaryColor(context),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.getTextPrimaryColor(context),
+                        side: BorderSide(color: AppColors.getBorderColor(context)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('No, mantener'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Sí, cancelar',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result ?? false;
+  }
+
+  /// Elimina completamente la reserva de la base de datos
+  Future<void> _deleteBooking() async {
+    if (_booking == null) return;
+
+    // Verificar que NO esté en estado finalizado o en casa
+    if (_booking!.status == 'checked_out' ||
+        _booking!.status == 'closed' ||
+        _booking!.status == 'in_house') {
+      _showInfoDialog(
+        title: 'No se puede eliminar',
+        message:
+            'Las reservas en estado "${_booking!.status}" no pueden ser eliminadas.',
+        icon: Icons.block,
+        color: AppColors.error,
+      );
+      return;
+    }
+
+    final confirmed = await _showDeleteBookingDialog();
+    if (!confirmed) return;
+
+    setState(() => _isDeletingBooking = true);
+    try {
+      // Llamar a la RPC para eliminar la reserva
+      final storagePaths = await widget.repository.deleteBooking(
+        bookingId: _booking!.id,
+      );
+
+      // Eliminar archivos del storage
+      if (storagePaths.isNotEmpty) {
+        debugPrint('🗑️ [_deleteBooking] Eliminando ${storagePaths.length} archivos del storage...');
+        for (final path in storagePaths) {
+          try {
+            await SupabaseConfig.client.storage.from('guest-documents').remove([path]);
+            debugPrint('🗑️ [_deleteBooking] Archivo eliminado: $path');
+          } catch (e) {
+            debugPrint('⚠️ [_deleteBooking] Error eliminando archivo $path: $e');
+            // No lanzamos error, continuamos con los demás
+          }
+        }
+      }
+
+      if (mounted) {
+        _showSnackBar('Reserva eliminada correctamente', isError: false);
+        // Volver a la lista de reservas
+        context.go('/admin');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Error al eliminar reserva: $e', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDeletingBooking = false);
+      }
+    }
+  }
+
+  Future<bool> _showDeleteBookingDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierColor: AppColors.blackWithAlpha80,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.getCardColor(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.errorLight,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_forever,
+                  size: 48,
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Título
+              const Text(
+                'Eliminar Reserva',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Descripción
+              Text(
+                '⚠️ Esta acción es IRREVERSIBLE.\n\nSe eliminarán permanentemente:\n• La reserva\n• Check-in (si existe)\n• Documentos del huésped\n• Historial de pagos y facturas\n• Conversaciones\n\n¿Estás seguro?',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.getTextSecondaryColor(context),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.getTextPrimaryColor(context),
+                        side: BorderSide(color: AppColors.getBorderColor(context)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Eliminar',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result ?? false;
   }
 
   void _showInfoDialog({
@@ -2331,6 +2612,24 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             onTap: _isSendingRoomReady ? null : _notifyRoomReady,
             isLoading: _isSendingRoomReady,
             color: AppColors.success,
+          ),
+          const SizedBox(height: 12),
+          _buildActionTile(
+            icon: Icons.cancel_outlined,
+            title: 'Cancelar reserva',
+            subtitle: 'Marca la reserva como cancelada',
+            onTap: _isCancellingBooking ? null : _cancelBooking,
+            isLoading: _isCancellingBooking,
+            color: AppColors.error,
+          ),
+          const SizedBox(height: 12),
+          _buildActionTile(
+            icon: Icons.delete_forever,
+            title: 'Eliminar reserva',
+            subtitle: 'Borra completamente la reserva y sus datos (solo si no está finalizada)',
+            onTap: _isDeletingBooking ? null : _deleteBooking,
+            isLoading: _isDeletingBooking,
+            color: AppColors.error,
           ),
         ],
       ),

@@ -108,6 +108,13 @@ abstract class AdminPanelRepository {
     String? reason,
   });
 
+  /// Elimina completamente una reserva y todos sus datos relacionados
+  /// Solo funciona si la reserva NO está en estado checked_out, closed o in_house
+  /// Retorna la lista de paths de storage que deben eliminarse desde el cliente
+  Future<List<String>> deleteBooking({
+    required String bookingId,
+  });
+
   // ==================== MÉTODOS DE UNIDADES ====================
 
   /// Lista unidades de una propiedad
@@ -188,6 +195,10 @@ abstract class AdminPanelRepository {
 
   /// Obtiene documentos próximos a expirar
   Future<List<ExpiringDocument>> getDocumentsExpiringSoon({int daysBefore = 7});
+
+  /// Obtiene la hora actual del servidor (para evitar manipulación del reloj del dispositivo)
+  /// Retorna la fecha/hora UTC del servidor de Supabase
+  Future<DateTime> getServerTime();
 }
 
 /// Resultado de crear una reserva

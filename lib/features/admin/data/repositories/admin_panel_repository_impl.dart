@@ -136,7 +136,9 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       }
 
       // Aplicar orden DESPUÉS de los filtros
-      final response = await query.order('created_at', ascending: false);
+      // Ordenar por fecha de check-in más próxima a la fecha actual (ascendente)
+      // Las reservas con checkin_date más cercano a hoy aparecen primero
+      final response = await query.order('checkin_date', ascending: true);
 
       debugPrint('📋 [listBookings] Respuesta recibida: ${response.length} registros');
 
@@ -297,7 +299,17 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         debugPrint('📋 [getBooking] Unidades encontradas: ${bookingUnitsResponse.length}');
 
         for (final bu in bookingUnitsResponse) {
-          final unitData = bu['units'] as Map<String, dynamic>?;
+          // La relación 'units' puede ser null, un Map, o una lista vacía
+          final rawUnits = bu['units'];
+          Map<String, dynamic>? unitData;
+
+          if (rawUnits is Map<String, dynamic>) {
+            unitData = rawUnits;
+          } else if (rawUnits is List && rawUnits.isNotEmpty) {
+            // Si es una lista, tomar el primer elemento
+            unitData = rawUnits.first as Map<String, dynamic>?;
+          }
+
           if (unitData != null) {
             unitsData.add({
               'id': bu['id'],
@@ -652,6 +664,47 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     } catch (e, s) {
       debugPrint('❌ [cancelBooking] Error: $e');
       debugPrint('❌ [cancelBooking] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Elimina completamente una reserva y todos sus datos relacionados
+  @override
+  Future<List<String>> deleteBooking({
+    required String bookingId,
+  }) async {
+    try {
+      debugPrint('🗑️ [deleteBooking] Eliminando reserva: $bookingId');
+
+      final response = await _client.rpc(
+        'delete_booking',
+        params: {'p_booking_id': bookingId},
+      ) as Map<String, dynamic>?;
+
+      if (response == null) {
+        throw Exception('No se recibió respuesta del servidor');
+      }
+
+      final success = response['success'] as bool? ?? false;
+
+      if (!success) {
+        final error = response['error'] as String? ?? 'Error desconocido';
+        throw Exception(error);
+      }
+
+      // Obtener paths de storage a eliminar
+      final storagePaths = (response['storage_paths'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [];
+
+      debugPrint(
+          '✅ [deleteBooking] Reserva eliminada. ${storagePaths.length} archivos de storage pendientes');
+
+      return storagePaths;
+    } catch (e, s) {
+      debugPrint('❌ [deleteBooking] Error: $e');
+      debugPrint('❌ [deleteBooking] StackTrace: $s');
       rethrow;
     }
   }
@@ -1069,6 +1122,31 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       debugPrint('❌ [getDocumentsExpiringSoon] Error: $e');
       debugPrint('❌ [getDocumentsExpiringSoon] StackTrace: $s');
       rethrow;
+    }
+  }
+
+  /// Obtiene la hora actual del servidor (para evitar manipulación del reloj del dispositivo)
+  /// Usa la función now() de PostgreSQL que retorna la hora UTC del servidor
+  @override
+  Future<DateTime> getServerTime() async {
+    try {
+      // Consulta simple para obtener la hora del servidor
+      final response = await _client.rpc('get_server_time');
+
+      if (response != null) {
+        final serverTime = DateTime.parse(response as String);
+        debugPrint('🕐 [getServerTime] Hora del servidor: $serverTime');
+        return serverTime;
+      }
+
+      // Fallback: si la RPC no existe, usar hora local (no ideal pero evita crash)
+      debugPrint('⚠️ [getServerTime] RPC no disponible, usando hora local como fallback');
+      return DateTime.now().toUtc();
+    } catch (e, s) {
+      debugPrint('❌ [getServerTime] Error: $e');
+      debugPrint('❌ [getServerTime] StackTrace: $s');
+      // Fallback: usar hora local si hay error
+      return DateTime.now().toUtc();
     }
   }
 }

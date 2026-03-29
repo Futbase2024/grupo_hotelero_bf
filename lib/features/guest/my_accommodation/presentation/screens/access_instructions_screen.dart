@@ -16,11 +16,15 @@ class AccessInstructionsScreen extends StatelessWidget {
     required this.booking,
     required this.unit,
     required this.property,
+    this.serverTime,
   });
 
   final AdminBookingEntity booking;
   final UnitEntity unit;
   final PropertyEntity property;
+  /// Hora actual del servidor (para evitar manipulación del reloj del dispositivo)
+  /// Si es null, se usa DateTime.now() como fallback
+  final DateTime? serverTime;
 
   /// Hora de check-in (misma para todos)
   static const String _checkinTime = '14:00';
@@ -38,17 +42,31 @@ class AccessInstructionsScreen extends StatelessWidget {
   String get _checkoutTime => _isHotel ? '12:00' : '11:30';
 
   /// Verifica si las llaves y códigos están disponibles
-  /// Si el admin ha marcado early check-in disponible, usa ese timestamp
-  /// Si no, usa la hora por defecto (14:00 del día de check-in)
+  /// Por defecto: 14:00 del día de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
+  /// IMPORTANTE: Usa la hora del servidor para evitar manipulación del reloj del dispositivo
   bool get _areKeysAvailable {
-    // Si el admin ha marcado que la habitación está disponible antes
+    // Usar hora del servidor si está disponible, si no, usar hora local como fallback
+    final now = serverTime ?? DateTime.now();
+    final checkInDate = booking.checkInDate;
+
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
     if (booking.earlyCheckinAvailableAt != null) {
-      return DateTime.now().isAfter(booking.earlyCheckinAvailableAt!) ||
-          DateTime.now().isAtSameMomentAs(booking.earlyCheckinAvailableAt!);
+      final earlyTime = booking.earlyCheckinAvailableAt!;
+
+      // Verificar que el early check-in fue marcado el mismo día de la reserva
+      final isSameDay = earlyTime.year == checkInDate.year &&
+          earlyTime.month == checkInDate.month &&
+          earlyTime.day == checkInDate.day;
+
+      // Solo tiene efecto si es el mismo día Y ya pasó la hora marcada
+      if (isSameDay) {
+        return now.isAfter(earlyTime) || now.isAtSameMomentAs(earlyTime);
+      }
+      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
     }
 
     // Comportamiento por defecto: 14:00 del día de check-in
-    final checkInDate = booking.checkInDate;
     final keysAvailableTime = DateTime(
       checkInDate.year,
       checkInDate.month,
@@ -58,21 +76,33 @@ class AccessInstructionsScreen extends StatelessWidget {
       0,
     );
 
-    return DateTime.now().isAfter(keysAvailableTime) ||
-        DateTime.now().isAtSameMomentAs(keysAvailableTime);
+    return now.isAfter(keysAvailableTime) || now.isAtSameMomentAs(keysAvailableTime);
   }
 
   /// Calcula cuándo estarán disponibles las llaves
-  /// Si el admin ha marcado early check-in, devuelve ese timestamp
-  /// Si no, devuelve las 14:00 del día de check-in
+  /// Por defecto: 14:00 del día de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
+  /// NOTA: El cálculo de disponibilidad real usa _areKeysAvailable con hora del servidor
   DateTime get _keysAvailableTime {
-    // Si el admin ha marcado que la habitación está disponible antes
+    final checkInDate = booking.checkInDate;
+
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
     if (booking.earlyCheckinAvailableAt != null) {
-      return booking.earlyCheckinAvailableAt!;
+      final earlyTime = booking.earlyCheckinAvailableAt!;
+
+      // Verificar que el early check-in fue marcado el mismo día de la reserva
+      final isSameDay = earlyTime.year == checkInDate.year &&
+          earlyTime.month == checkInDate.month &&
+          earlyTime.day == checkInDate.day;
+
+      // Solo tiene efecto si es el mismo día
+      if (isSameDay) {
+        return earlyTime;
+      }
+      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
     }
 
     // Comportamiento por defecto: 14:00 del día de check-in
-    final checkInDate = booking.checkInDate;
     return DateTime(
       checkInDate.year,
       checkInDate.month,

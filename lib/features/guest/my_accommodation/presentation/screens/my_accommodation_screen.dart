@@ -34,24 +34,40 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   String? _error;
   /// Lista de todas las unidades de la reserva (para multi-unidad)
   List<UnitEntity> _units = [];
+  /// Hora actual del servidor (para evitar manipulación del reloj del dispositivo)
+  DateTime? _serverTime;
 
   /// Hora a partir de la cual están disponibles las llaves/códigos por defecto (14:00)
   static const int _defaultKeysAvailableHour = 14;
 
   /// Verifica si las llaves y códigos están disponibles
-  /// Si el admin ha marcado early check-in disponible, usa ese timestamp
-  /// Si no, usa la hora por defecto (14:00 del día de check-in)
+  /// Por defecto: 14:00 del día de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
+  /// IMPORTANTE: Usa la hora del servidor para evitar manipulación del reloj del dispositivo
   bool get _areKeysAvailable {
     if (_booking == null) return false;
 
-    // Si el admin ha marcado que la habitación está disponible antes
+    // Usar hora del servidor si está disponible, si no, usar hora local como fallback
+    final now = _serverTime ?? DateTime.now();
+    final checkInDate = _booking!.checkInDate;
+
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
     if (_booking!.earlyCheckinAvailableAt != null) {
-      return DateTime.now().isAfter(_booking!.earlyCheckinAvailableAt!) ||
-          DateTime.now().isAtSameMomentAs(_booking!.earlyCheckinAvailableAt!);
+      final earlyTime = _booking!.earlyCheckinAvailableAt!;
+
+      // Verificar que el early check-in fue marcado el mismo día de la reserva
+      final isSameDay = earlyTime.year == checkInDate.year &&
+          earlyTime.month == checkInDate.month &&
+          earlyTime.day == checkInDate.day;
+
+      // Solo tiene efecto si es el mismo día Y ya pasó la hora marcada
+      if (isSameDay) {
+        return now.isAfter(earlyTime) || now.isAtSameMomentAs(earlyTime);
+      }
+      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
     }
 
     // Comportamiento por defecto: 14:00 del día de check-in
-    final checkInDate = _booking!.checkInDate;
     final keysAvailableTime = DateTime(
       checkInDate.year,
       checkInDate.month,
@@ -61,23 +77,35 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       0,
     );
 
-    return DateTime.now().isAfter(keysAvailableTime) ||
-        DateTime.now().isAtSameMomentAs(keysAvailableTime);
+    return now.isAfter(keysAvailableTime) || now.isAtSameMomentAs(keysAvailableTime);
   }
 
   /// Calcula cuándo estarán disponibles las llaves
-  /// Si el admin ha marcado early check-in, devuelve ese timestamp
-  /// Si no, devuelve las 14:00 del día de check-in
+  /// Por defecto: 14:00 del día de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
+  /// NOTA: El cálculo de disponibilidad real usa _areKeysAvailable con hora del servidor
   DateTime get _keysAvailableTime {
     if (_booking == null) return DateTime.now();
 
-    // Si el admin ha marcado que la habitación está disponible antes
+    final checkInDate = _booking!.checkInDate;
+
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
     if (_booking!.earlyCheckinAvailableAt != null) {
-      return _booking!.earlyCheckinAvailableAt!;
+      final earlyTime = _booking!.earlyCheckinAvailableAt!;
+
+      // Verificar que el early check-in fue marcado el mismo día de la reserva
+      final isSameDay = earlyTime.year == checkInDate.year &&
+          earlyTime.month == checkInDate.month &&
+          earlyTime.day == checkInDate.day;
+
+      // Solo tiene efecto si es el mismo día
+      if (isSameDay) {
+        return earlyTime;
+      }
+      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
     }
 
     // Comportamiento por defecto: 14:00 del día de check-in
-    final checkInDate = _booking!.checkInDate;
     return DateTime(
       checkInDate.year,
       checkInDate.month,
@@ -120,9 +148,15 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     }
 
     try {
-      // Cargar la reserva
+      // Cargar la reserva y la hora del servidor en paralelo
       final repository = getIt<AdminPanelRepository>();
-      final booking = await repository.getBooking(bookingId);
+      final results = await Future.wait([
+        repository.getBooking(bookingId),
+        repository.getServerTime(),
+      ]);
+
+      final booking = results[0] as AdminBookingEntity?;
+      final serverTime = results[1] as DateTime;
 
       if (booking == null) {
         setState(() {
@@ -163,6 +197,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           _unit = unit;
           _units = allUnits;
           _property = property;
+          _serverTime = serverTime;
           _isLoading = false;
         });
       }
@@ -919,6 +954,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 booking: _booking!,
                 unit: _unit!,
                 property: _property!,
+                serverTime: _serverTime,
               ),
             ),
           );
