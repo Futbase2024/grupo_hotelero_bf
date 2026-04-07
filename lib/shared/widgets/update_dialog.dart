@@ -1,11 +1,20 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/services/app_update_service.dart';
 import '../../core/theme/app_colors.dart';
+
+// Log de carga del archivo para debug
+void _logWebSkip() {
+  if (kIsWeb) {
+    debugPrint('🌐 [UpdateDialog] WEB DETECTADO - Saltando toda la lógica de actualizaciones');
+  }
+}
+
+// Ejecutar log al cargar el archivo
+final _ = () { _logWebSkip(); }();
 
 /// Diálogo de actualización que se muestra cuando hay una nueva versión disponible
 /// Soporta actualización opcional o forzada
@@ -52,9 +61,22 @@ class UpdateDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isForceUpdate = updateStatus == UpdateStatus.forceRequired;
 
-    return Platform.isIOS
-        ? _buildCupertinoDialog(context, isForceUpdate)
-        : _buildMaterialDialog(context, isForceUpdate);
+    // En web siempre usar Material, en móvil usar según plataforma
+    if (kIsWeb) {
+      return _buildMaterialDialog(context, isForceUpdate);
+    }
+
+    // En móvil, usar Cupertino en iOS
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return _buildCupertinoDialog(context, isForceUpdate);
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+        return _buildMaterialDialog(context, isForceUpdate);
+    }
   }
 
   Widget _buildCupertinoDialog(BuildContext context, bool isForceUpdate) {
@@ -177,6 +199,7 @@ class UpdateDialog extends StatelessWidget {
 }
 
 /// Widget que envuelve la app y verifica actualizaciones al iniciar
+/// En web NO verifica actualizaciones (no aplica)
 class UpdateChecker extends StatefulWidget {
   const UpdateChecker({
     super.key,
@@ -197,7 +220,22 @@ class _UpdateCheckerState extends State<UpdateChecker> {
   @override
   void initState() {
     super.initState();
-    debugPrint('🔍 [UpdateChecker] initState');
+
+    // LOG CRÍTICO: Verificar si kIsWeb funciona - BUILD 2026-03-29-V3
+    debugPrint('═══════════════════════════════════════════════════════════');
+    debugPrint('🌐 [UpdateChecker] BUILD-2026-03-29-V3 - initState');
+    debugPrint('🌐 [UpdateChecker] kIsWeb = $kIsWeb');
+    debugPrint('🌐 [UpdateChecker] checkOnStart = ${widget.checkOnStart}');
+    debugPrint('═══════════════════════════════════════════════════════════');
+
+    // En web NO verificar actualizaciones - RETURN TEMPRANO
+    if (kIsWeb) {
+      debugPrint('✅ [UpdateChecker] WEB DETECTADO - NO se verificarán actualizaciones');
+      return;
+    }
+
+    debugPrint('📱 [UpdateChecker] Plataforma nativa - verificando actualizaciones...');
+
     if (widget.checkOnStart) {
       // Usar addPostFrameCallback para ejecutar después del primer frame
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -212,6 +250,12 @@ class _UpdateCheckerState extends State<UpdateChecker> {
   }
 
   Future<void> _checkForUpdate() async {
+    // Doble verificación: no ejecutar en web
+    if (kIsWeb) {
+      debugPrint('🔍 [UpdateChecker] Web detectado, saltando verificación');
+      return;
+    }
+
     if (_hasChecked) {
       debugPrint('🔍 [UpdateChecker] Ya verificado, saltando');
       return;
