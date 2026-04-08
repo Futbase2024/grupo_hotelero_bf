@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../../../guest/chat/domain/repositories/chat_repository.dart';
@@ -106,7 +107,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       ),
       title: Row(
         children: [
-          const Text('Mensajes'),
+          Text(S.of(context).admin_chat_messages),
           const SizedBox(width: AppTheme.spacing8),
           BlocBuilder<ConversationsBloc, ConversationsState>(
             builder: (context, state) {
@@ -182,8 +183,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
     // Mostrar feedback al usuario
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Conversación eliminada'),
+      SnackBar(
+        content: Text(S.of(context).admin_chat_conversation_deleted),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: 2),
@@ -211,14 +212,14 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           ),
           const SizedBox(height: AppTheme.spacing24),
           Text(
-            'Sin conversaciones',
+            S.of(context).admin_chat_empty_title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Las conversaciones con huéspedes\naparecerán aquí',
+            S.of(context).admin_chat_empty_subtitle,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.gray500,
@@ -265,7 +266,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 }
               }
             },
-            child: const Text('Reintentar'),
+            child: Text(S.of(context).common_retry),
           ),
         ],
       ),

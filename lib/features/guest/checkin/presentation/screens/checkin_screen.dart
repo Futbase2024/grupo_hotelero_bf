@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
@@ -13,7 +14,7 @@ import 'package:bf_stay/features/guest/checkin/presentation/widgets/guest_form_c
 import 'package:bf_stay/features/guest/checkin/presentation/widgets/document_upload_sheet.dart';
 import 'package:bf_stay/features/guest/checkin/domain/entities/guest_entity.dart';
 
-/// Pantalla de Check-in para huéspedes con gestión de múltiples huéspedes
+/// Pantalla de Check-in para huespedes con gestion de multiples huespedes
 class CheckinScreen extends StatefulWidget {
   const CheckinScreen({super.key, required this.bookingId});
 
@@ -76,7 +77,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.go('/guest'),
       ),
-      title: const Text('Check-in Online'),
+      title: Text(S.of(context).guest_checkin_online),
     );
   }
 
@@ -86,8 +87,8 @@ class _CheckinScreenState extends State<CheckinScreen> {
       context.read<AuthBloc>().add(const AuthCheckRequested());
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Check-in completado exitosamente'),
+        SnackBar(
+          content: Text(S.of(context).guest_checkin_completed_success),
           backgroundColor: AppColors.success,
         ),
       );
@@ -113,15 +114,15 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppColors.gold),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: AppColors.gold),
+          const SizedBox(height: 16),
           Text(
-            'Cargando datos de la reserva...',
-            style: TextStyle(color: AppColors.gray500),
+            S.of(context).guest_checkin_loading_booking,
+            style: const TextStyle(color: AppColors.gray500),
           ),
         ],
       ),
@@ -134,15 +135,15 @@ class _SubmittingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppColors.gold),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: AppColors.gold),
+          const SizedBox(height: 16),
           Text(
-            'Enviando check-in...',
-            style: TextStyle(color: AppColors.gray500),
+            S.of(context).guest_checkin_sending,
+            style: const TextStyle(color: AppColors.gray500),
           ),
         ],
       ),
@@ -151,16 +152,14 @@ class _SubmittingView extends StatelessWidget {
 }
 
 class _CheckinCompletedView extends StatelessWidget {
-  const _CheckinCompletedView({
-    required this.state,
-    required this.bookingId,
-  });
+  const _CheckinCompletedView({required this.state, required this.bookingId});
 
   final CheckinAlreadyCompleted state;
   final String bookingId;
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
@@ -184,7 +183,9 @@ class _CheckinCompletedView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              state.isValidated ? 'Check-in Validado' : 'Check-in Completado',
+              state.isValidated
+                  ? s.guest_checkin_validated
+                  : s.guest_checkin_completed,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -195,13 +196,10 @@ class _CheckinCompletedView extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               state.statusMessage,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.gray500,
-              ),
+              style: const TextStyle(fontSize: 16, color: AppColors.gray500),
               textAlign: TextAlign.center,
             ),
-            // Indicador de espera si está pendiente de validación
+            // Indicador de espera si esta pendiente de validacion
             if (!state.isValidated) ...[
               const SizedBox(height: 16),
               Row(
@@ -217,8 +215,8 @@ class _CheckinCompletedView extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Esperando validación...',
-                    style: TextStyle(
+                    s.guest_checkin_waiting_validation,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.gray500,
                       fontStyle: FontStyle.italic,
@@ -255,7 +253,11 @@ class _CheckinCompletedView extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, color: AppColors.gold, size: 20),
+                      const Icon(
+                        Icons.calendar_today,
+                        color: AppColors.gold,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Text(
                         '${_formatDate(state.bookingData.checkInDate)} - ${_formatDate(state.bookingData.checkOutDate)}',
@@ -269,7 +271,7 @@ class _CheckinCompletedView extends StatelessWidget {
                       const Icon(Icons.people, color: AppColors.gold, size: 20),
                       const SizedBox(width: 12),
                       Text(
-                        '${state.guests.length} huésped${state.guests.length != 1 ? 'es' : ''} registrado${state.guests.length != 1 ? 's' : ''}',
+                        s.guest_checkin_guests_registered(state.guests.length),
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
@@ -290,9 +292,9 @@ class _CheckinCompletedView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                 ),
-                child: const Text(
-                  'Volver al inicio',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  s.common_back_to_home,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -320,14 +322,10 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
-              'Error al cargar',
+              S.of(context).guest_checkin_error_loading,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -345,16 +343,16 @@ class _ErrorView extends StatelessWidget {
               onPressed: () {
                 final currentState = context.read<CheckinBloc>().state;
                 if (currentState is CheckinLoaded) {
-                  context.read<CheckinBloc>().add(CheckinStarted(
-                    currentState.bookingData.bookingId,
-                  ));
+                  context.read<CheckinBloc>().add(
+                    CheckinStarted(currentState.bookingData.bookingId),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
               ),
-              child: const Text('Reintentar'),
+              child: Text(S.of(context).common_retry),
             ),
           ],
         ),
@@ -374,12 +372,21 @@ class _StepInfo {
   const _StepInfo({required this.icon, required this.title});
 }
 
-const List<_StepInfo> _steps = [
-  _StepInfo(icon: Icons.people_outline, title: 'Huéspedes'),
-  _StepInfo(icon: Icons.badge_outlined, title: 'Documentos'),
-  _StepInfo(icon: Icons.draw_outlined, title: 'Firma'),
-  _StepInfo(icon: Icons.check_circle_outline, title: 'Confirmar'),
-];
+List<_StepInfo> _getSteps(BuildContext context) {
+  final s = S.of(context);
+  return [
+    _StepInfo(icon: Icons.people_outline, title: s.guest_checkin_step_guests),
+    _StepInfo(
+      icon: Icons.badge_outlined,
+      title: s.guest_checkin_step_documents,
+    ),
+    _StepInfo(icon: Icons.draw_outlined, title: s.guest_checkin_step_signature),
+    _StepInfo(
+      icon: Icons.check_circle_outline,
+      title: s.guest_checkin_step_confirm,
+    ),
+  ];
+}
 
 // ═══════════════════════════════════════════════════════════════
 // MOBILE LAYOUT
@@ -454,6 +461,7 @@ class _MobileLayout extends StatelessWidget {
 
   Widget _buildNavigationButtons(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
+    final s = S.of(context);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -477,13 +485,16 @@ class _MobileLayout extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: isDark ? AppColors.gold : AppColors.black,
                     side: BorderSide(
-                      color: isDark ? AppColors.gold : AppColors.blackWithAlpha30,
+                      color: isDark
+                          ? AppColors.gold
+                          : AppColors.blackWithAlpha30,
                     ),
                   ),
-                  child: const Text('Atrás'),
+                  child: Text(s.guest_checkin_back),
                 ),
               ),
-            if (state.currentStep > 0) const SizedBox(width: AppTheme.spacing16),
+            if (state.currentStep > 0)
+              const SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: ElevatedButton(
                 onPressed: state.isCurrentStepComplete
@@ -495,7 +506,9 @@ class _MobileLayout extends StatelessWidget {
                   disabledBackgroundColor: AppColors.gray600,
                 ),
                 child: Text(
-                  state.currentStep == 3 ? 'Completar' : 'Continuar',
+                  state.currentStep == 3
+                      ? s.guest_checkin_complete
+                      : s.guest_checkin_continue,
                 ),
               ),
             ),
@@ -513,7 +526,9 @@ class _MobileLayout extends StatelessWidget {
     if (state.currentStep == 3) {
       context.read<CheckinBloc>().add(const CheckinSubmitted());
     } else {
-      context.read<CheckinBloc>().add(CheckinStepChanged(state.currentStep + 1));
+      context.read<CheckinBloc>().add(
+        CheckinStepChanged(state.currentStep + 1),
+      );
     }
   }
 }
@@ -595,7 +610,7 @@ class _DesktopLayout extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(AppTheme.spacing24),
                   child: Text(
-                    'Progreso del Check-in',
+                    S.of(context).guest_checkin_progress,
                     style: TextStyle(
                       fontSize: ResponsiveFontSize.titleMedium(context),
                       fontWeight: FontWeight.w600,
@@ -659,6 +674,7 @@ class _HorizontalStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final steps = _getSteps(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing24,
@@ -666,10 +682,10 @@ class _HorizontalStepper extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_steps.length, (index) {
+        children: List.generate(steps.length, (index) {
           final isCompleted = index < currentStep;
           final isCurrent = index == currentStep;
-          final step = _steps[index];
+          final step = steps[index];
 
           return Row(
             mainAxisSize: MainAxisSize.min,
@@ -680,7 +696,7 @@ class _HorizontalStepper extends StatelessWidget {
                 isCurrent: isCurrent,
                 step: step,
               ),
-              if (index < _steps.length - 1)
+              if (index < steps.length - 1)
                 Container(
                   width: 40,
                   height: 2,
@@ -706,14 +722,15 @@ class _VerticalStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final steps = _getSteps(context);
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-      itemCount: _steps.length,
+      itemCount: steps.length,
       itemBuilder: (context, index) {
         final isCompleted = index < currentStep;
         final isCurrent = index == currentStep;
-        final step = _steps[index];
-        final isLast = index == _steps.length - 1;
+        final step = steps[index];
+        final isLast = index == steps.length - 1;
 
         Color bgColor;
         Color iconColor;
@@ -819,10 +836,7 @@ class _StepCircle extends StatelessWidget {
         Container(
           width: 40,
           height: 40,
-          decoration: BoxDecoration(
-            color: bgColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
           child: Icon(
             isCompleted ? Icons.check : step.icon,
             color: iconColor,
@@ -855,6 +869,7 @@ class _NavigationButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
+    final s = S.of(context);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -879,15 +894,20 @@ class _NavigationButtons extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () => _onPrevious(context),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark ? AppColors.gold : AppColors.black,
+                        foregroundColor: isDark
+                            ? AppColors.gold
+                            : AppColors.black,
                         side: BorderSide(
-                          color: isDark ? AppColors.gold : AppColors.blackWithAlpha30,
+                          color: isDark
+                              ? AppColors.gold
+                              : AppColors.blackWithAlpha30,
                         ),
                       ),
-                      child: const Text('Atrás'),
+                      child: Text(s.guest_checkin_back),
                     ),
                   ),
-                if (state.currentStep > 0) const SizedBox(width: AppTheme.spacing16),
+                if (state.currentStep > 0)
+                  const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: state.isCurrentStepComplete
@@ -899,7 +919,9 @@ class _NavigationButtons extends StatelessWidget {
                       disabledBackgroundColor: AppColors.gray600,
                     ),
                     child: Text(
-                      state.currentStep == 3 ? 'Completar' : 'Continuar',
+                      state.currentStep == 3
+                          ? s.guest_checkin_complete
+                          : s.guest_checkin_continue,
                     ),
                   ),
                 ),
@@ -919,7 +941,9 @@ class _NavigationButtons extends StatelessWidget {
     if (state.currentStep == 3) {
       context.read<CheckinBloc>().add(const CheckinSubmitted());
     } else {
-      context.read<CheckinBloc>().add(CheckinStepChanged(state.currentStep + 1));
+      context.read<CheckinBloc>().add(
+        CheckinStepChanged(state.currentStep + 1),
+      );
     }
   }
 }
@@ -935,11 +959,12 @@ class _GuestsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Datos de los Huéspedes',
+          s.guest_checkin_guest_data,
           style: TextStyle(
             fontSize: ResponsiveFontSize.headlineSmall(context),
             fontWeight: FontWeight.bold,
@@ -947,19 +972,16 @@ class _GuestsStep extends StatelessWidget {
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
-          'Completa los datos de todos los huéspedes. Los niños menores de 14 años no requieren documentación.',
-          style: TextStyle(
-            fontSize: ResponsiveFontSize.bodyMedium(context),
-            color: AppColors.textSecondary,
-          ),
+          s.guest_checkin_guest_data_description,
+          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppTheme.spacing24),
 
-        // Resumen de huéspedes
+        // Resumen de huespedes
         _buildGuestsSummary(context),
         const SizedBox(height: AppTheme.spacing24),
 
-        // Lista de huéspedes
+        // Lista de huespedes
         ...state.guests.asMap().entries.map((entry) {
           final index = entry.key;
           final guest = entry.value;
@@ -968,10 +990,9 @@ class _GuestsStep extends StatelessWidget {
             guest: guest,
             index: index,
             onChanged: (updatedGuest) {
-              context.read<CheckinBloc>().add(CheckinGuestUpdated(
-                index,
-                updatedGuest,
-              ));
+              context.read<CheckinBloc>().add(
+                CheckinGuestUpdated(index, updatedGuest),
+              );
             },
             onDocumentUpload: guest.needsDocument
                 ? () => _handleDocumentUpload(context, index)
@@ -983,6 +1004,7 @@ class _GuestsStep extends StatelessWidget {
   }
 
   Widget _buildGuestsSummary(BuildContext context) {
+    final s = S.of(context);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -992,15 +1014,12 @@ class _GuestsStep extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.people, color: AppColors.gold),
+          const Icon(Icons.people, color: AppColors.gold),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${state.totalGuests} huéspedes: ${state.bookingData.numAdults} adultos, ${state.bookingData.numChildren} niños',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              s.guest_checkin_guests_summary(state.totalGuests),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
           if (!state.allGuestsHaveName)
@@ -1010,9 +1029,9 @@ class _GuestsStep extends StatelessWidget {
                 color: AppColors.warningLight,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
-                'Pendiente',
-                style: TextStyle(
+              child: Text(
+                s.guest_checkin_pending,
+                style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.warning,
                   fontWeight: FontWeight.w500,
@@ -1034,12 +1053,14 @@ class _GuestsStep extends StatelessWidget {
       context: context,
       guest: guest,
       onConfirm: (type, number, imageBytes) {
-        context.read<CheckinBloc>().add(CheckinGuestDocumentUpdated(
-          guestIndex: guestIndex,
-          documentType: type,
-          documentNumber: number,
-          imageBytes: imageBytes,
-        ));
+        context.read<CheckinBloc>().add(
+          CheckinGuestDocumentUpdated(
+            guestIndex: guestIndex,
+            documentType: type,
+            documentNumber: number,
+            imageBytes: imageBytes,
+          ),
+        );
       },
     );
   }
@@ -1056,6 +1077,7 @@ class _DocumentsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     final guestsRequiringDocs = state.guestsRequiringDocument;
     final guestsWithDocs = state.guestsWithDocument;
     final guestsPendingDocs = state.guestsPendingDocument;
@@ -1064,7 +1086,7 @@ class _DocumentsStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Documentos de Identidad',
+          s.guest_checkin_identity_documents,
           style: TextStyle(
             fontSize: ResponsiveFontSize.headlineSmall(context),
             fontWeight: FontWeight.bold,
@@ -1072,11 +1094,8 @@ class _DocumentsStep extends StatelessWidget {
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
-          'Sube el documento de identidad de cada huésped mayor de 14 años.',
-          style: TextStyle(
-            fontSize: ResponsiveFontSize.bodyMedium(context),
-            color: AppColors.textSecondary,
-          ),
+          s.guest_checkin_upload_documents_description,
+          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppTheme.spacing24),
 
@@ -1087,28 +1106,32 @@ class _DocumentsStep extends StatelessWidget {
         // Lista de documentos pendientes
         if (guestsPendingDocs.isNotEmpty) ...[
           Text(
-            'Documentos pendientes',
+            s.guest_checkin_pending_documents,
             style: TextStyle(
               fontSize: ResponsiveFontSize.titleMedium(context),
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppTheme.spacing12),
-          ...guestsPendingDocs.map((guest) => _buildPendingDocumentCard(context, guest)),
+          ...guestsPendingDocs.map(
+            (guest) => _buildPendingDocumentCard(context, guest),
+          ),
         ],
 
         // Lista de documentos completados
         if (guestsWithDocs.isNotEmpty) ...[
           const SizedBox(height: AppTheme.spacing16),
           Text(
-            'Documentos subidos',
+            s.guest_checkin_uploaded_documents,
             style: TextStyle(
               fontSize: ResponsiveFontSize.titleMedium(context),
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppTheme.spacing12),
-          ...guestsWithDocs.map((guest) => _buildCompletedDocumentCard(context, guest)),
+          ...guestsWithDocs.map(
+            (guest) => _buildCompletedDocumentCard(context, guest),
+          ),
         ],
       ],
     );
@@ -1119,6 +1142,7 @@ class _DocumentsStep extends StatelessWidget {
     List<GuestEntity> guestsWithDocs,
     List<GuestEntity> guestsRequiringDocs,
   ) {
+    final s = S.of(context);
     final completed = guestsWithDocs.length;
     final total = guestsRequiringDocs.length;
     final progress = total > 0 ? completed / total : 1.0;
@@ -1136,13 +1160,17 @@ class _DocumentsStep extends StatelessWidget {
           Row(
             children: [
               Icon(
-                state.allDocumentsComplete ? Icons.check_circle : Icons.upload_file,
-                color: state.allDocumentsComplete ? AppColors.success : AppColors.gold,
+                state.allDocumentsComplete
+                    ? Icons.check_circle
+                    : Icons.upload_file,
+                color: state.allDocumentsComplete
+                    ? AppColors.success
+                    : AppColors.gold,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '$completed de $total documentos subidos',
+                  s.guest_checkin_documents_uploaded(completed, total),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -1172,6 +1200,7 @@ class _DocumentsStep extends StatelessWidget {
   }
 
   Widget _buildPendingDocumentCard(BuildContext context, GuestEntity guest) {
+    final s = S.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -1200,7 +1229,9 @@ class _DocumentsStep extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  guest.fullName.isEmpty ? 'Huésped sin nombre' : guest.fullName,
+                  guest.fullName.isEmpty
+                      ? s.guest_checkin_guest_no_name
+                      : guest.fullName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -1210,8 +1241,8 @@ class _DocumentsStep extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   guest.isChildOver14
-                      ? 'Joven (${guest.age} años) - Documento requerido'
-                      : 'Documento requerido',
+                      ? s.guest_checkin_young_document_required(guest.age ?? 0)
+                      : s.guest_checkin_document_required,
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.warning,
@@ -1225,7 +1256,7 @@ class _DocumentsStep extends StatelessWidget {
               // TODO: Implement document upload
             },
             icon: const Icon(Icons.upload, size: 18),
-            label: const Text('Subir'),
+            label: Text(s.guest_checkin_upload),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.gold,
               foregroundColor: AppColors.black,
@@ -1315,17 +1346,19 @@ class _SignatureStepState extends State<_SignatureStep> {
   @override
   void initState() {
     super.initState();
-    _hasSignature = widget.state.signatureSvg != null &&
+    _hasSignature =
+        widget.state.signatureSvg != null &&
         widget.state.signatureSvg!.isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Firma del Titular',
+          s.guest_checkin_holder_signature,
           style: TextStyle(
             fontSize: ResponsiveFontSize.headlineSmall(context),
             fontWeight: FontWeight.bold,
@@ -1333,11 +1366,8 @@ class _SignatureStepState extends State<_SignatureStep> {
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
-          'Firma con tu dedo en el área de abajo para confirmar los datos.',
-          style: TextStyle(
-            fontSize: ResponsiveFontSize.bodyMedium(context),
-            color: AppColors.textSecondary,
-          ),
+          s.guest_checkin_signature_description,
+          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppTheme.spacing24),
 
@@ -1389,9 +1419,9 @@ class _SignatureStepState extends State<_SignatureStep> {
             child: TextButton.icon(
               onPressed: _clearSignature,
               icon: const Icon(Icons.clear, color: AppColors.gray500),
-              label: const Text(
-                'Borrar firma',
-                style: TextStyle(color: AppColors.gray500),
+              label: Text(
+                s.guest_checkin_clear_signature,
+                style: const TextStyle(color: AppColors.gray500),
               ),
             ),
           ),
@@ -1415,8 +1445,8 @@ class _SignatureStepState extends State<_SignatureStep> {
               const SizedBox(width: 12),
               Text(
                 _hasSignature
-                    ? 'Firma capturada correctamente'
-                    : 'Pendiente de firma',
+                    ? s.guest_checkin_signature_captured
+                    : s.guest_checkin_signature_pending,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -1504,13 +1534,13 @@ class SignaturePainter extends CustomPainter {
           currentPath = Path();
           currentPath.moveTo(point.dx, point.dy);
         } else {
-          // Continuar el trazo con línea suave
+          // Continuar el trazo con linea suave
           currentPath.lineTo(point.dx, point.dy);
         }
       }
     }
 
-    // Dibujar el último path si existe
+    // Dibujar el ultimo path si existe
     if (currentPath != null) {
       canvas.drawPath(currentPath, paint);
     }
@@ -1521,14 +1551,15 @@ class SignaturePainter extends CustomPainter {
     // Siempre repintar cuando los puntos son diferentes
     if (points.length != oldDelegate.points.length) return true;
 
-    // Comparar el último punto para detectar cambios durante el dibujo
+    // Comparar el ultimo punto para detectar cambios durante el dibujo
     if (points.isNotEmpty && oldDelegate.points.isNotEmpty) {
       final currentLast = points.last;
       final oldLast = oldDelegate.points.last;
       // Comparar valores de Offset, no referencias
       if (currentLast == null && oldLast == null) return false;
       if (currentLast == null || oldLast == null) return true;
-      if (currentLast.dx != oldLast.dx || currentLast.dy != oldLast.dy) return true;
+      if (currentLast.dx != oldLast.dx || currentLast.dy != oldLast.dy)
+        return true;
     }
 
     return false;
@@ -1546,11 +1577,12 @@ class _ConfirmationStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Confirmación',
+          s.guest_checkin_confirmation,
           style: TextStyle(
             fontSize: ResponsiveFontSize.headlineSmall(context),
             fontWeight: FontWeight.bold,
@@ -1558,11 +1590,8 @@ class _ConfirmationStep extends StatelessWidget {
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
-          'Revisa que todos los datos sean correctos antes de enviar.',
-          style: TextStyle(
-            fontSize: ResponsiveFontSize.bodyMedium(context),
-            color: AppColors.textSecondary,
-          ),
+          s.guest_checkin_confirmation_description,
+          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppTheme.spacing24),
 
@@ -1570,7 +1599,7 @@ class _ConfirmationStep extends StatelessWidget {
         _buildBookingSummary(context),
         const SizedBox(height: AppTheme.spacing24),
 
-        // Resumen de huéspedes
+        // Resumen de huespedes
         _buildGuestsSummary(context),
         const SizedBox(height: AppTheme.spacing24),
 
@@ -1595,7 +1624,7 @@ class _ConfirmationStep extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Al completar el check-in, confirmas que los datos proporcionados son correctos y aceptas las normas de la casa.',
+                  s.guest_checkin_legal_notice,
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.getTextSecondaryColor(context),
@@ -1610,6 +1639,7 @@ class _ConfirmationStep extends StatelessWidget {
   }
 
   Widget _buildBookingSummary(BuildContext context) {
+    final s = S.of(context);
     final booking = state.bookingData;
 
     return Container(
@@ -1627,7 +1657,7 @@ class _ConfirmationStep extends StatelessWidget {
               const Icon(Icons.hotel, color: AppColors.gold),
               const SizedBox(width: 8),
               Text(
-                'Reserva',
+                s.guest_checkin_booking,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -1639,29 +1669,32 @@ class _ConfirmationStep extends StatelessWidget {
           const Divider(height: 24),
           _buildSummaryRow(
             context,
-            'Código',
+            s.guest_checkin_code,
             booking.bookingCode,
             Icons.confirmation_number_outlined,
           ),
           const SizedBox(height: 12),
           _buildSummaryRow(
             context,
-            'Check-in',
+            s.guest_checkin_label,
             '${booking.checkInDate.day}/${booking.checkInDate.month}/${booking.checkInDate.year}',
             Icons.login,
           ),
           const SizedBox(height: 12),
           _buildSummaryRow(
             context,
-            'Check-out',
+            s.guest_checkout_label,
             '${booking.checkOutDate.day}/${booking.checkOutDate.month}/${booking.checkOutDate.year}',
             Icons.logout,
           ),
           const SizedBox(height: 12),
           _buildSummaryRow(
             context,
-            'Huéspedes',
-            '${booking.numAdults} adultos, ${booking.numChildren} niños',
+            s.guest_checkin_guests_label,
+            s.guest_checkin_adults_children(
+              booking.numAdults,
+              booking.numChildren,
+            ),
             Icons.people,
           ),
         ],
@@ -1690,10 +1723,7 @@ class _ConfirmationStep extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             textAlign: TextAlign.end,
           ),
         ),
@@ -1702,6 +1732,7 @@ class _ConfirmationStep extends StatelessWidget {
   }
 
   Widget _buildGuestsSummary(BuildContext context) {
+    final s = S.of(context);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -1717,7 +1748,7 @@ class _ConfirmationStep extends StatelessWidget {
               const Icon(Icons.people, color: AppColors.gold),
               const SizedBox(width: 8),
               Text(
-                'Huéspedes (${state.guests.length})',
+                s.guest_checkin_guests_count(state.guests.length),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -1727,76 +1758,87 @@ class _ConfirmationStep extends StatelessWidget {
             ],
           ),
           const Divider(height: 24),
-          ...state.guests.map((guest) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Icon(
-                  guest.isChildUnder14
-                      ? Icons.child_care
-                      : guest.isPrimary
-                          ? Icons.star
-                          : Icons.person,
-                  size: 20,
-                  color: guest.isChildUnder14
-                      ? AppColors.success
-                      : guest.isPrimary
-                          ? AppColors.gold
-                          : AppColors.gray500,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    guest.fullName.isEmpty ? 'Sin nombre' : guest.fullName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: guest.isReadOnly
-                          ? AppColors.gray500
-                          : AppColors.getTextPrimaryColor(context),
-                    ),
+          ...state.guests.map(
+            (guest) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    guest.isChildUnder14
+                        ? Icons.child_care
+                        : guest.isPrimary
+                        ? Icons.star
+                        : Icons.person,
+                    size: 20,
+                    color: guest.isChildUnder14
+                        ? AppColors.success
+                        : guest.isPrimary
+                        ? AppColors.gold
+                        : AppColors.gray500,
                   ),
-                ),
-                if (guest.isPrimary)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.goldWithAlpha20,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'TITULAR',
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      guest.fullName.isEmpty
+                          ? s.guest_checkin_no_name
+                          : guest.fullName,
                       style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.gold,
+                        fontSize: 14,
+                        color: guest.isReadOnly
+                            ? AppColors.gray500
+                            : AppColors.getTextPrimaryColor(context),
                       ),
                     ),
                   ),
-                if (guest.isChildUnder14)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.successLight,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'MENOR 14',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.success,
+                  if (guest.isPrimary)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.goldWithAlpha20,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        s.guest_checkin_holder_badge,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.gold,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                  if (guest.isChildUnder14)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.successLight,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        s.guest_checkin_minor_badge,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildDocumentsStatus(BuildContext context) {
+    final s = S.of(context);
     final isComplete = state.allDocumentsComplete;
     final completed = state.guestsWithDocument.length;
     final total = state.guestsRequiringDocument.length;
@@ -1817,8 +1859,8 @@ class _ConfirmationStep extends StatelessWidget {
           Expanded(
             child: Text(
               isComplete
-                  ? 'Todos los documentos subidos'
-                  : '$completed de $total documentos subidos',
+                  ? s.guest_checkin_all_documents_uploaded
+                  : s.guest_checkin_documents_uploaded(completed, total),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -1832,7 +1874,9 @@ class _ConfirmationStep extends StatelessWidget {
   }
 
   Widget _buildSignatureStatus(BuildContext context) {
-    final hasSignature = state.signatureSvg != null && state.signatureSvg!.isNotEmpty;
+    final s = S.of(context);
+    final hasSignature =
+        state.signatureSvg != null && state.signatureSvg!.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -1848,7 +1892,9 @@ class _ConfirmationStep extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            hasSignature ? 'Firma capturada' : 'Pendiente de firma',
+            hasSignature
+                ? s.guest_checkin_signature_captured_short
+                : s.guest_checkin_signature_pending,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/di/injection.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../shared/widgets/responsive_grid_view.dart';
@@ -176,7 +177,7 @@ class _SliverAppBar extends StatelessWidget {
         },
       ),
       title: Text(
-        '¿Qué ver?',
+        S.of(context).guest_que_ver_title,
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w900,
@@ -187,8 +188,8 @@ class _SliverAppBar extends StatelessWidget {
         if (hasActiveFilters && onClearFilters != null)
           TextButton(
             onPressed: onClearFilters,
-            child: const Text(
-              'Limpiar',
+            child: Text(
+              S.of(context).guest_que_ver_clear_filters,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -302,7 +303,7 @@ class _ResultsCount extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Text(
-        '$count ${count == 1 ? 'lugar' : 'lugares'}',
+        S.of(context).guest_que_ver_places_count(count),
         style: TextStyle(
           fontSize: 13,
           color: isDark ? AppColors.black : AppColors.gray600,
@@ -388,7 +389,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -440,7 +441,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              hasFilters ? 'Sin resultados' : 'No hay lugares',
+              hasFilters ? S.of(context).guest_que_ver_no_results : S.of(context).guest_que_ver_no_places,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -450,8 +451,8 @@ class _EmptyView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               hasFilters
-                  ? 'Prueba a cambiar los filtros de búsqueda'
-                  : 'Pronto añadiremos nuevos lugares',
+                  ? S.of(context).guest_que_ver_try_filters
+                  : S.of(context).guest_que_ver_coming_soon,
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.getTextSecondaryColor(context),

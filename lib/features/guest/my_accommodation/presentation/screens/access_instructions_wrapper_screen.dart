@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
@@ -35,13 +36,14 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
   }
 
   Future<void> _loadData() async {
+    final s = S.of(context);
     final authState = context.read<AuthBloc>().state;
     final user = authState is AuthAuthenticated ? authState.user : null;
     final bookingId = user?.bookingId;
 
     if (bookingId == null) {
       setState(() {
-        _error = 'No hay reserva asociada';
+        _error = s.guest_accommodation_no_booking;
         _isLoading = false;
       });
       return;
@@ -59,8 +61,9 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
       final serverTime = results[1] as DateTime;
 
       if (booking == null) {
+        if (!mounted) return;
         setState(() {
-          _error = 'Reserva no encontrada';
+          _error = s.guest_accommodation_booking_not_found;
           _isLoading = false;
         });
         return;
@@ -88,7 +91,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Error al cargar los datos';
+          _error = s.guest_accommodation_error_loading;
           _isLoading = false;
         });
       }
@@ -97,6 +100,8 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
+
     // Loading state
     if (_isLoading) {
       return Scaffold(
@@ -109,7 +114,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
                 const CircularProgressIndicator(color: AppColors.gold),
                 const SizedBox(height: AppTheme.spacing16),
                 Text(
-                  'Cargando instrucciones...',
+                  s.guest_access_loading_instructions,
                   style: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                     fontSize: 14,
@@ -137,7 +142,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
-            'Instrucciones de Acceso',
+            s.guest_access_instructions,
             style: TextStyle(
               color: AppColors.getTextPrimaryColor(context),
               fontWeight: FontWeight.w600,
@@ -165,7 +170,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
                   ),
                   const SizedBox(height: AppTheme.spacing16),
                   Text(
-                    _error ?? 'No se pudieron cargar las instrucciones',
+                    _error ?? s.guest_access_cannot_load_instructions,
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.getTextPrimaryColor(context),
@@ -185,7 +190,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
                       backgroundColor: AppColors.gold,
                       foregroundColor: AppColors.black,
                     ),
-                    child: const Text('Reintentar'),
+                    child: Text(s.common_retry),
                   ),
                 ],
               ),

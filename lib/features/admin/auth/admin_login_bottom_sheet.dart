@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/router/app_router.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../auth/domain/bloc/auth_bloc.dart';
 
 /// Modal bottom sheet para login de administradores y staff
@@ -103,7 +104,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
       } else {
         // Usuario no autorizado para el panel admin
         setState(() {
-          _errorMessage = 'No tienes acceso a este panel';
+          _errorMessage = S.of(context).auth_admin_error_unauthorized;
         });
         HapticFeedback.vibrate();
       }
@@ -190,7 +191,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
       children: [
         // Título
         Text(
-          'Acceso privado',
+          S.of(context).auth_admin_sheet_title,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w400,
@@ -203,7 +204,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
 
         // Subtítulo
         Text(
-          'Solo personal autorizado de BF-Stay',
+          S.of(context).auth_admin_sheet_subtitle,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w300,
@@ -223,7 +224,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
       children: [
         // Label
         Text(
-          'CORREO ELECTRÓNICO',
+          S.of(context).auth_admin_label_email,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -265,7 +266,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
                 color: isDark ? AppColors.white : AppColors.black,
               ),
               decoration: InputDecoration(
-                hintText: 'admin@bfstay.com',
+                hintText: S.of(context).auth_admin_hint_email,
                 hintStyle: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w300,
@@ -293,7 +294,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
       children: [
         // Label
         Text(
-          'CONTRASEÑA',
+          S.of(context).auth_admin_label_password,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -336,7 +337,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
                 color: isDark ? AppColors.white : AppColors.black,
               ),
               decoration: InputDecoration(
-                hintText: '••••••••',
+                hintText: S.of(context).auth_admin_hint_password,
                 hintStyle: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w300,
@@ -449,7 +450,7 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
                             ),
                           )
                         : Text(
-                            'Acceder al panel',
+                            S.of(context).auth_admin_submit_button,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,

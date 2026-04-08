@@ -42,10 +42,18 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
   StreamSubscription<StaffNotificationEntity>? _notificationSubscription;
   StreamSubscription<void>? _checkinsSubscription;
 
+  Timer? _notificationsDebounce;
+
   void _subscribeToNotifications() {
     _notificationSubscription = _repository.watchNotifications().listen(
       (notification) {
-        add(AdminDashboardNotificationReceived(notification));
+        if (isClosed) return;
+        _notificationsDebounce?.cancel();
+        _notificationsDebounce = Timer(const Duration(seconds: 3), () {
+          if (!isClosed) {
+            add(AdminDashboardNotificationReceived(notification));
+          }
+        });
       },
       onError: (error) {
         debugPrint('Error en stream de notificaciones: $error');
@@ -53,10 +61,18 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     );
   }
 
+  Timer? _checkinsDebounce;
+
   void _subscribeToCheckins() {
     _checkinsSubscription = _repository.watchCheckins().listen(
       (_) {
-        add(const AdminDashboardCheckinsChanged());
+        if (isClosed) return;
+        _checkinsDebounce?.cancel();
+        _checkinsDebounce = Timer(const Duration(seconds: 3), () {
+          if (!isClosed) {
+            add(const AdminDashboardCheckinsChanged());
+          }
+        });
       },
       onError: (error) {
         debugPrint('Error en stream de checkins: $error');
@@ -66,6 +82,8 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
 
   @override
   Future<void> close() {
+    _notificationsDebounce?.cancel();
+    _checkinsDebounce?.cancel();
     _notificationSubscription?.cancel();
     _checkinsSubscription?.cancel();
     return super.close();
@@ -75,7 +93,8 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardCheckinsChanged event,
     Emitter<AdminDashboardState> emit,
   ) async {
-    // Recargar la lista de checkins cuando hay cambios
+    // Evitar recarga si ya está cargando (previene bucle infinito)
+    if (state.isLoadingCheckins) return;
     add(const AdminDashboardCheckinsLoadRequested());
   }
 
@@ -98,10 +117,12 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
       unreadNotificationsCount: unreadCount,
     ));
 
-    // Si es una notificación de check-in, recargar el resumen
+    // Si es una notificación de check-in, recargar solo checkins (no todo el dashboard)
     if (event.notification.type == 'checkin_submitted' ||
         event.notification.type == 'checkin_completed') {
-      add(const AdminDashboardLoadRequested());
+      if (!state.isLoading && !state.isLoadingCheckins) {
+        add(const AdminDashboardCheckinsLoadRequested());
+      }
     }
   }
 
@@ -220,6 +241,9 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardCheckinsLoadRequested event,
     Emitter<AdminDashboardState> emit,
   ) async {
+    // Evitar recargas solapadas
+    if (state.isLoadingCheckins) return;
+
     emit(state.copyWith(isLoadingCheckins: true, clearError: true));
 
     try {

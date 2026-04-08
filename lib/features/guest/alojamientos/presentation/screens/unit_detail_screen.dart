@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/router/app_router.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_theme.dart';
@@ -111,7 +112,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -131,7 +132,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
@@ -627,7 +628,7 @@ class _AddressSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ubicación',
+                  S.of(context).guest_alojamiento_location,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -663,23 +664,23 @@ class _FeaturesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(title: 'Características'),
+        _SectionTitle(title: S.of(context).guest_alojamiento_features),
         const SizedBox(height: AppTheme.spacing16),
         Row(
           children: [
             _FeatureCard(
               icon: Icons.check_circle_outline,
-              label: 'Check-in flexible',
+              label: S.of(context).guest_alojamiento_feature_flexible_checkin,
             ),
             const SizedBox(width: AppTheme.spacing12),
             _FeatureCard(
               icon: Icons.wifi_outlined,
-              label: 'WiFi gratuito',
+              label: S.of(context).guest_alojamiento_feature_wifi,
             ),
             const SizedBox(width: AppTheme.spacing12),
             _FeatureCard(
               icon: Icons.ac_unit_outlined,
-              label: 'Aire acondicionado',
+              label: S.of(context).guest_alojamiento_feature_ac,
             ),
           ],
         ),
@@ -755,10 +756,10 @@ class _DescriptionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(title: 'Descripción'),
+        _SectionTitle(title: S.of(context).guest_alojamiento_description),
         const SizedBox(height: AppTheme.spacing12),
         Text(
-          'Descubre este ${unit.unitType.displayName.toLowerCase()} completamente equipado para hacer de tu estancia una experiencia inolvidable. Con un diseño moderno y elegante, cuenta con todas las comodidades que necesitas para sentirte como en casa.',
+          S.of(context).guest_alojamiento_description_text(unit.unitType.displayName.toLowerCase()),
           style: TextStyle(
             fontSize: 15,
             height: 1.6,
@@ -780,19 +781,20 @@ class _ServicesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
 
+    final s = S.of(context);
     final services = [
-      {'icon': Icons.kitchen_outlined, 'label': 'Cocina equipada'},
-      {'icon': Icons.local_laundry_service_outlined, 'label': 'Lavadora'},
-      {'icon': Icons.tv_outlined, 'label': 'Smart TV'},
-      {'icon': Icons.bed_outlined, 'label': 'Ropa de cama'},
-      {'icon': Icons.bathtub_outlined, 'label': 'Toallas'},
-      {'icon': Icons.coffee_outlined, 'label': 'Cafetera'},
+      {'icon': Icons.kitchen_outlined, 'label': s.guest_alojamiento_service_kitchen},
+      {'icon': Icons.local_laundry_service_outlined, 'label': s.guest_alojamiento_service_washer},
+      {'icon': Icons.tv_outlined, 'label': s.guest_alojamiento_service_tv},
+      {'icon': Icons.bed_outlined, 'label': s.guest_alojamiento_service_bedding},
+      {'icon': Icons.bathtub_outlined, 'label': s.guest_alojamiento_service_towels},
+      {'icon': Icons.coffee_outlined, 'label': s.guest_alojamiento_service_coffee},
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(title: 'Servicios incluidos'),
+        _SectionTitle(title: S.of(context).guest_alojamiento_services),
         const SizedBox(height: AppTheme.spacing16),
         Container(
           padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -863,7 +865,7 @@ class _AccessSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(title: 'Información de acceso'),
+        _SectionTitle(title: S.of(context).guest_alojamiento_access_info),
         const SizedBox(height: AppTheme.spacing16),
         Container(
           padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -891,7 +893,7 @@ class _AccessSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Ubicación de la caja',
+                            S.of(context).guest_alojamiento_box_location,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -929,7 +931,7 @@ class _AccessSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Instrucciones de acceso',
+                            S.of(context).guest_alojamiento_access_instructions,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,

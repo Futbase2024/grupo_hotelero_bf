@@ -334,7 +334,7 @@ class BookingListTile extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    _getStatusText(),
+                                    _getStatusText(context),
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -478,16 +478,7 @@ class BookingListTile extends StatelessWidget {
     );
   }
 
-  String _getStatusText() {
-    return switch (status) {
-      BookingStatus.created => 'Creada',
-      BookingStatus.confirmed => 'Confirmada',
-      BookingStatus.active => 'Activa',
-      BookingStatus.inHouse => 'En casa',
-      BookingStatus.checkedIn => 'Activa', // Legacy - mostrar como Activa
-      BookingStatus.checkedOut => 'Finalizada',
-      BookingStatus.closed => 'Cerrada',
-      BookingStatus.cancelled => 'Cancelada',
-    };
+  String _getStatusText(BuildContext context) {
+    return status.label(context);
   }
 }

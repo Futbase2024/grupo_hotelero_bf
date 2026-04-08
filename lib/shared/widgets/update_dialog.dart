@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/services/app_update_service.dart';
@@ -82,7 +83,7 @@ class UpdateDialog extends StatelessWidget {
   Widget _buildCupertinoDialog(BuildContext context, bool isForceUpdate) {
     return CupertinoAlertDialog(
       title: Text(
-        isForceUpdate ? 'Actualización Requerida' : 'Nueva Versión Disponible',
+        isForceUpdate ? S.of(context).common_update_force_title : S.of(context).common_update_available_title,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       content: Padding(
@@ -91,7 +92,7 @@ class UpdateDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _getMessage(),
+              _getMessage(context),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14),
             ),
@@ -113,12 +114,12 @@ class UpdateDialog extends StatelessWidget {
           CupertinoDialogAction(
             isDefaultAction: false,
             onPressed: onLater,
-            child: const Text('Más tarde'),
+            child: Text(S.of(context).common_later),
           ),
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: onUpdate,
-          child: const Text('Actualizar'),
+          child: Text(S.of(context).common_update),
         ),
       ],
     );
@@ -138,7 +139,7 @@ class UpdateDialog extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              isForceUpdate ? 'Actualización Requerida' : 'Nueva Versión Disponible',
+              isForceUpdate ? S.of(context).common_update_force_title : S.of(context).common_update_available_title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
           ),
@@ -149,7 +150,7 @@ class UpdateDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _getMessage(),
+            _getMessage(context),
             style: const TextStyle(fontSize: 14),
           ),
           if (versionInfo?.latestVersion != null) ...[
@@ -168,7 +169,7 @@ class UpdateDialog extends StatelessWidget {
         if (!isForceUpdate)
           TextButton(
             onPressed: onLater,
-            child: const Text('Más tarde'),
+            child: Text(S.of(context).common_later),
           ),
         ElevatedButton(
           onPressed: onUpdate,
@@ -179,22 +180,20 @@ class UpdateDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: const Text('Actualizar'),
+          child: Text(S.of(context).common_update),
         ),
       ],
     );
   }
 
-  String _getMessage() {
+  String _getMessage(BuildContext context) {
     if (versionInfo?.updateMessage != null) {
       return versionInfo!.updateMessage!;
     }
 
     return updateStatus == UpdateStatus.forceRequired
-        ? 'Es necesario actualizar la aplicación para continuar usándola. '
-            'Esta versión incluye mejoras importantes y correcciones de seguridad.'
-        : 'Hay una nueva versión disponible con mejoras y correcciones. '
-            '¿Deseas actualizar ahora?';
+        ? S.of(context).common_update_force_message
+        : S.of(context).common_update_available_message;
   }
 }
 

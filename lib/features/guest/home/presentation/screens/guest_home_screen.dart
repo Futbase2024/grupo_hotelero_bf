@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
@@ -17,7 +18,7 @@ import '../../domain/bloc/guest_home_bloc.dart';
 import '../../domain/bloc/guest_home_event.dart';
 import '../../domain/bloc/guest_home_state.dart';
 
-/// Pantalla principal del huésped
+/// Pantalla principal del huesped
 class GuestHomeScreen extends StatelessWidget {
   const GuestHomeScreen({super.key});
 
@@ -25,30 +26,30 @@ class GuestHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        // Mientras carga la autenticación, mostrar loading
+        // Mientras carga la autenticacion, mostrar loading
         if (state is AuthLoading || state is AuthInitial) {
           return Scaffold(
             backgroundColor: AppColors.getSurfaceColor(context),
             body: SafeArea(
               child: Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.gold,
-                ),
+                child: CircularProgressIndicator(color: AppColors.gold),
               ),
             ),
           );
         }
 
         final user = state is AuthAuthenticated ? state.user : null;
-        debugPrint('🏠 [GuestHomeScreen] AuthState: ${state.runtimeType}, user?.bookingId: "${user?.bookingId}"');
+        debugPrint(
+          '🏠 [GuestHomeScreen] AuthState: ${state.runtimeType}, user?.bookingId: "${user?.bookingId}"',
+        );
 
-        // Si no hay usuario autenticado, no mostrar nada (debería redirigir a login)
+        // Si no hay usuario autenticado, no mostrar nada (deberia redirigir a login)
         if (user == null) {
           return Scaffold(
             backgroundColor: AppColors.getSurfaceColor(context),
             body: SafeArea(
               child: Center(
-                child: Text('No autenticado'),
+                child: Text(S.of(context).guest_home_not_authenticated),
               ),
             ),
           );
@@ -61,11 +62,10 @@ class GuestHomeScreen extends StatelessWidget {
         final isCheckinSubmitted = checkinStatus == 'submitted';
 
         return BlocProvider(
-          create: (context) => GuestHomeBloc(
-            repository: getIt<AdminPanelRepository>(),
-          )
-            ..add(GuestHomeLoadBooking(user.bookingId ?? ''))
-            ..add(GuestHomeLoadNotifications(user.id)),
+          create: (context) =>
+              GuestHomeBloc(repository: getIt<AdminPanelRepository>())
+                ..add(GuestHomeLoadBooking(user.bookingId ?? ''))
+                ..add(GuestHomeLoadNotifications(user.id)),
           child: PopScope(
             canPop: false,
             onPopInvokedWithResult: (didPop, result) async {
@@ -73,79 +73,136 @@ class GuestHomeScreen extends StatelessWidget {
               await ExitConfirmationDialog.show(context);
             },
             child: Scaffold(
-            backgroundColor: AppColors.getSurfaceColor(context),
-            body: SafeArea(
-              child: ResponsiveContent(
-                child: Builder(
-                  builder: (innerContext) {
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        final bookingId = user.bookingId;
-                        if (bookingId == null || bookingId.isEmpty) return;
+              backgroundColor: AppColors.getSurfaceColor(context),
+              body: SafeArea(
+                child: ResponsiveContent(
+                  child: Builder(
+                    builder: (innerContext) {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          final bookingId = user.bookingId;
+                          if (bookingId == null || bookingId.isEmpty) return;
 
-                        // Refrescar datos de la reserva y estado del usuario
-                        innerContext.read<GuestHomeBloc>().add(GuestHomeRefreshBooking(bookingId));
-                        innerContext.read<AuthBloc>().add(const AuthCheckRequested());
-                      },
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.symmetric(
-                          vertical: innerContext.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header con saludo
-                            _buildHeader(innerContext, user),
-                            SizedBox(height: innerContext.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
-
-                            // Tu Estancia - con datos reales del BLoC
-                            _buildSectionTitle(innerContext, 'Tu Estancia'),
-                            const SizedBox(height: AppTheme.spacing16),
-                            const _StayInfoCard(),
-                            SizedBox(height: innerContext.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing32)),
-
-                            // Status message basado en el estado - Solo si NO está validado
-                            if (!isCheckinValidated) ...[
-                              _buildStatusBanner(innerContext, checkinStatus, checkinRejectionReason, user.checkinCancellationReason),
-                              const SizedBox(height: AppTheme.spacing16),
-                            ],
-
-                            // Quick actions
-                            _buildSectionTitle(innerContext, 'Acciones Rápidas'),
-                            const SizedBox(height: AppTheme.spacing16),
-                            BlocBuilder<GuestHomeBloc, GuestHomeState>(
-                              builder: (context, state) {
-                                // Solo obtener unitName, unitType y unitId si el estado es GuestHomeLoaded
-                                // Si está cargando, usar null (se mostrará loading en _StayInfoCard)
-                                final unitName = state is GuestHomeLoaded ? state.booking.unitName : null;
-                                final unitType = state is GuestHomeLoaded ? state.booking.unitType : UnitType.apartment;
-                                final unitId = state is GuestHomeLoaded ? state.booking.unitId : null;
-                                // Si está cargando, no llamar a UnitImageHelper todavía
-                                if (state is GuestHomeInitial || state is GuestHomeLoading) {
-                                  return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, null, UnitType.apartment, null);
-                                }
-                                return _buildQuickActions(context, isCheckinValidated, isCheckinSubmitted, user.bookingId, unitName, unitType, unitId);
-                              },
+                          // Refrescar datos de la reserva y estado del usuario
+                          innerContext.read<GuestHomeBloc>().add(
+                            GuestHomeRefreshBooking(bookingId),
+                          );
+                          innerContext.read<AuthBloc>().add(
+                            const AuthCheckRequested(),
+                          );
+                        },
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.symmetric(
+                            vertical: innerContext.responsive(
+                              mobile: AppTheme.spacing24,
+                              tablet: AppTheme.spacing32,
                             ),
-                          ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header con saludo
+                              _buildHeader(innerContext, user),
+                              SizedBox(
+                                height: innerContext.responsive(
+                                  mobile: AppTheme.spacing24,
+                                  tablet: AppTheme.spacing32,
+                                ),
+                              ),
+
+                              // Tu Estancia - con datos reales del BLoC
+                              _buildSectionTitle(
+                                innerContext,
+                                S.of(innerContext).guest_home_your_stay,
+                              ),
+                              const SizedBox(height: AppTheme.spacing16),
+                              const _StayInfoCard(),
+                              SizedBox(
+                                height: innerContext.responsive(
+                                  mobile: AppTheme.spacing24,
+                                  tablet: AppTheme.spacing32,
+                                ),
+                              ),
+
+                              // Status message basado en el estado - Solo si NO esta validado
+                              if (!isCheckinValidated) ...[
+                                _buildStatusBanner(
+                                  innerContext,
+                                  checkinStatus,
+                                  checkinRejectionReason,
+                                  user.checkinCancellationReason,
+                                ),
+                                const SizedBox(height: AppTheme.spacing16),
+                              ],
+
+                              // Quick actions
+                              _buildSectionTitle(
+                                innerContext,
+                                S.of(innerContext).guest_home_quick_actions,
+                              ),
+                              const SizedBox(height: AppTheme.spacing16),
+                              BlocBuilder<GuestHomeBloc, GuestHomeState>(
+                                builder: (context, state) {
+                                  // Solo obtener unitName, unitType y unitId si el estado es GuestHomeLoaded
+                                  // Si esta cargando, usar null (se mostrara loading en _StayInfoCard)
+                                  final unitName = state is GuestHomeLoaded
+                                      ? state.booking.unitName
+                                      : null;
+                                  final unitType = state is GuestHomeLoaded
+                                      ? state.booking.unitType
+                                      : UnitType.apartment;
+                                  final unitId = state is GuestHomeLoaded
+                                      ? state.booking.unitId
+                                      : null;
+                                  // Si esta cargando, no llamar a UnitImageHelper todavia
+                                  if (state is GuestHomeInitial ||
+                                      state is GuestHomeLoading) {
+                                    return _buildQuickActions(
+                                      context,
+                                      isCheckinValidated,
+                                      isCheckinSubmitted,
+                                      user.bookingId,
+                                      null,
+                                      UnitType.apartment,
+                                      null,
+                                    );
+                                  }
+                                  return _buildQuickActions(
+                                    context,
+                                    isCheckinValidated,
+                                    isCheckinSubmitted,
+                                    user.bookingId,
+                                    unitName,
+                                    unitType,
+                                    unitId,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
+        );
       },
     );
   }
 
-  /// Banner de estado que muestra información según el estado del check-in
-  Widget _buildStatusBanner(BuildContext context, String? checkinStatus, String? rejectionReason, String? cancellationReason) {
+  /// Banner de estado que muestra informacion segun el estado del check-in
+  Widget _buildStatusBanner(
+    BuildContext context,
+    String? checkinStatus,
+    String? rejectionReason,
+    String? cancellationReason,
+  ) {
     final isDark = AppColors.isDarkMode(context);
+    final s = S.of(context);
 
     // Estado validado - Acceso completo
     if (checkinStatus == 'validated') {
@@ -164,7 +221,11 @@ class GuestHomeScreen extends StatelessWidget {
                 color: AppColors.success,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle_outline, color: AppColors.white, size: 20),
+              child: const Icon(
+                Icons.check_circle_outline,
+                color: AppColors.white,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -172,8 +233,8 @@ class GuestHomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '¡Bienvenido!',
-                    style: TextStyle(
+                    s.guest_home_welcome,
+                    style: const TextStyle(
                       color: AppColors.success,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -181,7 +242,7 @@ class GuestHomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Tu estancia está activa. Disfruta de todos los servicios.',
+                    s.guest_home_stay_active_enjoy,
                     style: TextStyle(
                       color: AppColors.getTextSecondaryColor(context),
                       fontSize: 12,
@@ -195,7 +256,7 @@ class GuestHomeScreen extends StatelessWidget {
       );
     }
 
-    // Estado submitted - Pendiente de validación
+    // Estado submitted - Pendiente de validacion
     if (checkinStatus == 'submitted') {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -212,16 +273,20 @@ class GuestHomeScreen extends StatelessWidget {
                 color: AppColors.info,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.hourglass_empty, color: AppColors.white, size: 20),
+              child: const Icon(
+                Icons.hourglass_empty,
+                color: AppColors.white,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Pendiente de validación',
-                    style: TextStyle(
+                  Text(
+                    s.guest_home_pending_validation,
+                    style: const TextStyle(
                       color: AppColors.info,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -229,7 +294,7 @@ class GuestHomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Tu check-in ha sido enviado. Espera la validación del personal.',
+                    s.guest_home_checkin_sent_waiting,
                     style: TextStyle(
                       color: AppColors.getTextSecondaryColor(context),
                       fontSize: 12,
@@ -263,16 +328,20 @@ class GuestHomeScreen extends StatelessWidget {
                     color: AppColors.error,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.error_outline, color: AppColors.white, size: 20),
+                  child: const Icon(
+                    Icons.error_outline,
+                    color: AppColors.white,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Check-in rechazado',
-                        style: TextStyle(
+                      Text(
+                        s.guest_home_checkin_rejected,
+                        style: const TextStyle(
                           color: AppColors.error,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -280,7 +349,7 @@ class GuestHomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Debes corregir los errores y volver a enviarlo.',
+                        s.guest_home_correct_errors_resend,
                         style: TextStyle(
                           color: AppColors.getTextSecondaryColor(context),
                           fontSize: 12,
@@ -297,7 +366,9 @@ class GuestHomeScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.blackWithAlpha30 : AppColors.whiteWithAlpha90,
+                  color: isDark
+                      ? AppColors.blackWithAlpha30
+                      : AppColors.whiteWithAlpha90,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -312,8 +383,8 @@ class GuestHomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Motivo del rechazo:',
-                          style: TextStyle(
+                          s.guest_home_rejection_reason,
+                          style: const TextStyle(
                             color: AppColors.error,
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
@@ -359,16 +430,20 @@ class GuestHomeScreen extends StatelessWidget {
                     color: AppColors.error,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.block, color: AppColors.white, size: 20),
+                  child: const Icon(
+                    Icons.block,
+                    color: AppColors.white,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Reserva cancelada',
-                        style: TextStyle(
+                      Text(
+                        s.guest_home_booking_cancelled,
+                        style: const TextStyle(
                           color: AppColors.error,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -376,7 +451,7 @@ class GuestHomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Tu reserva ha sido cancelada.',
+                        s.guest_home_booking_cancelled_message,
                         style: TextStyle(
                           color: AppColors.getTextSecondaryColor(context),
                           fontSize: 12,
@@ -387,13 +462,16 @@ class GuestHomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-            // Mostrar motivo de la cancelación si existe
-            if (cancellationReason != null && cancellationReason.isNotEmpty) ...[
+            // Mostrar motivo de la cancelacion si existe
+            if (cancellationReason != null &&
+                cancellationReason.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.blackWithAlpha30 : AppColors.whiteWithAlpha90,
+                  color: isDark
+                      ? AppColors.blackWithAlpha30
+                      : AppColors.whiteWithAlpha90,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -408,8 +486,8 @@ class GuestHomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Motivo de la cancelación:',
-                          style: TextStyle(
+                          s.guest_home_cancellation_reason,
+                          style: const TextStyle(
                             color: AppColors.error,
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
@@ -430,22 +508,24 @@ class GuestHomeScreen extends StatelessWidget {
                 ),
               ),
             ],
-            // Añadir aviso de contacto
+            // Anadir aviso de contacto
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppColors.gold.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
                   Icon(Icons.phone, color: AppColors.gold, size: 16),
                   const SizedBox(width: 8),
                   Text(
-                    'Contacta con recepción',
-                    style: TextStyle(
+                    s.guest_home_contact_reception,
+                    style: const TextStyle(
                       color: AppColors.gold,
                       fontWeight: FontWeight.w500,
                       fontSize: 11,
@@ -475,16 +555,20 @@ class GuestHomeScreen extends StatelessWidget {
               color: AppColors.warning,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.pending_actions, color: AppColors.black, size: 20),
+            child: const Icon(
+              Icons.pending_actions,
+              color: AppColors.black,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Check-in pendiente',
-                  style: TextStyle(
+                Text(
+                  s.guest_home_checkin_pending,
+                  style: const TextStyle(
                     color: AppColors.warning,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -492,7 +576,7 @@ class GuestHomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Completa tu check-in para acceder a todos los servicios.',
+                  s.guest_home_complete_checkin_access,
                   style: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                     fontSize: 12,
@@ -509,6 +593,7 @@ class GuestHomeScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context, user) {
     final avatarSize = context.responsive<double>(mobile: 48.0, tablet: 56.0);
     final fontSize = context.responsive<double>(mobile: 16.0, tablet: 20.0);
+    final s = S.of(context);
 
     return Row(
       children: [
@@ -538,8 +623,8 @@ class GuestHomeScreen extends StatelessWidget {
             children: [
               Text(
                 user?.displayName != null && user!.displayName.isNotEmpty
-                    ? '¡Hola, ${user.displayName}!'
-                    : '¡Bienvenido!',
+                    ? s.guest_home_hello_name(user.displayName)
+                    : s.guest_home_welcome,
                 style: TextStyle(
                   fontSize: ResponsiveFontSize.titleLarge(context),
                   fontWeight: FontWeight.bold,
@@ -548,7 +633,7 @@ class GuestHomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Bienvenido a tu estancia',
+                s.guest_home_welcome_stay,
                 style: TextStyle(
                   fontSize: ResponsiveFontSize.bodyMedium(context),
                   color: AppColors.getTextSecondaryColor(context),
@@ -561,7 +646,9 @@ class GuestHomeScreen extends StatelessWidget {
         BlocBuilder<GuestHomeBloc, GuestHomeState>(
           buildWhen: (prev, curr) => curr is GuestHomeLoaded,
           builder: (context, state) {
-            final unreadCount = state is GuestHomeLoaded ? state.unreadNotificationsCount : 0;
+            final unreadCount = state is GuestHomeLoaded
+                ? state.unreadNotificationsCount
+                : 0;
             return Stack(
               children: [
                 IconButton(
@@ -634,15 +721,24 @@ class GuestHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, bool isCheckinValidated, bool isCheckinSubmitted, String? bookingId, String? unitName, UnitType unitType, String? unitId) {
-    // Si está submitted, el check-in está deshabilitado (ya enviado)
+  Widget _buildQuickActions(
+    BuildContext context,
+    bool isCheckinValidated,
+    bool isCheckinSubmitted,
+    String? bookingId,
+    String? unitName,
+    UnitType unitType,
+    String? unitId,
+  ) {
+    // Si esta submitted, el check-in esta deshabilitado (ya enviado)
     final canDoCheckin = !isCheckinSubmitted && !isCheckinValidated;
-    // Obtener imagen dinámica del alojamiento
+    // Obtener imagen dinamica del alojamiento
     final accommodationImagePath = UnitImageHelper.getLocalImagePath(unitName);
-    // Determinar si es hotel para mostrar Registro Físico
+    // Determinar si es hotel para mostrar Registro Fisico
     final isHotel = unitType == UnitType.hotelRoom;
+    final s = S.of(context);
 
-    // Si NO está validado: Check-in, Chat, Pack Romántico y Registro Físico
+    // Si NO esta validado: Check-in, Chat, Pack Romantico y Registro Fisico
     if (!isCheckinValidated) {
       return Column(
         children: [
@@ -652,16 +748,18 @@ class GuestHomeScreen extends StatelessWidget {
               Expanded(
                 child: _ServiceCard(
                   icon: Icons.fact_check_outlined,
-                  title: 'Check-in',
+                  title: s.guest_home_checkin,
                   imagePath: 'assets/images/checkin.png',
-                  onTap: canDoCheckin && bookingId != null ? () => context.go('/guest/checkin/$bookingId') : null,
+                  onTap: canDoCheckin && bookingId != null
+                      ? () => context.go('/guest/checkin/$bookingId')
+                      : null,
                 ),
               ),
               const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: _ServiceCard(
                   icon: Icons.chat_bubble_outline,
-                  title: 'Chat',
+                  title: s.guest_home_chat,
                   imagePath: 'assets/images/chat.png',
                   onTap: () => context.go('/guest/chat'),
                 ),
@@ -669,24 +767,24 @@ class GuestHomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing8),
-          // Segunda fila: Pack Romántico y (Registro Físico solo si es hotel)
+          // Segunda fila: Pack Romantico y (Registro Fisico solo si es hotel)
           Row(
             children: [
               Expanded(
                 child: _ServiceCard(
                   icon: Icons.favorite_outline,
-                  title: 'Pack Romántico',
+                  title: s.guest_home_romantic_pack,
                   imagePath: 'assets/images/pack_romantico.png',
                   onTap: () => context.go('/guest/romantic-pack'),
                 ),
               ),
-              // Solo mostrar Registro Físico si es hotel
+              // Solo mostrar Registro Fisico si es hotel
               if (isHotel) ...[
                 const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: _ServiceCard(
                     icon: Icons.assignment_outlined,
-                    title: 'Registro Físico',
+                    title: s.guest_home_physical_registration,
                     imagePath: 'assets/images/registro_fisico.png',
                     onTap: () => context.go('/guest/physical-registration'),
                   ),
@@ -698,75 +796,81 @@ class GuestHomeScreen extends StatelessWidget {
       );
     }
 
-    // Si está validado: Grid de 3 columnas con todos los servicios
+    // Si esta validado: Grid de 3 columnas con todos los servicios
     final services = <_ServiceItem>[
       _ServiceItem(
         icon: Icons.home_outlined,
-        title: 'Mi Alojamiento',
+        title: s.guest_home_my_accommodation,
         imagePath: accommodationImagePath,
         onTap: () => context.push('/guest/my-accommodation'),
       ),
       _ServiceItem(
         icon: Icons.rule_outlined,
-        title: 'Normas',
+        title: s.guest_home_rules,
         imagePath: 'assets/images/normas.png',
-        onTap: bookingId != null ? () => context.push('/guest/normas/$bookingId') : null,
+        onTap: bookingId != null
+            ? () => context.push('/guest/normas/$bookingId')
+            : null,
       ),
       _ServiceItem(
         icon: Icons.info_outline,
-        title: 'Instrucciones',
+        title: s.guest_home_instructions,
         imagePath: 'assets/images/servicios.png',
         onTap: () => context.push('/guest/access-instructions'),
       ),
       _ServiceItem(
         icon: Icons.chat_bubble_outline,
-        title: 'Chat',
+        title: s.guest_home_chat,
         imagePath: 'assets/images/chat.png',
         onTap: () => context.go('/guest/chat'),
       ),
       _ServiceItem(
         icon: Icons.book_outlined,
-        title: 'Guía',
+        title: s.guest_home_guide,
         imagePath: 'assets/images/info.png',
         onTap: () => context.go('/guest/guide'),
       ),
       _ServiceItem(
         icon: Icons.logout_outlined,
-        title: 'Check-out',
+        title: s.guest_home_checkout,
         imagePath: 'assets/images/checkout.png',
-        onTap: bookingId != null ? () => context.go('/guest/checkout/$bookingId') : null,
+        onTap: bookingId != null
+            ? () => context.go('/guest/checkout/$bookingId')
+            : null,
       ),
       // Nuevas acciones al final
       _ServiceItem(
         icon: Icons.apartment_outlined,
-        title: 'Alojamientos',
+        title: s.guest_home_accommodations,
         imagePath: 'assets/images/alojamiento.png',
         onTap: () => context.go('/guest/alojamientos'),
       ),
       _ServiceItem(
         icon: Icons.local_parking_outlined,
-        title: 'Parkings',
+        title: s.guest_home_parkings,
         imagePath: 'assets/images/parking.png',
-        onTap: unitId != null ? () => context.go('/guest/parkings/$unitId') : null,
+        onTap: unitId != null
+            ? () => context.go('/guest/parkings/$unitId')
+            : null,
       ),
       _ServiceItem(
         icon: Icons.explore_outlined,
-        title: '¿Qué ver?',
+        title: s.guest_home_what_to_see,
         imagePath: 'assets/images/quever.png',
         onTap: () => context.go('/guest/que-ver'),
       ),
-      // Pack Romántico (siempre disponible)
+      // Pack Romantico (siempre disponible)
       _ServiceItem(
         icon: Icons.favorite_outline,
-        title: 'Pack Romántico',
+        title: s.guest_home_romantic_pack,
         imagePath: 'assets/images/pack_romantico.png',
         onTap: () => context.go('/guest/romantic-pack'),
       ),
-      // Registro Físico solo para hoteles
+      // Registro Fisico solo para hoteles
       if (isHotel)
         _ServiceItem(
           icon: Icons.assignment_outlined,
-          title: 'Registro Físico',
+          title: s.guest_home_physical_registration,
           imagePath: 'assets/images/registro_fisico.png',
           onTap: () => context.go('/guest/physical-registration'),
         ),
@@ -795,7 +899,7 @@ class GuestHomeScreen extends StatelessWidget {
   }
 }
 
-/// Widget para mostrar la información de la estancia usando el BLoC
+/// Widget para mostrar la informacion de la estancia usando el BLoC
 class _StayInfoCard extends StatelessWidget {
   const _StayInfoCard();
 
@@ -817,7 +921,7 @@ class _StayInfoCard extends StatelessWidget {
         }
 
         if (state is GuestHomeNoBooking) {
-          return _buildErrorCard(context, 'No hay reserva asociada');
+          return _buildErrorCard(context, S.of(context).guest_home_no_booking);
         }
 
         if (state is GuestHomeLoaded) {
@@ -876,16 +980,19 @@ class _StayInfoCard extends StatelessWidget {
     final checkOutStr = dateFormat.format(booking.checkOutDate);
     final nights = booking.stayDurationNights;
     final imagePath = _getLocalImagePath(booking.unitName);
+    final s = S.of(context);
 
     return Container(
-      padding: EdgeInsets.all(context.responsive(mobile: AppTheme.spacing16, tablet: AppTheme.spacing24)),
+      padding: EdgeInsets.all(
+        context.responsive(
+          mobile: AppTheme.spacing16,
+          tablet: AppTheme.spacing24,
+        ),
+      ),
       decoration: BoxDecoration(
         color: AppColors.getCardColor(context),
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(
-          color: AppColors.gold,
-          width: 1.5,
-        ),
+        border: Border.all(color: AppColors.gold, width: 1.5),
         boxShadow: context.isDesktop
             ? [
                 BoxShadow(
@@ -952,14 +1059,13 @@ class _StayInfoCard extends StatelessWidget {
                             booking.hasMultipleUnits && booking.units.isNotEmpty
                                 ? booking.units.map((u) => u.name).join(' · ')
                                 : booking.hasMultipleUnits
-                                    ? '${booking.totalUnits} habitaciones'
-                                    : booking.unitName.isNotEmpty
-                                        ? booking.unitName
-                                        : 'Alojamiento',
-                            style: TextStyle(
+                                ? s.guest_home_rooms_count(booking.totalUnits)
+                                : booking.unitName.isNotEmpty
+                                ? booking.unitName
+                                : s.guest_home_accommodation,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.getTextPrimaryColor(context),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -968,7 +1074,10 @@ class _StayInfoCard extends StatelessWidget {
                         if (booking.hasMultipleUnits) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.gold,
                               borderRadius: BorderRadius.circular(12),
@@ -997,7 +1106,9 @@ class _StayInfoCard extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      booking.propertyName.isNotEmpty ? booking.propertyName : 'BF Stay',
+                      booking.propertyName.isNotEmpty
+                          ? booking.propertyName
+                          : 'BF Stay',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.getTextSecondaryColor(context),
@@ -1008,35 +1119,38 @@ class _StayInfoCard extends StatelessWidget {
               ),
             ],
           ),
-          Divider(height: AppTheme.spacing24, color: AppColors.getBorderColor(context)),
-          // Info items: Check-in, Check-out, Noches, Huéspedes
+          Divider(
+            height: AppTheme.spacing24,
+            color: AppColors.getBorderColor(context),
+          ),
+          // Info items: Check-in, Check-out, Noches, Huespedes
           Row(
             children: [
               Expanded(
                 child: _StayInfoItem(
                   icon: Icons.login,
-                  label: 'Check-in',
+                  label: s.guest_home_checkin,
                   value: checkInStr,
                 ),
               ),
               Expanded(
                 child: _StayInfoItem(
                   icon: Icons.logout,
-                  label: 'Check-out',
+                  label: s.guest_home_checkout,
                   value: checkOutStr,
                 ),
               ),
               Expanded(
                 child: _StayInfoItem(
                   icon: Icons.bed_outlined,
-                  label: 'Noches',
+                  label: s.guest_home_nights(nights),
                   value: '$nights',
                 ),
               ),
               Expanded(
                 child: _StayInfoItem(
                   icon: Icons.people_outline,
-                  label: 'Huéspedes',
+                  label: s.guest_home_guests,
                   value: '${booking.numGuests}',
                 ),
               ),
@@ -1048,7 +1162,7 @@ class _StayInfoCard extends StatelessWidget {
   }
 }
 
-/// Widget para cada item de información de estancia
+/// Widget para cada item de informacion de estancia
 class _StayInfoItem extends StatelessWidget {
   const _StayInfoItem({
     required this.icon,
@@ -1070,11 +1184,7 @@ class _StayInfoItem extends StatelessWidget {
             color: AppColors.gold,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: AppColors.black,
-          ),
+          child: Icon(icon, size: 18, color: AppColors.black),
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
@@ -1146,10 +1256,7 @@ class _ServiceCard extends StatelessWidget {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.gold,
-                      width: 1.5,
-                    ),
+                    border: Border.all(color: AppColors.gold, width: 1.5),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10.5),
@@ -1159,30 +1266,20 @@ class _ServiceCard extends StatelessWidget {
                             ? LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [
-                                  AppColors.gold,
-                                  AppColors.goldLight,
-                                ],
+                                colors: [AppColors.gold, AppColors.goldLight],
                               )
                             : null,
                       ),
                       child: imagePath != null
-                          ? Image.asset(
-                              imagePath!,
-                              fit: BoxFit.cover,
-                            )
-                          : Icon(
-                              icon,
-                              color: AppColors.black,
-                              size: 32,
-                            ),
+                          ? Image.asset(imagePath!, fit: BoxFit.cover)
+                          : Icon(icon, color: AppColors.black, size: 32),
                     ),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 6),
-            // Título debajo del recuadro
+            // Titulo debajo del recuadro
             Text(
               title,
               textAlign: TextAlign.center,

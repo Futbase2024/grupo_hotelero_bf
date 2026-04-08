@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/di/injection.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
@@ -123,7 +124,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
       ),
       title: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
-          final title = state is ChatLoaded ? state.otherParticipantName : 'Chat';
+          final title = state is ChatLoaded ? state.otherParticipantName : S.of(context).admin_chat_title;
 
           return Row(
             children: [
@@ -153,7 +154,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                     ),
                     if (state is ChatLoaded)
                       Text(
-                        'En línea',
+                        S.of(context).admin_chat_online,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppColors.success,
                             ),
@@ -178,13 +179,13 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline, color: AppColors.error),
-                      SizedBox(width: 12),
-                      Text('Eliminar conversación'),
+                      const Icon(Icons.delete_outline, color: AppColors.error),
+                      const SizedBox(width: 12),
+                      Text(S.of(context).admin_chat_delete_conversation),
                     ],
                   ),
                 ),
@@ -199,11 +200,10 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
   void _showDeleteConfirmation(BuildContext context) {
     ConfirmationDialog.show(
       context: context,
-      title: 'Eliminar conversación',
-      body: '¿Estás seguro de que quieres eliminar esta conversación? '
-          'Se eliminarán todos los mensajes y no se podrá recuperar.',
-      confirmText: 'Eliminar',
-      cancelText: 'Cancelar',
+      title: S.of(context).admin_chat_delete_conversation,
+      body: S.of(context).admin_chat_delete_confirm_body,
+      confirmText: S.of(context).common_delete,
+      cancelText: S.of(context).common_cancel,
       isDestructive: true,
     ).then((confirmed) {
       if (confirmed && mounted) {
@@ -222,8 +222,8 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
     ).then((_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conversación eliminada'),
+          SnackBar(
+            content: Text(S.of(context).admin_chat_deleted_success),
             backgroundColor: AppColors.success,
           ),
         );
@@ -232,7 +232,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al eliminar: $error'),
+            content: Text(S.of(context).admin_chat_error_deleting('$error')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -279,7 +279,7 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   ));
                 }
               },
-              child: const Text('Reintentar'),
+              child: Text(S.of(context).common_retry),
             ),
           ],
         ),
@@ -337,14 +337,14 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           ),
           const SizedBox(height: AppTheme.spacing24),
           Text(
-            'Conversación vacía',
+            S.of(context).admin_chat_empty_title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Escribe un mensaje para comenzar',
+            S.of(context).admin_chat_empty_subtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.gray500,
                 ),

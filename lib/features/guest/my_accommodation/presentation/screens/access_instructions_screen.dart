@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
@@ -9,7 +10,7 @@ import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/property_entity.dart';
 
-/// Pantalla de Instrucciones de Acceso completas para el huésped
+/// Pantalla de Instrucciones de Acceso completas para el huesped
 class AccessInstructionsScreen extends StatelessWidget {
   const AccessInstructionsScreen({
     super.key,
@@ -22,14 +23,15 @@ class AccessInstructionsScreen extends StatelessWidget {
   final AdminBookingEntity booking;
   final UnitEntity unit;
   final PropertyEntity property;
-  /// Hora actual del servidor (para evitar manipulación del reloj del dispositivo)
+
+  /// Hora actual del servidor (para evitar manipulacion del reloj del dispositivo)
   /// Si es null, se usa DateTime.now() como fallback
   final DateTime? serverTime;
 
   /// Hora de check-in (misma para todos)
   static const String _checkinTime = '14:00';
 
-  /// Hora a partir de la cual están disponibles las llaves/códigos por defecto (14:00)
+  /// Hora a partir de la cual estan disponibles las llaves/codigos por defecto (14:00)
   static const int _defaultKeysAvailableHour = 14;
 
   /// Determina si es un hotel basado en el nombre de la propiedad
@@ -38,35 +40,36 @@ class AccessInstructionsScreen extends StatelessWidget {
     return name.contains('hotel') || name.contains('grupo hotelero');
   }
 
-  /// Hora límite de check-out según tipo de propiedad
+  /// Hora limite de check-out segun tipo de propiedad
   String get _checkoutTime => _isHotel ? '12:00' : '11:30';
 
-  /// Verifica si las llaves y códigos están disponibles
-  /// Por defecto: 14:00 del día de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
-  /// IMPORTANTE: Usa la hora del servidor para evitar manipulación del reloj del dispositivo
+  /// Verifica si las llaves y codigos estan disponibles
+  /// Por defecto: 14:00 del dia de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
+  /// IMPORTANTE: Usa la hora del servidor para evitar manipulacion del reloj del dispositivo
   bool get _areKeysAvailable {
-    // Usar hora del servidor si está disponible, si no, usar hora local como fallback
+    // Usar hora del servidor si esta disponible, si no, usar hora local como fallback
     final now = serverTime ?? DateTime.now();
     final checkInDate = booking.checkInDate;
 
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
     if (booking.earlyCheckinAvailableAt != null) {
       final earlyTime = booking.earlyCheckinAvailableAt!;
 
-      // Verificar que el early check-in fue marcado el mismo día de la reserva
-      final isSameDay = earlyTime.year == checkInDate.year &&
+      // Verificar que el early check-in fue marcado el mismo dia de la reserva
+      final isSameDay =
+          earlyTime.year == checkInDate.year &&
           earlyTime.month == checkInDate.month &&
           earlyTime.day == checkInDate.day;
 
-      // Solo tiene efecto si es el mismo día Y ya pasó la hora marcada
+      // Solo tiene efecto si es el mismo dia Y ya paso la hora marcada
       if (isSameDay) {
         return now.isAfter(earlyTime) || now.isAtSameMomentAs(earlyTime);
       }
-      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
+      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
     }
 
-    // Comportamiento por defecto: 14:00 del día de check-in
+    // Comportamiento por defecto: 14:00 del dia de check-in
     final keysAvailableTime = DateTime(
       checkInDate.year,
       checkInDate.month,
@@ -76,33 +79,35 @@ class AccessInstructionsScreen extends StatelessWidget {
       0,
     );
 
-    return now.isAfter(keysAvailableTime) || now.isAtSameMomentAs(keysAvailableTime);
+    return now.isAfter(keysAvailableTime) ||
+        now.isAtSameMomentAs(keysAvailableTime);
   }
 
-  /// Calcula cuándo estarán disponibles las llaves
-  /// Por defecto: 14:00 del día de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
-  /// NOTA: El cálculo de disponibilidad real usa _areKeysAvailable con hora del servidor
+  /// Calcula cuando estaran disponibles las llaves
+  /// Por defecto: 14:00 del dia de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
+  /// NOTA: El calculo de disponibilidad real usa _areKeysAvailable con hora del servidor
   DateTime get _keysAvailableTime {
     final checkInDate = booking.checkInDate;
 
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
     if (booking.earlyCheckinAvailableAt != null) {
       final earlyTime = booking.earlyCheckinAvailableAt!;
 
-      // Verificar que el early check-in fue marcado el mismo día de la reserva
-      final isSameDay = earlyTime.year == checkInDate.year &&
+      // Verificar que el early check-in fue marcado el mismo dia de la reserva
+      final isSameDay =
+          earlyTime.year == checkInDate.year &&
           earlyTime.month == checkInDate.month &&
           earlyTime.day == checkInDate.day;
 
-      // Solo tiene efecto si es el mismo día
+      // Solo tiene efecto si es el mismo dia
       if (isSameDay) {
         return earlyTime;
       }
-      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
+      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
     }
 
-    // Comportamiento por defecto: 14:00 del día de check-in
+    // Comportamiento por defecto: 14:00 del dia de check-in
     return DateTime(
       checkInDate.year,
       checkInDate.month,
@@ -113,7 +118,7 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  /// Obtiene la dirección completa formateada
+  /// Obtiene la direccion completa formateada
   String get _fullAddress {
     final parts = <String>[];
     if (unit.addressLine1 != null && unit.addressLine1!.isNotEmpty) {
@@ -137,7 +142,7 @@ class AccessInstructionsScreen extends StatelessWidget {
     return parts.isNotEmpty ? parts.join(', ') : 'Dirección no disponible';
   }
 
-  /// Abre Google Maps con la ubicación
+  /// Abre Google Maps con la ubicacion
   Future<void> _openMaps() async {
     final lat = unit.lat;
     final lng = unit.lng;
@@ -149,9 +154,10 @@ class AccessInstructionsScreen extends StatelessWidget {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
     } else {
-      // Si no hay coordenadas, buscar por dirección
+      // Si no hay coordenadas, buscar por direccion
       final encodedAddress = Uri.encodeComponent(_fullAddress);
-      final url = 'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
+      final url =
+          'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -161,10 +167,11 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   /// Copia un texto al portapapeles
   void _copyToClipboard(BuildContext context, String text, String label) {
+    final s = S.of(context);
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$label copiado'),
+        content: Text(s.guest_access_copied(label)),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -175,7 +182,8 @@ class AccessInstructionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Si hay instrucciones de bienvenida personalizadas, mostrarlas directamente
-    if (unit.welcomeInstructions != null && unit.welcomeInstructions!.isNotEmpty) {
+    if (unit.welcomeInstructions != null &&
+        unit.welcomeInstructions!.isNotEmpty) {
       return _buildWelcomeInstructionsView(context);
     }
 
@@ -185,6 +193,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   /// Vista con las instrucciones de bienvenida personalizadas
   Widget _buildWelcomeInstructionsView(BuildContext context) {
+    final s = S.of(context);
     return Scaffold(
       backgroundColor: AppColors.getSurfaceColor(context),
       appBar: AppBar(
@@ -198,7 +207,7 @@ class AccessInstructionsScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Instrucciones de Acceso',
+          s.guest_access_instructions,
           style: TextStyle(
             color: AppColors.getTextPrimaryColor(context),
             fontWeight: FontWeight.w600,
@@ -212,18 +221,22 @@ class AccessInstructionsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tarjeta con el código de acceso destacado
+                // Tarjeta con el codigo de acceso destacado
                 _buildKeyCodeHighlightCard(context),
                 const SizedBox(height: AppTheme.spacing20),
 
                 // Tarjeta WiFi destacada (si hay datos en la base de datos)
-                if (unit.wifiNetwork != null && unit.wifiNetwork!.isNotEmpty) ...[
+                if (unit.wifiNetwork != null &&
+                    unit.wifiNetwork!.isNotEmpty) ...[
                   _buildWifiHighlightCard(context),
                   const SizedBox(height: AppTheme.spacing20),
                 ],
 
-                // Instrucciones completas formateadas (sin sección WiFi)
-                _buildFormattedInstructions(context, _removeWifiSection(unit.welcomeInstructions!)),
+                // Instrucciones completas formateadas (sin seccion WiFi)
+                _buildFormattedInstructions(
+                  context,
+                  _removeWifiSection(unit.welcomeInstructions!),
+                ),
               ],
             ),
           ),
@@ -232,9 +245,9 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  /// Elimina la sección WiFi del texto de instrucciones
+  /// Elimina la seccion WiFi del texto de instrucciones
   String _removeWifiSection(String instructions) {
-    // Patrón para detectar y eliminar la sección WiFi completa
+    // Patron para detectar y eliminar la seccion WiFi completa
     final wifiPattern = RegExp(
       r'\"WIFI\"[\s\S]*?(?=OS RECORDAMOS|EL INCUMPLIMIENTO|La hora del Check-out|$)',
       caseSensitive: false,
@@ -244,6 +257,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   /// Tarjeta destacada con los datos de WiFi
   Widget _buildWifiHighlightCard(BuildContext context) {
+    final s = S.of(context);
     final wifiNetwork = unit.wifiNetwork ?? '';
     final wifiPassword = unit.wifiPassword ?? '';
 
@@ -290,7 +304,7 @@ class AccessInstructionsScreen extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Red:',
+                s.guest_access_network,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.getTextSecondaryColor(context),
@@ -308,7 +322,11 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () => _copyToClipboard(context, wifiNetwork, 'Red WiFi'),
+                onPressed: () => _copyToClipboard(
+                  context,
+                  wifiNetwork,
+                  s.guest_access_wifi_network,
+                ),
                 icon: const Icon(Icons.copy, size: 22),
                 color: AppColors.gold,
               ),
@@ -316,11 +334,11 @@ class AccessInstructionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing12),
 
-          // Contraseña
+          // Contrasena
           Row(
             children: [
               Text(
-                'Contraseña:',
+                s.guest_access_password,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.getTextSecondaryColor(context),
@@ -338,7 +356,11 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () => _copyToClipboard(context, wifiPassword, 'Contraseña WiFi'),
+                onPressed: () => _copyToClipboard(
+                  context,
+                  wifiPassword,
+                  s.guest_access_wifi_password_label,
+                ),
                 icon: const Icon(Icons.copy, size: 22),
                 color: AppColors.gold,
               ),
@@ -349,15 +371,13 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  /// Tarjeta destacada con los códigos de acceso
+  /// Tarjeta destacada con los codigos de acceso
   Widget _buildKeyCodeHighlightCard(BuildContext context) {
+    final s = S.of(context);
     final mainDoorCode = property.mainDoorKeycode;
     final boxCode = booking.keyboxCode;
 
-    // Apartamento Bandera solo tiene código de puerta principal (sin casillero)
-    final isApartamentoBandera = unit.name == 'Apartamento Bandera';
-
-    // Si las llaves no están disponibles, mostrar mensaje informativo
+    // Si las llaves no estan disponibles, mostrar mensaje informativo
     if (!_areKeysAvailable) {
       return _buildKeysNotAvailableCard(context);
     }
@@ -389,7 +409,7 @@ class AccessInstructionsScreen extends StatelessWidget {
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Text(
-                  'Tus Códigos de Acceso',
+                  s.guest_access_your_codes,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -401,22 +421,33 @@ class AccessInstructionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing16),
 
-          // Código puerta principal
+          // Codigo puerta principal
           if (mainDoorCode != null && mainDoorCode.isNotEmpty) ...[
-            _buildCodeRow(context, 'Puerta Principal', mainDoorCode, Icons.door_front_door_outlined),
+            _buildCodeRow(
+              context,
+              s.guest_access_main_door,
+              mainDoorCode,
+              Icons.door_front_door_outlined,
+            ),
             const SizedBox(height: AppTheme.spacing12),
           ],
 
-          // Código del casillero/caja (no mostrar para Apartamento Bandera)
-          if (boxCode != null && boxCode.isNotEmpty && !isApartamentoBandera)
-            _buildCodeRow(context, 'Casillero de Llaves', boxCode, Icons.lock_open_outlined),
+          // Codigo del casillero/caja
+          if (boxCode != null && boxCode.isNotEmpty)
+            _buildCodeRow(
+              context,
+              s.guest_access_key_locker,
+              boxCode,
+              Icons.lock_open_outlined,
+            ),
         ],
       ),
     );
   }
 
-  /// Tarjeta informativa cuando las llaves/códigos aún no están disponibles
+  /// Tarjeta informativa cuando las llaves/codigos aun no estan disponibles
   Widget _buildKeysNotAvailableCard(BuildContext context) {
+    final s = S.of(context);
     final keysAvailableTime = _keysAvailableTime;
     final formattedDate =
         '${keysAvailableTime.day.toString().padLeft(2, '0')}/${keysAvailableTime.month.toString().padLeft(2, '0')}/${keysAvailableTime.year}';
@@ -450,9 +481,9 @@ class AccessInstructionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing16),
 
-          // Título
+          // Titulo
           Text(
-            'Códigos de acceso',
+            s.guest_access_codes_title,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -464,7 +495,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
           // Mensaje descriptivo
           Text(
-            'Los códigos de acceso y llaves estarán disponibles el día de tu llegada a partir de las $formattedTime h.',
+            s.guest_access_codes_available_message(formattedTime),
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextSecondaryColor(context),
@@ -484,14 +515,13 @@ class AccessInstructionsScreen extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.event_outlined,
-                  size: 18,
-                  color: AppColors.black,
-                ),
+                Icon(Icons.event_outlined, size: 18, color: AppColors.black),
                 const SizedBox(width: 8),
                 Text(
-                  '$formattedDate a las $formattedTime h',
+                  s.guest_access_codes_available_datetime(
+                    formattedDate,
+                    formattedTime,
+                  ),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -506,8 +536,13 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  /// Fila con código de acceso
-  Widget _buildCodeRow(BuildContext context, String label, String code, IconData icon) {
+  /// Fila con codigo de acceso
+  Widget _buildCodeRow(
+    BuildContext context,
+    String label,
+    String code,
+    IconData icon,
+  ) {
     return Row(
       children: [
         Container(
@@ -552,7 +587,10 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   /// Formatea y muestra las instrucciones de bienvenida
-  Widget _buildFormattedInstructions(BuildContext context, String instructions) {
+  Widget _buildFormattedInstructions(
+    BuildContext context,
+    String instructions,
+  ) {
     // Dividir las instrucciones en secciones
     final lines = instructions.split('\n');
     final sections = <Widget>[];
@@ -561,12 +599,16 @@ class AccessInstructionsScreen extends StatelessWidget {
       final trimmedLine = line.trim();
       if (trimmedLine.isEmpty) continue;
 
-      // Detectar títulos (líneas en mayúsculas o entre comillas)
+      // Detectar titulos (lineas en mayusculas o entre comillas)
       if (_isTitle(trimmedLine)) {
         sections.add(_buildInstructionTitle(context, _cleanTitle(trimmedLine)));
-      } else if (trimmedLine.startsWith('•') || trimmedLine.startsWith('-')) {
-        sections.add(_buildBulletPoint(context, trimmedLine.substring(1).trim()));
-      } else if (trimmedLine.startsWith('http') || trimmedLine.contains('maps.google')) {
+      } else if (trimmedLine.startsWith('\u2022') ||
+          trimmedLine.startsWith('-')) {
+        sections.add(
+          _buildBulletPoint(context, trimmedLine.substring(1).trim()),
+        );
+      } else if (trimmedLine.startsWith('http') ||
+          trimmedLine.contains('maps.google')) {
         sections.add(_buildLinkCard(context, trimmedLine));
       } else {
         sections.add(_buildInstructionText(context, trimmedLine));
@@ -580,15 +622,15 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  /// Detecta si una línea es un título
+  /// Detecta si una linea es un titulo
   bool _isTitle(String line) {
-    // Títulos en mayúsculas o entre comillas
+    // Titulos en mayusculas o entre comillas
     final upperCaseRatio = line.toUpperCase() == line && line.length > 3;
     final isQuoted = line.startsWith('"') && line.endsWith('"');
     return upperCaseRatio || isQuoted;
   }
 
-  /// Limpia el título de comillas
+  /// Limpia el titulo de comillas
   String _cleanTitle(String title) {
     if (title.startsWith('"') && title.endsWith('"')) {
       return title.substring(1, title.length - 1);
@@ -596,17 +638,16 @@ class AccessInstructionsScreen extends StatelessWidget {
     return title;
   }
 
-  /// Widget para título de sección
+  /// Widget para titulo de seccion
   Widget _buildInstructionTitle(BuildContext context, String title) {
     return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spacing16, bottom: AppTheme.spacing8),
+      padding: const EdgeInsets.only(
+        top: AppTheme.spacing16,
+        bottom: AppTheme.spacing8,
+      ),
       child: Row(
         children: [
-          Icon(
-            _getIconForTitle(title),
-            size: 20,
-            color: AppColors.gold,
-          ),
+          Icon(_getIconForTitle(title), size: 20, color: AppColors.gold),
           const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
@@ -623,20 +664,24 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  /// Obtiene el icono según el título
+  /// Obtiene el icono segun el titulo
   IconData _getIconForTitle(String title) {
     final lowerTitle = title.toLowerCase();
-    if (lowerTitle.contains('localización') || lowerTitle.contains('direccion')) {
+    if (lowerTitle.contains('localizaci\u00f3n') ||
+        lowerTitle.contains('direccion')) {
       return Icons.location_on_outlined;
-    } else if (lowerTitle.contains('edificio') || lowerTitle.contains('portal')) {
+    } else if (lowerTitle.contains('edificio') ||
+        lowerTitle.contains('portal')) {
       return Icons.door_front_door_outlined;
-    } else if (lowerTitle.contains('apartamento') || lowerTitle.contains('acceso')) {
+    } else if (lowerTitle.contains('apartamento') ||
+        lowerTitle.contains('acceso')) {
       return Icons.vpn_key_outlined;
     } else if (lowerTitle.contains('wifi')) {
       return Icons.wifi_outlined;
     } else if (lowerTitle.contains('norma')) {
       return Icons.rule_outlined;
-    } else if (lowerTitle.contains('check-out') || lowerTitle.contains('checkout')) {
+    } else if (lowerTitle.contains('check-out') ||
+        lowerTitle.contains('checkout')) {
       return Icons.logout_outlined;
     } else if (lowerTitle.contains('contacto')) {
       return Icons.phone_outlined;
@@ -647,15 +692,14 @@ class AccessInstructionsScreen extends StatelessWidget {
   /// Widget para punto de lista
   Widget _buildBulletPoint(BuildContext context, String text) {
     return Padding(
-      padding: const EdgeInsets.only(left: AppTheme.spacing8, bottom: AppTheme.spacing4),
+      padding: const EdgeInsets.only(
+        left: AppTheme.spacing8,
+        bottom: AppTheme.spacing4,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.circle,
-            size: 6,
-            color: AppColors.gold,
-          ),
+          Icon(Icons.circle, size: 6, color: AppColors.gold),
           const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
@@ -672,7 +716,7 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  /// Widget para texto de instrucción normal
+  /// Widget para texto de instruccion normal
   Widget _buildInstructionText(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
@@ -689,12 +733,13 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   /// Widget para tarjeta con enlace
   Widget _buildLinkCard(BuildContext context, String url) {
+    final s = S.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
       child: ElevatedButton.icon(
         onPressed: () => _openMaps(),
         icon: const Icon(Icons.map_outlined, size: 20),
-        label: const Text('Abrir en Google Maps'),
+        label: Text(s.guest_access_open_maps),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.gold,
           foregroundColor: AppColors.black,
@@ -709,6 +754,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   /// Vista estructurada por secciones (cuando no hay welcome_instructions)
   Widget _buildStructuredView(BuildContext context) {
+    final s = S.of(context);
     return Scaffold(
       backgroundColor: AppColors.getSurfaceColor(context),
       appBar: AppBar(
@@ -722,7 +768,7 @@ class AccessInstructionsScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Instrucciones de Acceso',
+          s.guest_access_instructions,
           style: TextStyle(
             color: AppColors.getTextPrimaryColor(context),
             fontWeight: FontWeight.w600,
@@ -740,26 +786,39 @@ class AccessInstructionsScreen extends StatelessWidget {
                 _buildWelcomeCard(context),
                 const SizedBox(height: AppTheme.spacing20),
 
-                // Localización
-                _buildSectionTitle(context, 'Localización', Icons.location_on_outlined),
+                // Localizacion
+                _buildSectionTitle(
+                  context,
+                  s.guest_access_location,
+                  Icons.location_on_outlined,
+                ),
                 const SizedBox(height: AppTheme.spacing12),
                 _buildLocationCard(context),
                 const SizedBox(height: AppTheme.spacing24),
 
                 // Acceso al edificio
-                _buildSectionTitle(context, 'Acceso al Edificio', Icons.door_front_door_outlined),
+                _buildSectionTitle(
+                  context,
+                  s.guest_access_building_access,
+                  Icons.door_front_door_outlined,
+                ),
                 const SizedBox(height: AppTheme.spacing12),
                 _buildBuildingAccessCard(context),
                 const SizedBox(height: AppTheme.spacing24),
 
                 // Acceso al apartamento
-                _buildSectionTitle(context, 'Acceso al Apartamento', Icons.vpn_key_outlined),
+                _buildSectionTitle(
+                  context,
+                  s.guest_access_apartment_access,
+                  Icons.vpn_key_outlined,
+                ),
                 const SizedBox(height: AppTheme.spacing12),
                 _buildApartmentAccessCard(context),
                 const SizedBox(height: AppTheme.spacing24),
 
                 // WiFi
-                if (unit.wifiNetwork != null && unit.wifiNetwork!.isNotEmpty) ...[
+                if (unit.wifiNetwork != null &&
+                    unit.wifiNetwork!.isNotEmpty) ...[
                   _buildSectionTitle(context, 'WiFi', Icons.wifi_outlined),
                   const SizedBox(height: AppTheme.spacing12),
                   _buildWifiCard(context),
@@ -767,19 +826,31 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ],
 
                 // Normas
-                _buildSectionTitle(context, 'Normas de la Casa', Icons.rule_outlined),
+                _buildSectionTitle(
+                  context,
+                  s.guest_access_house_rules,
+                  Icons.rule_outlined,
+                ),
                 const SizedBox(height: AppTheme.spacing12),
                 _buildRulesCard(context),
                 const SizedBox(height: AppTheme.spacing24),
 
                 // Check-out
-                _buildSectionTitle(context, 'Check-out', Icons.logout_outlined),
+                _buildSectionTitle(
+                  context,
+                  s.guest_access_checkout,
+                  Icons.logout_outlined,
+                ),
                 const SizedBox(height: AppTheme.spacing12),
                 _buildCheckoutCard(context),
                 const SizedBox(height: AppTheme.spacing24),
 
                 // Contacto
-                _buildSectionTitle(context, 'Contacto', Icons.phone_outlined),
+                _buildSectionTitle(
+                  context,
+                  s.guest_access_contact,
+                  Icons.phone_outlined,
+                ),
                 const SizedBox(height: AppTheme.spacing12),
                 _buildContactCard(context),
               ],
@@ -791,8 +862,11 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildWelcomeCard(BuildContext context) {
-    final guestName = booking.guestFirstName ?? 'Huésped';
-    final unitName = unit.name.isNotEmpty ? unit.name : 'su alojamiento';
+    final s = S.of(context);
+    final guestName = booking.guestFirstName ?? s.guest_access_guest;
+    final unitName = unit.name.isNotEmpty
+        ? unit.name
+        : s.guest_access_your_accommodation;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
@@ -821,7 +895,7 @@ class AccessInstructionsScreen extends StatelessWidget {
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Text(
-                  '¡Hola, $guestName!',
+                  s.guest_access_hello(guestName),
                   style: TextStyle(
                     fontSize: ResponsiveFontSize.titleLarge(context),
                     fontWeight: FontWeight.bold,
@@ -833,7 +907,7 @@ class AccessInstructionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing12),
           Text(
-            'Le escribimos para hacerle llegar la información del acceso a $unitName. Guarde esta información para su estancia.',
+            s.guest_access_welcome_message(unitName),
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextSecondaryColor(context),
@@ -848,11 +922,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   Widget _buildSectionTitle(BuildContext context, String title, IconData icon) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: AppColors.gold,
-        ),
+        Icon(icon, size: 20, color: AppColors.gold),
         const SizedBox(width: AppTheme.spacing8),
         Text(
           title,
@@ -867,6 +937,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildLocationCard(BuildContext context) {
+    final s = S.of(context);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -891,7 +962,7 @@ class AccessInstructionsScreen extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: _openMaps,
               icon: const Icon(Icons.map_outlined, size: 20),
-              label: const Text('Abrir en Google Maps'),
+              label: Text(s.guest_access_open_maps),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
@@ -908,7 +979,13 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildBuildingAccessCard(BuildContext context) {
+    final s = S.of(context);
     final mainDoorCode = property.mainDoorKeycode;
+    final keysAvailableTime = _keysAvailableTime;
+    final formattedDate =
+        '${keysAvailableTime.day}/${keysAvailableTime.month}/${keysAvailableTime.year}';
+    final formattedTime =
+        '${keysAvailableTime.hour.toString().padLeft(2, '0')}:${keysAvailableTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -921,7 +998,7 @@ class AccessInstructionsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'En la puerta de entrada hay una caja de códigos donde están las llaves de la puerta principal. Cógela y vuelva a dejarla en el mismo casillero una vez abierta.',
+            s.guest_access_building_instructions,
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextSecondaryColor(context),
@@ -929,12 +1006,14 @@ class AccessInstructionsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          // Solo mostrar el código si está disponible
-          if (_areKeysAvailable && mainDoorCode != null && mainDoorCode.isNotEmpty) ...[
+          // Solo mostrar el codigo si esta disponible
+          if (_areKeysAvailable &&
+              mainDoorCode != null &&
+              mainDoorCode.isNotEmpty) ...[
             Row(
               children: [
                 Text(
-                  'Código:',
+                  s.guest_access_code_label,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -943,7 +1022,10 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.gold,
                     borderRadius: BorderRadius.circular(8),
@@ -960,7 +1042,11 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: AppTheme.spacing8),
                 IconButton(
-                  onPressed: () => _copyToClipboard(context, mainDoorCode, 'Código de puerta'),
+                  onPressed: () => _copyToClipboard(
+                    context,
+                    mainDoorCode,
+                    s.guest_access_door_code,
+                  ),
                   icon: const Icon(Icons.copy, size: 22),
                   color: AppColors.getTextSecondaryColor(context),
                 ),
@@ -968,7 +1054,7 @@ class AccessInstructionsScreen extends StatelessWidget {
             ),
           ] else if (!_areKeysAvailable)
             Text(
-              'El código de acceso estará disponible a partir de las ${_keysAvailableTime.hour.toString().padLeft(2, '0')}:${_keysAvailableTime.minute.toString().padLeft(2, '0')} del día de tu llegada.',
+              s.guest_access_code_available_at(formattedDate, formattedTime),
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
@@ -977,7 +1063,7 @@ class AccessInstructionsScreen extends StatelessWidget {
             )
           else
             Text(
-              'El código de acceso le será proporcionado por el personal.',
+              s.guest_access_code_provided_by_staff,
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
@@ -990,8 +1076,11 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildApartmentAccessCard(BuildContext context) {
-    // El código de acceso viene de la reserva, no de la unidad
+    final s = S.of(context);
     final boxCode = booking.keyboxCode;
+    final keysAvailableTime = _keysAvailableTime;
+    final formattedTime =
+        '${keysAvailableTime.hour.toString().padLeft(2, '0')}:${keysAvailableTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -1004,7 +1093,7 @@ class AccessInstructionsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Una vez dentro verá varios casilleros. Su apartamento corresponde al casillero indicado. Dentro están las llaves de su apartamento.',
+            s.guest_access_apartment_instructions,
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextSecondaryColor(context),
@@ -1012,12 +1101,12 @@ class AccessInstructionsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          // Solo mostrar el código si está disponible
+          // Solo mostrar el codigo si esta disponible
           if (_areKeysAvailable && boxCode != null && boxCode.isNotEmpty) ...[
             Row(
               children: [
                 Text(
-                  'Código del casillero:',
+                  s.guest_access_locker_code_label,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -1026,7 +1115,10 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.gold,
                     borderRadius: BorderRadius.circular(8),
@@ -1043,7 +1135,11 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: AppTheme.spacing8),
                 IconButton(
-                  onPressed: () => _copyToClipboard(context, boxCode, 'Código de casillero'),
+                  onPressed: () => _copyToClipboard(
+                    context,
+                    boxCode,
+                    s.guest_access_locker_code,
+                  ),
                   icon: const Icon(Icons.copy, size: 22),
                   color: AppColors.getTextSecondaryColor(context),
                 ),
@@ -1051,7 +1147,7 @@ class AccessInstructionsScreen extends StatelessWidget {
             ),
           ] else if (!_areKeysAvailable)
             Text(
-              'El código del casillero estará disponible a partir de las ${_keysAvailableTime.hour.toString().padLeft(2, '0')}:${_keysAvailableTime.minute.toString().padLeft(2, '0')} del día de tu llegada.',
+              s.guest_access_locker_available_at(formattedTime),
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
@@ -1060,7 +1156,7 @@ class AccessInstructionsScreen extends StatelessWidget {
             )
           else
             Text(
-              'El código del casillero le será proporcionado por el personal.',
+              s.guest_access_locker_provided_by_staff,
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
@@ -1073,6 +1169,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildWifiCard(BuildContext context) {
+    final s = S.of(context);
     final wifiNetwork = unit.wifiNetwork ?? '';
     final wifiPassword = unit.wifiPassword ?? '';
 
@@ -1090,7 +1187,7 @@ class AccessInstructionsScreen extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Red:',
+                s.guest_access_network,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -1109,7 +1206,11 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () => _copyToClipboard(context, wifiNetwork, 'Nombre de red'),
+                onPressed: () => _copyToClipboard(
+                  context,
+                  wifiNetwork,
+                  s.guest_access_network_name,
+                ),
                 icon: const Icon(Icons.copy, size: 20),
                 color: AppColors.getTextSecondaryColor(context),
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -1118,11 +1219,11 @@ class AccessInstructionsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing12),
-          // Contraseña
+          // Contrasena
           Row(
             children: [
               Text(
-                'Contraseña:',
+                s.guest_access_password,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -1141,7 +1242,11 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () => _copyToClipboard(context, wifiPassword, 'Contraseña WiFi'),
+                onPressed: () => _copyToClipboard(
+                  context,
+                  wifiPassword,
+                  s.guest_access_wifi_password_label,
+                ),
                 icon: const Icon(Icons.copy, size: 20),
                 color: AppColors.getTextSecondaryColor(context),
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -1155,6 +1260,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildRulesCard(BuildContext context) {
+    final s = S.of(context);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -1168,14 +1274,14 @@ class AccessInstructionsScreen extends StatelessWidget {
           // Horarios de Check-in y Check-out
           _buildScheduleRow(
             context,
-            'Check-in',
+            s.guest_access_checkin,
             _checkinTime,
             Icons.login,
           ),
           const SizedBox(height: AppTheme.spacing12),
           _buildScheduleRow(
             context,
-            'Check-out',
+            s.guest_access_checkout_label,
             _checkoutTime,
             Icons.logout,
           ),
@@ -1185,22 +1291,22 @@ class AccessInstructionsScreen extends StatelessWidget {
 
           _buildRuleItem(
             context,
-            'Somos alojamiento 100% libre de humos.',
-            'Prohibido fumar dentro del apartamento. Esta prohibición incluye cigarrillos electrónicos y vaporizadores. En todo caso será cargado en su cuenta un importe de 50€ para limpiar y desodorizar la habitación.',
+            s.guest_access_rule_smoke_free_title,
+            s.guest_access_rule_smoke_free_description,
             Icons.smoke_free_outlined,
           ),
           const SizedBox(height: AppTheme.spacing16),
           _buildRuleItem(
             context,
-            'Las celebraciones y ruidos fuertes no están permitidos.',
-            'Respete el descanso de los demás huéspedes y vecinos.',
+            s.guest_access_rule_no_parties_title,
+            s.guest_access_rule_no_parties_description,
             Icons.volume_off_outlined,
           ),
           const SizedBox(height: AppTheme.spacing16),
           _buildRuleItem(
             context,
-            'No podrá acceder al recinto nadie que no se haya registrado previamente.',
-            'Todos los huéspedes deben estar registrados.',
+            s.guest_access_rule_registered_only_title,
+            s.guest_access_rule_registered_only_description,
             Icons.person_add_disabled_outlined,
           ),
           const SizedBox(height: AppTheme.spacing16),
@@ -1221,7 +1327,7 @@ class AccessInstructionsScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'El incumplimiento de estas normas podrá impedir su permanencia en nuestras instalaciones.',
+                    s.guest_access_rules_warning,
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.error,
@@ -1238,7 +1344,12 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   /// Fila con horario de check-in o check-out
-  Widget _buildScheduleRow(BuildContext context, String label, String time, IconData icon) {
+  Widget _buildScheduleRow(
+    BuildContext context,
+    String label,
+    String time,
+    IconData icon,
+  ) {
     return Row(
       children: [
         Container(
@@ -1247,11 +1358,7 @@ class AccessInstructionsScreen extends StatelessWidget {
             color: AppColors.gold,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.black,
-            size: 22,
-          ),
+          child: Icon(icon, color: AppColors.black, size: 22),
         ),
         const SizedBox(width: AppTheme.spacing12),
         Expanded(
@@ -1267,11 +1374,16 @@ class AccessInstructionsScreen extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.gold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Text(
                   time,
@@ -1289,7 +1401,12 @@ class AccessInstructionsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRuleItem(BuildContext context, String title, String description, IconData icon) {
+  Widget _buildRuleItem(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1299,11 +1416,7 @@ class AccessInstructionsScreen extends StatelessWidget {
             color: AppColors.gold.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppColors.gold,
-          ),
+          child: Icon(icon, size: 20, color: AppColors.gold),
         ),
         const SizedBox(width: AppTheme.spacing12),
         Expanded(
@@ -1335,6 +1448,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildCheckoutCard(BuildContext context) {
+    final s = S.of(context);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -1365,7 +1479,7 @@ class AccessInstructionsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hora límite de Check-out',
+                      s.guest_access_checkout_deadline,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -1374,7 +1488,7 @@ class AccessInstructionsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Hasta las $_checkoutTime',
+                      s.guest_access_checkout_until(_checkoutTime),
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -1388,7 +1502,7 @@ class AccessInstructionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing12),
           Text(
-            'Las llaves deben dejarlas en la misma caja de códigos de la entrada. Le agradeceríamos que nos haga saber cuando dejen el apartamento.',
+            s.guest_access_checkout_instructions,
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextSecondaryColor(context),
@@ -1401,6 +1515,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   }
 
   Widget _buildContactCard(BuildContext context) {
+    final s = S.of(context);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -1412,7 +1527,7 @@ class AccessInstructionsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Para cualquier consulta o incidencia durante su estancia, puede contactar con nosotros:',
+            s.guest_access_contact_description,
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextSecondaryColor(context),
@@ -1437,7 +1552,7 @@ class AccessInstructionsScreen extends StatelessWidget {
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Text(
-                  'Grupo Hotelero BF',
+                  s.guest_access_company_name,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

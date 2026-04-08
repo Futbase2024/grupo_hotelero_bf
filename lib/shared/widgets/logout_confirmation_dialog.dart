@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Diálogo profesional de confirmación para cerrar sesión.
@@ -68,7 +69,7 @@ class LogoutConfirmationDialog extends StatelessWidget {
 
             // Título
             Text(
-              'Cerrar sesión',
+              S.of(context).common_logout_title,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -81,8 +82,7 @@ class LogoutConfirmationDialog extends StatelessWidget {
 
             // Descripción
             Text(
-              '¿Estás seguro de que deseas cerrar sesión?\n\n'
-              'Podrás volver a acceder con tu código de reserva cuando lo necesites.',
+              S.of(context).common_logout_message,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
@@ -113,7 +113,7 @@ class LogoutConfirmationDialog extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Cancelar',
+                      S.of(context).common_cancel,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -139,9 +139,9 @@ class LogoutConfirmationDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Cerrar sesión',
-                      style: TextStyle(
+                    child: Text(
+                      S.of(context).common_logout_button,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),

@@ -10,6 +10,7 @@ import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/guest/access_box/domain/entities/access_box_entity.dart';
 import 'package:bf_stay/features/guest/access_box/domain/repositories/access_box_repository.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla de Access Box - Códigos de acceso a la propiedad
 class AccessBoxScreen extends StatefulWidget {
@@ -37,7 +38,7 @@ class _AccessBoxScreenState extends State<AccessBoxScreen> {
     if (bookingId == null) {
       setState(() {
         _isLoading = false;
-        _error = 'No hay reserva asociada';
+        _error = S.of(context).guest_access_no_booking;
       });
       return;
     }
@@ -55,7 +56,7 @@ class _AccessBoxScreenState extends State<AccessBoxScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Error al cargar los códigos de acceso';
+          _error = S.of(context).guest_access_error_loading;
           _isLoading = false;
         });
       }
@@ -77,7 +78,7 @@ class _AccessBoxScreenState extends State<AccessBoxScreen> {
           onPressed: () => context.go('/guest'),
         ),
         title: Text(
-          'Access Box',
+          S.of(context).guest_access_title,
           style: TextStyle(
             color: AppColors.getTextPrimaryColor(context),
             fontWeight: FontWeight.w600,
@@ -104,7 +105,7 @@ class _AccessBoxScreenState extends State<AccessBoxScreen> {
 
     if (_error != null || _accessBox == null) {
       return _AccessBoxErrorView(
-        error: _error ?? 'No hay códigos de acceso disponibles',
+        error: _error ?? S.of(context).guest_access_no_codes,
         onRetry: _loadAccessBox,
       );
     }
@@ -165,9 +166,9 @@ class _AccessBoxErrorView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                 ),
-                child: const Text(
-                  'Reintentar',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  S.of(context).common_retry,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -234,7 +235,7 @@ class _AccessBoxHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Códigos de Acceso',
+          S.of(context).guest_access_codes_title,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.getTextPrimaryColor(context),
@@ -242,7 +243,7 @@ class _AccessBoxHeader extends StatelessWidget {
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
-          'Utiliza estos códigos para acceder a la propiedad',
+          S.of(context).guest_access_codes_subtitle,
           style: TextStyle(
             color: AppColors.getTextSecondaryColor(context),
             fontSize: 14,
@@ -301,7 +302,7 @@ class _MainAccessCodeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Código Principal',
+                      S.of(context).guest_access_main_code,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: AppColors.black,
                             fontWeight: FontWeight.w600,
@@ -309,7 +310,7 @@ class _MainAccessCodeCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      accessBox.boxLocation ?? 'Puerta principal',
+                      accessBox.boxLocation ?? S.of(context).guest_access_main_door,
                       style: const TextStyle(
                         color: AppColors.blackWithAlpha80,
                         fontSize: 13,
@@ -359,7 +360,7 @@ class _MainAccessCodeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Válido del $validFromStr al $validUntilStr',
+                  S.of(context).guest_access_valid_period(validFromStr, validUntilStr),
                   style: const TextStyle(
                     color: AppColors.black,
                     fontSize: 12,
@@ -450,7 +451,7 @@ class _WiFiCard extends StatelessWidget {
               ),
               const SizedBox(width: AppTheme.spacing16),
               Text(
-                'Red WiFi',
+                S.of(context).guest_access_wifi_title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.getTextPrimaryColor(context),
@@ -462,7 +463,7 @@ class _WiFiCard extends StatelessWidget {
 
           // Network name
           _InfoRow(
-            label: 'Red',
+            label: S.of(context).guest_access_wifi_network,
             value: network,
             icon: Icons.network_cell_outlined,
           ),
@@ -473,7 +474,7 @@ class _WiFiCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _InfoRow(
-                  label: 'Contraseña',
+                  label: S.of(context).guest_access_wifi_password,
                   value: password,
                   icon: Icons.vpn_key_outlined,
                   isPassword: true,
@@ -560,7 +561,7 @@ class _CopyButton extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Contraseña copiada',
+                S.of(context).guest_access_password_copied,
                 style: TextStyle(
                   color: AppColors.getTextPrimaryColor(context),
                 ),
@@ -602,7 +603,7 @@ class _AdditionalCodesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
-            'Otros Accesos',
+            S.of(context).guest_access_other_accesses,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.getTextPrimaryColor(context),
@@ -758,7 +759,7 @@ class _InstructionsCard extends StatelessWidget {
               ),
               const SizedBox(width: AppTheme.spacing12),
               Text(
-                'Instrucciones de Acceso',
+                S.of(context).guest_access_instructions,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: AppColors.gold,
                       fontWeight: FontWeight.w600,

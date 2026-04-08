@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:bf_stay/core/theme/app_colors.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla para mostrar las indicaciones del registro físico en habitaciones de hotel
 class PhysicalRegistrationScreen extends StatelessWidget {
@@ -24,7 +25,7 @@ class PhysicalRegistrationScreen extends StatelessWidget {
           onPressed: () => context.go('/guest'),
         ),
         title: Text(
-          'Registro Físico',
+          S.of(context).guest_physical_registration_title,
           style: TextStyle(
             color: isDark ? AppColors.white : AppColors.black,
             fontWeight: FontWeight.w600,
@@ -59,7 +60,7 @@ class PhysicalRegistrationScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Registro Físico en Habitación',
+                      S.of(context).guest_physical_registration_header,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -69,7 +70,7 @@ class PhysicalRegistrationScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Indicaciones para completar tu registro',
+                      S.of(context).guest_physical_registration_subtitle,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.getTextSecondaryColor(context),
@@ -82,14 +83,14 @@ class PhysicalRegistrationScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Instrucciones principales
-              _buildSectionTitle(context, 'Instrucciones'),
+              _buildSectionTitle(context, S.of(context).guest_physical_registration_instructions),
               const SizedBox(height: 16),
 
               _buildInstructionCard(
                 context,
                 stepNumber: 1,
-                title: 'Dirígete a recepción',
-                description: 'Acude al mostrador de recepción del hotel para realizar el registro presencial.',
+                title: S.of(context).guest_physical_registration_step_1_title,
+                description: S.of(context).guest_physical_registration_step_1_desc,
                 icon: Icons.room_service_outlined,
               ),
               const SizedBox(height: 12),
@@ -97,8 +98,8 @@ class PhysicalRegistrationScreen extends StatelessWidget {
               _buildInstructionCard(
                 context,
                 stepNumber: 2,
-                title: 'Presenta tu documento',
-                description: 'Entrega tu DNI, pasaporte o documento de identidad válido para el registro.',
+                title: S.of(context).guest_physical_registration_step_2_title,
+                description: S.of(context).guest_physical_registration_step_2_desc,
                 icon: Icons.badge_outlined,
               ),
               const SizedBox(height: 12),
@@ -106,8 +107,8 @@ class PhysicalRegistrationScreen extends StatelessWidget {
               _buildInstructionCard(
                 context,
                 stepNumber: 3,
-                title: 'Firma el registro',
-                description: 'Firma el formulario de registro de huéspedes que te entregará el personal.',
+                title: S.of(context).guest_physical_registration_step_3_title,
+                description: S.of(context).guest_physical_registration_step_3_desc,
                 icon: Icons.draw_outlined,
               ),
               const SizedBox(height: 12),
@@ -115,20 +116,20 @@ class PhysicalRegistrationScreen extends StatelessWidget {
               _buildInstructionCard(
                 context,
                 stepNumber: 4,
-                title: 'Recibe tu llave',
-                description: 'Una vez completado el registro, recibirás la llave de tu habitación.',
+                title: S.of(context).guest_physical_registration_step_4_title,
+                description: S.of(context).guest_physical_registration_step_4_desc,
                 icon: Icons.vpn_key_outlined,
               ),
               const SizedBox(height: 32),
 
               // Horarios de recepción
-              _buildSectionTitle(context, 'Horario de Recepción'),
+              _buildSectionTitle(context, S.of(context).guest_physical_registration_schedule),
               const SizedBox(height: 16),
               _buildScheduleCard(context),
               const SizedBox(height: 32),
 
               // Documentos aceptados
-              _buildSectionTitle(context, 'Documentos Aceptados'),
+              _buildSectionTitle(context, S.of(context).guest_physical_registration_documents),
               const SizedBox(height: 16),
               _buildDocumentsCard(context),
               const SizedBox(height: 24),
@@ -260,7 +261,7 @@ class PhysicalRegistrationScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Horario de atención',
+                S.of(context).guest_physical_registration_schedule_hours,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -270,7 +271,7 @@ class PhysicalRegistrationScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildScheduleRow(context, 'Lunes - Domingos', '09:30 - 13:30'),
+          _buildScheduleRow(context, S.of(context).guest_physical_registration_schedule_days, '09:30 - 13:30'),
         ],
       ),
     );
@@ -309,9 +310,9 @@ class PhysicalRegistrationScreen extends StatelessWidget {
   Widget _buildDocumentsCard(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
     final documents = [
-      {'icon': Icons.credit_card_outlined, 'name': 'DNI / NIE'},
-      {'icon': Icons.book_outlined, 'name': 'Pasaporte'},
-      {'icon': Icons.card_travel_outlined, 'name': 'Carnet de conducir (UE)'},
+      {'icon': Icons.credit_card_outlined, 'name': S.of(context).guest_physical_registration_doc_dni},
+      {'icon': Icons.book_outlined, 'name': S.of(context).guest_physical_registration_doc_passport},
+      {'icon': Icons.card_travel_outlined, 'name': S.of(context).guest_physical_registration_doc_license},
     ];
 
     return Container(

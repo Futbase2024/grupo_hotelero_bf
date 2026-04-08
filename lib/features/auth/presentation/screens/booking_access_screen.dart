@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/responsive.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/auth_bloc.dart';
 import '../formatters/bf_code_formatter.dart';
 
@@ -109,7 +110,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                     _buildLogo(context, size: 120),
                     const SizedBox(height: AppTheme.spacing32),
                     Text(
-                      'Acceso de Huésped',
+                      S.of(context).auth_booking_access_title,
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.headlineMedium(context),
                         fontWeight: FontWeight.bold,
@@ -118,11 +119,11 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppTheme.spacing24),
-                    _buildBenefitItem(context, Icons.confirmation_number_outlined, 'Código de reserva'),
+                    _buildBenefitItem(context, Icons.confirmation_number_outlined, S.of(context).auth_booking_benefit_code),
                     const SizedBox(height: AppTheme.spacing16),
-                    _buildBenefitItem(context, Icons.person_outline, 'Acceso personalizado'),
+                    _buildBenefitItem(context, Icons.person_outline, S.of(context).auth_booking_benefit_personal),
                     const SizedBox(height: AppTheme.spacing16),
-                    _buildBenefitItem(context, Icons.phone_android_outlined, 'Acceso instantáneo'),
+                    _buildBenefitItem(context, Icons.phone_android_outlined, S.of(context).auth_booking_benefit_instant),
                     const SizedBox(height: AppTheme.spacing32),
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -131,7 +132,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                       ),
                       child: Text(
-                        'El código de reserva lo recibiste en el email de confirmación.',
+                        S.of(context).auth_booking_code_info_short,
                         style: TextStyle(
                           fontSize: ResponsiveFontSize.bodySmall(context),
                           color: AppColors.getTextSecondaryColor(context),
@@ -196,7 +197,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                     _buildLogo(context, size: 140),
                     const SizedBox(height: AppTheme.spacing40),
                     Text(
-                      'Acceso de Huésped',
+                      S.of(context).auth_booking_access_title,
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.headlineLarge(context),
                         fontWeight: FontWeight.bold,
@@ -206,7 +207,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                     ),
                     const SizedBox(height: AppTheme.spacing16),
                     Text(
-                      'Disfruta de tu estancia con acceso digital',
+                      S.of(context).auth_booking_desktop_subtitle,
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.titleMedium(context),
                         color: AppColors.getTextSecondaryColor(context),
@@ -214,13 +215,13 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppTheme.spacing48),
-                    _buildBenefitItem(context, Icons.confirmation_number_outlined, 'Código de reserva'),
+                    _buildBenefitItem(context, Icons.confirmation_number_outlined, S.of(context).auth_booking_benefit_code),
                     const SizedBox(height: AppTheme.spacing20),
-                    _buildBenefitItem(context, Icons.person_outline, 'Acceso personalizado'),
+                    _buildBenefitItem(context, Icons.person_outline, S.of(context).auth_booking_benefit_personal),
                     const SizedBox(height: AppTheme.spacing20),
-                    _buildBenefitItem(context, Icons.phone_android_outlined, 'Acceso instantáneo'),
+                    _buildBenefitItem(context, Icons.phone_android_outlined, S.of(context).auth_booking_benefit_instant),
                     const SizedBox(height: AppTheme.spacing20),
-                    _buildBenefitItem(context, Icons.lock_outline, 'Check-in seguro'),
+                    _buildBenefitItem(context, Icons.lock_outline, S.of(context).auth_booking_benefit_secure_checkin),
                     const SizedBox(height: AppTheme.spacing40),
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spacing20),
@@ -242,7 +243,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                           Icon(Icons.email_outlined, color: AppColors.gold, size: 32),
                           const SizedBox(height: AppTheme.spacing12),
                           Text(
-                            'El código de reserva lo recibiste en el email de confirmación de tu reserva.',
+                            S.of(context).auth_booking_code_info_full,
                             style: TextStyle(
                               fontSize: ResponsiveFontSize.bodyMedium(context),
                               color: AppColors.getTextSecondaryColor(context),
@@ -333,7 +334,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
 
           // Título
           Text(
-            'Acceso de Huésped',
+            S.of(context).auth_booking_access_title,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontSize: ResponsiveFontSize.headlineMedium(context),
                   fontWeight: FontWeight.bold,
@@ -343,7 +344,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Ingresa tu código de reserva para acceder a tu alojamiento',
+            S.of(context).auth_booking_form_subtitle,
             style: TextStyle(
               fontSize: ResponsiveFontSize.bodyMedium(context),
               color: AppColors.getTextSecondaryColor(context),
@@ -365,10 +366,10 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                   enabled: !isLoading,
                   onChanged: (_) => setState(() {}),
                   onFieldSubmitted: (_) => _handleAccess(),
-                  decoration: const InputDecoration(
-                    labelText: 'Código de Reserva',
-                    prefixIcon: Icon(Icons.confirmation_number_outlined),
-                    hintText: 'XX-XXXX-XXXX',
+                  decoration: InputDecoration(
+                    labelText: S.of(context).auth_booking_field_code,
+                    prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                    hintText: S.of(context).auth_booking_code_hint,
                   ),
                   style: TextStyle(
                     fontSize: ResponsiveFontSize.bodyMedium(context),
@@ -377,10 +378,10 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa tu código de reserva';
+                      return S.of(context).auth_booking_validation_code_required;
                     }
                     if (!BfCodeFormatter.isValid(value)) {
-                      return 'El formato del código no es válido';
+                      return S.of(context).auth_booking_validation_code_invalid;
                     }
                     return null;
                   },
@@ -415,7 +416,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       ),
                     )
                   : Text(
-                      'Acceder',
+                      S.of(context).auth_booking_access_button,
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.labelLarge(context),
                       ),
@@ -444,7 +445,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       ),
                       const SizedBox(width: AppTheme.spacing8),
                       Text(
-                        '¿Dónde encuentro mi código?',
+                        S.of(context).auth_booking_help_title,
                         style: TextStyle(
                           fontSize: ResponsiveFontSize.titleSmall(context),
                           color: AppColors.gold,
@@ -455,8 +456,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                   ),
                   const SizedBox(height: AppTheme.spacing8),
                   Text(
-                    'El código de reserva lo recibiste en el email de confirmación de tu reserva. '
-                    'Tiene el formato BF-XXXXX.',
+                    S.of(context).auth_booking_help_body,
                     style: TextStyle(
                       fontSize: ResponsiveFontSize.bodySmall(context),
                       color: AppColors.getTextSecondaryColor(context),
@@ -470,7 +470,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
 
           // Footer
           Text(
-            'BF Stay © 2026',
+            S.of(context).auth_booking_footer,
             style: TextStyle(
               fontSize: ResponsiveFontSize.bodySmall(context),
               color: AppColors.getTextTertiaryColor(context),
@@ -516,7 +516,7 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
               ),
               const SizedBox(height: AppTheme.spacing20),
               Text(
-                'Error de Acceso',
+                S.of(context).auth_booking_error_title,
                 style: TextStyle(
                   fontSize: ResponsiveFontSize.titleLarge(dialogContext),
                   fontWeight: FontWeight.w700,
@@ -548,9 +548,9 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     ),
                   ),
-                  child: const Text(
-                    'Entendido',
-                    style: TextStyle(
+                  child: Text(
+                    S.of(context).auth_booking_error_dismiss,
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -564,20 +564,20 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
     );
   }
 
-  /// Traduce los mensajes de error técnicos a mensajes amigables
+  /// Traduce los mensajes de error tecnicos a mensajes amigables
   String _getErrorMessage(String technicalMessage) {
     if (technicalMessage.contains('booking not found') ||
         technicalMessage.contains('code_not_found')) {
-      return 'El código de reserva no existe. Por favor, verifica que lo hayas escrito correctamente.';
+      return S.of(context).auth_booking_error_code_not_found;
     }
     if (technicalMessage.contains('code_expired')) {
-      return 'Este código de reserva ha expirado. Contacta con recepción para obtener uno nuevo.';
+      return S.of(context).auth_booking_error_code_expired;
     }
     if (technicalMessage.contains('email_mismatch')) {
-      return 'El email no coincide con el de la reserva. Verifica que sea el mismo email que usaste al reservar.';
+      return S.of(context).auth_booking_error_email_mismatch;
     }
-    // Mensaje genérico para otros errores
-    return 'No se pudo verificar el código de reserva. Por favor, inténtalo de nuevo.';
+    // Mensaje generico para otros errores
+    return S.of(context).auth_booking_error_generic;
   }
 
   /// Indicador de validación en tiempo real

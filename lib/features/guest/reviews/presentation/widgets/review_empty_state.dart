@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Widget que se muestra cuando no hay reseñas
 class ReviewEmptyState extends StatelessWidget {
@@ -41,7 +42,7 @@ class ReviewEmptyState extends StatelessWidget {
 
             // Título
             Text(
-              'No hay reseñas aún',
+              S.of(context).guest_reviews_empty_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -53,10 +54,12 @@ class ReviewEmptyState extends StatelessWidget {
 
             // Descripción
             Text(
-              'Los huéspedes que se hayan alojado aquí podrán compartir sus experiencias.',
+              S.of(context).guest_reviews_empty_subtitle,
               style: TextStyle(
                 fontSize: 15,
-                color: isDark ? AppColors.silver.withValues(alpha: 0.7) : AppColors.gray600,
+                color: isDark
+                    ? AppColors.silver.withValues(alpha: 0.7)
+                    : AppColors.gray600,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -70,7 +73,7 @@ class ReviewEmptyState extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onWriteReview,
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Escribe la primera reseña'),
+                  label: Text(S.of(context).guest_reviews_write_first),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.gold,
                     foregroundColor: AppColors.black,
@@ -131,7 +134,9 @@ class ReviewFilterEmptyState extends StatelessWidget {
 
             // Título
             Text(
-              'No hay reseñas de $currentFilter estrellas',
+              S
+                  .of(context)
+                  .guest_reviews_filter_empty_title(currentFilter.toString()),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -143,10 +148,12 @@ class ReviewFilterEmptyState extends StatelessWidget {
 
             // Descripción
             Text(
-              'Prueba con otro filtro o mira todas las reseñas.',
+              S.of(context).guest_reviews_filter_empty_subtitle,
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? AppColors.silver.withValues(alpha: 0.7) : AppColors.gray600,
+                color: isDark
+                    ? AppColors.silver.withValues(alpha: 0.7)
+                    : AppColors.gray600,
               ),
               textAlign: TextAlign.center,
             ),
@@ -157,10 +164,8 @@ class ReviewFilterEmptyState extends StatelessWidget {
               TextButton.icon(
                 onPressed: onClearFilter,
                 icon: const Icon(Icons.close, size: 18),
-                label: const Text('Limpiar filtro'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.gold,
-                ),
+                label: Text(S.of(context).guest_reviews_clear_filter),
+                style: TextButton.styleFrom(foregroundColor: AppColors.gold),
               ),
             ],
           ],

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'l10n/app_localizations.dart';
 
 import 'core/config/supabase_config.dart';
 import 'core/config/url_strategy.dart'
@@ -17,6 +18,7 @@ import 'core/services/app_update_service.dart';
 import 'core/services/fcm_service/fcm_service_factory.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/cubit/theme_cubit.dart';
+import 'core/locale/cubit/locale_cubit.dart';
 import 'features/auth/domain/bloc/auth_bloc.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/guest/alojamientos/domain/bloc/alojamientos_bloc.dart';
@@ -26,50 +28,39 @@ import 'shared/widgets/splash_screen.dart';
 import 'shared/widgets/update_dialog.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // ✅ Configurar Edge-to-Edge para Android 15 (SDK 35)
-  // Esto permite que el contenido se dibuje detrás de las barras del sistema
-  await SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-  );
-
-  // ✅ Configurar estilo de barras de sistema para Android 15
-  // NOTA: En Android 15, statusBarColor y systemNavigationBarColor están deprecados
-  // Con edgeToEdge habilitado, las barras son automáticamente transparentes
-  // Solo configuramos el brillo de los iconos
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      // ❌ DEPRECATED en Android 15 - NO USAR:
-      // statusBarColor: Colors.transparent,
-      // systemNavigationBarColor: Colors.transparent,
-      // ✅ Solo configurar brillo de iconos:
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
-
-  // Configurar URL strategy para web (hash URLs)
-  configureUrlStrategy();
-
-  // Inicializar Firebase primero
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  // Configurar Crashlytics
-  // Capturar errores de Flutter
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-
-  // Capturar errores asíncronos no manejados
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
-
-  // Ejecutar la app dentro de una zona protegida para capturar errores
+  // Ejecutar todo dentro de la misma zona para evitar Zone mismatch
   runZonedGuarded<Future<void>>(
     () async {
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Configurar Edge-to-Edge para Android 15 (SDK 35)
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+      // Configurar estilo de barras de sistema para Android 15
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
+      );
+
+      // Configurar URL strategy para web (hash URLs)
+      configureUrlStrategy();
+
+      // Inicializar Firebase
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Configurar Crashlytics
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
+
       runApp(const BFStayApp());
     },
     (error, stack) {
@@ -143,7 +134,11 @@ class _BFStayAppState extends State<BFStayApp> {
       debugPrint('✅ App Update Service initialized');
     } catch (e, s) {
       debugPrint('❌ Error initializing App Update Service: $e');
-      crashlytics.recordError(e, s, reason: 'App Update Service initialization failed');
+      crashlytics.recordError(
+        e,
+        s,
+        reason: 'App Update Service initialization failed',
+      );
       // No rethrow - no es crítico
     }
 
@@ -165,22 +160,19 @@ class _BFStayAppState extends State<BFStayApp> {
         theme: AppTheme.darkTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,
-        home: SplashScreen(
-          onInitComplete: _initializeApp,
-        ),
+        home: SplashScreen(onInitComplete: _initializeApp),
       );
     }
 
     // Mostrar la app principal después de la inicialización
     return MultiBlocProvider(
       providers: [
-        BlocProvider<ThemeCubit>(
-          create: (context) => ThemeCubit(),
-        ),
+        BlocProvider<ThemeCubit>(create: (context) => ThemeCubit()),
+        BlocProvider<LocaleCubit>(create: (context) => LocaleCubit()),
         BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc(
-            authRepository: getIt<AuthRepository>(),
-          )..add(const AuthCheckRequested()),
+          create: (context) =>
+              AuthBloc(authRepository: getIt<AuthRepository>())
+                ..add(const AuthCheckRequested()),
         ),
         BlocProvider<AlojamientosBloc>(
           create: (context) => AlojamientosBloc(
@@ -193,6 +185,7 @@ class _BFStayAppState extends State<BFStayApp> {
           final authBloc = context.read<AuthBloc>();
           final router = AppRouter.createRouter(authBloc);
           final themeMode = context.watch<ThemeCubit>().state;
+          final locale = context.watch<LocaleCubit>().state;
 
           return MaterialApp.router(
             title: 'BF Stay',
@@ -200,12 +193,12 @@ class _BFStayAppState extends State<BFStayApp> {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeMode,
+            locale: locale,
+            localizationsDelegates: S.localizationsDelegates,
+            supportedLocales: S.supportedLocales,
             routerConfig: router,
             builder: (context, child) {
-              return UpdateChecker(
-                checkOnStart: true,
-                child: child!,
-              );
+              return UpdateChecker(checkOnStart: true, child: child!);
             },
           );
         },

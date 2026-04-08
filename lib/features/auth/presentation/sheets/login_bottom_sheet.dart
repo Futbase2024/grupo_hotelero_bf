@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/auth_bloc.dart';
 import '../formatters/bf_code_formatter.dart';
 
@@ -234,7 +235,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
 
         // Título
         Text(
-          'Acceso a tu reserva',
+          S.of(context).auth_sheet_title,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w400,
@@ -247,7 +248,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
 
         // Subtítulo
         Text(
-          'Introduce tu correo y el código que recibiste',
+          S.of(context).auth_sheet_subtitle,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w300,
@@ -267,7 +268,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
       children: [
         // Label
         Text(
-          'CORREO ELECTRÓNICO',
+          S.of(context).auth_sheet_label_email,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -309,7 +310,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
                 color: isDark ? AppColors.white : AppColors.black,
               ),
               decoration: InputDecoration(
-                hintText: 'tu@correo.com',
+                hintText: S.of(context).auth_sheet_hint_email,
                 hintStyle: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w300,
@@ -337,7 +338,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
       children: [
         // Label
         Text(
-          'CÓDIGO DE RESERVA',
+          S.of(context).auth_sheet_label_code,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -385,7 +386,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
                 fontFamily: 'JetBrains Mono',
               ),
               decoration: InputDecoration(
-                hintText: 'BF-XXXX-XXXX',
+                hintText: S.of(context).auth_sheet_hint_code,
                 hintStyle: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
@@ -515,7 +516,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
                             ),
                           )
                         : Text(
-                            'Acceder a mi reserva',
+                            S.of(context).auth_sheet_submit_button,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
@@ -536,7 +537,7 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
 
   Widget _buildHelpText(bool isDark) {
     return Text(
-      '¿No tienes tu código? Contacta con tu alojamiento',
+      S.of(context).auth_sheet_help_text,
       style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w300,

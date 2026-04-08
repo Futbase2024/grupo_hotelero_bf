@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../domain/entities/guest_entity.dart';
 import 'document_camera_screen.dart';
 
@@ -100,9 +101,9 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
             const SizedBox(height: AppTheme.spacing24),
 
             // Title
-            const Text(
-              'Subir Documento',
-              style: TextStyle(
+            Text(
+              S.of(context).guest_checkin_upload_document_title,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: AppColors.white,
@@ -142,9 +143,9 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Tipo de documento',
-          style: TextStyle(
+        Text(
+          S.of(context).guest_checkin_document_type,
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
@@ -180,9 +181,9 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Número de documento',
-          style: TextStyle(
+        Text(
+          S.of(context).guest_checkin_document_number,
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
@@ -224,7 +225,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
       case DocumentType.passport:
         return 'ABC123456';
       case DocumentType.other:
-        return 'Número de documento';
+        return S.of(context).guest_checkin_document_number;
     }
   }
 
@@ -232,9 +233,9 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Foto del documento',
-          style: TextStyle(
+        Text(
+          S.of(context).guest_checkin_document_photo,
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
@@ -302,14 +303,14 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
               color: AppColors.success,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, color: AppColors.white, size: 16),
-                SizedBox(width: 4),
+                const Icon(Icons.check_circle, color: AppColors.white, size: 16),
+                const SizedBox(width: 4),
                 Text(
-                  'Imagen capturada',
-                  style: TextStyle(
+                  S.of(context).guest_checkin_image_captured,
+                  style: const TextStyle(
                     color: AppColors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -340,18 +341,18 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
           ),
         ),
         const SizedBox(height: AppTheme.spacing12),
-        const Text(
-          'Toca para capturar documento',
-          style: TextStyle(
+        Text(
+          S.of(context).guest_checkin_tap_to_capture,
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.gold,
           ),
         ),
         const SizedBox(height: AppTheme.spacing4),
-        const Text(
-          'Cámara o galería',
-          style: TextStyle(
+        Text(
+          S.of(context).guest_checkin_camera_or_gallery,
+          style: const TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
           ),
@@ -373,9 +374,9 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Seleccionar origen',
-                style: TextStyle(
+              Text(
+                S.of(context).guest_checkin_select_source,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
@@ -387,7 +388,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                   Expanded(
                     child: _SourceButton(
                       icon: Icons.camera_alt,
-                      label: 'Cámara',
+                      label: S.of(context).guest_checkin_camera,
                       onTap: () {
                         Navigator.pop(dialogContext);
                         _openCameraWithGuide();
@@ -398,7 +399,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                   Expanded(
                     child: _SourceButton(
                       icon: Icons.photo_library,
-                      label: 'Galería',
+                      label: S.of(context).guest_checkin_gallery,
                       onTap: () {
                         Navigator.pop(dialogContext);
                         _pickImage(ImageSource.gallery);
@@ -437,7 +438,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al capturar imagen: $e'),
+            content: Text(S.of(context).guest_checkin_capture_error(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -474,7 +475,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al capturar imagen: $e'),
+            content: Text(S.of(context).guest_checkin_capture_error(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -562,7 +563,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                 ),
               )
             : Text(
-                _imageBytes == null ? 'Foto obligatoria' : 'Confirmar',
+                _imageBytes == null ? S.of(context).guest_checkin_photo_required : S.of(context).guest_checkin_confirm,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

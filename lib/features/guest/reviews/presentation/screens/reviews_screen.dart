@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/reviews_bloc.dart';
 import '../../domain/entities/review_entity.dart';
 import '../widgets/rating_summary_card.dart';
@@ -30,7 +31,7 @@ class ReviewsScreen extends StatelessWidget {
       backgroundColor: isDark ? AppColors.gray900 : AppColors.gray50,
       appBar: AppBar(
         title: Text(
-          propertyName ?? 'Reseñas',
+          propertyName ?? S.of(context).guest_reviews_title,
           style: TextStyle(
             color: isDark ? AppColors.white : AppColors.gray900,
             fontWeight: FontWeight.w600,
@@ -61,7 +62,7 @@ class ReviewsScreen extends StatelessWidget {
                 color: isDark ? AppColors.gold : AppColors.goldDark,
               ),
               onPressed: () => _navigateToCreateReview(context),
-              tooltip: 'Escribir reseña',
+              tooltip: S.of(context).guest_reviews_write_review,
             ),
         ],
       ),
@@ -71,7 +72,7 @@ class ReviewsScreen extends StatelessWidget {
             if (state is ReviewCreated) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Reseña publicada correctamente'),
+                  content: Text(S.of(context).guest_reviews_published),
                   backgroundColor: AppColors.success,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
@@ -97,9 +98,9 @@ class ReviewsScreen extends StatelessWidget {
                   message: state.message,
                   onRetry: () => _onRetry(context),
                 ),
-              ReviewCreating() => _LoadingOverlay(message: 'Publicando reseña...'),
-              ReviewUpdating() => _LoadingOverlay(message: 'Actualizando reseña...'),
-              ReviewDeleting() => _LoadingOverlay(message: 'Eliminando reseña...'),
+              ReviewCreating() => _LoadingOverlay(message: S.of(context).guest_reviews_publishing),
+              ReviewUpdating() => _LoadingOverlay(message: S.of(context).guest_reviews_updating),
+              ReviewDeleting() => _LoadingOverlay(message: S.of(context).guest_reviews_deleting),
               _ => const _LoadingView(),
             };
           },
@@ -139,7 +140,7 @@ class _LoadingView extends StatelessWidget {
           const CircularProgressIndicator(color: AppColors.gold),
           const SizedBox(height: 16),
           Text(
-            'Cargando reseñas...',
+            S.of(context).guest_reviews_loading,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? AppColors.silver : AppColors.gray600,
@@ -269,18 +270,18 @@ class _ReviewsLoadedView extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: isDark ? AppColors.gray800 : AppColors.white,
         title: Text(
-          'Eliminar reseña',
+          S.of(dialogContext).guest_reviews_delete_review,
           style: TextStyle(color: isDark ? AppColors.white : AppColors.gray900),
         ),
         content: Text(
-          '¿Estás seguro de que quieres eliminar tu reseña? Esta acción no se puede deshacer.',
+          S.of(dialogContext).guest_reviews_delete_confirm,
           style: TextStyle(color: isDark ? AppColors.silver : AppColors.gray700),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Cancelar',
+              S.of(dialogContext).common_cancel,
               style: TextStyle(color: isDark ? AppColors.silver : AppColors.gray600),
             ),
           ),
@@ -289,7 +290,7 @@ class _ReviewsLoadedView extends StatelessWidget {
               Navigator.of(dialogContext).pop();
               context.read<ReviewsBloc>().add(ReviewsDelete(reviewId: review.id));
             },
-            child: const Text('Eliminar', style: TextStyle(color: AppColors.error)),
+            child: Text(S.of(dialogContext).common_delete, style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -320,7 +321,7 @@ class _FilterChips extends StatelessWidget {
           // Chip "Todos"
           _buildFilterChip(
             context: context,
-            label: 'Todas',
+            label: S.of(context).guest_reviews_filter_all,
             value: null,
             isSelected: currentFilter == null,
             isDark: isDark,
@@ -411,7 +412,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:bf_stay/core/theme/app_colors.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla elegante para mostrar las normas de uso del Jacuzzi
 class JacuzziRulesScreen extends StatelessWidget {
@@ -15,155 +16,173 @@ class JacuzziRulesScreen extends StatelessWidget {
       backgroundColor: isDark ? AppColors.black : AppColors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: isDark ? AppColors.white : AppColors.black,
-              ),
-              onPressed: () => context.go('/guest'),
-            ),
-            title: Text(
-              'Normas Jacuzzi',
-              style: TextStyle(
-                color: isDark ? AppColors.white : AppColors.black,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? AppColors.white : AppColors.black,
           ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Hero Section con imagen del jacuzzi y borde gold
-                  _buildHeroSection(context),
-                  const SizedBox(height: 32),
+          onPressed: () => context.go('/guest'),
+        ),
+        title: Text(
+          S.of(context).guest_jacuzzi_title,
+          style: TextStyle(
+            color: isDark ? AppColors.white : AppColors.black,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Hero Section con imagen del jacuzzi y borde gold
+              _buildHeroSection(context),
+              const SizedBox(height: 32),
 
-                  // Título principal
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          'Normas de uso del Jacuzzi',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.white : AppColors.black,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Disfruta de una experiencia relajante',
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: AppColors.gold,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+              // Título principal
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      S.of(context).guest_jacuzzi_rules_title,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.white : AppColors.black,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Sección: Encendido
-                  _buildSectionTitle(context, 'Encendido', Icons.power_settings_new),
-                  const SizedBox(height: 12),
-                  _buildInstructionCard(
-                    context,
-                    steps: [
-                      'Mantenga pulsado el botón POWER durante 2 segundos para encender el panel de control.',
-                      'El panel se iluminará cuando esté activo.',
-                      'Para apagarlo, vuelva a presionar el botón POWER.',
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sección: Bloqueo del panel
-                  _buildSectionTitle(context, 'Bloqueo del panel', Icons.lock),
-                  const SizedBox(height: 12),
-                  _buildInstructionCard(
-                    context,
-                    steps: [
-                      'El panel de control puede bloquearse automáticamente tras un corto periodo de inactividad. Cuando esto ocurra aparecerá la palabra LOCK en la pantalla.',
-                    ],
-                    subSections: [
-                      _SubSection(
-                        title: 'Para desbloquear el panel:',
-                        steps: ['Mantenga presionado el botón OK durante 3 segundos.'],
+                    const SizedBox(height: 8),
+                    Text(
+                      S.of(context).guest_jacuzzi_subtitle,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.gold,
+                        fontStyle: FontStyle.italic,
                       ),
-                      _SubSection(
-                        title: 'Para bloquearlo manualmente:',
-                        steps: ['Mantenga presionado el botón OK durante 3 segundos.'],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
 
-                  // Sección: Función Ozono
-                  _buildSectionTitle(context, 'Función Ozono', Icons.bubble_chart),
-                  const SizedBox(height: 12),
-                  _buildInstructionCard(
-                    context,
-                    introText: 'El sistema de ozono se utiliza para la desinfección del agua.',
-                    steps: [
-                      'Utilice los botones IZQUIERDA o DERECHA para seleccionar OZONO.',
-                      'Confirme pulsando OK.',
-                      'El ozonador comenzará a funcionar.',
-                      'Para detenerlo, pulse OK nuevamente.',
-                    ],
-                    note: 'El ozonador se apagará automáticamente después de 10 minutos si no se vuelve a activar.',
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sección: Funciones de masaje
-                  _buildSectionTitle(context, 'Funciones de masaje', Icons.hot_tub),
-                  const SizedBox(height: 12),
-
-                  // Jets de aire
-                  _buildMassageCard(
-                    context,
-                    title: 'Jets de aire',
-                    icon: Icons.air,
-                    steps: [
-                      'Utilice IZQUIERDA o DERECHA para seleccionar JET AIRE.',
-                      'Confirme pulsando OK.',
-                      'Las burbujas comenzarán a funcionar.',
-                      'Para detenerlas, pulse OK nuevamente.',
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Jets de agua
-                  _buildMassageCard(
-                    context,
-                    title: 'Jets de agua',
-                    icon: Icons.water_drop,
-                    steps: [
-                      'Utilice IZQUIERDA o DERECHA para seleccionar JET AGUA.',
-                      'Confirme pulsando OK.',
-                      'Los chorros de agua comenzarán a funcionar.',
-                      'Para detenerlos, pulse OK nuevamente.',
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sección: Importante (nivel de agua)
-                  _buildImportantCard(context),
-                  const SizedBox(height: 24),
-
-                  // Sección: Uso responsable del agua
-                  _buildWaterResponsibilityCard(context),
-                  const SizedBox(height: 24),
+              // Sección: Encendido
+              _buildSectionTitle(
+                context,
+                S.of(context).guest_jacuzzi_power,
+                Icons.power_settings_new,
+              ),
+              const SizedBox(height: 12),
+              _buildInstructionCard(
+                context,
+                steps: [
+                  S.of(context).guest_jacuzzi_power_step_1,
+                  S.of(context).guest_jacuzzi_power_step_2,
+                  S.of(context).guest_jacuzzi_power_step_3,
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
+
+              // Sección: Bloqueo del panel
+              _buildSectionTitle(
+                context,
+                S.of(context).guest_jacuzzi_lock,
+                Icons.lock,
+              ),
+              const SizedBox(height: 12),
+              _buildInstructionCard(
+                context,
+                steps: [S.of(context).guest_jacuzzi_lock_step_1],
+                subSections: [
+                  _SubSection(
+                    title: S.of(context).guest_jacuzzi_lock_unlock,
+                    steps: [S.of(context).guest_jacuzzi_lock_unlock_step],
+                  ),
+                  _SubSection(
+                    title: S.of(context).guest_jacuzzi_lock_manual,
+                    steps: [S.of(context).guest_jacuzzi_lock_manual_step],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Sección: Función Ozono
+              _buildSectionTitle(
+                context,
+                S.of(context).guest_jacuzzi_ozone,
+                Icons.bubble_chart,
+              ),
+              const SizedBox(height: 12),
+              _buildInstructionCard(
+                context,
+                introText: S.of(context).guest_jacuzzi_ozone_intro,
+                steps: [
+                  S.of(context).guest_jacuzzi_ozone_step_1,
+                  S.of(context).guest_jacuzzi_ozone_step_2,
+                  S.of(context).guest_jacuzzi_ozone_step_3,
+                  S.of(context).guest_jacuzzi_ozone_step_4,
+                ],
+                note: S
+                    .of(context)
+                    .guest_jacuzzi_ozone_note(
+                      'El sistema se ejecuta automáticamente durante 30 minutos',
+                    ),
+              ),
+              const SizedBox(height: 24),
+
+              // Sección: Funciones de masaje
+              _buildSectionTitle(
+                context,
+                S.of(context).guest_jacuzzi_massage,
+                Icons.hot_tub,
+              ),
+              const SizedBox(height: 12),
+
+              // Jets de aire
+              _buildMassageCard(
+                context,
+                title: S.of(context).guest_jacuzzi_air_jets,
+                icon: Icons.air,
+                steps: [
+                  S.of(context).guest_jacuzzi_air_step_1,
+                  S.of(context).guest_jacuzzi_air_step_2,
+                  S.of(context).guest_jacuzzi_air_step_3,
+                  S.of(context).guest_jacuzzi_air_step_4,
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Jets de agua
+              _buildMassageCard(
+                context,
+                title: S.of(context).guest_jacuzzi_water_jets,
+                icon: Icons.water_drop,
+                steps: [
+                  S.of(context).guest_jacuzzi_water_step_1,
+                  S.of(context).guest_jacuzzi_water_step_2,
+                  S.of(context).guest_jacuzzi_water_step_3,
+                  S.of(context).guest_jacuzzi_water_step_4,
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Sección: Importante (nivel de agua)
+              _buildImportantCard(context),
+              const SizedBox(height: 24),
+
+              // Sección: Uso responsable del agua
+              _buildWaterResponsibilityCard(context),
+              const SizedBox(height: 24),
+            ],
           ),
-        );
-      }
+        ),
+      ),
+    );
+  }
 
   Widget _buildHeroSection(BuildContext context) {
     return Container(
@@ -171,10 +190,7 @@ class JacuzziRulesScreen extends StatelessWidget {
       height: 220,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.gold,
-          width: 3,
-        ),
+        border: Border.all(color: AppColors.gold, width: 3),
         boxShadow: [
           BoxShadow(
             color: AppColors.gold.withValues(alpha: 0.3),
@@ -185,10 +201,7 @@ class JacuzziRulesScreen extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(17),
-        child: Image.asset(
-          'assets/images/jacuzzi.png',
-          fit: BoxFit.cover,
-        ),
+        child: Image.asset('assets/images/jacuzzi.png', fit: BoxFit.cover),
       ),
     );
   }
@@ -205,11 +218,7 @@ class JacuzziRulesScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Icon(
-          icon,
-          color: AppColors.gold,
-          size: 22,
-        ),
+        Icon(icon, color: AppColors.gold, size: 22),
         const SizedBox(width: 8),
         Text(
           title,
@@ -238,9 +247,7 @@ class JacuzziRulesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.gray50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.goldWithAlpha30,
-        ),
+        border: Border.all(color: AppColors.goldWithAlpha30),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,24 +271,26 @@ class JacuzziRulesScreen extends StatelessWidget {
 
           // Subsecciones
           if (subSections != null)
-            ...subSections.map((sub) => Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        sub.title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.gold,
-                        ),
+            ...subSections.map(
+              (sub) => Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sub.title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gold,
                       ),
-                      const SizedBox(height: 8),
-                      _buildStepsList(context, sub.steps),
-                    ],
-                  ),
-                )),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildStepsList(context, sub.steps),
+                  ],
+                ),
+              ),
+            ),
 
           // Nota
           if (note != null) ...[
@@ -291,21 +300,15 @@ class JacuzziRulesScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.goldWithAlpha10,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.goldWithAlpha30,
-                ),
+                border: Border.all(color: AppColors.goldWithAlpha30),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: AppColors.gold,
-                    size: 18,
-                  ),
+                  Icon(Icons.info_outline, color: AppColors.gold, size: 18),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Nota: $note',
+                      S.of(context).guest_jacuzzi_note(note),
                       style: TextStyle(
                         fontSize: 13,
                         color: isDark ? AppColors.gold : AppColors.gray700,
@@ -329,9 +332,7 @@ class JacuzziRulesScreen extends StatelessWidget {
         final index = entry.key;
         final step = entry.value;
         return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == steps.length - 1 ? 0 : 12,
-          ),
+          padding: EdgeInsets.only(bottom: index == steps.length - 1 ? 0 : 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -385,9 +386,7 @@ class JacuzziRulesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.goldWithAlpha30,
-        ),
+        border: Border.all(color: AppColors.goldWithAlpha30),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,11 +399,7 @@ class JacuzziRulesScreen extends StatelessWidget {
                   color: AppColors.goldWithAlpha10,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.gold,
-                  size: 24,
-                ),
+                child: Icon(icon, color: AppColors.gold, size: 24),
               ),
               const SizedBox(width: 12),
               Text(
@@ -440,9 +435,7 @@ class JacuzziRulesScreen extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.warning.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,7 +456,7 @@ class JacuzziRulesScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Importante',
+                S.of(context).guest_jacuzzi_important,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -474,7 +467,7 @@ class JacuzziRulesScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Los jets solo funcionan si el nivel de agua ha alcanzado el mínimo necesario.',
+            S.of(context).guest_jacuzzi_water_level_info,
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextPrimaryColor(context),
@@ -494,7 +487,7 @@ class JacuzziRulesScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Si el nivel de agua baja demasiado:',
+                  S.of(context).guest_jacuzzi_low_water_title,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -502,11 +495,17 @@ class JacuzziRulesScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildBulletPoint(context, 'Los jets se detendrán automáticamente.'),
-                _buildBulletPoint(context, 'El icono parpadeará en el panel.'),
+                _buildBulletPoint(
+                  context,
+                  S.of(context).guest_jacuzzi_low_water_stop,
+                ),
+                _buildBulletPoint(
+                  context,
+                  S.of(context).guest_jacuzzi_low_water_icon,
+                ),
                 const SizedBox(height: 8),
                 Text(
-                  'Cuando el nivel de agua vuelva a ser el adecuado, los jets volverán a funcionar con normalidad.',
+                  S.of(context).guest_jacuzzi_low_water_resume,
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.getTextSecondaryColor(context),
@@ -560,9 +559,7 @@ class JacuzziRulesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.gray50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.goldWithAlpha30,
-        ),
+        border: Border.all(color: AppColors.goldWithAlpha30),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,7 +580,7 @@ class JacuzziRulesScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Uso responsable del agua',
+                S.of(context).guest_jacuzzi_water_responsibility,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -594,7 +591,7 @@ class JacuzziRulesScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Una vez utilizado el jacuzzi y vaciado el agua, será necesario esperar aproximadamente 2 horas para que las calderas vuelvan a calentar toda el agua necesaria para llenarlo nuevamente.',
+            S.of(context).guest_jacuzzi_water_refill_info,
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextPrimaryColor(context),
@@ -612,14 +609,10 @@ class JacuzziRulesScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.opacity,
-                  color: AppColors.gold,
-                  size: 20,
-                ),
+                Icon(Icons.opacity, color: AppColors.gold, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Capacidad aproximada:',
+                  S.of(context).guest_jacuzzi_capacity,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -628,7 +621,7 @@ class JacuzziRulesScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '300 litros',
+                  S.of(context).guest_jacuzzi_capacity_liters,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -640,7 +633,7 @@ class JacuzziRulesScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'La normativa actual sobre el consumo de agua nos obliga a todos a ser responsables con su utilización.',
+            S.of(context).guest_jacuzzi_water_regulation,
             style: TextStyle(
               fontSize: 13,
               color: AppColors.getTextSecondaryColor(context),
@@ -657,15 +650,11 @@ class JacuzziRulesScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.favorite,
-                  color: AppColors.gold,
-                  size: 18,
-                ),
+                Icon(Icons.favorite, color: AppColors.gold, size: 18),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Gracias por su comprensión y colaboración.',
+                    S.of(context).guest_jacuzzi_thanks,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -687,8 +676,5 @@ class _SubSection {
   final String title;
   final List<String> steps;
 
-  const _SubSection({
-    required this.title,
-    required this.steps,
-  });
+  const _SubSection({required this.title, required this.steps});
 }

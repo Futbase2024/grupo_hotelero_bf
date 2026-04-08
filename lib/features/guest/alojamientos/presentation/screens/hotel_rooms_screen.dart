@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../domain/bloc/alojamientos_bloc.dart';
 import '../../domain/entities/property_entity.dart';
@@ -46,7 +47,7 @@ class _HotelRoomsScreenState extends State<HotelRoomsScreen> {
           },
         ),
         title: Text(
-          'Hotel Boutique Jerez',
+          S.of(context).guest_alojamiento_hotel_rooms_title,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -159,7 +160,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -179,7 +180,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
@@ -228,7 +229,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No hay habitaciones',
+              S.of(context).guest_alojamiento_no_rooms,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -237,7 +238,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'No hay habitaciones disponibles en este momento',
+              S.of(context).guest_alojamiento_no_rooms_subtitle,
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? AppColors.silver : AppColors.gray600,
@@ -286,7 +287,7 @@ class _LoadedView extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Habitaciones',
+                  S.of(context).guest_alojamiento_rooms,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -341,7 +342,7 @@ class _LoadedView extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Zonas Comunes',
+                  S.of(context).guest_alojamiento_common_areas,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -651,8 +652,8 @@ class _ZonasComunesCard extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Zonas Comunes',
+                              Text(
+                                S.of(context).guest_alojamiento_common_areas,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -660,7 +661,7 @@ class _ZonasComunesCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '${_previewPhotos.length} fotos',
+                                S.of(context).guest_alojamiento_photos_count(_previewPhotos.length),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: AppColors.white.withValues(alpha: 0.8),

@@ -7,6 +7,7 @@ import 'package:bf_stay/core/services/notification_service.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_entities.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/admin/domain/services/email_service.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla de detalle de check-in para administración
 /// Muestra huéspedes, documentos y firma del check-in
@@ -106,7 +107,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          widget.bookingCode ?? 'Detalle Check-in',
+          widget.bookingCode ?? S.of(context).admin_checkin_detail_title,
           style: const TextStyle(
             color: AppColors.white,
             fontSize: 18,
@@ -120,19 +121,19 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
             if (_checkinDetail!.isPending) ...[
               IconButton(
                 icon: const Icon(Icons.check_circle_outline, color: AppColors.success),
-                tooltip: 'Validar',
+                tooltip: S.of(context).admin_checkin_validate,
                 onPressed: _validateCheckin,
               ),
               IconButton(
                 icon: const Icon(Icons.cancel_outlined, color: AppColors.warning),
-                tooltip: 'Rechazar',
+                tooltip: S.of(context).admin_checkin_reject,
                 onPressed: _showRejectDialog,
               ),
             ],
             // Cancelar disponible tanto si está pendiente como rechazado
             IconButton(
               icon: const Icon(Icons.delete_forever, color: AppColors.error),
-              tooltip: 'Cancelar Reserva',
+              tooltip: S.of(context).admin_checkin_cancel_booking,
               onPressed: _showCancelDialog,
             ),
           ],
@@ -166,7 +167,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                 const Icon(Icons.error_outline, size: 48, color: AppColors.error),
                 const SizedBox(height: 16),
                 Text(
-                  'Error al cargar el check-in',
+                  S.of(context).admin_checkin_error_loading,
                   style: TextStyle(color: AppColors.white, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
@@ -182,7 +183,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.gold,
                   ),
-                  child: const Text('Reintentar'),
+                  child: Text(S.of(context).common_retry),
                 ),
               ],
             ),
@@ -193,8 +194,8 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
     if (_checkinDetail == null) {
       debugPrint('🏗️ [CheckinDetail] Renderizando NULL');
-      return const Center(
-        child: Text('No se encontró el check-in', style: TextStyle(color: AppColors.white)),
+      return Center(
+        child: Text(S.of(context).admin_checkin_not_found, style: const TextStyle(color: AppColors.white)),
       );
     }
 
@@ -242,27 +243,27 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
     switch (status) {
       case 'submitted':
         statusColor = const Color(0xFFE67E22);
-        statusText = 'Pendiente de validación';
+        statusText = S.of(context).admin_checkin_status_pending;
         statusIcon = Icons.pending_actions;
         break;
       case 'validated':
         statusColor = const Color(0xFF27AE60);
-        statusText = 'Validado';
+        statusText = S.of(context).admin_checkin_status_validated;
         statusIcon = Icons.check_circle;
         break;
       case 'rejected':
         statusColor = const Color(0xFFE67E22);
-        statusText = 'Rechazado';
+        statusText = S.of(context).admin_checkin_status_rejected;
         statusIcon = Icons.cancel;
         break;
       case 'cancelled':
         statusColor = const Color(0xFFC0392B);
-        statusText = 'Cancelado';
+        statusText = S.of(context).admin_checkin_status_cancelled;
         statusIcon = Icons.delete_forever;
         break;
       default:
         statusColor = AppColors.gray500;
-        statusText = 'Borrador';
+        statusText = S.of(context).admin_checkin_status_draft;
         statusIcon = Icons.edit_document;
     }
 
@@ -298,22 +299,22 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                 ),
                 if (_checkinDetail!.submittedAt != null)
                   Text(
-                    'Enviado: ${_formatDateTime(_checkinDetail!.submittedAt!)}',
+                    '${S.of(context).admin_checkin_submitted_label} ${_formatDateTime(_checkinDetail!.submittedAt!)}',
                     style: TextStyle(color: AppColors.gray400, fontSize: 12),
                   ),
                 if (_checkinDetail!.validatedAt != null)
                   Text(
-                    'Validado: ${_formatDateTime(_checkinDetail!.validatedAt!)}',
+                    '${S.of(context).admin_checkin_validated_label} ${_formatDateTime(_checkinDetail!.validatedAt!)}',
                     style: TextStyle(color: AppColors.gray400, fontSize: 12),
                   ),
                 if (_checkinDetail!.rejectedAt != null)
                   Text(
-                    'Rechazado: ${_formatDateTime(_checkinDetail!.rejectedAt!)}',
+                    '${S.of(context).admin_checkin_rejected_label} ${_formatDateTime(_checkinDetail!.rejectedAt!)}',
                     style: TextStyle(color: AppColors.gray400, fontSize: 12),
                   ),
                 if (_checkinDetail!.cancelledAt != null)
                   Text(
-                    'Cancelado: ${_formatDateTime(_checkinDetail!.cancelledAt!)}',
+                    '${S.of(context).admin_checkin_cancelled_label} ${_formatDateTime(_checkinDetail!.cancelledAt!)}',
                     style: TextStyle(color: AppColors.gray400, fontSize: 12),
                   ),
               ],
@@ -340,7 +341,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               const Icon(Icons.home_work, color: AppColors.gold, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Información de la reserva',
+                S.of(context).admin_checkin_booking_info,
                 style: TextStyle(
                   color: AppColors.white,
                   fontSize: 16,
@@ -350,18 +351,18 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow('Propiedad', _checkinDetail!.propertyName),
+          _buildInfoRow(S.of(context).admin_checkin_property_label, _checkinDetail!.propertyName),
           _buildInfoRow(
-            _checkinDetail!.hasMultipleUnits ? 'Unidades' : 'Unidad',
+            _checkinDetail!.hasMultipleUnits ? S.of(context).admin_checkin_units_label : S.of(context).admin_checkin_unit_label,
             _checkinDetail!.allUnitNames,
           ),
-          _buildInfoRow('Código', _checkinDetail!.bookingCode, isCode: true),
+          _buildInfoRow(S.of(context).admin_checkin_code_label, _checkinDetail!.bookingCode, isCode: true),
           _buildInfoRow(
-            'Check-in',
+            S.of(context).admin_checkin_checkin_date_label,
             DateFormat('dd/MM/yyyy').format(_checkinDetail!.checkinDate),
           ),
           _buildInfoRow(
-            'Check-out',
+            S.of(context).admin_checkin_checkout_date_label,
             DateFormat('dd/MM/yyyy').format(_checkinDetail!.checkoutDate),
           ),
         ],
@@ -406,7 +407,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               const Icon(Icons.people, color: AppColors.gold, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Huéspedes (${_checkinDetail!.guests.length})',
+                '${S.of(context).admin_checkin_guests_section} (${_checkinDetail!.guests.length})',
                 style: TextStyle(
                   color: AppColors.white,
                   fontSize: 16,
@@ -449,7 +450,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'TITULAR',
+                    S.of(context).admin_checkin_primary_badge,
                     style: TextStyle(
                       color: AppColors.gold,
                       fontSize: 10,
@@ -477,7 +478,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           if (guest.documentType != null)
             _buildGuestDetailRow(
               Icons.badge,
-              '${_getDocumentTypeLabel(guest.documentType!)}: ${guest.documentNumber ?? "N/A"}',
+              '${_getDocumentTypeLabel(guest.documentType!)}: ${guest.documentNumber ?? S.of(context).admin_checkin_na}',
             ),
           if (guest.nationality != null)
             _buildGuestDetailRow(Icons.flag, guest.nationality!),
@@ -553,7 +554,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               const Icon(Icons.folder_open, color: AppColors.gold, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Documentos (${_checkinDetail!.documents.length})',
+                '${S.of(context).admin_checkin_documents_section} (${_checkinDetail!.documents.length})',
                 style: TextStyle(
                   color: AppColors.white,
                   fontSize: 16,
@@ -573,7 +574,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
     final url = _documentUrls[doc.id];
     final guestName = _checkinDetail!.guests
         .where((g) => g.id == doc.guestId)
-        .firstOrNull?.fullName ?? 'Huésped desconocido';
+        .firstOrNull?.fullName ?? S.of(context).admin_checkin_unknown_guest;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -639,7 +640,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               const Icon(Icons.draw, color: AppColors.gold, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Firma del titular',
+                S.of(context).admin_checkin_signature_section,
                 style: TextStyle(
                   color: AppColors.white,
                   fontSize: 16,
@@ -675,11 +676,11 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
   String _getDocumentTypeLabel(String type) {
     switch (type.toLowerCase()) {
       case 'dni':
-        return 'DNI';
+        return S.of(context).admin_checkin_doc_type_dni;
       case 'nie':
-        return 'NIE';
+        return S.of(context).admin_checkin_doc_type_nie;
       case 'passport':
-        return 'Pasaporte';
+        return S.of(context).admin_checkin_doc_type_passport;
       default:
         return type.toUpperCase();
     }
@@ -728,7 +729,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                           Icon(Icons.error, color: AppColors.error, size: 48),
                           SizedBox(height: 8),
                           Text(
-                            'Error al cargar imagen',
+                            S.of(context).admin_checkin_image_load_error,
                             style: TextStyle(color: AppColors.gray400),
                           ),
                         ],
@@ -749,20 +750,20 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.darkSurface,
-        title: Text('Validar Check-in', style: TextStyle(color: AppColors.white)),
+        title: Text(S.of(context).admin_checkin_validate_title, style: TextStyle(color: AppColors.white)),
         content: Text(
-          '¿Confirmar que el check-in es correcto? La reserva pasará a estado "Checked In".',
+          S.of(context).admin_checkin_validate_message,
           style: TextStyle(color: AppColors.gray300),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
+            child: Text(S.of(context).common_cancel, style: TextStyle(color: AppColors.gray400)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-            child: Text('Validar', style: TextStyle(color: AppColors.white)),
+            child: Text(S.of(context).admin_checkin_validate, style: TextStyle(color: AppColors.white)),
           ),
         ],
       ),
@@ -812,8 +813,8 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Check-in validado correctamente'),
+            SnackBar(
+              content: Text(S.of(context).admin_checkin_validated_success),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.fixed,
             ),
@@ -825,7 +826,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(S.of(context).admin_checkin_error(e.toString())),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.fixed,
             ),
@@ -842,12 +843,12 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.darkSurface,
-        title: Text('Rechazar Check-in', style: TextStyle(color: AppColors.white)),
+        title: Text(S.of(context).admin_checkin_reject_title, style: TextStyle(color: AppColors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Indica el motivo del rechazo:',
+              S.of(context).admin_checkin_reject_message,
               style: TextStyle(color: AppColors.gray300),
             ),
             SizedBox(height: 12),
@@ -855,7 +856,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               controller: reasonController,
               style: TextStyle(color: AppColors.white),
               decoration: InputDecoration(
-                hintText: 'Ej: Documento ilegible',
+                hintText: S.of(context).admin_checkin_reject_hint,
                 hintStyle: TextStyle(color: AppColors.gray500),
                 filled: true,
                 fillColor: AppColors.darkBackground,
@@ -871,12 +872,12 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
+            child: Text(S.of(context).common_cancel, style: TextStyle(color: AppColors.gray400)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
-            child: Text('Rechazar', style: TextStyle(color: AppColors.black)),
+            child: Text(S.of(context).admin_checkin_reject, style: TextStyle(color: AppColors.black)),
           ),
         ],
       ),
@@ -884,7 +885,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
     if (confirmed == true && mounted) {
       final reason = reasonController.text.trim().isEmpty
-          ? 'Sin motivo especificado'
+          ? S.of(context).admin_checkin_no_reason
           : reasonController.text.trim();
 
       try {
@@ -928,8 +929,8 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Check-in rechazado'),
+            SnackBar(
+              content: Text(S.of(context).admin_checkin_rejected_success),
               backgroundColor: AppColors.warning,
               behavior: SnackBarBehavior.fixed,
             ),
@@ -941,7 +942,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(S.of(context).admin_checkin_error(e.toString())),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.fixed,
             ),
@@ -962,7 +963,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: AppColors.error),
             SizedBox(width: 8),
-            Text('Cancelar Reserva', style: TextStyle(color: AppColors.white)),
+            Text(S.of(context).admin_checkin_cancel_booking, style: TextStyle(color: AppColors.white)),
           ],
         ),
         content: Column(
@@ -970,7 +971,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Esta acción cancelará la reserva por completo.',
+              S.of(context).admin_checkin_cancel_message,
               style: TextStyle(color: AppColors.gray300),
             ),
             SizedBox(height: 8),
@@ -987,7 +988,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'El huésped NO podrá corregir los datos. Deberá contactar con recepción.',
+                      S.of(context).admin_checkin_cancel_warning,
                       style: TextStyle(color: AppColors.error, fontSize: 13),
                     ),
                   ),
@@ -996,7 +997,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
             ),
             SizedBox(height: 16),
             Text(
-              'Motivo de la cancelación:',
+              S.of(context).admin_checkin_cancel_reason_label,
               style: TextStyle(color: AppColors.gray300),
             ),
             SizedBox(height: 8),
@@ -1004,7 +1005,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               controller: reasonController,
               style: TextStyle(color: AppColors.white),
               decoration: InputDecoration(
-                hintText: 'Ej: Reserva no encontrada en sistema',
+                hintText: S.of(context).admin_checkin_cancel_reason_hint,
                 hintStyle: TextStyle(color: AppColors.gray500),
                 filled: true,
                 fillColor: AppColors.darkBackground,
@@ -1020,12 +1021,12 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Atrás', style: TextStyle(color: AppColors.gray400)),
+            child: Text(S.of(context).common_back, style: TextStyle(color: AppColors.gray400)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: Text('Cancelar Reserva', style: TextStyle(color: AppColors.white)),
+            child: Text(S.of(context).admin_checkin_cancel_booking, style: TextStyle(color: AppColors.white)),
           ),
         ],
       ),
@@ -1033,7 +1034,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
     if (confirmed == true && mounted) {
       final reason = reasonController.text.trim().isEmpty
-          ? 'Sin motivo especificado'
+          ? S.of(context).admin_checkin_no_reason
           : reasonController.text.trim();
 
       try {
@@ -1077,8 +1078,8 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Reserva cancelada'),
+            SnackBar(
+              content: Text(S.of(context).admin_checkin_cancelled_success),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.fixed,
             ),
@@ -1090,7 +1091,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(S.of(context).admin_checkin_error(e.toString())),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.fixed,
             ),

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/parkings_bloc.dart';
 import '../../domain/entities/unit_parking_entity.dart';
 import '../../domain/repositories/parkings_repository.dart';
@@ -168,7 +169,7 @@ class _SliverAppBar extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            'Parkings',
+            S.of(context).guest_parking_title,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -282,7 +283,7 @@ class _UnitParkingsList extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     child: Text(
-                      'Parkings para $unitName',
+                      S.of(context).guest_parking_for_unit(unitName),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -396,7 +397,7 @@ class _UnitParkingSectionState extends State<_UnitParkingSection> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${widget.parkings.length} ${widget.parkings.length == 1 ? 'parking disponible' : 'parkings disponibles'}',
+                          '${widget.parkings.length} ${widget.parkings.length == 1 ? S.of(context).guest_parking_available_singular : S.of(context).guest_parking_available_plural}',
                           style: TextStyle(
                             fontSize: 13,
                             color: AppColors.getTextSecondaryColor(context),
@@ -485,7 +486,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_parking_error_loading,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -505,7 +506,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
@@ -545,7 +546,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No hay parkings',
+              S.of(context).guest_parking_empty_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -554,7 +555,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Pronto añadiremos información de parkings cercanos',
+              S.of(context).guest_parking_empty_subtitle,
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.getTextSecondaryColor(context),
@@ -635,7 +636,7 @@ class _HotelParkingInfoCardState extends State<_HotelParkingInfoCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'INFORMACIÓN ZONAS DE APARCAMIENTO',
+                          S.of(context).guest_parking_info_zones_title,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -677,12 +678,9 @@ class _HotelParkingInfoCardState extends State<_HotelParkingInfoCard> {
                   _ParkingInfoSection(
                     icon: Icons.local_parking,
                     iconColor: AppColors.gold,
-                    title: 'PARKING PLAZA ARENAL',
-                    subtitle: 'A unos 5 minutos andando',
-                    content: '''
-• Abonando la estancia a través de la app El Parking: 6,95€/24h
-• Reservando a través de su web: 8€/24h (mínimo 24h)
-• Abonando el ticket en la máquina: 16€/24h''',
+                    title: S.of(context).guest_parking_plaza_arenal_title,
+                    subtitle: S.of(context).guest_parking_plaza_arenal_subtitle,
+                    content: S.of(context).guest_parking_plaza_arenal_content,
                   ),
 
                   const SizedBox(height: 20),
@@ -691,12 +689,9 @@ class _HotelParkingInfoCardState extends State<_HotelParkingInfoCard> {
                   _ParkingInfoSection(
                     icon: Icons.directions_car,
                     iconColor: AppColors.info,
-                    title: 'PARKING EN ZONA CENTRO',
-                    subtitle: 'O.R.A AZUL',
-                    content: '''
-• Lunes a Viernes: 9:00 - 13:30 y 17:00 - 20:00
-• Sábados: 9:00 - 14:00
-• Julio y Agosto: 9:00 - 14:00''',
+                    title: S.of(context).guest_parking_centro_title,
+                    subtitle: S.of(context).guest_parking_centro_subtitle,
+                    content: S.of(context).guest_parking_centro_content,
                   ),
 
                   const SizedBox(height: 20),
@@ -705,9 +700,9 @@ class _HotelParkingInfoCardState extends State<_HotelParkingInfoCard> {
                   _ParkingInfoSection(
                     icon: Icons.directions_walk,
                     iconColor: AppColors.success,
-                    title: 'PARKING ZONA GRATUITA',
-                    subtitle: 'A unos 10 minutos andando',
-                    content: 'Zona libre de estacionamiento rotativo.',
+                    title: S.of(context).guest_parking_free_zone_title,
+                    subtitle: S.of(context).guest_parking_free_zone_subtitle,
+                    content: S.of(context).guest_parking_free_zone_content,
                     showGpsLink: true,
                     gpsLabel: 'Calzada del Arroyo',
                     gpsUrl: 'https://www.google.com/maps/search/?api=1&query=Calzada+del+Arroyo+Jerez+de+la+Frontera',
@@ -830,7 +825,7 @@ class _ParkingInfoSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'GPS: $gpsLabel',
+                      S.of(context).guest_parking_gps_label(gpsLabel!),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

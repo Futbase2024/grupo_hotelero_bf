@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../domain/bloc/alojamientos_bloc.dart';
 import '../../domain/entities/property_entity.dart';
@@ -27,7 +28,7 @@ class AlojamientoDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle'),
+        title: Text(S.of(context).guest_alojamiento_detail_title),
         centerTitle: true,
         backgroundColor: AppColors.white,
         foregroundColor: AppColors.textPrimary,
@@ -112,7 +113,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -132,7 +133,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.textOnGold,
@@ -244,7 +245,7 @@ class _DetailView extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Unidades disponibles',
+                      S.of(context).guest_alojamiento_units_available,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -293,7 +294,7 @@ class _DetailView extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'No hay unidades disponibles',
+                            S.of(context).guest_alojamiento_no_units,
                             style: const TextStyle(
                               fontSize: 14,
                               color: AppColors.textSecondary,
@@ -314,7 +315,7 @@ class _DetailView extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildInfoSection(
                     icon: Icons.map_outlined,
-                    title: 'Ubicación',
+                    title: S.of(context).guest_alojamiento_location,
                     child: _LocationPreview(
                       lat: property.lat!,
                       lng: property.lng!,
@@ -441,22 +442,22 @@ class _HouseRulesButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Normas de la Casa',
-                    style: TextStyle(
+                    S.of(context).guest_house_rules_title,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'Consulta las normas y recomendaciones',
-                    style: TextStyle(
+                    S.of(context).guest_house_rules_subtitle,
+                    style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
                     ),

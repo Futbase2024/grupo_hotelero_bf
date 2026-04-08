@@ -48,12 +48,13 @@ class StatusBadge extends StatelessWidget {
 
   /// Crea un badge para el estado de reserva
   factory StatusBadge.forBookingStatus(
+    BuildContext context,
     BookingStatus status, {
     double fontSize = 10,
   }) {
     final config = _bookingStatusConfigs[status]!;
     return StatusBadge(
-      label: config.label,
+      label: status.label(context),
       backgroundColor: config.backgroundColor,
       textColor: config.textColor,
       fontSize: fontSize,
@@ -62,10 +63,12 @@ class StatusBadge extends StatelessWidget {
 
   /// Crea un badge desde string de estado de reserva
   factory StatusBadge.fromBookingString(
+    BuildContext context,
     String status, {
     double fontSize = 10,
   }) {
     return StatusBadge.forBookingStatus(
+      context,
       BookingStatus.fromString(status),
       fontSize: fontSize,
     );
@@ -75,12 +78,13 @@ class StatusBadge extends StatelessWidget {
 
   /// Crea un badge para el estado de check-in
   factory StatusBadge.forCheckinStatus(
+    BuildContext context,
     CheckinStatus status, {
     double fontSize = 10,
   }) {
     final config = _checkinStatusConfigs[status]!;
     return StatusBadge(
-      label: config.label,
+      label: status.label(context),
       backgroundColor: config.backgroundColor,
       textColor: config.textColor,
       fontSize: fontSize,
@@ -89,16 +93,19 @@ class StatusBadge extends StatelessWidget {
 
   /// Crea un badge desde string de estado de check-in
   factory StatusBadge.fromCheckinString(
+    BuildContext context,
     String? status, {
     double fontSize = 10,
   }) {
     if (status == null || status.isEmpty) {
       return StatusBadge.forCheckinStatus(
+        context,
         CheckinStatus.notStarted,
         fontSize: fontSize,
       );
     }
     return StatusBadge.forCheckinStatus(
+      context,
       CheckinStatus.fromString(status),
       fontSize: fontSize,
     );
@@ -108,12 +115,13 @@ class StatusBadge extends StatelessWidget {
 
   /// Crea un badge para el estado de check-out
   factory StatusBadge.forCheckoutStatus(
+    BuildContext context,
     CheckoutStatus status, {
     double fontSize = 10,
   }) {
     final config = _checkoutStatusConfigs[status]!;
     return StatusBadge(
-      label: config.label,
+      label: status.label(context),
       backgroundColor: config.backgroundColor,
       textColor: config.textColor,
       fontSize: fontSize,
@@ -122,16 +130,19 @@ class StatusBadge extends StatelessWidget {
 
   /// Crea un badge desde string de estado de check-out
   factory StatusBadge.fromCheckoutString(
+    BuildContext context,
     String? status, {
     double fontSize = 10,
   }) {
     if (status == null || status.isEmpty) {
       return StatusBadge.forCheckoutStatus(
+        context,
         CheckoutStatus.notStarted,
         fontSize: fontSize,
       );
     }
     return StatusBadge.forCheckoutStatus(
+      context,
       CheckoutStatus.fromString(status),
       fontSize: fontSize,
     );
@@ -139,110 +150,91 @@ class StatusBadge extends StatelessWidget {
 
   // ==================== CONFIGURACIONES ====================
 
-  static const Map<BookingStatus, _StatusConfig> _bookingStatusConfigs = {
-    BookingStatus.created: _StatusConfig(
-      label: 'Creada',
+  static const Map<BookingStatus, _StatusColorConfig> _bookingStatusConfigs = {
+    BookingStatus.created: _StatusColorConfig(
       backgroundColor: Color(0x26737373), // gris 15%
       textColor: Color(0xFF737373),
     ),
-    BookingStatus.confirmed: _StatusConfig(
-      label: 'Confirmada',
+    BookingStatus.confirmed: _StatusColorConfig(
       backgroundColor: Color(0x262980B9), // azul 15%
       textColor: Color(0xFF2980B9),
     ),
-    BookingStatus.active: _StatusConfig(
-      label: 'Activa',
+    BookingStatus.active: _StatusColorConfig(
       backgroundColor: Color(0x2627AE60), // verde 15%
       textColor: Color(0xFF27AE60),
     ),
-    BookingStatus.inHouse: _StatusConfig(
-      label: 'En casa',
+    BookingStatus.inHouse: _StatusColorConfig(
       backgroundColor: Color(0x2627AE60), // verde 15%
       textColor: Color(0xFF27AE60),
     ),
-    BookingStatus.checkedIn: _StatusConfig(
-      label: 'Activa', // Legacy - mostrar como Activa
+    BookingStatus.checkedIn: _StatusColorConfig(
       backgroundColor: Color(0x2627AE60), // verde 15%
       textColor: Color(0xFF27AE60),
     ),
-    BookingStatus.checkedOut: _StatusConfig(
-      label: 'Finalizada',
+    BookingStatus.checkedOut: _StatusColorConfig(
       backgroundColor: Color(0x26737373), // gris 15%
       textColor: Color(0xFF737373),
     ),
-    BookingStatus.closed: _StatusConfig(
-      label: 'Cerrada',
+    BookingStatus.closed: _StatusColorConfig(
       backgroundColor: Color(0x26636363), // gris oscuro 15%
       textColor: Color(0xFF636363),
     ),
-    BookingStatus.cancelled: _StatusConfig(
-      label: 'Cancelada',
+    BookingStatus.cancelled: _StatusColorConfig(
       backgroundColor: Color(0x26C0392B), // rojo 15%
       textColor: Color(0xFFC0392B),
     ),
   };
 
-  static const Map<CheckinStatus, _StatusConfig> _checkinStatusConfigs = {
-    CheckinStatus.notStarted: _StatusConfig(
-      label: 'Pendiente',
+  static const Map<CheckinStatus, _StatusColorConfig> _checkinStatusConfigs = {
+    CheckinStatus.notStarted: _StatusColorConfig(
       backgroundColor: Color(0x1A737373), // gris 10%
       textColor: Color(0xFF737373),
     ),
-    CheckinStatus.inProgress: _StatusConfig(
-      label: 'En progreso',
+    CheckinStatus.inProgress: _StatusColorConfig(
       backgroundColor: Color(0x262980B9), // azul 15%
       textColor: Color(0xFF2980B9),
     ),
-    CheckinStatus.submitted: _StatusConfig(
-      label: 'Por revisar',
+    CheckinStatus.submitted: _StatusColorConfig(
       backgroundColor: Color(0x26E67E22), // naranja 15%
       textColor: Color(0xFFE67E22),
     ),
-    CheckinStatus.validated: _StatusConfig(
-      label: 'Validado',
+    CheckinStatus.validated: _StatusColorConfig(
       backgroundColor: Color(0x2627AE60), // verde 15%
       textColor: Color(0xFF27AE60),
     ),
-    CheckinStatus.rejected: _StatusConfig(
-      label: 'Rechazado',
+    CheckinStatus.rejected: _StatusColorConfig(
       backgroundColor: Color(0x26C0392B), // rojo 15%
       textColor: Color(0xFFC0392B),
     ),
   };
 
-  static const Map<CheckoutStatus, _StatusConfig> _checkoutStatusConfigs = {
-    CheckoutStatus.notStarted: _StatusConfig(
-      label: 'Sin iniciar',
+  static const Map<CheckoutStatus, _StatusColorConfig> _checkoutStatusConfigs = {
+    CheckoutStatus.notStarted: _StatusColorConfig(
       backgroundColor: Color(0x1A737373), // gris 10%
       textColor: Color(0xFF737373),
     ),
-    CheckoutStatus.requested: _StatusConfig(
-      label: 'Solicitado',
+    CheckoutStatus.requested: _StatusColorConfig(
       backgroundColor: Color(0x26E67E22), // naranja 15%
       textColor: Color(0xFFE67E22),
     ),
-    CheckoutStatus.validated: _StatusConfig(
-      label: 'Validado',
+    CheckoutStatus.validated: _StatusColorConfig(
       backgroundColor: Color(0x2627AE60), // verde 15%
       textColor: Color(0xFF27AE60),
     ),
-    CheckoutStatus.rejected: _StatusConfig(
-      label: 'Incidencias',
+    CheckoutStatus.rejected: _StatusColorConfig(
       backgroundColor: Color(0x26C0392B), // rojo 15%
       textColor: Color(0xFFC0392B),
     ),
   };
 }
 
-/// Configuración interna de cada estado
-class _StatusConfig {
-  const _StatusConfig({
-    required this.label,
+/// Configuración interna de colores por estado (sin label, ya viene de la extensión l10n)
+class _StatusColorConfig {
+  const _StatusColorConfig({
     required this.backgroundColor,
     required this.textColor,
   });
 
-  final String label;
   final Color backgroundColor;
   final Color textColor;
 }

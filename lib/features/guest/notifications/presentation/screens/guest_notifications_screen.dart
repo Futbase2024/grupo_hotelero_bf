@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../home/domain/bloc/guest_home_bloc.dart';
 import '../../../home/domain/bloc/guest_home_event.dart';
 import '../../../home/domain/bloc/guest_home_state.dart';
@@ -35,7 +37,7 @@ class _GuestNotificationsScreenState extends State<GuestNotificationsScreen> {
           onPressed: () => context.go('/guest'),
         ),
         title: Text(
-          'Notificaciones',
+          S.of(context).guest_notifications_title,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -65,7 +67,7 @@ class _GuestNotificationsScreenState extends State<GuestNotificationsScreen> {
                   ),
                 ),
                 child: Text(
-                  'Borrar todas',
+                  S.of(context).guest_notifications_delete_all,
                   style: TextStyle(
                     color: AppColors.error,
                     fontSize: 14,
@@ -145,18 +147,18 @@ class _GuestNotificationsScreenState extends State<GuestNotificationsScreen> {
           side: BorderSide(color: AppColors.getBorderColor(context)),
         ),
         title: Text(
-          'Borrar todas las notificaciones',
+          S.of(context).guest_notifications_delete_all_title,
           style: TextStyle(color: AppColors.getTextPrimaryColor(context)),
         ),
         content: Text(
-          '¿Estas seguro de que quieres eliminar todas las notificaciones? Esta accion no se puede deshacer.',
+          S.of(context).guest_notifications_delete_all_confirm,
           style: TextStyle(color: AppColors.getTextSecondaryColor(context)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Cancelar',
+              S.of(context).common_cancel,
               style: TextStyle(color: AppColors.getTextSecondaryColor(context)),
             ),
           ),
@@ -174,9 +176,9 @@ class _GuestNotificationsScreenState extends State<GuestNotificationsScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text(
-              'Borrar todas',
-              style: TextStyle(
+            child: Text(
+              S.of(context).guest_notifications_delete_all,
+              style: const TextStyle(
                 color: AppColors.error,
                 fontWeight: FontWeight.w500,
               ),
@@ -218,7 +220,7 @@ class _ActionBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '$unreadCount notificacion${unreadCount == 1 ? '' : 'es'} sin leer',
+              S.of(context).guest_notifications_unread_count(unreadCount),
               style: TextStyle(
                 color: AppColors.gold,
                 fontSize: 14,
@@ -236,7 +238,7 @@ class _ActionBanner extends StatelessWidget {
               ),
             ),
             child: Text(
-              'Marcar todas',
+              S.of(context).guest_notifications_mark_all,
               style: TextStyle(
                 color: AppColors.gold,
                 fontSize: 13,
@@ -278,7 +280,7 @@ class _EmptyNotificationsView extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Sin notificaciones',
+            S.of(context).guest_notifications_empty_title,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -287,7 +289,7 @@ class _EmptyNotificationsView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Aqui apareceran las notificaciones\ncuando las recibas',
+            S.of(context).guest_notifications_empty_subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -399,14 +401,14 @@ class _NotificationCard extends StatelessWidget {
                     if (!notification.isRead) ...[
                       _ActionButton(
                         icon: Icons.check,
-                        label: 'Leida',
+                        label: S.of(context).guest_notifications_read,
                         onTap: onMarkAsRead,
                       ),
                       const SizedBox(width: 8),
                     ],
                     _ActionButton(
                       icon: Icons.delete_outline,
-                      label: 'Eliminar',
+                      label: S.of(context).common_delete,
                       onTap: onDelete,
                       isDestructive: true,
                     ),
@@ -493,7 +495,7 @@ class _ActionButton extends StatelessWidget {
               Icon(Icons.delete_outline, size: 16, color: AppColors.error),
               const SizedBox(width: 4),
               Text(
-                'Eliminar',
+                S.of(context).common_delete,
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.error,

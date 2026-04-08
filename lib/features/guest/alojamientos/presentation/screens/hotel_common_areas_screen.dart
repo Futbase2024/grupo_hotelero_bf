@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_theme.dart';
 import '../../../../../../core/di/injection.dart';
@@ -96,7 +97,7 @@ class _HotelCommonAreasScreenState extends State<HotelCommonAreasScreen> {
           },
         ),
         title: Text(
-          'Zonas Comunes',
+          S.of(context).guest_alojamiento_common_areas,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -179,7 +180,7 @@ class _PhotosGrid extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Espacios compartidos',
+                            S.of(context).guest_alojamiento_shared_spaces,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -188,7 +189,7 @@ class _PhotosGrid extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Disfruta de las áreas comunes del hotel',
+                            S.of(context).guest_alojamiento_common_areas_subtitle,
                             style: TextStyle(
                               fontSize: 13,
                               color: isDark ? AppColors.silver : AppColors.gray600,
@@ -547,7 +548,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -567,7 +568,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
@@ -616,7 +617,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No hay fotos',
+              S.of(context).guest_alojamiento_no_photos,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -625,7 +626,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'No se encontraron fotos de zonas comunes',
+              S.of(context).guest_alojamiento_no_photos_subtitle,
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? AppColors.silver : AppColors.gray600,

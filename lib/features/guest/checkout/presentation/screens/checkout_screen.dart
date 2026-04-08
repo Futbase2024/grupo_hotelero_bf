@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
@@ -11,7 +12,7 @@ import 'package:bf_stay/features/guest/checkout/presentation/bloc/checkout_bloc.
 import 'package:bf_stay/features/guest/checkout/presentation/bloc/checkout_event.dart';
 import 'package:bf_stay/features/guest/checkout/presentation/bloc/checkout_state.dart';
 
-/// Pantalla de Check-out para huéspedes
+/// Pantalla de Check-out para huespedes
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key, required this.bookingId});
 
@@ -64,7 +65,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.go('/guest'),
       ),
-      title: const Text('Check-out'),
+      title: Text(S.of(context).guest_checkout_title),
     );
   }
 
@@ -73,7 +74,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Refrescar el estado del usuario
       context.read<AuthBloc>().add(const AuthCheckRequested());
 
-      // Redirigir automáticamente a la pantalla inicial
+      // Redirigir automaticamente a la pantalla inicial
       Future.delayed(const Duration(milliseconds: 500), () {
         if (context.mounted) {
           context.go('/guest');
@@ -92,15 +93,15 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppColors.gold),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: AppColors.gold),
+          const SizedBox(height: 16),
           Text(
-            'Cargando datos de la estancia...',
-            style: TextStyle(color: AppColors.gray500),
+            S.of(context).guest_checkout_loading,
+            style: const TextStyle(color: AppColors.gray500),
           ),
         ],
       ),
@@ -113,15 +114,15 @@ class _SubmittingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppColors.gold),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: AppColors.gold),
+          const SizedBox(height: 16),
           Text(
-            'Procesando check-out...',
-            style: TextStyle(color: AppColors.gray500),
+            S.of(context).guest_checkout_processing,
+            style: const TextStyle(color: AppColors.gray500),
           ),
         ],
       ),
@@ -150,7 +151,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Error al cargar',
+              S.of(context).guest_checkout_error_loading,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -172,7 +173,7 @@ class _ErrorView extends StatelessWidget {
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
               ),
-              child: const Text('Reintentar'),
+              child: Text(S.of(context).common_retry),
             ),
           ],
         ),
@@ -190,6 +191,7 @@ class _SuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -209,9 +211,9 @@ class _SuccessView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              '¡Check-out Completado!',
-              style: TextStyle(
+            Text(
+              s.guest_checkout_completed,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
@@ -219,9 +221,9 @@ class _SuccessView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Gracias por tu estancia. ¡Esperamos verte pronto!',
-              style: TextStyle(
+            Text(
+              s.guest_checkout_thank_you,
+              style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.gray500,
               ),
@@ -240,9 +242,9 @@ class _SuccessView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                 ),
-                child: const Text(
-                  'Volver al inicio',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  s.common_back_to_home,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -291,6 +293,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
   }
 
   Widget _buildAlreadyCheckedOutView(BuildContext context) {
+    final s = S.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -310,9 +313,9 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Check-out ya realizado',
-              style: TextStyle(
+            Text(
+              s.guest_checkout_already_done,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
@@ -320,9 +323,9 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Ya has completado el check-out de esta reserva.',
-              style: TextStyle(
+            Text(
+              s.guest_checkout_already_done_message,
+              style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.gray500,
               ),
@@ -341,9 +344,9 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                 ),
-                child: const Text(
-                  'Volver al inicio',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  s.common_back_to_home,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -378,7 +381,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
           _buildFeedbackSection(context),
           const SizedBox(height: AppTheme.spacing32),
 
-          // Botón de confirmar
+          // Boton de confirmar
           _buildConfirmButton(context),
           const SizedBox(height: AppTheme.spacing24),
 
@@ -390,11 +393,12 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final s = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Resumen de tu estancia',
+          s.guest_checkout_stay_summary,
           style: TextStyle(
             fontSize: ResponsiveFontSize.headlineSmall(context),
             fontWeight: FontWeight.bold,
@@ -402,7 +406,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
-          'Revisa los datos y confirma tu check-out cuando estés listo para salir.',
+          s.guest_checkout_review_description,
           style: TextStyle(
             fontSize: ResponsiveFontSize.bodyMedium(context),
             color: AppColors.getTextSecondaryColor(context),
@@ -417,6 +421,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
     dynamic booking,
     DateFormat dateFormat,
   ) {
+    final s = S.of(context);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
@@ -474,7 +479,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
                 child: _buildDateItem(
                   context,
                   Icons.login,
-                  'Check-in',
+                  s.guest_checkout_checkin_label,
                   dateFormat.format(booking.checkInDate),
                 ),
               ),
@@ -483,7 +488,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
                 child: _buildDateItem(
                   context,
                   Icons.logout,
-                  'Check-out',
+                  s.guest_checkout_checkout_label,
                   dateFormat.format(booking.checkOutDate),
                   isHighlighted: true,
                 ),
@@ -492,14 +497,14 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
           ),
           const SizedBox(height: AppTheme.spacing16),
 
-          // Huéspedes y noches
+          // Huespedes y noches
           Row(
             children: [
               Expanded(
                 child: _buildInfoItem(
                   context,
                   Icons.people_outline,
-                  '${booking.numGuests} huéspedes',
+                  s.guest_checkout_guests_count(booking.numGuests),
                 ),
               ),
               const SizedBox(width: AppTheme.spacing16),
@@ -507,7 +512,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
                 child: _buildInfoItem(
                   context,
                   Icons.bed_outlined,
-                  '${booking.stayNights} ${booking.stayNights == 1 ? 'noche' : 'noches'}',
+                  s.guest_checkout_nights_count(booking.stayNights),
                 ),
               ),
             ],
@@ -591,7 +596,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '¿Cómo fue tu estancia? (opcional)',
+          S.of(context).guest_checkout_rating_title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -626,7 +631,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Comentarios adicionales (opcional)',
+          S.of(context).guest_checkout_feedback_title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -639,7 +644,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
           maxLines: 3,
           maxLength: 500,
           decoration: InputDecoration(
-            hintText: 'Cuéntanos sobre tu experiencia...',
+            hintText: S.of(context).guest_checkout_feedback_hint,
             hintStyle: TextStyle(color: AppColors.getTextSecondaryColor(context)),
             filled: true,
             fillColor: AppColors.getInputBackgroundColor(context),
@@ -678,9 +683,9 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           ),
         ),
-        child: const Text(
-          'Confirmar Check-out',
-          style: TextStyle(
+        child: Text(
+          S.of(context).guest_checkout_confirm_button,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -702,7 +707,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Al confirmar el check-out, indicas que has recogido todas tus pertenencias y dejado el alojamiento.',
+              S.of(context).guest_checkout_confirm_info,
               style: TextStyle(
                 fontSize: 13,
                 color: AppColors.getTextSecondaryColor(context),
@@ -715,6 +720,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
   }
 
   Widget _buildConfirmationDialog(BuildContext context) {
+    final s = S.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -747,9 +753,9 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                '¿Confirmar check-out?',
-                style: TextStyle(
+              Text(
+                s.guest_checkout_confirm_dialog_title,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -757,7 +763,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
               ),
               const SizedBox(height: 12),
               Text(
-                '¿Estás seguro de que deseas finalizar tu estancia?',
+                s.guest_checkout_confirm_dialog_message,
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.getTextSecondaryColor(context),
@@ -779,7 +785,7 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
                         side: BorderSide(color: AppColors.getBorderColor(context)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Cancelar'),
+                      child: Text(s.common_cancel),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -798,9 +804,9 @@ class _CheckoutSummaryViewState extends State<_CheckoutSummaryView> {
                         foregroundColor: AppColors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'Confirmar',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        s.guest_checkout_confirm,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),

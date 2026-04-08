@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../domain/entities/review_entity.dart';
 import 'rating_stars.dart';
 
@@ -41,7 +42,7 @@ class RatingSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Rating promedio grande
-          _buildAverageRating(averageRating, totalReviews, isDark),
+          _buildAverageRating(context, averageRating, totalReviews, isDark),
           const SizedBox(width: 24),
 
           // Distribución de ratings
@@ -53,7 +54,7 @@ class RatingSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAverageRating(double averageRating, int totalReviews, bool isDark) {
+  Widget _buildAverageRating(BuildContext context, double averageRating, int totalReviews, bool isDark) {
     return Column(
       children: [
         // Número grande
@@ -77,7 +78,7 @@ class RatingSummaryCard extends StatelessWidget {
 
         // Total de reseñas
         Text(
-          '$totalReviews ${totalReviews == 1 ? 'reseña' : 'reseñas'}',
+          S.of(context).guest_reviews_count_label(totalReviews),
           style: TextStyle(
             fontSize: 14,
             color: isDark ? AppColors.silver.withValues(alpha: 0.7) : AppColors.gray500,
@@ -216,7 +217,7 @@ class _EmptyRatingSummary extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Sin reseñas aún',
+            S.of(context).guest_reviews_no_reviews_title,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -225,7 +226,7 @@ class _EmptyRatingSummary extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Sé el primero en dejar una reseña',
+            S.of(context).guest_reviews_be_first,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? AppColors.silver.withValues(alpha: 0.7) : AppColors.gray500,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../domain/entities/review_entity.dart';
 import 'rating_stars.dart';
 
@@ -143,7 +144,7 @@ class ReviewCard extends StatelessWidget {
             TextButton.icon(
               onPressed: onEdit,
               icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('Editar'),
+              label: Text(S.of(context).common_edit),
               style: TextButton.styleFrom(
                 foregroundColor: isDark ? AppColors.silver : AppColors.gray600,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -154,7 +155,7 @@ class ReviewCard extends StatelessWidget {
             TextButton.icon(
               onPressed: onDelete,
               icon: const Icon(Icons.delete_outline, size: 18),
-              label: const Text('Eliminar'),
+              label: Text(S.of(context).common_delete),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.error,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -177,18 +178,18 @@ class _VerifiedBadge extends StatelessWidget {
         color: AppColors.success.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          const Icon(
             Icons.check_circle_outline,
             size: 12,
             color: AppColors.success,
           ),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Text(
-            'Verificado',
-            style: TextStyle(
+            S.of(context).guest_reviews_verified,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
               color: AppColors.success,
@@ -247,7 +248,7 @@ class _CommentTextState extends State<_CommentText> {
         GestureDetector(
           onTap: () => setState(() => _isExpanded = !_isExpanded),
           child: Text(
-            _isExpanded ? 'Ver menos' : 'Ver más',
+            _isExpanded ? S.of(context).guest_reviews_show_less : S.of(context).guest_reviews_show_more,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,

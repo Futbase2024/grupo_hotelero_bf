@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Dashboard del personal
 class StaffDashboardScreen extends StatelessWidget {
@@ -28,19 +29,19 @@ class StaffDashboardScreen extends StatelessWidget {
                   const SizedBox(height: AppTheme.spacing32),
 
                   // Stats
-                  _buildSectionTitle(context, 'Resumen del Día'),
+                  _buildSectionTitle(context, S.of(context).staff_dashboard_daily_summary),
                   const SizedBox(height: AppTheme.spacing16),
                   _buildStatsGrid(context),
                   const SizedBox(height: AppTheme.spacing32),
 
                   // Pending tasks
-                  _buildSectionTitle(context, 'Tareas Pendientes'),
+                  _buildSectionTitle(context, S.of(context).staff_dashboard_pending_tasks),
                   const SizedBox(height: AppTheme.spacing16),
                   _buildPendingTasks(context),
                   const SizedBox(height: AppTheme.spacing32),
 
                   // Quick actions
-                  _buildSectionTitle(context, 'Acciones Rápidas'),
+                  _buildSectionTitle(context, S.of(context).staff_dashboard_quick_actions),
                   const SizedBox(height: AppTheme.spacing16),
                   _buildQuickActions(context),
                 ],
@@ -79,14 +80,14 @@ class StaffDashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '¡Hola, ${user?.displayName ?? "Staff"}!',
+                S.of(context).staff_dashboard_greeting(user?.displayName ?? 'Staff'),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Panel de Control',
+                S.of(context).staff_dashboard_control_panel,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -124,25 +125,25 @@ class StaffDashboardScreen extends StatelessWidget {
       childAspectRatio: 1.4,
       children: [
         _StatCard(
-          title: 'Check-ins Hoy',
+          title: S.of(context).staff_dashboard_checkins_today,
           value: '8',
           icon: Icons.login,
           color: AppColors.success,
         ),
         _StatCard(
-          title: 'Check-outs Hoy',
+          title: S.of(context).staff_dashboard_checkouts_today,
           value: '5',
           icon: Icons.logout,
           color: AppColors.warning,
         ),
         _StatCard(
-          title: 'Ocupación',
+          title: S.of(context).staff_dashboard_occupancy,
           value: '85%',
           icon: Icons.hotel,
           color: AppColors.info,
         ),
         _StatCard(
-          title: 'Pendientes',
+          title: S.of(context).staff_dashboard_pending,
           value: '3',
           icon: Icons.pending_actions,
           color: AppColors.error,
@@ -155,22 +156,22 @@ class StaffDashboardScreen extends StatelessWidget {
     return Column(
       children: [
         _TaskCard(
-          title: 'Check-in pendiente',
-          subtitle: 'Habitación 204 - Juan García',
+          title: S.of(context).staff_dashboard_pending_checkin,
+          subtitle: S.of(context).staff_dashboard_room_guest('204', 'Juan García'),
           time: '14:00',
           type: TaskType.checkin,
         ),
         const SizedBox(height: AppTheme.spacing8),
         _TaskCard(
-          title: 'Check-out pendiente',
-          subtitle: 'Habitación 102 - María López',
+          title: S.of(context).staff_dashboard_pending_checkout,
+          subtitle: S.of(context).staff_dashboard_room_guest('102', 'María López'),
           time: '11:00',
           type: TaskType.checkout,
         ),
         const SizedBox(height: AppTheme.spacing8),
         _TaskCard(
-          title: 'Solicitud de limpieza',
-          subtitle: 'Habitación 305 - Extras',
+          title: S.of(context).staff_dashboard_cleaning_request,
+          subtitle: S.of(context).staff_dashboard_room_extras('305'),
           time: '16:30',
           type: TaskType.cleaning,
         ),
@@ -184,7 +185,7 @@ class StaffDashboardScreen extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.fact_check_outlined,
-            title: 'Gestionar\nCheck-ins',
+            title: S.of(context).staff_dashboard_manage_checkins,
             color: AppColors.gold,
             onTap: () => context.go('/staff/checkins'),
           ),
@@ -193,7 +194,7 @@ class StaffDashboardScreen extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.people_outline,
-            title: 'Ver\nHuéspedes',
+            title: S.of(context).staff_dashboard_view_guests,
             color: AppColors.info,
             onTap: () {},
           ),
@@ -202,7 +203,7 @@ class StaffDashboardScreen extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.report_outlined,
-            title: 'Generar\nInforme',
+            title: S.of(context).staff_dashboard_generate_report,
             color: AppColors.success,
             onTap: () {},
           ),

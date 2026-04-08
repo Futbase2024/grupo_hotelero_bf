@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
@@ -18,7 +19,7 @@ import 'package:bf_stay/features/guest/alojamientos/domain/repositories/properti
 import 'package:bf_stay/shared/utils/unit_image_helper.dart';
 import 'package:bf_stay/features/guest/my_accommodation/presentation/screens/access_instructions_screen.dart';
 
-/// Pantalla de Mi Alojamiento para el huésped
+/// Pantalla de Mi Alojamiento para el huesped
 class MyAccommodationScreen extends StatefulWidget {
   const MyAccommodationScreen({super.key});
 
@@ -34,40 +35,40 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   String? _error;
   /// Lista de todas las unidades de la reserva (para multi-unidad)
   List<UnitEntity> _units = [];
-  /// Hora actual del servidor (para evitar manipulación del reloj del dispositivo)
+  /// Hora actual del servidor (para evitar manipulacion del reloj del dispositivo)
   DateTime? _serverTime;
 
-  /// Hora a partir de la cual están disponibles las llaves/códigos por defecto (14:00)
+  /// Hora a partir de la cual estan disponibles las llaves/codigos por defecto (14:00)
   static const int _defaultKeysAvailableHour = 14;
 
-  /// Verifica si las llaves y códigos están disponibles
-  /// Por defecto: 14:00 del día de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
-  /// IMPORTANTE: Usa la hora del servidor para evitar manipulación del reloj del dispositivo
+  /// Verifica si las llaves y codigos estan disponibles
+  /// Por defecto: 14:00 del dia de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
+  /// IMPORTANTE: Usa la hora del servidor para evitar manipulacion del reloj del dispositivo
   bool get _areKeysAvailable {
     if (_booking == null) return false;
 
-    // Usar hora del servidor si está disponible, si no, usar hora local como fallback
+    // Usar hora del servidor si esta disponible, si no, usar hora local como fallback
     final now = _serverTime ?? DateTime.now();
     final checkInDate = _booking!.checkInDate;
 
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
     if (_booking!.earlyCheckinAvailableAt != null) {
       final earlyTime = _booking!.earlyCheckinAvailableAt!;
 
-      // Verificar que el early check-in fue marcado el mismo día de la reserva
+      // Verificar que el early check-in fue marcado el mismo dia de la reserva
       final isSameDay = earlyTime.year == checkInDate.year &&
           earlyTime.month == checkInDate.month &&
           earlyTime.day == checkInDate.day;
 
-      // Solo tiene efecto si es el mismo día Y ya pasó la hora marcada
+      // Solo tiene efecto si es el mismo dia Y ya paso la hora marcada
       if (isSameDay) {
         return now.isAfter(earlyTime) || now.isAtSameMomentAs(earlyTime);
       }
-      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
+      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
     }
 
-    // Comportamiento por defecto: 14:00 del día de check-in
+    // Comportamiento por defecto: 14:00 del dia de check-in
     final keysAvailableTime = DateTime(
       checkInDate.year,
       checkInDate.month,
@@ -80,32 +81,32 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     return now.isAfter(keysAvailableTime) || now.isAtSameMomentAs(keysAvailableTime);
   }
 
-  /// Calcula cuándo estarán disponibles las llaves
-  /// Por defecto: 14:00 del día de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DÍA de check-in
-  /// NOTA: El cálculo de disponibilidad real usa _areKeysAvailable con hora del servidor
+  /// Calcula cuando estaran disponibles las llaves
+  /// Por defecto: 14:00 del dia de check-in
+  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
+  /// NOTA: El calculo de disponibilidad real usa _areKeysAvailable con hora del servidor
   DateTime get _keysAvailableTime {
     if (_booking == null) return DateTime.now();
 
     final checkInDate = _booking!.checkInDate;
 
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DÍA de check-in
+    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
     if (_booking!.earlyCheckinAvailableAt != null) {
       final earlyTime = _booking!.earlyCheckinAvailableAt!;
 
-      // Verificar que el early check-in fue marcado el mismo día de la reserva
+      // Verificar que el early check-in fue marcado el mismo dia de la reserva
       final isSameDay = earlyTime.year == checkInDate.year &&
           earlyTime.month == checkInDate.month &&
           earlyTime.day == checkInDate.day;
 
-      // Solo tiene efecto si es el mismo día
+      // Solo tiene efecto si es el mismo dia
       if (isSameDay) {
         return earlyTime;
       }
-      // Si NO es el mismo día, ignorar y usar comportamiento por defecto
+      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
     }
 
-    // Comportamiento por defecto: 14:00 del día de check-in
+    // Comportamiento por defecto: 14:00 del dia de check-in
     return DateTime(
       checkInDate.year,
       checkInDate.month,
@@ -120,11 +121,11 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   String? get _localImagePath {
     // Priorizar el nombre del booking (que es lo que funciona en Tu Estancia)
     final unitName = _booking?.unitName ?? _unit?.name;
-    debugPrint('🏠 Mi Alojamiento - unitName: "$unitName"');
-    debugPrint('🏠 Mi Alojamiento - _booking?.unitName: "${_booking?.unitName}"');
-    debugPrint('🏠 Mi Alojamiento - _unit?.name: "${_unit?.name}"');
+    debugPrint('Mi Alojamiento - unitName: "$unitName"');
+    debugPrint('Mi Alojamiento - _booking?.unitName: "${_booking?.unitName}"');
+    debugPrint('Mi Alojamiento - _unit?.name: "${_unit?.name}"');
     final path = UnitImageHelper.getLocalImagePath(unitName);
-    debugPrint('🏠 Mi Alojamiento - path: "$path"');
+    debugPrint('Mi Alojamiento - path: "$path"');
     return path;
   }
 
@@ -135,13 +136,14 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   Future<void> _loadData() async {
+    final s = S.of(context);
     final authState = context.read<AuthBloc>().state;
     final user = authState is AuthAuthenticated ? authState.user : null;
     final bookingId = user?.bookingId;
 
     if (bookingId == null) {
       setState(() {
-        _error = 'No hay reserva asociada';
+        _error = s.guest_accommodation_no_booking;
         _isLoading = false;
       });
       return;
@@ -159,8 +161,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       final serverTime = results[1] as DateTime;
 
       if (booking == null) {
+        if (!mounted) return;
         setState(() {
-          _error = 'Reserva no encontrada';
+          _error = s.guest_accommodation_booking_not_found;
           _isLoading = false;
         });
         return;
@@ -204,7 +207,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Error al cargar los datos';
+          _error = s.guest_accommodation_error_loading;
           _isLoading = false;
         });
       }
@@ -213,6 +216,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Scaffold(
       backgroundColor: AppColors.getSurfaceColor(context),
       appBar: AppBar(
@@ -226,7 +230,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Mi Alojamiento',
+          s.guest_accommodation_title,
           style: TextStyle(
             color: AppColors.getTextPrimaryColor(context),
             fontWeight: FontWeight.w600,
@@ -265,16 +269,16 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
         _buildHeader(),
         const SizedBox(height: AppTheme.spacing24),
 
-        // Sección de llaves y códigos - condicionada a las 14:00 del día de check-in
+        // Seccion de llaves y codigos - condicionada a las 14:00 del dia de check-in
         if (_areKeysAvailable) ...[
-          // Código de la puerta principal de la propiedad (común para todas las unidades)
+          // Codigo de la puerta principal de la propiedad (comun para todas las unidades)
           if (_property?.mainDoorKeycode != null &&
               _property!.mainDoorKeycode!.isNotEmpty) ...[
             _buildMainDoorKeycodeCard(),
             const SizedBox(height: AppTheme.spacing16),
           ],
 
-          // Si hay múltiples unidades, mostrar cada una con sus códigos
+          // Si hay multiples unidades, mostrar cada una con sus codigos
           if (_booking?.hasMultipleUnits == true && _units.isNotEmpty) ...[
             _buildMultipleUnitsCards(),
           ] else ...[
@@ -287,25 +291,25 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             if (_unit?.boxLocationText != null && _unit!.boxLocationText!.isNotEmpty) ...[
               _buildInfoCard(
                 icon: Icons.place_outlined,
-                title: 'Ubicación de la caja',
+                title: S.of(context).guest_accommodation_box_location,
                 content: _unit!.boxLocationText!,
               ),
               const SizedBox(height: AppTheme.spacing16),
             ],
           ],
 
-          // Instrucciones de acceso - Botón para ver instrucciones completas
+          // Instrucciones de acceso - Boton para ver instrucciones completas
           if (_areKeysAvailable && _booking != null && _unit != null && _property != null) ...[
             _buildAccessInstructionsButton(),
             const SizedBox(height: AppTheme.spacing16),
           ],
         ] else ...[
-          // Mensaje informativo cuando las llaves no están disponibles
+          // Mensaje informativo cuando las llaves no estan disponibles
           _buildKeysNotAvailableCard(),
           const SizedBox(height: AppTheme.spacing16),
         ],
 
-        // Dirección
+        // Direccion
         _buildAddressCard(),
         const SizedBox(height: AppTheme.spacing16),
 
@@ -315,14 +319,15 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Construye las tarjetas de cada unidad cuando hay múltiples
+  /// Construye las tarjetas de cada unidad cuando hay multiples
   Widget _buildMultipleUnitsCards() {
+    final s = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Título de sección
+        // Titulo de seccion
         Text(
-          'HABITACIONES (${_units.length})',
+          s.guest_accommodation_rooms_count(_units.length),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -344,8 +349,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Tarjeta individual para cada unidad con sus códigos
+  /// Tarjeta individual para cada unidad con sus codigos
   Widget _buildUnitCard(UnitEntity unit) {
+    final s = S.of(context);
     final hasBoxCode = unit.boxCode != null && unit.boxCode!.isNotEmpty;
     final hasBoxLocation = unit.boxLocationText != null && unit.boxLocationText!.isNotEmpty;
     final hasWifi = unit.wifiNetwork != null && unit.wifiNetwork!.isNotEmpty;
@@ -400,12 +406,12 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           if (hasBoxCode) ...[
             _buildUnitCodeRow(
               icon: Icons.lock_open_outlined,
-              label: 'Key Box Code',
+              label: s.guest_accommodation_key_box_code,
               code: unit.boxCode!,
             ),
           ],
 
-          // Ubicación de la caja
+          // Ubicacion de la caja
           if (hasBoxLocation) ...[
             if (hasBoxCode) const SizedBox(height: 8),
             Row(
@@ -445,7 +451,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             const SizedBox(height: 8),
             _buildUnitCodeRow(
               icon: Icons.key_outlined,
-              label: 'Contraseña WiFi',
+              label: s.guest_accommodation_wifi_password,
               code: unit.wifiPassword!,
             ),
           ],
@@ -487,7 +493,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Fila de código para una unidad
+  /// Fila de codigo para una unidad
   Widget _buildUnitCodeRow({
     required IconData icon,
     required String label,
@@ -538,16 +544,17 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   Widget _buildHeader() {
+    final s = S.of(context);
     final imagePath = _localImagePath;
-    debugPrint('🏠 _buildHeader - imagePath: "$imagePath"');
+    debugPrint('_buildHeader - imagePath: "$imagePath"');
 
-    // Construir el título según si hay múltiples unidades
+    // Construir el titulo segun si hay multiples unidades
     String titleText;
     if (_booking?.hasMultipleUnits == true && _booking!.units.isNotEmpty) {
       // Mostrar nombres de todas las unidades
       titleText = _booking!.units.map((u) => u.name).join(' · ');
     } else {
-      titleText = _unit?.name ?? _booking?.unitName ?? 'Mi Alojamiento';
+      titleText = _unit?.name ?? _booking?.unitName ?? s.guest_accommodation_title;
     }
 
     return Container(
@@ -569,7 +576,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                     height: 52,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      debugPrint('❌ Error cargando imagen: $error');
+                      debugPrint('Error cargando imagen: $error');
                       return Container(
                         width: 52,
                         height: 52,
@@ -616,7 +623,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    // Badge con número de unidades si hay múltiples
+                    // Badge con numero de unidades si hay multiples
                     if (_booking?.hasMultipleUnits == true) ...[
                       const SizedBox(width: 8),
                       Container(
@@ -626,7 +633,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '×${_booking!.totalUnits}',
+                          'x${_booking!.totalUnits}',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -653,8 +660,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Tarjeta informativa cuando las llaves/códigos aún no están disponibles
+  /// Tarjeta informativa cuando las llaves/codigos aun no estan disponibles
   Widget _buildKeysNotAvailableCard() {
+    final s = S.of(context);
     final keysAvailableTime = _keysAvailableTime;
     final formattedDate =
         '${keysAvailableTime.day.toString().padLeft(2, '0')}/${keysAvailableTime.month.toString().padLeft(2, '0')}/${keysAvailableTime.year}';
@@ -688,9 +696,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           ),
           const SizedBox(height: AppTheme.spacing16),
 
-          // Título
+          // Titulo
           Text(
-            'Códigos de acceso',
+            s.guest_accommodation_access_codes,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -702,7 +710,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
 
           // Mensaje descriptivo
           Text(
-            'Los códigos de acceso y llaves estarán disponibles el día de tu llegada a partir de las $formattedTime h.',
+            s.guest_accommodation_codes_available_message(formattedTime),
             style: TextStyle(
               fontSize: 14,
               color: AppColors.getTextSecondaryColor(context),
@@ -729,7 +737,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '$formattedDate a las $formattedTime h',
+                  s.guest_accommodation_codes_available_datetime(formattedDate, formattedTime),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -744,8 +752,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Tarjeta para el código de la puerta principal del edificio
+  /// Tarjeta para el codigo de la puerta principal del edificio
   Widget _buildMainDoorKeycodeCard() {
+    final s = S.of(context);
     final keycode = _property?.mainDoorKeycode;
     if (keycode == null || keycode.isEmpty) return const SizedBox.shrink();
 
@@ -782,7 +791,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Puerta Principal',
+                  s.guest_accommodation_main_door,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -790,7 +799,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                   ),
                 ),
                 Text(
-                  'Código del portal',
+                  s.guest_accommodation_portal_code,
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.getTextSecondaryColor(context),
@@ -799,7 +808,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               ],
             ),
           ),
-          // Código flex 3
+          // Codigo flex 3
           Expanded(
             flex: 3,
             child: Container(
@@ -825,7 +834,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           Expanded(
             flex: 1,
             child: IconButton(
-              onPressed: () => _copyToClipboard(keycode, 'Código de puerta'),
+              onPressed: () => _copyToClipboard(keycode, s.guest_accommodation_door_code),
               icon: const Icon(Icons.copy, size: 20),
               color: AppColors.getTextSecondaryColor(context),
               padding: EdgeInsets.zero,
@@ -837,12 +846,13 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Copia un texto al portapapeles y muestra confirmación
+  /// Copia un texto al portapapeles y muestra confirmacion
   void _copyToClipboard(String text, String label) {
+    final s = S.of(context);
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$label copiado al portapapeles'),
+        content: Text(s.common_copied_to_clipboard(label)),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -851,7 +861,8 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   Widget _buildBoxCodeCard() {
-    // Priorizar el código específico de la reserva (keyboxCode) sobre el código genérico de la unidad
+    final s = S.of(context);
+    // Priorizar el codigo especifico de la reserva (keyboxCode) sobre el codigo generico de la unidad
     final boxCode = _booking?.keyboxCode ?? _unit?.boxCode ?? '';
     if (boxCode.isEmpty) return const SizedBox.shrink();
 
@@ -888,7 +899,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Key Box Code',
+                  s.guest_accommodation_key_box_code,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -896,7 +907,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                   ),
                 ),
                 Text(
-                  'Código de la caja de llaves',
+                  s.guest_accommodation_keybox_description,
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.getTextSecondaryColor(context),
@@ -905,7 +916,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               ],
             ),
           ),
-          // Código flex 3
+          // Codigo flex 3
           Expanded(
             flex: 3,
             child: Container(
@@ -931,7 +942,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           Expanded(
             flex: 1,
             child: IconButton(
-              onPressed: () => _copyToClipboard(boxCode, 'Key Box Code'),
+              onPressed: () => _copyToClipboard(boxCode, s.guest_accommodation_key_box_code),
               icon: const Icon(Icons.copy, size: 20),
               color: AppColors.getTextSecondaryColor(context),
               padding: EdgeInsets.zero,
@@ -943,8 +954,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Botón para ver las instrucciones de acceso completas
+  /// Boton para ver las instrucciones de acceso completas
   Widget _buildAccessInstructionsButton() {
+    final s = S.of(context);
     return GestureDetector(
       onTap: () {
         if (_booking != null && _unit != null && _property != null) {
@@ -987,7 +999,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Instrucciones de Acceso',
+                    s.guest_accommodation_access_instructions,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -996,7 +1008,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Toca para ver toda la información de acceso',
+                    s.guest_accommodation_tap_for_access_info,
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.getTextSecondaryColor(context),
@@ -1071,6 +1083,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   Widget _buildAddressCard() {
+    final s = S.of(context);
     final addressParts = <String>[];
     if (_unit?.addressLine1 != null && _unit!.addressLine1!.isNotEmpty) {
       addressParts.add(_unit!.addressLine1!);
@@ -1120,7 +1133,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               ),
               const SizedBox(width: AppTheme.spacing12),
               Text(
-                'Dirección',
+                s.guest_accommodation_address,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -1139,10 +1152,10 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 height: 1.5,
               ),
             ),
-            // TODO: Añadir botón para abrir en mapa cuando haya coordenadas
+            // TODO: Anadir boton para abrir en mapa cuando haya coordenadas
           ] else
             Text(
-              'Dirección no disponible',
+              s.guest_accommodation_address_unavailable,
               style: TextStyle(
                 fontSize: 15,
                 color: AppColors.getTextSecondaryColor(context),
@@ -1154,29 +1167,30 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     );
   }
 
-  /// Devuelve el nombre del archivo PDF según el tipo de unidad
+  /// Devuelve el nombre del archivo PDF segun el tipo de unidad
   String _getNormasFileName() {
     final unitType = _unit?.unitType;
-    debugPrint('📋 UnitType detectado: $unitType');
+    debugPrint('UnitType detectado: $unitType');
     if (unitType == UnitType.hotelRoom) {
-      debugPrint('📋 Seleccionando: Normas_hotel.pdf');
+      debugPrint('Seleccionando: Normas_hotel.pdf');
       return 'Normas_hotel.pdf';
     }
     // Para apartamentos y habitaciones de apartamentos
-    debugPrint('📋 Seleccionando: Normas_apartamentos.pdf');
+    debugPrint('Seleccionando: Normas_apartamentos.pdf');
     return 'Normas_apartamentos.pdf';
   }
 
   /// Abre el PDF de normas desde Supabase Storage
   Future<void> _openNormasPdf() async {
-    debugPrint('🔍 Iniciando _openNormasPdf...');
+    final s = S.of(context);
+    debugPrint('Iniciando _openNormasPdf...');
 
     if (_unit == null) {
-      debugPrint('❌ Error: _unit es null');
+      debugPrint('Error: _unit es null');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No hay información del alojamiento'),
+          SnackBar(
+            content: Text(s.guest_accommodation_no_unit_info),
             backgroundColor: AppColors.error,
           ),
         );
@@ -1187,51 +1201,51 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     try {
       final fileName = _getNormasFileName();
       final filePath = 'Normas/$fileName';
-      debugPrint('📁 Ruta completa del archivo: $filePath');
+      debugPrint('Ruta completa del archivo: $filePath');
 
-      // ✅ OPTIMIZACIÓN: Usar URL pública (el bucket unit-photos es público)
-      // Las URLs públicas nunca caducan
-      debugPrint('🔗 Obteniendo URL pública del bucket: unit-photos');
+      // OPTIMIZACION: Usar URL publica (el bucket unit-photos es publico)
+      // Las URLs publicas nunca caducan
+      debugPrint('Obteniendo URL publica del bucket: unit-photos');
       final publicUrl = Supabase.instance.client.storage
           .from('unit-photos')
           .getPublicUrl(filePath);
 
-      debugPrint('✅ URL pública obtenida: ${publicUrl.substring(0, 50)}...');
+      debugPrint('URL publica obtenida: ${publicUrl.substring(0, 50)}...');
 
       final uri = Uri.parse(publicUrl);
-      debugPrint('🌐 Intentando abrir URL...');
+      debugPrint('Intentando abrir URL...');
 
       if (await canLaunchUrl(uri)) {
-        debugPrint('✅ URL puede ser lanzada, abriendo...');
+        debugPrint('URL puede ser lanzada, abriendo...');
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-        debugPrint('✅ URL lanzada correctamente');
+        debugPrint('URL lanzada correctamente');
       } else {
-        debugPrint('❌ No se puede lanzar la URL');
+        debugPrint('No se puede lanzar la URL');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se pudo abrir el documento'),
+            SnackBar(
+              content: Text(s.guest_accommodation_cannot_open_document),
               backgroundColor: AppColors.error,
             ),
           );
         }
       }
     } on StorageException catch (e) {
-      debugPrint('❌ StorageException: ${e.message}');
+      debugPrint('StorageException: ${e.message}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Archivo no encontrado: ${e.message}'),
+            content: Text(s.guest_accommodation_file_not_found(e.message)),
             backgroundColor: AppColors.error,
           ),
         );
       }
     } catch (e) {
-      debugPrint('❌ Error general: $e');
+      debugPrint('Error general: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al cargar las normas: $e'),
+            content: Text(s.guest_accommodation_rules_load_error('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -1240,10 +1254,11 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   Widget _buildNormasCard() {
+    final s = S.of(context);
     final unitType = _unit?.unitType;
     final normasTitle = unitType == UnitType.hotelRoom
-        ? 'Normas del Hotel'
-        : 'Normas del Apartamento';
+        ? s.guest_accommodation_hotel_rules
+        : s.guest_accommodation_apartment_rules;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
@@ -1284,7 +1299,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           ),
           const SizedBox(height: AppTheme.spacing12),
           Text(
-            'Consulta las normas y recomendaciones para tu estancia.',
+            s.guest_accommodation_rules_description,
             style: TextStyle(
               fontSize: 15,
               color: AppColors.getTextSecondaryColor(context),
@@ -1297,7 +1312,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             child: ElevatedButton.icon(
               onPressed: _openNormasPdf,
               icon: const Icon(Icons.picture_as_pdf_outlined, size: 20),
-              label: const Text('Ver Normas (PDF)'),
+              label: Text(s.guest_accommodation_view_rules_pdf),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
@@ -1314,6 +1329,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   Widget _buildErrorState() {
+    final s = S.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -1334,7 +1350,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             ),
             const SizedBox(height: AppTheme.spacing16),
             Text(
-              _error ?? 'Ha ocurrido un error',
+              _error ?? s.guest_accommodation_error_occurred,
               style: TextStyle(
                 fontSize: 16,
                 color: AppColors.getTextPrimaryColor(context),
@@ -1354,7 +1370,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
               ),
-              child: const Text('Reintentar'),
+              child: Text(s.common_retry),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../domain/entities/collection_entity.dart';
 import '../../domain/entities/place_entity.dart';
@@ -203,7 +204,7 @@ class _CollectionHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$placeCount ${placeCount == 1 ? 'lugar' : 'lugares'}',
+                      S.of(context).guest_que_ver_places_count(placeCount),
                       style: TextStyle(
                         fontSize: 14,
                         color: accentColor,

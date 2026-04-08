@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Pantalla de cámara con guía para escanear documentos
 class DocumentCameraScreen extends StatefulWidget {
@@ -46,7 +47,7 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
     try {
       _cameras = await availableCameras();
       if (_cameras == null || _cameras!.isEmpty) {
-        setState(() => _error = 'No hay cámaras disponibles');
+        setState(() => _error = S.of(context).guest_checkin_camera_not_available);
         return;
       }
 
@@ -67,7 +68,7 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
       setState(() => _isInitialized = true);
     } catch (e) {
       debugPrint('❌ [DocumentCamera] Error: $e');
-      setState(() => _error = 'Error al inicializar cámara: $e');
+      setState(() => _error = S.of(context).guest_checkin_camera_init_error(e.toString()));
     }
   }
 
@@ -107,7 +108,7 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al capturar: $e'),
+            content: Text(S.of(context).guest_checkin_camera_capture_error(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -200,9 +201,9 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
           icon: const Icon(Icons.close, color: AppColors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Escanear Documento',
-          style: TextStyle(color: AppColors.white),
+        title: Text(
+          S.of(context).guest_checkin_camera_scan_title,
+          style: const TextStyle(color: AppColors.white),
         ),
       ),
       body: _buildBody(),
@@ -225,7 +226,7 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Volver'),
+              child: Text(S.of(context).common_back),
             ),
           ],
         ),
@@ -233,15 +234,15 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
     }
 
     if (!_isInitialized || _controller == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: AppColors.gold),
-            SizedBox(height: 16),
+            const CircularProgressIndicator(color: AppColors.gold),
+            const SizedBox(height: 16),
             Text(
-              'Iniciando cámara...',
-              style: TextStyle(color: AppColors.white),
+              S.of(context).guest_checkin_camera_starting,
+              style: const TextStyle(color: AppColors.white),
             ),
           ],
         ),
@@ -292,15 +293,15 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
               color: AppColors.goldWithAlpha20,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.info_outline, color: AppColors.gold, size: 18),
-                SizedBox(width: 8),
+                const Icon(Icons.info_outline, color: AppColors.gold, size: 18),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    'Encuadra el documento dentro del recuadro',
-                    style: TextStyle(color: AppColors.gold, fontSize: 13),
+                    S.of(context).guest_checkin_camera_frame_hint,
+                    style: const TextStyle(color: AppColors.gold, fontSize: 13),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -410,14 +411,14 @@ class ScanGuideOverlay extends StatelessWidget {
                     color: AppColors.black.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.badge_outlined, color: AppColors.gold, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.badge_outlined, color: AppColors.gold, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        'Documento de Identidad',
-                        style: TextStyle(
+                        S.of(context).guest_checkin_camera_document_label,
+                        style: const TextStyle(
                           color: AppColors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,

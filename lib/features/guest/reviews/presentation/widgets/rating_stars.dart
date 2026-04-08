@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Widget para mostrar rating con estrellas
 /// Puede ser de solo lectura o interactivo para seleccionar rating
@@ -186,7 +187,7 @@ class RatingStarsLarge extends StatelessWidget {
         if (totalReviews != null) ...[
           const SizedBox(height: 4),
           Text(
-            '$totalReviews ${totalReviews == 1 ? 'reseña' : 'reseñas'}',
+            S.of(context).guest_reviews_count_label(totalReviews!),
             style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/reviews_bloc.dart';
 import '../../domain/entities/review_entity.dart';
 import '../widgets/rating_stars.dart';
@@ -62,7 +63,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
       backgroundColor: isDark ? AppColors.gray900 : AppColors.gray50,
       appBar: AppBar(
         title: Text(
-          isEditing ? 'Editar reseña' : 'Nueva reseña',
+          isEditing ? S.of(context).guest_reviews_edit_review : S.of(context).guest_reviews_new_review,
           style: TextStyle(
             color: isDark ? AppColors.white : AppColors.gray900,
             fontWeight: FontWeight.w600,
@@ -93,7 +94,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    isEditing ? 'Reseña actualizada' : 'Reseña publicada',
+                    isEditing ? S.of(context).guest_reviews_updated : S.of(context).guest_reviews_published,
                   ),
                   backgroundColor: AppColors.success,
                   behavior: SnackBarBehavior.floating,
@@ -181,7 +182,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Tu reseña será pública y ayudará a otros huéspedes a tomar decisiones.',
+              S.of(context).guest_reviews_info_public,
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? AppColors.gold : AppColors.goldDark,
@@ -198,7 +199,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Tu valoración',
+          S.of(context).guest_reviews_your_rating,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -207,7 +208,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Toca las estrellas para puntuar',
+          S.of(context).guest_reviews_tap_stars,
           style: TextStyle(
             fontSize: 14,
             color: isDark ? AppColors.silver.withValues(alpha: 0.7) : AppColors.gray600,
@@ -248,11 +249,11 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
 
   String _getRatingText(int rating) {
     return switch (rating) {
-      1 => 'Muy malo',
-      2 => 'Malo',
-      3 => 'Regular',
-      4 => 'Bueno',
-      5 => 'Excelente',
+      1 => S.of(context).guest_reviews_rating_1,
+      2 => S.of(context).guest_reviews_rating_2,
+      3 => S.of(context).guest_reviews_rating_3,
+      4 => S.of(context).guest_reviews_rating_4,
+      5 => S.of(context).guest_reviews_rating_5,
       _ => '',
     };
   }
@@ -266,8 +267,8 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
         color: isDark ? AppColors.white : AppColors.gray900,
       ),
       decoration: InputDecoration(
-        labelText: 'Título (opcional)',
-        hintText: 'Resume tu experiencia en una frase',
+        labelText: S.of(context).guest_reviews_title_label,
+        hintText: S.of(context).guest_reviews_title_hint,
         labelStyle: TextStyle(
           color: isDark ? AppColors.silver.withValues(alpha: 0.7) : AppColors.gray600,
         ),
@@ -307,16 +308,16 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Por favor, escribe un comentario';
+          return S.of(context).guest_reviews_comment_required;
         }
         if (value.trim().length < 10) {
-          return 'El comentario debe tener al menos 10 caracteres';
+          return S.of(context).guest_reviews_comment_min_length;
         }
         return null;
       },
       decoration: InputDecoration(
-        labelText: 'Tu comentario *',
-        hintText: 'Cuéntanos tu experiencia...',
+        labelText: S.of(context).guest_reviews_comment_label,
+        hintText: S.of(context).guest_reviews_comment_hint,
         alignLabelWithHint: true,
         labelStyle: TextStyle(
           color: isDark ? AppColors.silver.withValues(alpha: 0.7) : AppColors.gray600,
@@ -371,7 +372,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
           ),
         ),
         child: Text(
-          isEditing ? 'Guardar cambios' : 'Publicar reseña',
+          isEditing ? S.of(context).guest_reviews_save_changes : S.of(context).guest_reviews_publish_review,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -386,7 +387,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Por favor, selecciona una puntuación'),
+          content: Text(S.of(context).guest_reviews_select_rating),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -451,7 +452,7 @@ class _LoadingOverlay extends StatelessWidget {
               const CircularProgressIndicator(color: AppColors.gold),
               const SizedBox(height: 16),
               Text(
-                'Guardando...',
+                S.of(context).guest_reviews_saving,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? AppColors.white : AppColors.gray900,

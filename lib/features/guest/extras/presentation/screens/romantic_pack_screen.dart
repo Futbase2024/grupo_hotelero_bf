@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bf_stay/core/theme/app_colors.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla elegante y romántica para mostrar el Pack Romántico
 class RomanticPackScreen extends StatelessWidget {
@@ -29,7 +30,7 @@ class RomanticPackScreen extends StatelessWidget {
           onPressed: () => context.go('/guest'),
         ),
         title: Text(
-          'Pack Romántico',
+          S.of(context).guest_romantic_title,
           style: TextStyle(
             color: isDark ? AppColors.white : AppColors.black,
             fontWeight: FontWeight.w600,
@@ -51,7 +52,7 @@ class RomanticPackScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Sorprende a tu pareja',
+                      S.of(context).guest_romantic_surprise,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -61,7 +62,7 @@ class RomanticPackScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Una experiencia inolvidable',
+                      S.of(context).guest_romantic_unforgettable,
                       style: TextStyle(
                         fontSize: 16,
                         color: _romanticPink,
@@ -75,20 +76,20 @@ class RomanticPackScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Qué incluye el pack
-              _buildSectionTitle(context, '¿Qué incluye?'),
+              _buildSectionTitle(context, S.of(context).guest_romantic_includes),
               const SizedBox(height: 16),
               _buildInclusionCard(
                 context,
                 icon: Icons.local_florist,
-                title: 'Punto decoración romántica',
-                description: 'Decoración con pétalos de rosas artificiales en la habitación',
+                title: S.of(context).guest_romantic_decoration_title,
+                description: S.of(context).guest_romantic_decoration_desc,
               ),
               const SizedBox(height: 12),
               _buildInclusionCard(
                 context,
                 icon: Icons.card_giftcard,
-                title: 'A elegir: Champán o Bombones',
-                description: 'Puedes elegir entre una botella de champán o una caja de bombones artesanales. Si deseas ambos, consulta el precio adicional en recepción.',
+                title: S.of(context).guest_romantic_choose_title,
+                description: S.of(context).guest_romantic_choose_desc,
               ),
               const SizedBox(height: 32),
 
@@ -97,7 +98,7 @@ class RomanticPackScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Cómo reservar
-              _buildSectionTitle(context, '¿Cómo reservar?'),
+              _buildSectionTitle(context, S.of(context).guest_romantic_how_to),
               const SizedBox(height: 16),
               _buildStepsCard(context),
               const SizedBox(height: 32),
@@ -278,7 +279,7 @@ class RomanticPackScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Pack Básico',
+                S.of(context).guest_romantic_basic_pack,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -289,7 +290,7 @@ class RomanticPackScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '15€',
+            S.of(context).guest_romantic_price,
             style: TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.bold,
@@ -311,9 +312,9 @@ class RomanticPackScreen extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Reservar ahora',
-                style: TextStyle(
+              child: Text(
+                S.of(context).guest_romantic_book_now,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -322,7 +323,7 @@ class RomanticPackScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'O consulta en recepción para personalizar tu pack',
+            S.of(context).guest_romantic_customize,
             style: TextStyle(
               fontSize: 13,
               color: AppColors.getTextSecondaryColor(context),
@@ -347,16 +348,16 @@ class RomanticPackScreen extends StatelessWidget {
           children: [
             Icon(Icons.favorite, color: _romanticPink),
             const SizedBox(width: 8),
-            const Text('Pack Romántico'),
+            Text(S.of(context).guest_romantic_title),
           ],
         ),
-        content: const Text(
-          'Serás redirigido a nuestra web para completar el pago de forma segura.',
+        content: Text(
+          S.of(context).guest_romantic_redirect,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
+            child: Text(S.of(context).common_cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -370,7 +371,7 @@ class RomanticPackScreen extends StatelessWidget {
               backgroundColor: _romanticPink,
               foregroundColor: AppColors.white,
             ),
-            child: const Text('Continuar'),
+            child: Text(S.of(context).common_continue),
           ),
         ],
       ),
@@ -380,10 +381,10 @@ class RomanticPackScreen extends StatelessWidget {
   Widget _buildStepsCard(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
     final steps = [
-      {'number': '1', 'text': 'Contacta con recepción'},
-      {'number': '2', 'text': 'Indica el día y hora deseada'},
-      {'number': '3', 'text': 'Personaliza tu pack (opcional)'},
-      {'number': '4', 'text': 'Prepararemos todo para tu llegada'},
+      {'number': '1', 'text': S.of(context).guest_romantic_step_1},
+      {'number': '2', 'text': S.of(context).guest_romantic_step_2},
+      {'number': '3', 'text': S.of(context).guest_romantic_step_3},
+      {'number': '4', 'text': S.of(context).guest_romantic_step_4},
     ];
 
     return Container(
@@ -478,7 +479,7 @@ class RomanticPackScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Reserva con al menos 24 horas de antelación para garantizar la disponibilidad de todos los elementos.',
+              S.of(context).guest_romantic_note,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? AppColors.gold : AppColors.gray700,

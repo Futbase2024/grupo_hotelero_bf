@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../core/config/supabase_config.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
 import '../../../domain/entities/booking_unit_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
@@ -61,7 +62,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       if (booking == null) {
         debugPrint('🔴 [_loadBooking] Reserva no encontrada');
         setState(() {
-          _error = 'Reserva no encontrada';
+          _error = S.of(context).admin_booking_not_found;
           _isLoading = false;
         });
         return;
@@ -115,13 +116,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
       if (mounted) {
         _showSnackBar(
-          success ? 'Notificación enviada al huésped' : 'Error al enviar la notificación',
+          success ? S.of(context).admin_booking_notification_sent : S.of(context).admin_booking_notification_error,
           isError: !success,
         );
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -138,15 +139,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       final result = await widget.repository.resendCode(_booking!.id);
       if (mounted) {
         if (result.success) {
-          _showSnackBar('Código reenviado correctamente', isError: false);
+          _showSnackBar(S.of(context).admin_booking_code_resent, isError: false);
           await _loadBooking();
         } else {
-          _showSnackBar('Error: ${result.error ?? "No se pudo reenviar"}', isError: true);
+          _showSnackBar(S.of(context).admin_booking_error(result.error ?? S.of(context).admin_booking_resend_error), isError: true);
         }
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -165,12 +166,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         bookingId: _booking!.id,
       );
       if (mounted) {
-        _showSnackBar('Check-in validado correctamente', isError: false);
+        _showSnackBar(S.of(context).admin_booking_checkin_validated, isError: false);
         await _loadBooking();
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al validar: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_validating(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -193,12 +194,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         reason: reason.isNotEmpty ? reason : null,
       );
       if (mounted) {
-        _showSnackBar('Check-in rechazado', isError: false);
+        _showSnackBar(S.of(context).admin_booking_checkin_rejected, isError: false);
         await _loadBooking();
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al rechazar: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_rejecting(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -216,12 +217,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     try {
       await widget.repository.validateCheckout(bookingId: _booking!.id);
       if (mounted) {
-        _showSnackBar('Check-out validado. Reserva cerrada.', isError: false);
+        _showSnackBar(S.of(context).admin_booking_checkout_validated, isError: false);
         await _loadBooking();
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al validar check-out: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_validating_checkout(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -240,15 +241,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     try {
       await widget.repository.rejectCheckout(
         bookingId: _booking!.id,
-        reason: reason.isNotEmpty ? reason : 'Incidencias detectadas',
+        reason: reason.isNotEmpty ? reason : S.of(context).admin_booking_incidents_detected,
       );
       if (mounted) {
-        _showSnackBar('Check-out rechazado', isError: false);
+        _showSnackBar(S.of(context).admin_booking_checkout_rejected, isError: false);
         await _loadBooking();
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al rechazar check-out: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_rejecting_checkout(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -267,8 +268,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     if (isAlreadyClosed) {
       _showInfoDialog(
-        title: 'Reserva ya cerrada',
-        message: 'Esta reserva ya ha sido cerrada anteriormente.',
+        title: S.of(context).admin_booking_already_closed_title,
+        message: S.of(context).admin_booking_already_closed_message,
         icon: Icons.info_outline,
         color: AppColors.info,
       );
@@ -285,12 +286,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         notes: notes.isNotEmpty ? notes : null,
       );
       if (mounted) {
-        _showSnackBar('Reserva cerrada correctamente', isError: false);
+        _showSnackBar(S.of(context).admin_booking_closed_successfully, isError: false);
         await _loadBooking();
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al cerrar reserva: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_closing(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -306,8 +307,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     // Verificar si ya está cancelada
     if (_booking!.status == 'cancelled') {
       _showInfoDialog(
-        title: 'Reserva ya cancelada',
-        message: 'Esta reserva ya ha sido cancelada anteriormente.',
+        title: S.of(context).admin_booking_already_cancelled_title,
+        message: S.of(context).admin_booking_already_cancelled_message,
         icon: Icons.info_outline,
         color: AppColors.info,
       );
@@ -321,12 +322,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     try {
       await widget.repository.cancelBooking(bookingId: _booking!.id);
       if (mounted) {
-        _showSnackBar('Reserva cancelada correctamente', isError: false);
+        _showSnackBar(S.of(context).admin_booking_cancelled_successfully, isError: false);
         await _loadBooking();
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al cancelar reserva: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_cancelling(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -365,9 +366,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               const SizedBox(height: 20),
 
               // Título
-              const Text(
-                'Cancelar Reserva',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_cancel_booking,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
@@ -378,7 +379,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
               // Descripción
               Text(
-                '¿Estás seguro de que deseas cancelar esta reserva?\n\nEsta acción cambiará el estado a "Cancelada" pero mantendrá el registro en el sistema.',
+                S.of(context).admin_booking_cancel_booking_confirm,
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.getTextSecondaryColor(context),
@@ -399,7 +400,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         side: BorderSide(color: AppColors.getBorderColor(context)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('No, mantener'),
+                      child: Text(S.of(context).admin_booking_no_keep),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -411,9 +412,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'Sí, cancelar',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        S.of(context).admin_booking_yes_cancel,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -436,9 +437,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         _booking!.status == 'closed' ||
         _booking!.status == 'in_house') {
       _showInfoDialog(
-        title: 'No se puede eliminar',
+        title: S.of(context).admin_booking_cannot_delete_title,
         message:
-            'Las reservas en estado "${_booking!.status}" no pueden ser eliminadas.',
+            S.of(context).admin_booking_cannot_delete_message(_booking!.status),
         icon: Icons.block,
         color: AppColors.error,
       );
@@ -470,13 +471,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       }
 
       if (mounted) {
-        _showSnackBar('Reserva eliminada correctamente', isError: false);
+        _showSnackBar(S.of(context).admin_booking_deleted_successfully, isError: false);
         // Volver a la lista de reservas
         context.go('/admin');
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al eliminar reserva: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_deleting(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -515,9 +516,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               const SizedBox(height: 20),
 
               // Título
-              const Text(
-                'Eliminar Reserva',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_delete_booking,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
@@ -528,7 +529,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
               // Descripción
               Text(
-                '⚠️ Esta acción es IRREVERSIBLE.\n\nSe eliminarán permanentemente:\n• La reserva\n• Check-in (si existe)\n• Documentos del huésped\n• Historial de pagos y facturas\n• Conversaciones\n\n¿Estás seguro?',
+                S.of(context).admin_booking_delete_confirm,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.getTextSecondaryColor(context),
@@ -549,7 +550,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         side: BorderSide(color: AppColors.getBorderColor(context)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Cancelar'),
+                      child: Text(S.of(context).common_cancel),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -561,9 +562,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'Eliminar',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        S.of(context).common_delete,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -635,7 +636,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text('Entendido'),
+                  child: Text(S.of(context).common_understood),
                 ),
               ),
             ],
@@ -676,9 +677,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               const SizedBox(height: 20),
 
               // Título
-              const Text(
-                'Cerrar Reserva',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_close_booking,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
@@ -689,7 +690,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
               // Descripción
               Text(
-                'El huésped no ha realizado el check-out.\n¿Deseas cerrar la reserva manualmente?',
+                S.of(context).admin_booking_close_confirm,
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.getTextSecondaryColor(context),
@@ -707,7 +708,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 ),
                 maxLines: 2,
                 decoration: InputDecoration(
-                  hintText: 'Notas (opcional)...',
+                  hintText: S.of(context).admin_booking_close_notes_hint,
                   hintStyle: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                   ),
@@ -740,7 +741,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         side: BorderSide(color: AppColors.getBorderColor(context)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Cancelar'),
+                      child: Text(S.of(context).common_cancel),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -752,9 +753,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'Cerrar Reserva',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        S.of(context).admin_booking_close_booking,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -798,9 +799,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               const SizedBox(height: 20),
 
               // Título
-              const Text(
-                'Rechazar Check-out',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_reject_checkout,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
@@ -811,7 +812,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
               // Descripción
               Text(
-                'Indica las incidencias detectadas para notificar al huésped:',
+                S.of(context).admin_booking_reject_checkout_desc,
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.getTextSecondaryColor(context),
@@ -828,7 +829,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 ),
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: 'Descripción de las incidencias...',
+                  hintText: S.of(context).admin_booking_incidents_hint,
                   hintStyle: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                   ),
@@ -861,7 +862,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         side: BorderSide(color: AppColors.getBorderColor(context)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Cancelar'),
+                      child: Text(S.of(context).common_cancel),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -873,9 +874,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'Rechazar',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        S.of(context).admin_booking_reject,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -919,9 +920,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               const SizedBox(height: 20),
 
               // Título
-              const Text(
-                'Rechazar Check-in',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_reject_checkin,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
@@ -932,7 +933,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
               // Descripción
               Text(
-                'Indica el motivo del rechazo (opcional):',
+                S.of(context).admin_booking_reject_checkin_desc,
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.getTextSecondaryColor(context),
@@ -949,7 +950,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 ),
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: 'Motivo del rechazo...',
+                  hintText: S.of(context).admin_booking_reject_reason_hint,
                   hintStyle: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                   ),
@@ -982,7 +983,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         side: BorderSide(color: AppColors.getBorderColor(context)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Cancelar'),
+                      child: Text(S.of(context).common_cancel),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -994,9 +995,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'Rechazar',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        S.of(context).admin_booking_reject,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -1022,7 +1023,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   void _copyToClipboard(String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
     HapticFeedback.lightImpact();
-    _showSnackBar('$label copiado al portapapeles', isError: false);
+    _showSnackBar(S.of(context).common_copied_to_clipboard(label), isError: false);
   }
 
   void _shareCode() {
@@ -1031,12 +1032,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final checkIn = _formatDate(_booking!.checkInDate);
     final checkOut = _formatDate(_booking!.checkOutDate);
 
-    String message = 'Tu código de acceso BF-Stay: ${_booking!.bookingCode}';
+    String message = S.of(context).admin_booking_share_code_message(_booking!.bookingCode);
     if (_booking!.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty) {
-      message += '\nCódigo KeyBox: ${_booking!.keyboxCode}';
+      message += '\n${S.of(context).admin_booking_share_keybox_code(_booking!.keyboxCode!)}';
     }
-    message += '\nEntrada: $checkIn · Salida: $checkOut';
-    message += '\nDescarga la app BF-Stay e introduce este código.';
+    message += '\n${S.of(context).admin_booking_share_dates(checkIn, checkOut)}';
+    message += '\n${S.of(context).admin_booking_share_download_app}';
 
     HapticFeedback.lightImpact();
     Share.share(message);
@@ -1052,19 +1053,19 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.darkSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.edit_outlined, color: AppColors.gold, size: 22),
-            SizedBox(width: 10),
-            Text('Editar Código KeyBox', style: TextStyle(color: AppColors.white, fontSize: 18)),
+            const Icon(Icons.edit_outlined, color: AppColors.gold, size: 22),
+            const SizedBox(width: 10),
+            Text(S.of(context).admin_booking_edit_keybox_title, style: const TextStyle(color: AppColors.white, fontSize: 18)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Introduce el nuevo código del KeyBox:',
+            Text(
+              S.of(context).admin_booking_edit_keybox_desc,
               style: TextStyle(color: AppColors.gray300, fontSize: 14),
             ),
             const SizedBox(height: 16),
@@ -1112,7 +1113,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.gray400)),
+            child: Text(S.of(context).common_cancel, style: const TextStyle(color: AppColors.gray400)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
@@ -1121,7 +1122,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               foregroundColor: AppColors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Guardar'),
+            child: Text(S.of(context).common_save),
           ),
         ],
       ),
@@ -1138,12 +1139,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       );
 
       if (mounted) {
-        _showSnackBar('Código KeyBox actualizado', isError: false);
+        _showSnackBar(S.of(context).admin_booking_keybox_updated, isError: false);
         await _loadBooking();
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al actualizar: $e', isError: true);
+        _showSnackBar(S.of(context).admin_booking_error_updating(e.toString()), isError: true);
       }
     } finally {
       if (mounted) {
@@ -1156,16 +1157,16 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
-  String _getStatusText(String status) {
+  String _getStatusText(String status, BuildContext context) {
     switch (status) {
       case 'confirmed':
-        return 'Confirmada';
+        return S.of(context).enum_booking_status_confirmed;
       case 'checked_in':
-        return 'Check-in realizado';
+        return S.of(context).admin_booking_checkin_done;
       case 'checked_out':
-        return 'Check-out realizado';
+        return S.of(context).admin_booking_checkout_done;
       case 'cancelled':
-        return 'Cancelada';
+        return S.of(context).enum_booking_status_cancelled;
       default:
         return status;
     }
@@ -1203,9 +1204,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           },
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.gold),
         ),
-        title: const Text(
-          'Detalle de Reserva',
-          style: TextStyle(color: AppColors.white, fontSize: 18),
+        title: Text(
+          S.of(context).admin_booking_detail_title,
+          style: const TextStyle(color: AppColors.white, fontSize: 18),
         ),
         actions: [
           if (_booking != null)
@@ -1247,7 +1248,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
               ),
-              child: const Text('Reintentar'),
+              child: Text(S.of(context).common_retry),
             ),
           ],
         ),
@@ -1255,8 +1256,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
 
     if (_booking == null) {
-      return const Center(
-        child: Text('No hay datos', style: TextStyle(color: AppColors.gray400)),
+      return Center(
+        child: Text(S.of(context).common_no_data, style: const TextStyle(color: AppColors.gray400)),
       );
     }
 
@@ -1298,11 +1299,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
   Widget _buildStatusCard() {
     final statusColor = _getStatusColor(_booking!.status);
-    final statusText = _getStatusText(_booking!.status);
+    final statusText = _getStatusText(_booking!.status, context);
 
     // Texto de unidades: mostrar "X habitaciones" si tiene múltiples
     final unitsText = _booking!.hasMultipleUnits
-        ? '${_booking!.totalUnits} habitaciones'
+        ? '${_booking!.totalUnits} ${S.of(context).admin_booking_units_label}'
         : _booking!.unitName;
 
     return Container(
@@ -1390,11 +1391,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               _buildStatusChip(
                 icon: _booking!.isCodeSent ? Icons.mark_email_read : Icons.mark_email_unread,
-                label: _booking!.isCodeSent ? 'Email enviado' : 'Email pendiente',
+                label: _booking!.isCodeSent ? S.of(context).admin_booking_email_sent : S.of(context).admin_booking_email_pending,
               ),
               _buildStatusChip(
                 icon: _booking!.isCodeUsed ? Icons.lock_open : Icons.lock_outline,
-                label: _booking!.isCodeUsed ? 'Código usado' : 'Código sin usar',
+                label: _booking!.isCodeUsed ? S.of(context).admin_booking_code_used : S.of(context).admin_booking_code_unused,
               ),
               if (_booking!.checkinId != null)
                 _buildStatusChip(
@@ -1404,15 +1405,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                           ? Icons.pending
                           : Icons.edit_document,
                   label: _booking!.checkinStatus == 'validated'
-                      ? 'Check-in OK'
+                      ? S.of(context).admin_booking_checkin_ok
                       : _booking!.checkinStatus == 'submitted'
-                          ? 'Check-in pendiente'
-                          : 'Check-in en progreso',
+                          ? S.of(context).admin_booking_checkin_pending
+                          : S.of(context).admin_booking_checkin_in_progress,
                 ),
               if (_booking!.checkinId == null)
                 _buildStatusChip(
                   icon: Icons.hourglass_empty,
-                  label: 'Sin check-in',
+                  label: S.of(context).admin_booking_no_checkin,
                 ),
             ],
           ),
@@ -1464,9 +1465,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               const Icon(Icons.person_outline, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
-              const Text(
-                'HUÉSPED',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_guest_section,
+                style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1477,7 +1478,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            _booking!.guestFullName.isNotEmpty ? _booking!.guestFullName : 'Sin nombre',
+            _booking!.guestFullName.isNotEmpty ? _booking!.guestFullName : S.of(context).admin_booking_no_name,
             style: const TextStyle(
               color: AppColors.white,
               fontSize: 18,
@@ -1510,9 +1511,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               const Icon(Icons.calendar_today_outlined, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
-              const Text(
-                'RESERVA',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_reservation_section,
+                style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1526,7 +1527,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               Expanded(
                 child: _buildDateColumn(
-                  'Entrada',
+                  S.of(context).admin_booking_checkin_label,
                   DateFormat('dd MMM yyyy').format(_booking!.checkInDate),
                   Icons.login,
                 ),
@@ -1538,7 +1539,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '$nights ${nights == 1 ? 'noche' : 'noches'}',
+                  '$nights ${nights == 1 ? S.of(context).admin_booking_night_singular : S.of(context).admin_booking_night_plural}',
                   style: const TextStyle(
                     color: AppColors.gold,
                     fontSize: 12,
@@ -1548,7 +1549,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               ),
               Expanded(
                 child: _buildDateColumn(
-                  'Salida',
+                  S.of(context).admin_booking_checkout_label,
                   DateFormat('dd MMM yyyy').format(_booking!.checkOutDate),
                   Icons.logout,
                   alignment: CrossAxisAlignment.end,
@@ -1570,7 +1571,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               if (_booking!.childrenAges.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 Text(
-                  '(${_booking!.childrenAges.join(', ')} años)',
+                  '(${_booking!.childrenAges.join(', ')} ${S.of(context).admin_booking_years_label})',
                   style: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                     fontSize: 12,
@@ -1631,7 +1632,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               const Icon(Icons.meeting_room_outlined, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
               Text(
-                'HABITACIONES (${_booking!.totalUnits})',
+                '${S.of(context).admin_booking_rooms_section} (${_booking!.totalUnits})',
                 style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
@@ -1737,7 +1738,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       const Icon(Icons.wifi, color: AppColors.gold, size: 16),
                       const SizedBox(width: 8),
                       Text(
-                        'WiFi',
+                        S.of(context).admin_booking_wifi_label,
                         style: TextStyle(
                           color: AppColors.getTextSecondaryColor(context),
                           fontSize: 11,
@@ -1753,7 +1754,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         SizedBox(
                           width: 60,
                           child: Text(
-                            'Red:',
+                            S.of(context).admin_booking_wifi_network_label,
                             style: TextStyle(
                               color: AppColors.getTextSecondaryColor(context),
                               fontSize: 12,
@@ -1779,7 +1780,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         SizedBox(
                           width: 60,
                           child: Text(
-                            'Clave:',
+                            S.of(context).admin_booking_wifi_password_label,
                             style: TextStyle(
                               color: AppColors.getTextSecondaryColor(context),
                               fontSize: 12,
@@ -1800,7 +1801,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                               ),
                               const SizedBox(width: 8),
                               GestureDetector(
-                                onTap: () => _copyToClipboard(unit.wifiPassword!, 'Clave WiFi'),
+                                onTap: () => _copyToClipboard(unit.wifiPassword!, S.of(context).admin_booking_wifi_password_clipboard),
                                 child: Icon(
                                   Icons.copy,
                                   size: 14,
@@ -1836,7 +1837,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Código de acceso',
+                          S.of(context).admin_booking_access_code_label,
                           style: TextStyle(
                             color: AppColors.getTextSecondaryColor(context),
                             fontSize: 11,
@@ -1857,7 +1858,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => _copyToClipboard(unit.boxCode!, 'Código de acceso'),
+                    onTap: () => _copyToClipboard(unit.boxCode!, S.of(context).admin_booking_access_code_clipboard),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -1892,7 +1893,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       const Icon(Icons.info_outline, color: AppColors.silver, size: 16),
                       const SizedBox(width: 8),
                       Text(
-                        'Instrucciones de acceso',
+                        S.of(context).admin_booking_access_instructions_label,
                         style: TextStyle(
                           color: AppColors.getTextSecondaryColor(context),
                           fontSize: 11,
@@ -1934,9 +1935,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               const Icon(Icons.vpn_key_outlined, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
-              const Text(
-                'CÓDIGOS DE ACCESO',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_access_codes_section,
+                style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1947,7 +1948,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           ),
           const SizedBox(height: 16),
           _buildCodeRow(
-            'Código de Reserva',
+            S.of(context).admin_booking_reservation_code_label,
             _booking!.bookingCode,
             Icons.confirmation_number_outlined,
           ),
@@ -1958,7 +1959,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               Expanded(
                 child: _buildCodeButton(
-                  'Compartir',
+                  S.of(context).admin_booking_share_button,
                   Icons.share_outlined,
                   _shareCode,
                   isPrimary: true,
@@ -1973,7 +1974,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
   Widget _buildKeyboxCodeRow() {
     final hasKeyboxCode = _booking!.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty;
-    final displayCode = hasKeyboxCode ? _booking!.keyboxCode! : 'Sin configurar';
+    final displayCode = hasKeyboxCode ? _booking!.keyboxCode! : S.of(context).admin_booking_keybox_not_set;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1997,7 +1998,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Código KeyBox',
+                  S.of(context).admin_booking_keybox_code_label,
                   style: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                     fontSize: 11,
@@ -2020,7 +2021,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           // Botón de copiar (solo si tiene código)
           if (hasKeyboxCode) ...[
             GestureDetector(
-              onTap: () => _copyToClipboard(displayCode, 'Código KeyBox'),
+              onTap: () => _copyToClipboard(displayCode, S.of(context).admin_booking_keybox_code_clipboard),
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -2175,23 +2176,23 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     if (!hasCheckin) {
       statusColor = AppColors.gray500;
-      statusText = 'Check-in no iniciado';
+      statusText = S.of(context).admin_booking_checkin_not_started;
       statusIcon = Icons.hourglass_empty;
     } else if (isValidated) {
       statusColor = AppColors.success;
-      statusText = 'Check-in validado';
+      statusText = S.of(context).admin_booking_checkin_validated_status;
       statusIcon = Icons.verified;
     } else if (isRejected) {
       statusColor = AppColors.error;
-      statusText = 'Check-in rechazado';
+      statusText = S.of(context).admin_booking_checkin_rejected_status;
       statusIcon = Icons.cancel;
     } else if (isSubmitted) {
       statusColor = AppColors.warning;
-      statusText = 'Pendiente de validación';
+      statusText = S.of(context).admin_booking_checkin_pending_validation;
       statusIcon = Icons.pending;
     } else {
       statusColor = AppColors.info;
-      statusText = 'Check-in en progreso';
+      statusText = S.of(context).admin_booking_checkin_in_progress_status;
       statusIcon = Icons.edit_document;
     }
 
@@ -2217,7 +2218,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'CHECK-IN',
+                S.of(context).admin_booking_checkin_section,
                 style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
@@ -2264,7 +2265,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    '${_booking!.docsPending} documentos pendientes',
+                    '${_booking!.docsPending} ${S.of(context).admin_booking_docs_pending}',
                     style: const TextStyle(color: AppColors.warning, fontSize: 13),
                   ),
                 ],
@@ -2277,7 +2278,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               children: [
                 Expanded(
                   child: _buildCodeButton(
-                    'Validar',
+                    S.of(context).admin_booking_validate_button,
                     Icons.check_circle_outline,
                     _isValidating ? () {} : _validateCheckin,
                     isPrimary: true,
@@ -2286,7 +2287,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildCodeButton(
-                    'Rechazar',
+                    S.of(context).admin_booking_reject_button,
                     Icons.cancel_outlined,
                     _isValidating ? () {} : _rejectCheckin,
                   ),
@@ -2314,9 +2315,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               const Icon(Icons.note_outlined, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
-              const Text(
-                'NOTAS INTERNAS',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_internal_notes_section,
+                style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -2357,19 +2358,19 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     if (isValidated) {
       statusColor = AppColors.success;
-      statusText = isBookingClosed ? 'Reserva cerrada' : 'Check-out validado';
+      statusText = isBookingClosed ? S.of(context).admin_booking_closed_status : S.of(context).admin_booking_checkout_validated_status;
       statusIcon = Icons.verified;
     } else if (isRejected) {
       statusColor = AppColors.error;
-      statusText = 'Check-out con incidencias';
+      statusText = S.of(context).admin_booking_checkout_incidents_status;
       statusIcon = Icons.warning_rounded;
     } else if (isRequested) {
       statusColor = AppColors.warning;
-      statusText = 'Check-out solicitado';
+      statusText = S.of(context).admin_booking_checkout_requested_status;
       statusIcon = Icons.pending;
     } else {
       statusColor = AppColors.gray500;
-      statusText = 'Check-out pendiente';
+      statusText = S.of(context).admin_booking_checkout_pending_status;
       statusIcon = Icons.exit_to_app;
     }
 
@@ -2394,9 +2395,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 child: const Icon(Icons.exit_to_app, color: AppColors.black, size: 16),
               ),
               const SizedBox(width: 8),
-              const Text(
-                'CHECK-OUT',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_checkout_section,
+                style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -2433,7 +2434,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           if (_booking!.checkoutRequestedAt != null) ...[
             const SizedBox(height: 12),
             Text(
-              'Solicitado: ${DateFormat('dd/MM/yyyy HH:mm').format(_booking!.checkoutRequestedAt!)}',
+              '${S.of(context).admin_booking_requested_label} ${DateFormat('dd/MM/yyyy HH:mm').format(_booking!.checkoutRequestedAt!)}',
               style: const TextStyle(color: AppColors.gray400, fontSize: 12),
             ),
           ],
@@ -2449,9 +2450,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Notas:',
-                    style: TextStyle(color: AppColors.gray400, fontSize: 11),
+                  Text(
+                    S.of(context).admin_booking_notes_label,
+                    style: const TextStyle(color: AppColors.gray400, fontSize: 11),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -2469,7 +2470,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               children: [
                 Expanded(
                   child: _buildCodeButton(
-                    'Validar',
+                    S.of(context).admin_booking_validate_button,
                     Icons.check_circle_outline,
                     _isValidatingCheckout ? () {} : () => _validateCheckout(),
                     isPrimary: true,
@@ -2478,7 +2479,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildCodeButton(
-                    'Incidencias',
+                    S.of(context).admin_booking_incidents_button,
                     Icons.report_problem_outlined,
                     _isValidatingCheckout ? () {} : () => _rejectCheckout(),
                   ),
@@ -2491,14 +2492,14 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           if (!isRequested && !isValidated && !isRejected) ...[
             const SizedBox(height: 16),
             _buildCodeButton(
-              'Cerrar Reserva',
+              S.of(context).admin_booking_close_booking_button,
               Icons.exit_to_app,
               _isClosingBooking ? () {} : () => _closeBooking(),
               isPrimary: true,
             ),
             const SizedBox(height: 8),
             Text(
-              'El huésped no ha solicitado check-out. Puedes cerrar la reserva manualmente.',
+              S.of(context).admin_booking_close_booking_description,
               style: TextStyle(
                 color: AppColors.getTextSecondaryColor(context),
                 fontSize: 12,
@@ -2527,9 +2528,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               const Icon(Icons.draw_outlined, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
-              const Text(
-                'FIRMA DEL TITULAR',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_signature_section,
+                style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -2554,10 +2555,10 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   ${_booking!.signatureSvg!}
                 </svg>''',
                 fit: BoxFit.contain,
-                placeholderBuilder: (context) => const Center(
+                placeholderBuilder: (context) => Center(
                   child: Text(
-                    'Firma no disponible',
-                    style: TextStyle(color: AppColors.gray500),
+                    S.of(context).admin_booking_signature_unavailable,
+                    style: const TextStyle(color: AppColors.gray500),
                   ),
                 ),
               ),
@@ -2583,9 +2584,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               const Icon(Icons.settings_outlined, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
-              const Text(
-                'ACCIONES',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_booking_actions_section,
+                style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -2597,18 +2598,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(height: 16),
           _buildActionTile(
             icon: Icons.send_outlined,
-            title: 'Reenviar código por email',
+            title: S.of(context).admin_booking_resend_code_title,
             subtitle: _booking!.isCodeSent
-                ? 'Último envío: ${_booking!.codeSentAt != null ? DateFormat('dd/MM/yyyy HH:mm').format(_booking!.codeSentAt!) : 'N/A'}'
-                : 'Aún no se ha enviado',
+                ? '${S.of(context).admin_booking_last_sent_label} ${_booking!.codeSentAt != null ? DateFormat('dd/MM/yyyy HH:mm').format(_booking!.codeSentAt!) : S.of(context).admin_booking_na}'
+                : S.of(context).admin_booking_not_sent_yet,
             onTap: _isResending ? null : _resendCode,
             isLoading: _isResending,
           ),
           const SizedBox(height: 12),
           _buildActionTile(
             icon: Icons.door_front_door_outlined,
-            title: 'Habitación disponible',
-            subtitle: 'Notifica al huésped que la habitación está lista y puede acceder',
+            title: S.of(context).admin_booking_room_ready_title,
+            subtitle: S.of(context).admin_booking_room_ready_subtitle,
             onTap: _isSendingRoomReady ? null : _notifyRoomReady,
             isLoading: _isSendingRoomReady,
             color: AppColors.success,
@@ -2616,8 +2617,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(height: 12),
           _buildActionTile(
             icon: Icons.cancel_outlined,
-            title: 'Cancelar reserva',
-            subtitle: 'Marca la reserva como cancelada',
+            title: S.of(context).admin_booking_cancel_booking_title,
+            subtitle: S.of(context).admin_booking_cancel_booking_subtitle,
             onTap: _isCancellingBooking ? null : _cancelBooking,
             isLoading: _isCancellingBooking,
             color: AppColors.error,
@@ -2625,8 +2626,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(height: 12),
           _buildActionTile(
             icon: Icons.delete_forever,
-            title: 'Eliminar reserva',
-            subtitle: 'Borra completamente la reserva y sus datos (solo si no está finalizada)',
+            title: S.of(context).admin_booking_delete_booking_title,
+            subtitle: S.of(context).admin_booking_delete_booking_subtitle,
             onTap: _isDeletingBooking ? null : _deleteBooking,
             isLoading: _isDeletingBooking,
             color: AppColors.error,

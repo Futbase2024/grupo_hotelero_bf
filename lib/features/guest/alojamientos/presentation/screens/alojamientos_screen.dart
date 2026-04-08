@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_theme.dart';
 import '../../domain/bloc/alojamientos_bloc.dart';
@@ -42,7 +43,7 @@ class _AlojamientosScreenState extends State<AlojamientosScreen> {
           },
         ),
         title: Text(
-          'Nuestros Alojamientos',
+          S.of(context).guest_alojamientos_title,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -144,7 +145,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -164,7 +165,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.black,
@@ -566,7 +567,7 @@ class _HotelCard extends StatelessWidget {
                           color: AppColors.black,
                           borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                         ),
-                        child: const Text(
+                        child: Text(
                           'HOTEL',
                           style: TextStyle(
                             fontSize: 10,
@@ -643,7 +644,7 @@ class _HotelCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '$roomCount habitaciones',
+                                S.of(context).guest_alojamientos_room_count(roomCount),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
@@ -700,7 +701,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No hay alojamientos',
+              S.of(context).guest_alojamientos_empty_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -709,7 +710,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'No hay alojamientos disponibles en este momento',
+              S.of(context).guest_alojamientos_empty_subtitle,
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? AppColors.silver : AppColors.gray600,

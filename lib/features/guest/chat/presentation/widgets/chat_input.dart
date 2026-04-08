@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Widget de campo de entrada para el chat
 class ChatInput extends StatefulWidget {
@@ -68,7 +69,7 @@ class _ChatInputState extends State<ChatInput> {
                 onSubmitted: (_) => _sendMessage(),
                 style: const TextStyle(color: AppColors.black),
                 decoration: InputDecoration(
-                  hintText: 'Escribe un mensaje...',
+                  hintText: S.of(context).guest_chat_input_hint,
                   hintStyle: const TextStyle(color: AppColors.gray500),
                   filled: true,
                   fillColor: AppColors.backgroundInput,

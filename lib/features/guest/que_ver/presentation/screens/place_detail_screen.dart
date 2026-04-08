@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/di/injection.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../domain/entities/place_entity.dart';
@@ -145,7 +146,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                 const Icon(Icons.error_outline, size: 64, color: AppColors.error),
                 const SizedBox(height: 16),
                 Text(
-                  'Error al cargar el lugar',
+                  S.of(context).guest_que_ver_error_loading,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -168,7 +169,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                     backgroundColor: AppColors.gold,
                     foregroundColor: AppColors.white,
                   ),
-                  child: const Text('Reintentar'),
+                  child: Text(S.of(context).common_retry),
                 ),
               ],
             ),
@@ -181,7 +182,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
       return Scaffold(
         backgroundColor: isDark ? AppColors.black : AppColors.gray50,
         body: SafeArea(
-          child: const Center(child: Text('Lugar no encontrado')),
+          child: Center(child: Text(S.of(context).guest_que_ver_place_not_found)),
         ),
       );
     }
@@ -680,17 +681,17 @@ class _BadgesSection extends StatelessWidget {
                   color: AppColors.gold.withValues(alpha: 0.3),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.confirmation_num_outlined,
                     size: 14,
                     color: AppColors.gold,
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
-                    'Entrada gratuita',
+                    S.of(context).guest_que_ver_free_entry,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -748,7 +749,7 @@ class _DescriptionSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Sobre este lugar',
+            S.of(context).guest_que_ver_about_place,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -792,7 +793,7 @@ class _PracticalInfoSection extends StatelessWidget {
     if (place.address != null) {
       items.add(_InfoItem(
         icon: Icons.place_outlined,
-        label: 'Dirección',
+        label: S.of(context).guest_que_ver_address,
         value: place.address!,
       ));
     }
@@ -800,7 +801,7 @@ class _PracticalInfoSection extends StatelessWidget {
     if (place.bestTimeToVisit != null) {
       items.add(_InfoItem(
         icon: Icons.wb_sunny_outlined,
-        label: 'Mejor momento',
+        label: S.of(context).guest_que_ver_best_time,
         value: place.bestTimeToVisit!,
       ));
     }
@@ -808,7 +809,7 @@ class _PracticalInfoSection extends StatelessWidget {
     if (place.hasLocation) {
       items.add(_InfoItem(
         icon: Icons.map_outlined,
-        label: 'Ubicación',
+        label: S.of(context).guest_que_ver_location,
         value: '${place.geoLat!.toStringAsFixed(4)}, ${place.geoLng!.toStringAsFixed(4)}',
         onTap: () => _openMap(place.geoLat!, place.geoLng!),
         isClickable: true,
@@ -823,7 +824,7 @@ class _PracticalInfoSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Información práctica',
+            S.of(context).guest_que_ver_practical_info,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -938,7 +939,7 @@ class _TipsSection extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Consejos',
+                S.of(context).guest_que_ver_tips,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -993,8 +994,8 @@ class _ActionButtons extends StatelessWidget {
   void _copyUrl(BuildContext context, String url) {
     Clipboard.setData(ClipboardData(text: url));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Enlace copiado al portapapeles'),
+      SnackBar(
+        content: Text(S.of(context).guest_que_ver_link_copied),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
       ),
@@ -1021,7 +1022,7 @@ class _ActionButtons extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: () => _openMap(place.geoLat!, place.geoLng!),
             icon: const Icon(Icons.directions, size: 18),
-            label: const Text('Cómo llegar'),
+            label: Text(S.of(context).guest_que_ver_how_to_get),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.gold,
               foregroundColor: AppColors.white,
@@ -1043,7 +1044,7 @@ class _ActionButtons extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: () => _copyUrl(context, place.bookingUrl!),
             icon: const Icon(Icons.link, size: 18),
-            label: const Text('Copiar enlace'),
+            label: Text(S.of(context).guest_que_ver_copy_link),
             style: ElevatedButton.styleFrom(
               backgroundColor: place.hasLocation ? AppColors.gray700 : AppColors.gold,
               foregroundColor: AppColors.white,
@@ -1065,7 +1066,7 @@ class _ActionButtons extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () => _copyUrl(context, place.websiteUrl!),
             icon: const Icon(Icons.language, size: 18),
-            label: const Text('Web oficial'),
+            label: Text(S.of(context).guest_que_ver_official_web),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.gold,
               padding: const EdgeInsets.symmetric(vertical: 14),

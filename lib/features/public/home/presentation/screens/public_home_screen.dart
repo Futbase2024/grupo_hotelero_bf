@@ -7,7 +7,9 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/responsive.dart';
 import '../../../../../core/theme/widgets/theme_toggle.dart';
+import '../../../../../core/locale/widgets/language_selector.dart';
 import '../../../../../core/router/app_router.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../auth/presentation/widgets/logo_tap_trigger.dart';
 import '../../../../admin/auth/admin_login_bottom_sheet.dart';
 
@@ -108,7 +110,11 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         Container(
           width: double.infinity,
           constraints: BoxConstraints(
-            minHeight: context.responsive(mobile: 350.0, tablet: 500.0, desktop: 600.0),
+            minHeight: context.responsive(
+              mobile: 350.0,
+              tablet: 500.0,
+              desktop: 600.0,
+            ),
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusXXLarge),
@@ -155,32 +161,84 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Badge superior
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.black : AppColors.blackWithAlpha05,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                          border: Border.all(color: isDark ? _kDarkBorder : _kLightBorder),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.star_rounded, color: isDark ? AppColors.gold : AppColors.black, size: 14),
-                            const SizedBox(width: AppTheme.spacing8),
-                            Text(
-                              'EXCLUSIVIDAD GARANTIZADA',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark ? AppColors.gold : AppColors.black,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.15,
+                      // Selector de idioma + Badge superior + Theme toggle
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Selector de idioma (flex 2)
+                          Expanded(
+                            flex: 2,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: LanguageSelector(
+                                variant: LanguageSelectorVariant.compact,
                               ),
                             ),
-                          ],
+                          ),
+                          // Exclusividad garantizada (flex 6)
+                          Expanded(
+                            flex: 6,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacing12,
+                                vertical: AppTheme.spacing8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.black
+                                    : AppColors.blackWithAlpha05,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusFull,
+                                ),
+                                border: Border.all(
+                                  color: isDark ? _kDarkBorder : _kLightBorder,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.star_rounded,
+                                    color: isDark
+                                        ? AppColors.gold
+                                        : AppColors.black,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing8),
+                                  Text(
+                                    S.of(context).public_badge_exclusivity,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark
+                                          ? AppColors.gold
+                                          : AppColors.black,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Theme toggle (flex 2)
+                          Expanded(
+                            flex: 2,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: ThemeToggle(
+                                variant: ThemeToggleVariant.icon,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: context.responsive(
+                          mobile: AppTheme.spacing24,
+                          tablet: AppTheme.spacing16,
                         ),
                       ),
-                      SizedBox(height: context.responsive(mobile: AppTheme.spacing24, tablet: AppTheme.spacing16)),
 
                       // Logo circular
                       _buildLogo(context),
@@ -209,7 +267,9 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: AppColors.goldGradient,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusFull,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.gold,
@@ -219,20 +279,25 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                             ],
                           ),
                           child: ElevatedButton(
-                            onPressed: () => context.go(AppRoutes.bookingAccess),
+                            onPressed: () =>
+                                context.go(AppRoutes.bookingAccess),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               foregroundColor: AppColors.black,
                               elevation: 0,
                               shadowColor: Colors.transparent,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusFull,
+                                ),
                               ),
                             ),
                             child: Text(
-                              'Acceder a mi Reserva',
+                              S.of(context).public_cta_access_booking,
                               style: TextStyle(
-                                fontSize: ResponsiveFontSize.labelLarge(context),
+                                fontSize: ResponsiveFontSize.labelLarge(
+                                  context,
+                                ),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -244,19 +309,6 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                 ),
               ),
             ),
-          ),
-        ),
-        // Theme Toggle en esquina superior derecha
-        Positioned(
-          top: AppTheme.spacing16,
-          right: AppTheme.spacing16,
-          child: Container(
-            padding: const EdgeInsets.all(AppTheme.spacing4),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.blackWithAlpha50 : AppColors.whiteWithAlpha80,
-              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            ),
-            child: const ThemeToggle(variant: ThemeToggleVariant.icon),
           ),
         ),
       ],
@@ -272,74 +324,76 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
     final services = [
       _ServiceItem(
         icon: Icons.login_outlined,
-        title: 'Check-in Digital',
-        description: 'Registro de entrada sin esperas.',
+        title: S.of(context).public_service_checkin_title,
+        description: S.of(context).public_service_checkin_desc,
         route: AppRoutes.bookingAccess,
         imageAsset: 'assets/images/checkin.png',
         overlayColor: const Color(0xFF2E7D32),
       ),
       _ServiceItem(
         icon: Icons.logout_outlined,
-        title: 'Check-out Digital',
-        description: 'Salida rápida y sencilla.',
+        title: S.of(context).public_service_checkout_title,
+        description: S.of(context).public_service_checkout_desc,
         route: AppRoutes.bookingAccess,
         imageAsset: 'assets/images/checkout.png',
         overlayColor: const Color(0xFF1565C0),
       ),
       _ServiceItem(
         icon: Icons.rule_outlined,
-        title: 'Normas de la Casa',
-        description: 'Reglas y recomendaciones.',
+        title: S.of(context).public_service_house_rules_title,
+        description: S.of(context).public_service_house_rules_desc,
         route: AppRoutes.houseRulesGeneral,
         imageAsset: 'assets/images/normas.png',
         overlayColor: const Color(0xFF6D4C41),
       ),
       _ServiceItem(
         icon: Icons.attractions_outlined,
-        title: '¿Qué ver?',
-        description: 'Lugares de interés cercanos.',
+        title: S.of(context).public_service_what_to_see_title,
+        description: S.of(context).public_service_what_to_see_desc,
         route: AppRoutes.queVer,
         imageAsset: 'assets/images/quever.png',
         overlayColor: const Color(0xFF00838F),
       ),
       _ServiceItem(
         icon: Icons.local_parking_outlined,
-        title: 'Aparcamientos',
-        description: 'Opciones de parking.',
+        title: S.of(context).public_service_parking_title,
+        description: S.of(context).public_service_parking_desc,
         route: AppRoutes.parkings,
         imageAsset: 'assets/images/parking.png',
         overlayColor: const Color(0xFF5E35B1),
       ),
       _ServiceItem(
         icon: Icons.chat_bubble_outline_rounded,
-        title: 'Chat',
-        description: 'Conserje virtual 24/7.',
+        title: S.of(context).public_service_chat_title,
+        description: S.of(context).public_service_chat_desc,
         route: AppRoutes.bookingAccess,
         imageAsset: 'assets/images/chat.png',
         overlayColor: const Color(0xFF00695C),
       ),
       _ServiceItem(
         icon: Icons.home_work_outlined,
-        title: 'Alojamientos',
-        description: 'Otras propiedades.',
+        title: S.of(context).public_service_accommodations_title,
+        description: S.of(context).public_service_accommodations_desc,
         route: AppRoutes.alojamientos,
         imageAsset: 'assets/images/alojamiento.png',
         overlayColor: const Color(0xFF455A64),
       ),
       _ServiceItem(
         icon: Icons.star_outline_rounded,
-        title: 'Reseñas',
-        description: 'Opiniones de huéspedes.',
+        title: S.of(context).public_service_reviews_title,
+        description: S.of(context).public_service_reviews_desc,
         route: '/guest/reviews/bf000000-0000-0000-0000-000000000001',
         imageAsset: 'assets/images/reseña.png',
         overlayColor: const Color(0xFFEF6C00),
-      ),      
+      ),
     ];
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceWithAlpha40 : AppColors.whiteWithAlpha90,
+        color: isDark
+            ? AppColors.darkSurfaceWithAlpha40
+            : AppColors.whiteWithAlpha90,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: borderColor, width: 1.5),
       ),
@@ -349,7 +403,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           // Título de sección
           Center(
             child: Text(
-              'Nuestros Servicios',
+              S.of(context).public_services_section_title,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.headlineSmall(context),
                 fontWeight: FontWeight.w700,
@@ -368,10 +422,15 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
               crossAxisCount: 2,
               mainAxisSpacing: 6,
               crossAxisSpacing: 6,
-              mainAxisExtent: context.responsive(mobile: 130.0, tablet: 140.0, desktop: 150.0),
+              mainAxisExtent: context.responsive(
+                mobile: 130.0,
+                tablet: 140.0,
+                desktop: 150.0,
+              ),
             ),
             itemCount: services.length,
-            itemBuilder: (context, index) => _buildServiceCard(context, services[index], cardBorderColor),
+            itemBuilder: (context, index) =>
+                _buildServiceCard(context, services[index], cardBorderColor),
           ),
         ],
       ),
@@ -405,7 +464,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
               ),
               const SizedBox(width: AppTheme.spacing8),
               Text(
-                'BF STAY',
+                S.of(context).public_footer_brand_name,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -448,7 +507,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
 
           // Copyright
           Text(
-            '© ${DateTime.now().year} BF Stay • Todos los derechos reservados',
+            S.of(context).public_footer_copyright(DateTime.now().year),
             style: TextStyle(
               fontSize: 11,
               color: isDark ? AppColors.darkTextSecondary : AppColors.gray500,
@@ -467,7 +526,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
               }
             },
             child: Text(
-              'Política de Privacidad',
+              S.of(context).public_footer_privacy_policy,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? AppColors.gold : AppColors.gray600,
@@ -482,7 +541,11 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
 
   /// Logo de la aplicación con trigger oculto de 5 taps
   Widget _buildLogo(BuildContext context) {
-    final logoSize = context.responsive<double>(mobile: 140.0, tablet: 170.0, desktop: 200.0);
+    final logoSize = context.responsive<double>(
+      mobile: 140.0,
+      tablet: 170.0,
+      desktop: 200.0,
+    );
 
     return LogoTapTrigger(
       onTriggered: () => AdminLoginBottomSheet.show(context),
@@ -494,10 +557,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           border: Border.all(color: AppColors.gold, width: 0),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Image.asset(
-          'assets/icons/logo.png',
-          fit: BoxFit.cover,
-        ),
+        child: Image.asset('assets/icons/logo.png', fit: BoxFit.cover),
       ),
     );
   }
@@ -519,7 +579,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
       text: TextSpan(
         children: [
           TextSpan(
-            text: 'Tu Estancia, ',
+            text: S.of(context).public_hero_title_prefix,
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
@@ -529,7 +589,7 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           ),
           // "Elevada" con gradiente dorado
           TextSpan(
-            text: 'Elevada',
+            text: S.of(context).public_hero_title_suffix,
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
@@ -546,8 +606,16 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
   }
 
   /// Card de servicio compacta para grid
-  Widget _buildServiceCard(BuildContext context, _ServiceItem service, Color borderColor) {
-    final titleSize = context.responsive(mobile: 12.0, tablet: 13.0, desktop: 14.0);
+  Widget _buildServiceCard(
+    BuildContext context,
+    _ServiceItem service,
+    Color borderColor,
+  ) {
+    final titleSize = context.responsive(
+      mobile: 12.0,
+      tablet: 13.0,
+      desktop: 14.0,
+    );
     final isClickable = service.route != null;
     final overlayColor = service.overlayColor ?? AppColors.gold;
     final isDark = AppColors.isDarkMode(context);
@@ -574,18 +642,19 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                         ? Image.asset(
                             service.imageAsset!,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    overlayColor,
-                                    overlayColor.withValues(alpha: 0.7),
-                                  ],
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        overlayColor,
+                                        overlayColor.withValues(alpha: 0.7),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
                           )
                         : Container(
                             decoration: BoxDecoration(
@@ -650,11 +719,11 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
     void showCopiedSnackBar(String value, String type) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$type copiado al portapapeles'),
+          content: Text(S.of(context).common_copied_to_clipboard(type)),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
           action: SnackBarAction(
-            label: 'OK',
+            label: S.of(context).common_ok,
             onPressed: () {},
           ),
         ),
@@ -671,7 +740,8 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         } else {
           // Si no se puede abrir (ej: emulador sin app de teléfono), copiar al portapapeles
           await Clipboard.setData(ClipboardData(text: phone));
-          if (context.mounted) showCopiedSnackBar(phone, 'Teléfono');
+          if (context.mounted)
+            showCopiedSnackBar(phone, S.of(context).common_phone_type);
         }
       };
     } else if (email != null) {
@@ -682,7 +752,8 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         } else {
           // Si no se puede abrir, copiar al portapapeles
           await Clipboard.setData(ClipboardData(text: email));
-          if (context.mounted) showCopiedSnackBar(email, 'Email');
+          if (context.mounted)
+            showCopiedSnackBar(email, S.of(context).common_email_type);
         }
       };
     }
@@ -695,7 +766,11 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isDark ? AppColors.gold : AppColors.black, size: 16),
+            Icon(
+              icon,
+              color: isDark ? AppColors.gold : AppColors.black,
+              size: 16,
+            ),
             const SizedBox(width: AppTheme.spacing8),
             Text(
               text,

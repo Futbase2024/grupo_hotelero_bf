@@ -10,6 +10,7 @@ import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla de Información para el huésped
 class StayGuideScreen extends StatefulWidget {
@@ -166,7 +167,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Información',
+                S.of(context).guest_guide_title,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -182,7 +183,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
               ),
               const SizedBox(height: AppTheme.spacing8),
               Text(
-                'Todo lo que necesitas saber sobre tu estancia',
+                S.of(context).guest_guide_subtitle,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.whiteWithAlpha90,
@@ -204,24 +205,24 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
 
   Widget _buildContactSection(BuildContext context) {
     return _InfoSection(
-      title: 'Contacto',
+      title: S.of(context).guest_guide_contact,
       icon: Icons.phone_outlined,
       children: [
         _ContactItem(
           icon: Icons.phone_outlined,
-          label: 'Teléfono 1',
+          label: S.of(context).guest_guide_phone_1,
           value: '+34 656 61 80 65',
           onTap: () => _makePhoneCall('+34656618065'),
         ),
         _ContactItem(
           icon: Icons.phone_outlined,
-          label: 'Teléfono 2',
+          label: S.of(context).guest_guide_phone_2,
           value: '+34 674 27 70 16',
           onTap: () => _makePhoneCall('+34674277016'),
         ),
         _ContactItem(
           icon: Icons.email_outlined,
-          label: 'Email',
+          label: S.of(context).common_email_type,
           value: 'Info@boutiquejerez.es',
           onTap: () => _sendEmail('Info@boutiquejerez.es'),
         ),
@@ -245,14 +246,14 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
     final checkOutStr = checkOut != null ? '${checkOut.day}/${checkOut.month}/${checkOut.year}' : '-';
 
     return _InfoSection(
-      title: 'Tus datos',
+      title: S.of(context).guest_guide_your_data,
       icon: Icons.person_outline,
       children: [
-        _DataRow(label: 'Alojamiento', value: _bookingData?['unitName'] ?? '-'),
-        _DataRow(label: 'Propiedad', value: _bookingData?['propertyName'] ?? '-'),
-        _DataRow(label: 'Check-in', value: checkInStr),
-        _DataRow(label: 'Check-out', value: checkOutStr),
-        _DataRow(label: 'Huéspedes', value: '${_bookingData?['guests'] ?? 1}'),
+        _DataRow(label: S.of(context).guest_guide_accommodation, value: _bookingData?['unitName'] ?? '-'),
+        _DataRow(label: S.of(context).guest_guide_property, value: _bookingData?['propertyName'] ?? '-'),
+        _DataRow(label: S.of(context).guest_guide_checkin, value: checkInStr),
+        _DataRow(label: S.of(context).guest_guide_checkout, value: checkOutStr),
+        _DataRow(label: S.of(context).guest_guide_guests, value: '${_bookingData?['guests'] ?? 1}'),
       ],
     );
   }
@@ -267,7 +268,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
     final isHotel = unitType == UnitType.hotelRoom;
 
     return _InfoSection(
-      title: 'Servicios',
+      title: S.of(context).guest_guide_services,
       icon: Icons.room_service_outlined,
       children: [
         Padding(
@@ -277,19 +278,19 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
             children: [
               _ServiceIcon(
                 icon: Icons.wifi_outlined,
-                label: 'WiFi',
+                label: S.of(context).guest_guide_wifi,
                 onTap: () => _showWifiInfo(context),
               ),
               // Solo mostrar lavadero si NO es hotel (apartamentos tienen lavadero)
               if (!isHotel) ...[
                 _ServiceIcon(
                   icon: Icons.local_laundry_service_outlined,
-                  label: 'Lavadero',
+                  label: S.of(context).guest_guide_laundry,
                   onTap: () => _showServiceInfo(
                     context: context,
-                    title: 'Lavadero',
+                    title: S.of(context).guest_guide_laundry,
                     icon: Icons.local_laundry_service_outlined,
-                    description: 'Lavadora y secadora disponibles.\n\nUbicación: Cuarto de servicio\nHorario: 8:00 - 22:00',
+                    description: S.of(context).guest_guide_laundry_desc,
                   ),
                 ),
               ],
@@ -297,28 +298,28 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
               if (hasJacuzzi) ...[
                 _ServiceIcon(
                   icon: Icons.hot_tub_outlined,
-                  label: 'Jacuzzi',
+                  label: S.of(context).guest_guide_jacuzzi,
                   onTap: () => context.go('/guest/jacuzzi-rules'),
                 ),
               ],
               _ServiceIcon(
                 icon: Icons.ac_unit_outlined,
-                label: 'A/C',
+                label: S.of(context).guest_guide_ac,
                 onTap: () => _showServiceInfo(
                   context: context,
-                  title: 'Aire Acondicionado',
+                  title: S.of(context).guest_guide_ac_title,
                   icon: Icons.ac_unit_outlined,
-                  description: 'Aire acondicionado en todas las estancias.\n\nControl por termostato\nTemperatura recomendada: 22-24°C',
+                  description: S.of(context).guest_guide_ac_desc,
                 ),
               ),
               _ServiceIcon(
                 icon: Icons.tv_outlined,
-                label: 'TV',
+                label: S.of(context).guest_guide_tv,
                 onTap: () => _showServiceInfo(
                   context: context,
-                  title: 'Smart TV',
+                  title: S.of(context).guest_guide_tv_title,
                   icon: Icons.tv_outlined,
-                  description: 'Smart TV con Netflix, Prime Video y YouTube.\n\nControl remoto disponible\nCanales locales incluidos',
+                  description: S.of(context).guest_guide_tv_desc,
                 ),
               ),
             ],
@@ -402,9 +403,9 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
-                  'Cerrar',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  S.of(context).common_close,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -416,8 +417,8 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
 
   /// Modal específico para WiFi con botones de copiar
   void _showWifiInfo(BuildContext context) {
-    final wifiNetwork = _bookingData?['wifiNetwork'] as String? ?? 'No disponible';
-    final wifiPassword = _bookingData?['wifiPassword'] as String? ?? 'No disponible';
+    final wifiNetwork = _bookingData?['wifiNetwork'] as String? ?? S.of(context).guest_guide_not_available;
+    final wifiPassword = _bookingData?['wifiPassword'] as String? ?? S.of(context).guest_guide_not_available;
 
     showModalBottomSheet(
       context: context,
@@ -462,7 +463,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
 
               // Title
               Text(
-                'WiFi',
+                S.of(context).guest_guide_wifi,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -473,7 +474,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
 
               // Subtitle
               Text(
-                'Conexión a internet de alta velocidad',
+                S.of(context).guest_guide_wifi_desc,
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.getTextSecondaryColor(context),
@@ -484,18 +485,18 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
               // Network card
               _wifiCredentialCard(
                 icon: Icons.wifi,
-                label: 'Red',
+                label: S.of(context).guest_access_wifi_network,
                 value: wifiNetwork,
-                onCopy: () => _copyToClipboard(sheetContext, wifiNetwork, 'Red WiFi'),
+                onCopy: () => _copyToClipboard(sheetContext, wifiNetwork, S.of(context).guest_access_wifi_title),
               ),
               const SizedBox(height: AppTheme.spacing12),
 
               // Password card
               _wifiCredentialCard(
                 icon: Icons.lock_outline,
-                label: 'Contraseña',
+                label: S.of(context).guest_access_wifi_password,
                 value: wifiPassword,
-                onCopy: () => _copyToClipboard(sheetContext, wifiPassword, 'Contraseña WiFi'),
+                onCopy: () => _copyToClipboard(sheetContext, wifiPassword, S.of(context).guest_access_wifi_password),
               ),
               const SizedBox(height: AppTheme.spacing24),
 
@@ -512,9 +513,9 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    'Cerrar',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  child: Text(
+                    S.of(context).common_close,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -529,7 +530,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$label copiado'),
+        content: Text(S.of(context).common_copied_to_clipboard(label)),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -615,14 +616,14 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
     final checkOutTime = isHotel ? '12:00' : '11:30';
 
     return _InfoSection(
-      title: 'Normas de la casa',
+      title: S.of(context).guest_guide_house_rules,
       icon: Icons.rule_outlined,
       children: [
-        _RuleItem(icon: Icons.access_time_outlined, text: 'Check-in: 14:00'),
-        _RuleItem(icon: Icons.access_time_filled, text: 'Check-out: $checkOutTime'),
-        _RuleItem(icon: Icons.smoke_free_outlined, text: 'No fumar en el alojamiento'),
-        _RuleItem(icon: Icons.party_mode_outlined, text: 'No se permiten fiestas'),
-        _RuleItem(icon: Icons.pets_outlined, text: 'No se admiten mascotas'),
+        _RuleItem(icon: Icons.access_time_outlined, text: S.of(context).guest_guide_rule_checkin),
+        _RuleItem(icon: Icons.access_time_filled, text: S.of(context).guest_guide_rule_checkout(checkOutTime)),
+        _RuleItem(icon: Icons.smoke_free_outlined, text: S.of(context).guest_guide_rule_no_smoking),
+        _RuleItem(icon: Icons.party_mode_outlined, text: S.of(context).guest_guide_rule_no_parties),
+        _RuleItem(icon: Icons.pets_outlined, text: S.of(context).guest_guide_rule_no_pets),
       ],
     );
   }

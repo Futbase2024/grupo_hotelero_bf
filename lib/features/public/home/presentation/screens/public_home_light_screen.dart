@@ -6,6 +6,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/responsive.dart';
 import '../../../../../core/router/app_router.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Pantalla pública de inicio - Versión Light (fondo blanco)
 class PublicHomeLightScreen extends StatefulWidget {
@@ -134,7 +135,7 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
                     Icon(Icons.star_rounded, color: AppColors.black, size: 14),
                     const SizedBox(width: AppTheme.spacing8),
                     Text(
-                      'EXCLUSIVIDAD GARANTIZADA',
+                      S.of(context).public_badge_exclusivity,
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.black,
@@ -153,7 +154,7 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
 
               // Título principal
               Text(
-                'Tu Estancia,',
+                S.of(context).public_hero_title_line1,
                 style: TextStyle(
                   fontSize: context.responsive(
                     mobile: 24.0,
@@ -167,7 +168,7 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Elevada',
+                S.of(context).public_hero_title_line2,
                 style: TextStyle(
                   fontSize: context.responsive(
                     mobile: 24.0,
@@ -184,7 +185,7 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
 
               // Subtítulo
               Text(
-                'Gestión inteligente para alojamientos exclusivos.',
+                S.of(context).public_hero_subtitle,
                 style: TextStyle(
                   fontSize: ResponsiveFontSize.bodyMedium(context),
                   color: AppColors.black.withValues(alpha: 0.8),
@@ -210,7 +211,7 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
                     ),
                   ),
                   child: Text(
-                    'Acceder a mi Reserva',
+                    S.of(context).public_access_booking,
                     style: TextStyle(
                       fontSize: ResponsiveFontSize.labelLarge(context),
                       fontWeight: FontWeight.w700,
@@ -230,43 +231,43 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
     final services = [
       _ServiceItem(
         icon: Icons.login_outlined,
-        title: 'Check-in Digital',
-        description: 'Registro de entrada sin esperas.',
+        title: S.of(context).public_service_checkin_title,
+        description: S.of(context).public_service_checkin_desc,
       ),
       _ServiceItem(
         icon: Icons.logout_outlined,
-        title: 'Check-out Digital',
-        description: 'Salida rápida y sencilla.',
+        title: S.of(context).public_service_checkout_title,
+        description: S.of(context).public_service_checkout_desc,
       ),
       _ServiceItem(
         icon: Icons.rule_outlined,
-        title: 'Normas de la Casa',
-        description: 'Reglas y recomendaciones.',
+        title: S.of(context).public_service_rules_title,
+        description: S.of(context).public_service_rules_desc,
       ),
       _ServiceItem(
         icon: Icons.attractions_outlined,
-        title: '¿Qué ver?',
-        description: 'Lugares de interés cercanos.',
+        title: S.of(context).public_service_what_to_see_title,
+        description: S.of(context).public_service_what_to_see_desc,
       ),
       _ServiceItem(
         icon: Icons.local_parking_outlined,
-        title: 'Aparcamientos Cercanos',
-        description: 'Opciones de parking.',
+        title: S.of(context).public_service_parking_title,
+        description: S.of(context).public_service_parking_desc,
       ),
       _ServiceItem(
         icon: Icons.chat_bubble_outline_rounded,
-        title: 'Chat',
-        description: 'Conserje virtual 24/7.',
+        title: S.of(context).public_service_chat_title,
+        description: S.of(context).public_service_chat_desc,
       ),
       _ServiceItem(
         icon: Icons.home_work_outlined,
-        title: 'Nuestros Alojamientos',
-        description: 'Otras propiedades disponibles.',
+        title: S.of(context).public_service_accommodations_title,
+        description: S.of(context).public_service_accommodations_desc,
       ),
       _ServiceItem(
         icon: Icons.star_outline_rounded,
-        title: 'Reseñas y Comentarios',
-        description: 'Opiniones de huéspedes.',
+        title: S.of(context).public_service_reviews_title,
+        description: S.of(context).public_service_reviews_desc,
       ),
     ];
 
@@ -290,7 +291,7 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
           // Título de sección
           Center(
             child: Text(
-              'Nuestros Servicios',
+              S.of(context).public_services_title,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.headlineSmall(context),
                 fontWeight: FontWeight.w700,
@@ -382,7 +383,7 @@ class _PublicHomeLightScreenState extends State<PublicHomeLightScreen> {
 
           // Copyright
           Text(
-            '© ${DateTime.now().year} BF Stay • Todos los derechos reservados',
+            S.of(context).public_copyright(DateTime.now().year),
             style: TextStyle(
               fontSize: 11,
               color: AppColors.silver.withValues(alpha: 0.5),

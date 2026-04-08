@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entities/invoice_entity.dart';
 import '../bloc/invoices_bloc.dart';
@@ -132,7 +133,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                 Expanded(
                   child: _SecondaryActionButton(
                     icon: Icons.picture_as_pdf_outlined,
-                    label: 'Generar PDF',
+                    label: S.of(context).admin_invoice_generate_pdf,
                     onPressed: () => _generatePdf(context, currentInvoice),
                   ),
                 ),
@@ -140,7 +141,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                 Expanded(
                   child: _SecondaryActionButton(
                     icon: Icons.share_outlined,
-                    label: 'Compartir',
+                    label: S.of(context).admin_invoice_share,
                     onPressed: () => _showShareOptions(context, currentInvoice),
                   ),
                 ),
@@ -148,7 +149,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                 Expanded(
                   child: _SecondaryActionButton(
                     icon: Icons.download_outlined,
-                    label: 'Descargar',
+                    label: S.of(context).admin_invoice_download,
                     onPressed: () => _downloadPdf(context, currentInvoice),
                   ),
                 ),
@@ -178,9 +179,9 @@ class InvoiceDetailScreen extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.send_outlined),
-            label: const Text(
-              'Emitir Factura',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            label: Text(
+              S.of(context).admin_invoice_issue,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -202,9 +203,9 @@ class InvoiceDetailScreen extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.check_circle_outline),
-            label: const Text(
-              'Marcar Pagada',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            label: Text(
+              S.of(context).admin_invoice_mark_paid,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -229,9 +230,9 @@ class InvoiceDetailScreen extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.cancel_outlined),
-            label: const Text(
-              'Cancelar',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            label: Text(
+              S.of(context).common_cancel,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -261,8 +262,8 @@ class InvoiceDetailScreen extends StatelessWidget {
             Expanded(
               child: Text(
                 currentInvoice.isPaid
-                    ? 'Factura pagada el ${_formatDate(currentInvoice.paidAt)}'
-                    : 'Factura cancelada${currentInvoice.cancellationReason != null ? ': ${currentInvoice.cancellationReason}' : ''}',
+                    ? S.of(context).admin_invoice_paid_on(_formatDate(currentInvoice.paidAt))
+                    : S.of(context).admin_invoice_cancelled(currentInvoice.cancellationReason ?? ''),
                 style: TextStyle(
                   color: currentInvoice.isPaid ? AppColors.success : AppColors.error,
                   fontWeight: FontWeight.w500,
@@ -286,20 +287,20 @@ class InvoiceDetailScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: AppColors.darkBorder),
         ),
-        title: const Text(
-          '¿Emitir factura?',
-          style: TextStyle(color: AppColors.white),
+        title: Text(
+          S.of(context).admin_invoice_issue_confirm_title,
+          style: const TextStyle(color: AppColors.white),
         ),
         content: Text(
-          'Una vez emitida, la factura ${invoice.invoiceNumber} no podrá ser modificada.',
+          S.of(context).admin_invoice_issue_confirm_message(invoice.invoiceNumber),
           style: const TextStyle(color: AppColors.gray400),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.gray400),
+            child: Text(
+              S.of(context).common_cancel,
+              style: const TextStyle(color: AppColors.gray400),
             ),
           ),
           ElevatedButton(
@@ -308,7 +309,7 @@ class InvoiceDetailScreen extends StatelessWidget {
               backgroundColor: AppColors.gold,
               foregroundColor: AppColors.black,
             ),
-            child: const Text('Emitir'),
+            child: Text(S.of(context).admin_invoice_issue),
           ),
         ],
       ),
@@ -329,20 +330,20 @@ class InvoiceDetailScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: AppColors.darkBorder),
         ),
-        title: const Text(
-          '¿Marcar como pagada?',
-          style: TextStyle(color: AppColors.white),
+        title: Text(
+          S.of(context).admin_invoice_mark_paid_confirm_title,
+          style: const TextStyle(color: AppColors.white),
         ),
         content: Text(
-          'Se registrará el pago de ${invoice.formattedTotal}.',
+          S.of(context).admin_invoice_mark_paid_confirm_message(invoice.formattedTotal),
           style: const TextStyle(color: AppColors.gray400),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.gray400),
+            child: Text(
+              S.of(context).common_cancel,
+              style: const TextStyle(color: AppColors.gray400),
             ),
           ),
           ElevatedButton(
@@ -351,7 +352,7 @@ class InvoiceDetailScreen extends StatelessWidget {
               backgroundColor: AppColors.success,
               foregroundColor: AppColors.white,
             ),
-            child: const Text('Confirmar pago'),
+            child: Text(S.of(context).admin_invoice_confirm_payment),
           ),
         ],
       ),
@@ -374,24 +375,24 @@ class InvoiceDetailScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: AppColors.darkBorder),
         ),
-        title: const Text(
-          '¿Cancelar factura?',
-          style: TextStyle(color: AppColors.white),
+        title: Text(
+          S.of(context).admin_invoice_cancel_confirm_title,
+          style: const TextStyle(color: AppColors.white),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Motivo de cancelación (opcional):',
-              style: TextStyle(color: AppColors.gray400),
+            Text(
+              S.of(context).admin_invoice_cancel_reason_label,
+              style: const TextStyle(color: AppColors.gray400),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: reasonController,
               style: const TextStyle(color: AppColors.white),
               decoration: InputDecoration(
-                hintText: 'Ej: Solicitud del cliente',
+                hintText: S.of(context).admin_invoice_cancel_reason_hint,
                 hintStyle: const TextStyle(color: AppColors.gray500),
                 filled: true,
                 fillColor: AppColors.darkBackground,
@@ -410,9 +411,9 @@ class InvoiceDetailScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'No cancelar',
-              style: TextStyle(color: AppColors.gray400),
+            child: Text(
+              S.of(context).admin_invoice_dont_cancel,
+              style: const TextStyle(color: AppColors.gray400),
             ),
           ),
           ElevatedButton(
@@ -421,7 +422,7 @@ class InvoiceDetailScreen extends StatelessWidget {
               backgroundColor: AppColors.error,
               foregroundColor: AppColors.white,
             ),
-            child: const Text('Cancelar factura'),
+            child: Text(S.of(context).admin_invoice_cancel_invoice),
           ),
         ],
       ),
@@ -442,7 +443,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al generar PDF: $e'),
+            content: Text(S.of(context).admin_invoice_error_generate_pdf(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -465,9 +466,9 @@ class InvoiceDetailScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Compartir factura',
-                  style: TextStyle(
+                Text(
+                  S.of(context).admin_invoice_share_title,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: AppColors.white,
@@ -479,7 +480,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                   children: [
                     _ShareOption(
                       icon: Icons.email_outlined,
-                      label: 'Email',
+                      label: S.of(context).common_email_type,
                       color: AppColors.gold,
                       onPressed: () {
                         Navigator.pop(context);
@@ -497,7 +498,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                     ),
                     _ShareOption(
                       icon: Icons.copy_outlined,
-                      label: 'Copiar enlace',
+                      label: S.of(context).admin_invoice_copy_link,
                       color: AppColors.info,
                       onPressed: () {
                         Navigator.pop(context);
@@ -525,7 +526,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al compartir: $e'),
+            content: Text(S.of(context).admin_invoice_error_share(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -544,7 +545,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al compartir: $e'),
+            content: Text(S.of(context).admin_invoice_error_share(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -563,7 +564,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(S.of(context).admin_invoice_error_share(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -585,7 +586,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('PDF guardado en: ${file.path}'),
+            content: Text(S.of(context).admin_invoice_pdf_saved(file.path)),
             backgroundColor: AppColors.success,
           ),
         );
@@ -594,7 +595,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al descargar PDF: $e'),
+            content: Text(S.of(context).admin_invoice_error_download(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -626,37 +627,37 @@ class _InvoicePreviewCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header con logo y datos emisor
-          _buildHeader(),
+          _buildHeader(context),
 
           const Divider(color: AppColors.darkBorder, height: 1),
 
           // Datos cliente
-          _buildClientSection(),
+          _buildClientSection(context),
 
           const Divider(color: AppColors.darkBorder, height: 1),
 
           // Detalles factura
-          _buildInvoiceDetails(),
+          _buildInvoiceDetails(context),
 
           const Divider(color: AppColors.darkBorder, height: 1),
 
           // Líneas de factura
-          _buildLineItems(),
+          _buildLineItems(context),
 
           const Divider(color: AppColors.darkBorder, height: 1),
 
           // Totales
-          _buildTotals(),
+          _buildTotals(context),
 
           // Notas
           if (invoice.notes != null && invoice.notes!.isNotEmpty)
-            _buildNotes(),
+            _buildNotes(context),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -681,7 +682,7 @@ class _InvoicePreviewCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'NIF: ${invoice.issuerNif}',
+                  '${S.of(context).admin_invoice_nif_label}: ${invoice.issuerNif}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.gray400,
@@ -713,9 +714,9 @@ class _InvoicePreviewCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text(
-                'FACTURA',
-                style: TextStyle(
+              Text(
+                S.of(context).admin_invoice_label,
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: AppColors.gray500,
@@ -736,7 +737,7 @@ class _InvoicePreviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildClientSection() {
+  Widget _buildClientSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -747,9 +748,9 @@ class _InvoicePreviewCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'FACTURAR A',
-                  style: TextStyle(
+                Text(
+                  S.of(context).admin_invoice_bill_to,
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: AppColors.gray500,
@@ -768,7 +769,7 @@ class _InvoicePreviewCard extends StatelessWidget {
                 if (invoice.clientNif != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    'NIF: ${invoice.clientNif}',
+                    '${S.of(context).admin_invoice_nif_label}: ${invoice.clientNif}',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.gray400,
@@ -806,15 +807,15 @@ class _InvoicePreviewCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _buildDateRow('Fecha emisión', invoice.formattedIssueDate),
+              _buildDateRow(S.of(context).admin_invoice_issue_date_label, invoice.formattedIssueDate),
               if (invoice.dueDate != null)
                 _buildDateRow(
-                  'Fecha vencimiento',
+                  S.of(context).admin_invoice_due_date_label,
                   DateFormat('dd/MM/yyyy').format(invoice.dueDate!),
                 ),
               if (invoice.periodStart != null && invoice.periodEnd != null)
                 _buildDateRow(
-                  'Período',
+                  S.of(context).admin_invoice_period_label,
                   '${DateFormat('dd/MM').format(invoice.periodStart!)} - ${DateFormat('dd/MM/yyyy').format(invoice.periodEnd!)}',
                 ),
             ],
@@ -850,7 +851,7 @@ class _InvoicePreviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInvoiceDetails() {
+  Widget _buildInvoiceDetails(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
@@ -875,7 +876,7 @@ class _InvoicePreviewCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Reserva: ${invoice.bookingCode}',
+                  '${S.of(context).admin_invoice_booking_label}: ${invoice.bookingCode}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.gray500,
@@ -897,13 +898,13 @@ class _InvoicePreviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLineItems() {
+  Widget _buildLineItems(BuildContext context) {
     if (invoice.lineItems.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(20),
+      return Padding(
+        padding: const EdgeInsets.all(20),
         child: Text(
-          'Sin líneas de factura',
-          style: TextStyle(
+          S.of(context).admin_invoice_no_line_items,
+          style: const TextStyle(
             fontSize: 14,
             color: AppColors.gray500,
             fontStyle: FontStyle.italic,
@@ -925,13 +926,13 @@ class _InvoicePreviewCard extends StatelessWidget {
                 bottom: BorderSide(color: AppColors.darkBorder),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   flex: 3,
                   child: Text(
-                    'Descripción',
-                    style: TextStyle(
+                    S.of(context).admin_invoice_col_description,
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppColors.gray500,
@@ -941,9 +942,9 @@ class _InvoicePreviewCard extends StatelessWidget {
                 SizedBox(
                   width: 60,
                   child: Text(
-                    'Cant.',
+                    S.of(context).admin_invoice_col_qty,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppColors.gray500,
@@ -953,9 +954,9 @@ class _InvoicePreviewCard extends StatelessWidget {
                 SizedBox(
                   width: 80,
                   child: Text(
-                    'Precio',
+                    S.of(context).admin_invoice_col_price,
                     textAlign: TextAlign.right,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppColors.gray500,
@@ -965,9 +966,9 @@ class _InvoicePreviewCard extends StatelessWidget {
                 SizedBox(
                   width: 80,
                   child: Text(
-                    'Total',
+                    S.of(context).admin_invoice_col_total,
                     textAlign: TextAlign.right,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppColors.gray500,
@@ -1036,7 +1037,7 @@ class _InvoicePreviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTotals() {
+  Widget _buildTotals(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1045,10 +1046,10 @@ class _InvoicePreviewCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildTotalRow('Base imponible', invoice.taxBase),
+          _buildTotalRow(S.of(context).admin_invoice_tax_base, invoice.taxBase),
           const SizedBox(height: 8),
           _buildTotalRow(
-            'IVA (${invoice.taxRate.toStringAsFixed(0)}%)',
+            '${S.of(context).admin_invoice_tax_label} (${invoice.taxRate.toStringAsFixed(0)}%)',
             invoice.taxAmount,
           ),
           const SizedBox(height: 12),
@@ -1062,9 +1063,9 @@ class _InvoicePreviewCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'TOTAL',
-                  style: TextStyle(
+                Text(
+                  S.of(context).admin_invoice_total_label,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppColors.gold,
@@ -1108,15 +1109,15 @@ class _InvoicePreviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildNotes() {
+  Widget _buildNotes(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Notas',
-            style: TextStyle(
+          Text(
+            S.of(context).admin_invoice_notes_label,
+            style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppColors.gray500,

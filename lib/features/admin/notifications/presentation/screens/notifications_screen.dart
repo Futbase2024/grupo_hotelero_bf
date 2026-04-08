@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../domain/bloc/admin_dashboard_bloc.dart';
 import '../../../domain/bloc/admin_dashboard_event.dart';
 import '../../../domain/bloc/admin_dashboard_state.dart';
@@ -43,9 +44,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Notificaciones',
-          style: TextStyle(
+        title: Text(
+          S.of(context).admin_notifications_title,
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: AppColors.white,
@@ -68,9 +69,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Borrar todas',
-                  style: TextStyle(
+                child: Text(
+                  S.of(context).admin_notifications_delete_all,
+                  style: const TextStyle(
                     color: AppColors.error,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -145,20 +146,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: AppColors.darkBorder),
         ),
-        title: const Text(
-          'Borrar todas las notificaciones',
-          style: TextStyle(color: AppColors.white),
+        title: Text(
+          S.of(context).admin_notifications_delete_all_title,
+          style: const TextStyle(color: AppColors.white),
         ),
-        content: const Text(
-          '¿Estás seguro de que quieres eliminar todas las notificaciones? Esta acción no se puede deshacer.',
-          style: TextStyle(color: AppColors.gray400),
+        content: Text(
+          S.of(context).admin_notifications_delete_all_confirm,
+          style: const TextStyle(color: AppColors.gray400),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.gray400),
+            child: Text(
+              S.of(context).common_cancel,
+              style: const TextStyle(color: AppColors.gray400),
             ),
           ),
           TextButton(
@@ -175,9 +176,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text(
-              'Borrar todas',
-              style: TextStyle(
+            child: Text(
+              S.of(context).admin_notifications_delete_all,
+              style: const TextStyle(
                 color: AppColors.error,
                 fontWeight: FontWeight.w500,
               ),
@@ -219,7 +220,7 @@ class _ActionBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '$unreadCount notificación${unreadCount == 1 ? '' : 'es'} sin leer',
+              S.of(context).admin_notifications_unread_count(unreadCount),
               style: const TextStyle(
                 color: AppColors.gold,
                 fontSize: 14,
@@ -236,9 +237,9 @@ class _ActionBanner extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text(
-              'Marcar todas',
-              style: TextStyle(
+            child: Text(
+              S.of(context).admin_notifications_mark_all_read,
+              style: const TextStyle(
                 color: AppColors.gold,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -278,19 +279,19 @@ class _EmptyNotificationsView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Sin notificaciones',
-            style: TextStyle(
+          Text(
+            S.of(context).admin_notifications_empty_title,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: AppColors.white,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Aquí aparecerán las notificaciones\ncuando las recibas',
+          Text(
+            S.of(context).admin_notifications_empty_subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppColors.gray400,
               height: 1.5,
@@ -403,14 +404,14 @@ class _NotificationCard extends StatelessWidget {
                     if (!notification.read) ...[
                       _ActionButton(
                         icon: Icons.check,
-                        label: 'Leída',
+                        label: S.of(context).admin_notifications_mark_read,
                         onTap: onMarkAsRead,
                       ),
                       const SizedBox(width: 8),
                     ],
                     _ActionButton(
                       icon: Icons.delete_outline,
-                      label: 'Eliminar',
+                      label: S.of(context).common_delete,
                       onTap: onDelete,
                       isDestructive: true,
                     ),
@@ -499,9 +500,9 @@ class _ActionButton extends StatelessWidget {
             children: [
               const Icon(Icons.delete_outline, size: 16, color: AppColors.error),
               const SizedBox(width: 4),
-              const Text(
-                'Eliminar',
-                style: TextStyle(
+              Text(
+                S.of(context).common_delete,
+                style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.error,
                   fontWeight: FontWeight.w500,

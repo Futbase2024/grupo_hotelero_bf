@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla de gestión de check-ins para el personal
 class StaffCheckinsScreen extends StatefulWidget {
@@ -36,16 +37,16 @@ class _StaffCheckinsScreenState extends State<StaffCheckinsScreen>
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/staff'),
         ),
-        title: const Text('Gestión de Check-ins'),
+        title: Text(S.of(context).staff_checkins_title),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.gold,
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.gold,
-          tabs: const [
-            Tab(text: 'Pendientes'),
-            Tab(text: 'En proceso'),
-            Tab(text: 'Completados'),
+          tabs: [
+            Tab(text: S.of(context).staff_checkins_tab_pending),
+            Tab(text: S.of(context).staff_checkins_tab_in_progress),
+            Tab(text: S.of(context).staff_checkins_tab_completed),
           ],
         ),
       ),
@@ -65,9 +66,9 @@ class _StaffCheckinsScreenState extends State<StaffCheckinsScreen>
         onPressed: () {},
         backgroundColor: AppColors.gold,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Nuevo Check-in',
-          style: TextStyle(color: Colors.white),
+        label: Text(
+          S.of(context).staff_checkins_new_checkin,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );
@@ -154,14 +155,14 @@ class _CheckinCard extends StatelessWidget {
     }
   }
 
-  String get _statusText {
+  String _getStatusText(BuildContext context) {
     switch (status) {
       case CheckinStatus.pending:
-        return 'Pendiente';
+        return S.of(context).staff_checkins_status_pending;
       case CheckinStatus.inProgress:
-        return 'En proceso';
+        return S.of(context).staff_checkins_status_in_progress;
       case CheckinStatus.completed:
-        return 'Completado';
+        return S.of(context).staff_checkins_status_completed;
     }
   }
 
@@ -237,7 +238,7 @@ class _CheckinCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   ),
                   child: Text(
-                    _statusText,
+                    _getStatusText(context),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: _statusColor,
                           fontWeight: FontWeight.w600,
@@ -254,7 +255,7 @@ class _CheckinCard extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () {},
                       icon: const Icon(Icons.visibility_outlined, size: 18),
-                      label: const Text('Ver detalles'),
+                      label: Text(S.of(context).staff_checkins_view_details),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           vertical: AppTheme.spacing8,
@@ -273,7 +274,7 @@ class _CheckinCard extends StatelessWidget {
                         size: 18,
                       ),
                       label: Text(
-                        status == CheckinStatus.pending ? 'Iniciar' : 'Completar',
+                        status == CheckinStatus.pending ? S.of(context).staff_checkins_start : S.of(context).staff_checkins_complete,
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(

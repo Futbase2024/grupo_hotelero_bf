@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 import '../app_colors.dart';
 import '../cubit/theme_cubit.dart';
@@ -68,7 +69,7 @@ class _IconButtonToggle extends StatelessWidget {
             if (showLabel) ...[
               const SizedBox(width: 8),
               Text(
-                isDark ? 'Claro' : 'Oscuro',
+                isDark ? S.of(context).common_theme_light : S.of(context).common_theme_dark,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: AppColors.gold,
                     ),
@@ -121,7 +122,7 @@ class _SwitchToggle extends StatelessWidget {
         if (showLabel) ...[
           const SizedBox(width: 12),
           Text(
-            isDark ? 'Modo Oscuro' : 'Modo Claro',
+            isDark ? S.of(context).common_theme_mode_dark : S.of(context).common_theme_mode_light,
             style: Theme.of(context).textTheme.labelMedium,
           ),
         ],
@@ -142,28 +143,28 @@ class _SegmentedToggle extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Tema de la aplicación',
+          S.of(context).common_theme_app_label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),
         ),
         const SizedBox(height: 8),
         SegmentedButton<ThemeMode>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: ThemeMode.light,
-              label: Text('Claro'),
-              icon: Icon(Icons.light_mode_rounded, size: 18),
+              label: Text(S.of(context).common_theme_light),
+              icon: const Icon(Icons.light_mode_rounded, size: 18),
             ),
             ButtonSegment(
               value: ThemeMode.system,
-              label: Text('Sistema'),
-              icon: Icon(Icons.settings_suggest_rounded, size: 18),
+              label: Text(S.of(context).common_theme_system),
+              icon: const Icon(Icons.settings_suggest_rounded, size: 18),
             ),
             ButtonSegment(
               value: ThemeMode.dark,
-              label: Text('Oscuro'),
-              icon: Icon(Icons.dark_mode_rounded, size: 18),
+              label: Text(S.of(context).common_theme_dark),
+              icon: const Icon(Icons.dark_mode_rounded, size: 18),
             ),
           ],
           selected: {themeMode},

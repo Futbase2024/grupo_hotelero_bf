@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/responsive.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/auth_bloc.dart';
 import '../widgets/logo_tap_trigger.dart';
 
@@ -171,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Título
             Text(
-              'BF Stay',
+              S.of(context).auth_login_brand_name,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.headlineLarge(context),
                 fontWeight: FontWeight.bold,
@@ -182,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Subtítulo
             Text(
-              'Panel de Control',
+              S.of(context).auth_login_subtitle,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.titleMedium(context),
                 color: isDark ? AppColors.gray400 : AppColors.gray600,
@@ -240,10 +241,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildFeatureList(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
     final features = [
-      (Icons.hotel_outlined, 'Gestión de reservas', AppColors.success),
-      (Icons.people_outline, 'Check-in digital', AppColors.warning),
-      (Icons.chat_outlined, 'Chat con huéspedes', AppColors.info),
-      (Icons.key_outlined, 'Acceso sin llaves', AppColors.gold),
+      (Icons.hotel_outlined, S.of(context).auth_feature_bookings, AppColors.success),
+      (Icons.people_outline, S.of(context).auth_feature_checkin, AppColors.warning),
+      (Icons.chat_outlined, S.of(context).auth_feature_chat, AppColors.info),
+      (Icons.key_outlined, S.of(context).auth_feature_keyless, AppColors.gold),
     ];
 
     return Column(
@@ -286,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: AppTheme.spacing24),
             Text(
-              'BF Stay',
+              S.of(context).auth_login_brand_name,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.headlineMedium(context),
                 fontWeight: FontWeight.bold,
@@ -296,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
-              'Panel de Control',
+              S.of(context).auth_login_subtitle,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.bodyMedium(context),
                 color: isDark ? AppColors.gray400 : AppColors.gray600,
@@ -315,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen> {
             textInputAction: TextInputAction.next,
             enabled: !isLoading,
             decoration: InputDecoration(
-              labelText: 'Email',
+              labelText: S.of(context).auth_field_email,
               labelStyle: TextStyle(color: isDark ? AppColors.gray400 : AppColors.gray600),
               prefixIcon: Icon(Icons.email_outlined, color: isDark ? AppColors.gray400 : AppColors.gray600),
               filled: true,
@@ -339,10 +340,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Por favor ingresa tu email';
+                return S.of(context).auth_validation_email_required;
               }
               if (!value.contains('@')) {
-                return 'Por favor ingresa un email válido';
+                return S.of(context).auth_validation_email_invalid;
               }
               return null;
             },
@@ -357,7 +358,7 @@ class _LoginScreenState extends State<LoginScreen> {
             enabled: !isLoading,
             onFieldSubmitted: (_) => _handleLogin(),
             decoration: InputDecoration(
-              labelText: 'Contraseña',
+              labelText: S.of(context).auth_field_password,
               labelStyle: TextStyle(color: isDark ? AppColors.gray400 : AppColors.gray600),
               prefixIcon: Icon(Icons.lock_outlined, color: isDark ? AppColors.gray400 : AppColors.gray600),
               filled: true,
@@ -392,10 +393,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Por favor ingresa tu contraseña';
+                return S.of(context).auth_validation_password_required;
               }
               if (value.length < 6) {
-                return 'La contraseña debe tener al menos 6 caracteres';
+                return S.of(context).auth_validation_password_min_length;
               }
               return null;
             },
@@ -408,7 +409,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: TextButton(
               onPressed: isLoading ? null : () => _showForgotPasswordDialog(context),
               child: Text(
-                '¿Olvidaste tu contraseña?',
+                S.of(context).auth_forgot_password,
                 style: TextStyle(
                   fontSize: ResponsiveFontSize.bodySmall(context),
                   color: AppColors.gold,
@@ -441,7 +442,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     )
                   : Text(
-                      'Iniciar Sesión',
+                      S.of(context).auth_login_button,
                       style: TextStyle(
                         fontSize: ResponsiveFontSize.labelLarge(context),
                         fontWeight: FontWeight.w600,
@@ -458,7 +459,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
                 child: Text(
-                  'o',
+                  S.of(context).auth_divider_or,
                   style: TextStyle(
                     fontSize: ResponsiveFontSize.bodySmall(context),
                     color: isDark ? AppColors.gray400 : AppColors.gray600,
@@ -484,7 +485,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               icon: Icon(Icons.key_outlined, color: AppColors.gold),
               label: Text(
-                'Acceso con código de reserva',
+                S.of(context).auth_guest_access_button,
                 style: TextStyle(
                   fontSize: ResponsiveFontSize.labelLarge(context),
                   color: isDark ? AppColors.white : AppColors.black,
@@ -496,7 +497,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // Footer minimalista
           Text(
-            'BF Stay © 2026',
+            S.of(context).auth_login_footer,
             style: TextStyle(
               fontSize: ResponsiveFontSize.bodySmall(context),
               color: isDark ? AppColors.gray400 : AppColors.gray600,
@@ -520,7 +521,7 @@ class _LoginScreenState extends State<LoginScreen> {
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),
         title: Text(
-          'Recuperar Contraseña',
+          S.of(context).auth_recover_password_title,
           style: TextStyle(
             fontSize: ResponsiveFontSize.titleLarge(dialogContext),
             color: isDark ? AppColors.white : AppColors.black,
@@ -530,7 +531,7 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña.',
+              S.of(context).auth_recover_password_body,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.bodyMedium(dialogContext),
                 color: isDark ? AppColors.gray400 : AppColors.gray600,
@@ -541,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                labelText: 'Email',
+                labelText: S.of(context).auth_field_email,
                 labelStyle: TextStyle(color: isDark ? AppColors.gray400 : AppColors.gray600),
                 prefixIcon: Icon(Icons.email_outlined, color: isDark ? AppColors.gray400 : AppColors.gray600),
                 filled: true,
@@ -570,7 +571,7 @@ class _LoginScreenState extends State<LoginScreen> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              'Cancelar',
+              S.of(context).common_cancel,
               style: TextStyle(
                 fontSize: ResponsiveFontSize.labelLarge(dialogContext),
                 color: isDark ? AppColors.gray400 : AppColors.gray600,
@@ -586,7 +587,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Navigator.pop(dialogContext);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('Email de recuperación enviado'),
+                    content: Text(S.of(context).auth_recover_password_sent),
                     backgroundColor: AppColors.gold,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
@@ -605,7 +606,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             child: Text(
-              'Enviar',
+              S.of(context).auth_button_send,
               style: TextStyle(fontSize: ResponsiveFontSize.labelLarge(dialogContext)),
             ),
           ),

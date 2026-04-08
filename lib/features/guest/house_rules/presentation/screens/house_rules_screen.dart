@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/di/injection.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../domain/bloc/house_rules_bloc.dart';
@@ -30,7 +31,7 @@ class HouseRulesScreen extends StatelessWidget {
         backgroundColor: isDark ? AppColors.black : AppColors.gray50,
         appBar: AppBar(
           title: Text(
-            'Normas de la Casa',
+            S.of(context).guest_house_rules_title,
             style: TextStyle(
               color: isDark ? AppColors.gold : AppColors.textPrimary,
               fontWeight: FontWeight.w600,
@@ -162,7 +163,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -182,7 +183,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.textOnGold,
@@ -291,7 +292,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No hay normas',
+              S.of(context).guest_house_rules_empty_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -300,7 +301,7 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Este alojamiento no tiene normas registradas',
+              S.of(context).guest_house_rules_empty_subtitle,
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.getTextSecondaryColor(context),

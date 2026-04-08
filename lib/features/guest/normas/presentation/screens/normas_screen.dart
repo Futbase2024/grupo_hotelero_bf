@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
@@ -103,14 +104,14 @@ class _NormasScreenState extends State<NormasScreen> {
   Widget build(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
     final title = _unitType == UnitType.hotelRoom
-        ? 'Normas del Hotel'
-        : 'Normas del Apartamento';
+        ? S.of(context).guest_normas_hotel_title
+        : S.of(context).guest_normas_apartment_title;
 
     return Scaffold(
       backgroundColor: AppColors.getSurfaceColor(context),
       appBar: AppBar(
         title: Text(
-          _isLoading ? 'Normas' : title,
+          _isLoading ? S.of(context).guest_normas_title : title,
           style: TextStyle(
             color: isDark ? AppColors.gold : AppColors.textPrimary,
             fontWeight: FontWeight.w600,
@@ -153,8 +154,8 @@ class _NormasScreenState extends State<NormasScreen> {
     }
 
     if (_imageUrl == null) {
-      return const Center(
-        child: Text('No hay normas disponibles'),
+      return Center(
+        child: Text(S.of(context).guest_normas_not_available),
       );
     }
 
@@ -183,7 +184,7 @@ class _NormasScreenState extends State<NormasScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No se pudo cargar la imagen',
+                  S.of(context).guest_normas_image_error,
                   style: TextStyle(
                     color: AppColors.getTextSecondaryColor(context),
                   ),
@@ -227,7 +228,7 @@ class _NormasScreenState extends State<NormasScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Error al cargar',
+              S.of(context).guest_alojamientos_error_title,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -236,7 +237,7 @@ class _NormasScreenState extends State<NormasScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              _error ?? 'Ha ocurrido un error',
+              _error ?? S.of(context).guest_normas_generic_error,
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.getTextSecondaryColor(context),
@@ -253,7 +254,7 @@ class _NormasScreenState extends State<NormasScreen> {
                 _loadData();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(S.of(context).common_retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: AppColors.textOnGold,

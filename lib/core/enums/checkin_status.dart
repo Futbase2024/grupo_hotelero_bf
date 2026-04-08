@@ -1,3 +1,6 @@
+import 'package:flutter/widgets.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
+
 /// Estados del proceso de check-in
 enum CheckinStatus {
   /// Sin iniciar - el huésped aún no ha accedido
@@ -44,30 +47,6 @@ enum CheckinStatus {
     };
   }
 
-  /// Etiqueta legible para mostrar en UI
-  String get label {
-    return switch (this) {
-      CheckinStatus.notStarted => 'Pendiente',
-      CheckinStatus.inProgress => 'En progreso',
-      CheckinStatus.submitted => 'Enviado',
-      CheckinStatus.validated => 'Validado',
-      CheckinStatus.rejected => 'Rechazado',
-      CheckinStatus.cancelled => 'Cancelado',
-    };
-  }
-
-  /// Descripción del estado
-  String get description {
-    return switch (this) {
-      CheckinStatus.notStarted => 'El huésped aún no ha iniciado el check-in',
-      CheckinStatus.inProgress => 'El huésped está completando sus datos',
-      CheckinStatus.submitted => 'Pendiente de revisión por el administrador',
-      CheckinStatus.validated => 'Check-in validado, estancia autorizada',
-      CheckinStatus.rejected => 'Requiere corrección por el huésped',
-      CheckinStatus.cancelled => 'Reserva cancelada, contacte con recepción',
-    };
-  }
-
   /// Si el huésped puede editar el check-in
   bool get isEditable {
     return this == CheckinStatus.notStarted ||
@@ -89,4 +68,32 @@ enum CheckinStatus {
 
   /// Si el check-in ya comenzó (no está en not_started)
   bool get hasStarted => this != CheckinStatus.notStarted;
+}
+
+extension CheckinStatusL10n on CheckinStatus {
+  /// Etiqueta legible para mostrar en UI
+  String label(BuildContext context) {
+    final s = S.of(context);
+    return switch (this) {
+      CheckinStatus.notStarted => s.enum_checkin_status_not_started,
+      CheckinStatus.inProgress => s.enum_checkin_status_in_progress,
+      CheckinStatus.submitted => s.enum_checkin_status_submitted,
+      CheckinStatus.validated => s.enum_checkin_status_validated,
+      CheckinStatus.rejected => s.enum_checkin_status_rejected,
+      CheckinStatus.cancelled => s.enum_checkin_status_cancelled,
+    };
+  }
+
+  /// Descripción del estado
+  String description(BuildContext context) {
+    final s = S.of(context);
+    return switch (this) {
+      CheckinStatus.notStarted => s.enum_checkin_status_not_started_desc,
+      CheckinStatus.inProgress => s.enum_checkin_status_in_progress_desc,
+      CheckinStatus.submitted => s.enum_checkin_status_submitted_desc,
+      CheckinStatus.validated => s.enum_checkin_status_validated_desc,
+      CheckinStatus.rejected => s.enum_checkin_status_rejected_desc,
+      CheckinStatus.cancelled => s.enum_checkin_status_cancelled_desc,
+    };
+  }
 }

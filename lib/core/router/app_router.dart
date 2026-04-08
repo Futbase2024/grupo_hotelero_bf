@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 import '../../features/auth/domain/bloc/auth_bloc.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
@@ -506,18 +507,18 @@ class AppRouter {
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text(
-                'Página no encontrada',
+                S.of(context).common_page_not_found,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
-                state.error?.toString() ?? 'Ruta no válida',
+                state.error?.toString() ?? S.of(context).common_invalid_route,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => context.go(AppRoutes.publicHome),
-                child: const Text('Volver al inicio'),
+                child: Text(S.of(context).common_back_to_home),
               ),
             ],
           ),

@@ -1,0 +1,1521 @@
+{
+  "@@locale": "pt",
+  "common_app_name": "BF Stay",
+  "common_cancel": "Cancelar",
+  "common_exit": "Sair",
+  "common_save": "Guardar",
+  "common_delete": "Eliminar",
+  "common_close": "Fechar",
+  "common_loading": "Carregando...",
+  "common_retry": "Tentar novamente",
+  "common_accept": "Aceitar",
+  "common_continue": "Continuar",
+  "common_back": "Voltar",
+  "common_ok": "OK",
+  "common_error": "Erro",
+  "common_success": "Sucesso",
+  "common_no_data": "Sem dados",
+  "common_yes": "Sim",
+  "common_no": "Não",
+  "common_send": "Enviar",
+  "common_edit": "Editar",
+  "common_search": "Pesquisar",
+  "common_later": "Mais tarde",
+  "common_update": "Atualizar",
+  "common_understood": "Entendido",
+  "common_exit_app_title": "Sair do BF Stay",
+  "common_exit_app_message": "Tem certeza de que deseja sair do aplicativo?\n\nSua sessão permanecerá ativa quando você voltar.",
+  "common_logout_title": "Terminar sessão",
+  "common_logout_message": "Tem certeza de que deseja terminar sessão?\n\nVocê poderá voltar a acessar com seu código de reserva quando precisar.",
+  "common_logout_button": "Terminar sessão",
+  "common_splash_ready": "Pronto",
+  "common_splash_loading": "Carregando...",
+  "common_update_force_title": "Atualização Obrigatória",
+  "common_update_available_title": "Nova Versão Disponível",
+  "common_update_force_message": "É necessário atualizar o aplicativo para continuar a usá-lo. Esta versão inclui melhorias importantes e correções de segurança.",
+  "common_update_available_message": "Há uma nova versão disponível com melhorias e correções. Deseja atualizar agora?",
+  "common_update_version": "Versão {version}",
+  "common_page_not_found": "Página não encontrada",
+  "common_invalid_route": "Rota inválida",
+  "common_back_to_home": "Voltar ao início",
+  "common_theme_light": "Claro",
+  "common_theme_dark": "Escuro",
+  "common_theme_mode_light": "Modo Claro",
+  "common_theme_mode_dark": "Modo Escuro",
+  "common_theme_system": "Sistema",
+  "common_theme_app_label": "Tema do aplicativo",
+  "common_copied_to_clipboard": "{type} copiado para a área de transferência",
+  "common_phone_type": "Telefone",
+  "common_email_type": "Email",
+  "enum_booking_status_created": "Criada",
+  "enum_booking_status_confirmed": "Confirmada",
+  "enum_booking_status_active": "Ativa",
+  "enum_booking_status_in_house": "Na casa",
+  "enum_booking_status_checked_out": "Finalizada",
+  "enum_booking_status_closed": "Fechada",
+  "enum_booking_status_cancelled": "Cancelada",
+  "admin_chat_title": "Chat",
+  "admin_chat_online": "Online",
+  "admin_chat_delete_conversation": "Eliminar conversa",
+  "admin_chat_delete_confirm_body": "Tem certeza de que deseja eliminar esta conversa?",
+  "admin_chat_deleted_success": "Conversa eliminada com sucesso",
+  "admin_chat_error_deleting": "Erro ao eliminar a conversa",
+  "admin_checkin_detail_title": "Detalhes do Check-in",
+  "admin_checkin_validate": "Validar",
+  "admin_checkin_reject": "Rejeitar",
+  "admin_checkin_cancel_booking": "Cancelar Reserva",
+  "admin_checkin_error_loading": "Erro ao carregar",
+  "admin_checkin_not_found": "Check-in não encontrado",
+  "admin_checkin_status_pending": "Pendente",
+  "admin_checkin_status_validated": "Validado",
+  "admin_checkin_status_rejected": "Rejeitado",
+  "admin_checkin_status_cancelled": "Cancelado",
+  "admin_checkin_status_draft": "Rascunho",
+  "admin_checkin_submitted_label": "Enviado:",
+  "admin_checkin_validated_label": "Validado:",
+  "admin_checkin_rejected_label": "Rejeitado:",
+  "admin_checkin_cancelled_label": "Cancelado:",
+  "admin_checkin_booking_info": "Informação da Reserva",
+  "admin_checkin_property_label": "Propriedade:",
+  "admin_checkin_units_label": "quartos",
+  "admin_checkin_unit_label": "quarto",
+  "admin_checkin_code_label": "Código:",
+  "admin_checkin_checkin_date_label": "Check-in:",
+  "admin_checkin_checkout_date_label": "Check-out:",
+  "admin_checkin_guests_section": "HÓSPEDES",
+  "admin_checkin_primary_badge": "Titular",
+  "admin_checkin_na": "N/D",
+  "admin_checkin_documents_section": "DOCUMENTOS",
+  "admin_checkin_unknown_guest": "Hóspede desconhecido",
+  "admin_checkin_signature_section": "ASSINATURA",
+  "admin_checkin_doc_type_dni": "DNI",
+  "admin_checkin_doc_type_nie": "NIE",
+  "admin_checkin_doc_type_passport": "Passaporte",
+  "admin_checkin_image_load_error": "Erro ao carregar imagem",
+  "admin_checkin_validate_title": "Validar Check-in",
+  "admin_checkin_validate_message": "Tem certeza de que deseja validar este check-in?",
+  "admin_checkin_validated_success": "Check-in validado com sucesso",
+  "admin_checkin_error": "Erro: {error}",
+  "admin_checkin_reject_title": "Rejeitar Check-in",
+  "admin_checkin_reject_message": "Tem certeza de que deseja rejeitar este check-in?",
+  "admin_checkin_reject_hint": "Motivo da rejeição (opcional)...",
+  "admin_checkin_no_reason": "Sem motivo",
+  "admin_checkin_rejected_success": "Check-in rejeitado com sucesso",
+  "admin_checkin_cancel_message": "Tem certeza de que deseja cancelar esta reserva?",
+  "admin_checkin_cancel_warning": "Esta ação não pode ser desfeita.",
+  "admin_checkin_cancel_reason_label": "Motivo do cancelamento",
+  "admin_checkin_cancel_reason_hint": "Descreva o motivo do cancelamento...",
+  "admin_checkin_cancelled_success": "Reserva cancelada com sucesso",
+  "admin_invoice_generate_pdf": "Gerar PDF",
+  "admin_invoice_share": "Compartilhar",
+  "admin_invoice_download": "Baixar",
+  "admin_invoice_issue": "Emitir",
+  "admin_invoice_mark_paid": "Marcar como paga",
+  "admin_invoice_paid_on": "Paga em {date}",
+  "admin_invoice_cancelled": "Cancelada",
+  "admin_invoice_issue_confirm_title": "Emitir Fatura",
+  "admin_invoice_issue_confirm_message": "Tem certeza de que deseja emitir esta fatura?",
+  "admin_invoice_mark_paid_confirm_title": "Marcar como Paga",
+  "admin_invoice_mark_paid_confirm_message": "Confirma que o pagamento desta fatura foi recebido?",
+  "admin_invoice_confirm_payment": "Confirmar pagamento",
+  "admin_invoice_cancel_confirm_title": "Cancelar Fatura",
+  "admin_invoice_cancel_reason_label": "Motivo do cancelamento",
+  "admin_invoice_cancel_reason_hint": "Descreva o motivo do cancelamento...",
+  "admin_invoice_dont_cancel": "Não cancelar",
+  "admin_invoice_cancel_invoice": "Cancelar fatura",
+  "admin_invoice_error_generate_pdf": "Erro ao gerar PDF",
+  "admin_invoice_share_title": "Compartilhar Fatura",
+  "admin_invoice_copy_link": "Copiar link",
+  "admin_invoice_error_share": "Erro ao compartilhar",
+  "admin_invoice_pdf_saved": "PDF salvo com sucesso",
+  "admin_invoice_error_download": "Erro ao baixar",
+  "admin_invoice_nif_label": "NIF/CIF:",
+  "admin_invoice_label": "Fatura",
+  "admin_invoice_bill_to": "Faturar para",
+  "admin_invoice_issue_date_label": "Data de emissão:",
+  "admin_invoice_due_date_label": "Data de vencimento:",
+  "admin_invoice_period_label": "Período",
+  "admin_invoice_booking_label": "Reserva",
+  "admin_invoice_no_line_items": "Sem conceitos",
+  "admin_invoice_col_description": "Descrição",
+  "admin_invoice_col_qty": "Qtd",
+  "admin_invoice_col_price": "Preço",
+  "admin_invoice_col_total": "Total",
+  "admin_invoice_tax_base": "Base imponível",
+  "admin_invoice_tax_label": "IVA",
+  "admin_invoice_total_label": "Total",
+  "admin_invoice_notes_label": "Notas",
+  "admin_notifications_title": "Notificações",
+  "admin_notifications_empty_title": "Sem notificações",
+  "admin_notifications_empty_subtitle": "As notificações aparecerão aqui",
+  "admin_notifications_mark_all_read": "Marcar tudo como lido",
+  "admin_notifications_mark_read": "Marcar como lido",
+  "admin_notifications_delete_all": "Eliminar tudo",
+  "admin_notifications_delete_all_title": "Eliminar todas as notificações",
+  "admin_notifications_delete_all_confirm": "Tem certeza de que deseja eliminar todas as notificações?",
+  "admin_notifications_unread_count": "{count} não lidos",
+  "public_badge_exclusivity": "EXCLUSIVIDADE GARANTIDA",
+  "public_cta_access_booking": "Aceder à minha reserva",
+  "public_services_section_title": "Os Nossos Serviços",
+  "public_footer_brand_name": "BF STAY",
+  "public_service_checkin_title": "Check-in digital",
+  "public_service_checkin_desc": "Registro sem espera.",
+  "public_service_checkout_title": "Check-out digital",
+  "public_service_checkout_desc": "Saída rápida e simples.",
+  "public_service_house_rules_title": "Regras da casa",
+  "public_service_house_rules_desc": "Regras e recomendações.",
+  "public_service_what_to_see_title": "O que visitar?",
+  "public_service_what_to_see_desc": "Locais de interesse nas proximidades.",
+  "public_service_parking_title": "Parqueamentos",
+  "public_service_parking_desc": "Opções de estacionamento.",
+  "public_service_chat_title": "Chat",
+  "public_service_chat_desc": "Concierge virtual 24/7.",
+  "public_service_accommodations_title": "Alojamentos",
+  "public_service_accommodations_desc": "Outras propriedades.",
+  "public_service_reviews_title": "Avaliações",
+  "public_service_reviews_desc": "Opiniões dos hóspedes.",
+  "public_hero_subtitle": "Gestão inteligente para alojamentos exclusivos.",
+  "enum_booking_status_created_desc": "Reserva criada, pendente de confirmação",
+  "enum_booking_status_confirmed_desc": "Reserva confirmada, pendente de check-in",
+  "enum_booking_status_active_desc": "Check-in validado, painel completo acessível",
+  "enum_booking_status_in_house_desc": "Hóspede fisicamente no alojamento",
+  "enum_booking_status_checked_in_legacy_desc": "Check-in validado (legacy)",
+  "enum_booking_status_checked_out_desc": "Check-out realizado, hóspede saiu",
+  "enum_booking_status_closed_desc": "Reserva finalizada e fechada",
+  "enum_booking_status_cancelled_desc": "Reserva cancelada",
+  "enum_checkin_status_not_started": "Pendente",
+  "enum_checkin_status_in_progress": "Em progresso",
+  "enum_checkin_status_submitted": "Enviado",
+  "enum_checkin_status_validated": "Validado",
+  "enum_checkin_status_rejected": "Rejeitado",
+  "enum_checkin_status_cancelled": "Cancelado",
+  "enum_checkin_status_not_started_desc": "O hóspede ainda não iniciou o check-in",
+  "enum_checkin_status_in_progress_desc": "O hóspede está a completar os seus dados",
+  "enum_checkin_status_submitted_desc": "Pendente de revisão pelo administrador",
+  "enum_checkin_status_validated_desc": "Check-in validado, estadia autorizada",
+  "enum_checkin_status_rejected_desc": "Requer correção pelo hóspede",
+  "enum_checkin_status_cancelled_desc": "Reserva cancelada, contacte a receção",
+  "enum_checkout_status_not_started": "Não iniciado",
+  "enum_checkout_status_requested": "Solicitado",
+  "enum_checkout_status_validated": "Validado",
+  "enum_checkout_status_rejected": "Rejeitado",
+  "enum_checkout_status_not_started_desc": "A estadia ainda está em curso",
+  "enum_checkout_status_requested_desc": "O hóspede solicitou o check-out",
+  "enum_checkout_status_validated_desc": "Check-out validado, reserva pronta para fechar",
+  "enum_checkout_status_rejected_desc": "Há incidências a resolver",
+  "public_hero_title_prefix": "A Sua Estadia, ",
+  "public_hero_title_suffix": "Elevada",
+  "public_footer_privacy_policy": "Política de Privacidade",
+  "public_service_parking_title_light": "Estacionamentos Próximos",
+  "public_service_accommodations_title_light": "Os Nossos Alojamentos",
+  "public_service_accommodations_desc_light": "Outras propriedades disponíveis.",
+  "public_service_reviews_title_light": "Avaliações e Comentários",
+  "auth_login_brand_name": "BF Stay",
+  "auth_login_subtitle": "Painel de Controlo",
+  "auth_feature_bookings": "Gestão de reservas",
+  "auth_feature_checkin": "Check-in digital",
+  "auth_feature_chat": "Chat com hóspedes",
+  "auth_feature_keyless": "Acesso sem chaves",
+  "auth_field_email": "Email",
+  "auth_field_password": "Palavra-passe",
+  "auth_validation_email_required": "Por favor introduza o seu email",
+  "auth_validation_email_invalid": "Por favor introduza um email válido",
+  "auth_validation_password_required": "Por favor introduza a sua palavra-passe",
+  "auth_validation_password_min_length": "A palavra-passe deve ter pelo menos 6 caracteres",
+  "auth_forgot_password": "Esqueceu a palavra-passe?",
+  "auth_login_button": "Iniciar Sessão",
+  "auth_divider_or": "ou",
+  "auth_guest_access_button": "Acesso com código de reserva",
+  "auth_login_footer": "BF Stay © 2026",
+  "auth_recover_password_title": "Recuperar Palavra-passe",
+  "auth_recover_password_body": "Introduza o seu email e enviaremos instruções para redefinir a sua palavra-passe.",
+  "auth_recover_password_sent": "Email de recuperação enviado",
+  "auth_button_send": "Enviar",
+  "auth_booking_access_title": "Acesso de Hóspede",
+  "auth_booking_benefit_code": "Código de reserva",
+  "auth_booking_benefit_personal": "Acesso personalizado",
+  "auth_booking_benefit_instant": "Acesso instantâneo",
+  "auth_booking_benefit_secure_checkin": "Check-in seguro",
+  "auth_booking_code_info_short": "O código de reserva foi enviado no email de confirmação.",
+  "auth_booking_code_info_full": "O código de reserva foi enviado no email de confirmação da sua reserva.",
+  "auth_booking_desktop_subtitle": "Desfrute da sua estadia com acesso digital",
+  "auth_booking_form_subtitle": "Introduza o seu código de reserva para aceder ao seu alojamento",
+  "auth_booking_field_code": "Código de Reserva",
+  "auth_booking_code_hint": "XX-XXXX-XXXX",
+  "auth_booking_validation_code_required": "Por favor introduza o seu código de reserva",
+  "auth_booking_validation_code_invalid": "O formato do código não é válido",
+  "auth_booking_access_button": "Aceder",
+  "auth_booking_help_title": "Onde encontro o meu código?",
+  "auth_booking_help_body": "O código de reserva foi enviado no email de confirmação da sua reserva. Tem o formato BF-XXXXX.",
+  "auth_booking_footer": "BF Stay © 2026",
+  "auth_booking_error_title": "Erro de Acesso",
+  "auth_booking_error_code_not_found": "O código de reserva não existe. Por favor, verifique que o escreveu corretamente.",
+  "auth_booking_error_code_expired": "Este código de reserva expirou. Contacte a receção para obter um novo.",
+  "auth_booking_error_email_mismatch": "O email não coincide com o da reserva. Verifique que é o mesmo email que usou ao reservar.",
+  "auth_booking_error_generic": "Não foi possível verificar o código de reserva. Por favor, tente novamente.",
+  "auth_booking_error_dismiss": "Entendido",
+  "auth_sheet_title": "Acesso à sua reserva",
+  "auth_sheet_subtitle": "Introduza o seu email e o código que recebeu",
+  "auth_sheet_label_email": "CORREIO ELETRÓNICO",
+  "auth_sheet_hint_email": "seu@email.com",
+  "auth_sheet_label_code": "CÓDIGO DE RESERVA",
+  "auth_sheet_hint_code": "BF-XXXX-XXXX",
+  "auth_sheet_submit_button": "Aceder à minha reserva",
+  "auth_sheet_help_text": "Não tem o seu código? Contacte o seu alojamento",
+  "auth_admin_sheet_title": "Acesso privado",
+  "auth_admin_sheet_subtitle": "Apenas pessoal autorizado de BF-Stay",
+  "auth_admin_label_email": "CORREIO ELETRÓNICO",
+  "auth_admin_hint_email": "admin@bfstay.com",
+  "auth_admin_label_password": "PALAVRA-PASSE",
+  "auth_admin_hint_password": "••••••••",
+  "auth_admin_error_unauthorized": "Não tem acesso a este painel",
+  "auth_admin_submit_button": "Aceder ao painel",
+  "guest_settings_title": "Definições",
+  "guest_settings_section_language": "Idioma",
+  "guest_settings_language_title": "Idioma da aplicação",
+  "guest_settings_language_subtitle": "Selecione o idioma da interface",
+  "guest_settings_section_legal": "Legal",
+  "guest_settings_privacy_policy_title": "Política de Privacidade",
+  "guest_settings_privacy_policy_subtitle": "Consulte a nossa política de privacidade",
+  "guest_settings_privacy_open_error": "Não foi possível abrir a política de privacidade",
+  "notification_channel_name": "BF Stay Notificações",
+  "notification_channel_description": "Canal de notificações de BF Stay",
+  "notification_checkin_validated_title": "✅ Check-in Validado",
+  "notification_checkin_validated_body": "O seu check-in foi validado corretamente. Bem-vindo!",
+  "notification_checkin_rejected_title": "❌ Check-in Rejeitado",
+  "notification_checkin_rejected_body": "O seu check-in foi rejeitado. Por favor, reveja a sua documentação.",
+  "notification_booking_cancelled_title": "🚫 Reserva Cancelada",
+  "notification_booking_cancelled_body": "A sua reserva foi cancelada. Contacte a receção.",
+  "notification_checkin_status_update_title": "📋 Atualização de Check-in",
+  "notification_admin_checkin_submitted_title": "📝 Novo Check-in Pendente",
+  "guest_parking_title": "Estacionamentos",
+  "guest_parking_available_singular": "estacionamento disponível",
+  "guest_parking_available_plural": "estacionamentos disponíveis",
+  "guest_parking_error_loading": "Erro ao carregar",
+  "guest_parking_empty_title": "Não há estacionamentos",
+  "guest_parking_empty_subtitle": "Em breve adicionaremos informação de estacionamentos próximos",
+  "guest_parking_info_zones_title": "INFORMAÇÃO ZONAS DE ESTACIONAMENTO",
+  "guest_parking_plaza_arenal_title": "ESTACIONAMENTO PLAZA ARENAL",
+  "guest_parking_plaza_arenal_subtitle": "A cerca de 5 minutos a pé",
+  "guest_parking_plaza_arenal_content": "• Pagando a estadia através da app El Parking: 6,95€/24h\n• Reservando através do seu site: 8€/24h (mínimo 24h)\n• Pagando o ticket na máquina: 16€/24h",
+  "guest_parking_centro_title": "ESTACIONAMENTO NA ZONA CENTRO",
+  "guest_parking_centro_subtitle": "O.R.A AZUL",
+  "guest_parking_centro_content": "• Segunda a Sexta: 09:00 - 13:30 e 17:00 - 20:00\n• Sábados: 09:00 - 14:00\n• Julho e Agosto: 09:00 - 14:00",
+  "guest_parking_free_zone_title": "ESTACIONAMENTO ZONA GRATUITA",
+  "guest_parking_free_zone_subtitle": "A cerca de 10 minutos a pé",
+  "guest_parking_free_zone_content": "Zona livre de estacionamento rotativo.",
+  "guest_checkin_camera_not_available": "Não há câmeras disponíveis",
+  "guest_checkin_camera_scan_title": "Digitalizar Documento",
+  "guest_checkin_camera_starting": "A iniciar câmera...",
+  "guest_checkin_camera_frame_hint": "Enquadre o documento dentro do retângulo",
+  "guest_checkin_camera_document_label": "Documento de Identidade",
+  "admin_chat_messages": "Mensagens",
+  "admin_chat_conversation_deleted": "Conversa eliminada",
+  "admin_chat_empty_title": "Sem conversas",
+  "admin_chat_empty_subtitle": "As conversas com hóspedes\naparecerão aqui",
+  "guest_chat_input_hint": "Escreva uma mensagem...",
+  "admin_booking_detail_title": "Detalhe de Reserva",
+  "admin_booking_not_found": "Reserva não encontrada",
+  "admin_booking_resend_error": "Não foi possível reenviar o código",
+  "admin_booking_notification_sent": "Notificação enviada corretamente",
+  "admin_booking_notification_error": "Erro ao enviar a notificação",
+  "admin_booking_code_resent": "Código reenviado corretamente",
+  "admin_booking_checkin_validated": "Check-in validado corretamente",
+  "admin_booking_checkin_rejected": "Check-in rejeitado",
+  "admin_booking_checkout_validated": "Check-out validado corretamente",
+  "admin_booking_checkout_rejected": "Check-out rejeitado",
+  "admin_booking_incidents_detected": "Incidências detetadas",
+  "admin_booking_closed_successfully": "Reserva fechada corretamente",
+  "admin_booking_cancelled_successfully": "Reserva cancelada corretamente",
+  "admin_booking_deleted_successfully": "Reserva eliminada corretamente",
+  "admin_booking_keybox_updated": "Código keybox atualizado",
+  "admin_booking_already_closed_title": "Reserva já fechada",
+  "admin_booking_already_closed_message": "Esta reserva já se encontra fechada.",
+  "admin_booking_already_cancelled_title": "Reserva já cancelada",
+  "admin_booking_already_cancelled_message": "Esta reserva já se encontra cancelada.",
+  "admin_booking_cannot_delete_title": "Não é possível eliminar",
+  "admin_booking_cancel_booking": "Cancelar Reserva",
+  "admin_booking_cancel_booking_confirm": "Tem a certeza de que deseja cancelar esta reserva? Esta ação não pode ser desfeita.",
+  "admin_booking_no_keep": "Não, manter",
+  "admin_booking_yes_cancel": "Sim, cancelar",
+  "admin_booking_delete_booking": "Eliminar Reserva",
+  "admin_booking_delete_confirm": "Tem a certeza de que deseja eliminar completamente esta reserva e todos os seus dados associados? Esta ação é irreversível.",
+  "admin_booking_close_booking": "Fechar Reserva",
+  "admin_booking_close_confirm": "Deseja fechar manualmente esta reserva? Será registada a data de encerramento.",
+  "admin_booking_close_notes_hint": "Notas de encerramento (opcional)",
+  "admin_booking_reject_checkout": "Rejeitar Check-out",
+  "admin_booking_reject_checkout_desc": "Indique as incidências detetadas para rejeitar o check-out.",
+  "admin_booking_incidents_hint": "Descreva as incidências detetadas...",
+  "admin_booking_reject": "Rejeitar",
+  "admin_booking_reject_checkin": "Rejeitar Check-in",
+  "admin_booking_reject_checkin_desc": "Indique o motivo da rejeição do check-in.",
+  "admin_booking_reject_reason_hint": "Motivo da rejeição (opcional)...",
+  "admin_booking_share_download_app": "Descarregue a app: BF Stay",
+  "admin_booking_edit_keybox_title": "Código Keybox",
+  "admin_booking_edit_keybox_desc": "Introduza o código da caixa de chaves",
+  "admin_booking_checkin_done": "Check-in realizado",
+  "admin_booking_checkout_done": "Check-out realizado",
+  "admin_booking_units_label": "quartos",
+  "admin_booking_email_sent": "Email enviado",
+  "admin_booking_email_pending": "Email pendente",
+  "admin_booking_code_used": "Código utilizado",
+  "admin_booking_code_unused": "Código não utilizado",
+  "admin_booking_checkin_ok": "Check-in OK",
+  "admin_booking_checkin_pending": "Pendente de validação",
+  "admin_booking_checkin_in_progress": "Em progresso",
+  "admin_booking_no_checkin": "Sem check-in",
+  "admin_booking_guest_section": "HÓSPEDE",
+  "admin_booking_no_name": "Sem nome",
+  "admin_booking_reservation_section": "RESERVA",
+  "admin_booking_checkin_label": "Check-in",
+  "admin_booking_checkout_label": "Check-out",
+  "admin_booking_night_singular": "noite",
+  "admin_booking_night_plural": "noites",
+  "admin_booking_years_label": "anos",
+  "admin_booking_rooms_section": "Quartos",
+  "admin_booking_wifi_label": "WiFi",
+  "admin_booking_wifi_network_label": "Rede:",
+  "admin_booking_wifi_password_label": "Palavra-passe:",
+  "admin_booking_wifi_password_clipboard": "Palavra-passe WiFi",
+  "admin_booking_access_code_label": "Código de acesso",
+  "admin_booking_access_code_clipboard": "Código de acesso",
+  "admin_booking_access_instructions_label": "Instruções de acesso",
+  "admin_booking_access_codes_section": "CÓDIGOS DE ACESSO",
+  "admin_booking_reservation_code_label": "Código de reserva",
+  "admin_booking_share_button": "Partilhar",
+  "admin_booking_keybox_not_set": "Não configurado",
+  "admin_booking_keybox_code_label": "Código Keybox",
+  "admin_booking_keybox_code_clipboard": "Código Keybox",
+  "admin_booking_checkin_not_started": "Check-in não iniciado",
+  "admin_booking_checkin_validated_status": "Check-in validado",
+  "admin_booking_checkin_rejected_status": "Check-in rejeitado",
+  "admin_booking_checkin_pending_validation": "Pendente de validação",
+  "admin_booking_checkin_in_progress_status": "Check-in em progresso",
+  "admin_booking_checkin_section": "CHECK-IN",
+  "admin_booking_docs_pending": "documentos pendentes",
+  "admin_booking_validate_button": "Validar",
+  "admin_booking_reject_button": "Rejeitar",
+  "admin_booking_internal_notes_section": "NOTAS INTERNAS",
+  "admin_booking_closed_status": "Reserva fechada",
+  "admin_booking_checkout_validated_status": "Check-out validado",
+  "admin_booking_checkout_incidents_status": "Check-out com incidências",
+  "admin_booking_checkout_requested_status": "Check-out solicitado",
+  "admin_booking_checkout_pending_status": "Check-out pendente",
+  "admin_booking_checkout_section": "CHECK-OUT",
+  "admin_booking_requested_label": "Solicitado:",
+  "admin_booking_notes_label": "Notas:",
+  "admin_booking_incidents_button": "Incidências",
+  "admin_booking_close_booking_button": "Fechar Reserva",
+  "admin_booking_close_booking_description": "O hóspede não solicitou check-out. Pode fechar a reserva manualmente.",
+  "admin_booking_signature_section": "ASSINATURA DO TITULAR",
+  "admin_booking_signature_unavailable": "Assinatura não disponível",
+  "admin_booking_actions_section": "AÇÕES",
+  "admin_booking_resend_code_title": "Reenviar código por email",
+  "admin_booking_last_sent_label": "Último envio:",
+  "admin_booking_na": "N/A",
+  "admin_booking_not_sent_yet": "Ainda não foi enviado",
+  "admin_booking_room_ready_title": "Quarto disponível",
+  "admin_booking_room_ready_subtitle": "Notifique o hóspede que o quarto está pronto e pode aceder",
+  "admin_booking_cancel_booking_title": "Cancelar reserva",
+  "admin_booking_cancel_booking_subtitle": "Marque a reserva como cancelada",
+  "admin_booking_delete_booking_title": "Eliminar reserva",
+  "admin_booking_delete_booking_subtitle": "Apague completamente a reserva e os seus dados (apenas se não estiver finalizada)",
+  "admin_dashboard_admin_title": "BF-Stay Admin",
+  "admin_dashboard_tab_summary": "Resumo",
+  "admin_dashboard_tab_bookings": "Reservas",
+  "admin_dashboard_tab_checkins": "Check-ins",
+  "admin_dashboard_tab_invoices": "Faturas",
+  "admin_dashboard_tab_marketing": "Marketing",
+  "admin_dashboard_tab_properties": "Alojamentos",
+  "guest_reviews_title": "Avaliações",
+  "guest_reviews_write_review": "Escrever avaliação",
+  "guest_reviews_published": "Avaliação publicada corretamente",
+  "guest_reviews_publishing": "A publicar avaliação...",
+  "guest_reviews_updating": "A atualizar avaliação...",
+  "guest_reviews_deleting": "A eliminar avaliação...",
+  "guest_reviews_loading": "A carregar avaliações...",
+  "guest_reviews_delete_review": "Eliminar avaliação",
+  "guest_reviews_delete_confirm": "Tem a certeza de que quer eliminar a sua avaliação? Esta ação não pode ser desfeita.",
+  "guest_reviews_filter_all": "Todas",
+  "guest_reviews_edit_review": "Editar avaliação",
+  "guest_reviews_new_review": "Nova avaliação",
+  "guest_reviews_updated": "Avaliação atualizada",
+  "guest_reviews_info_public": "A sua avaliação será pública e ajudará outros hóspedes a tomar decisões.",
+  "guest_reviews_your_rating": "A sua classificação",
+  "guest_reviews_tap_stars": "Toque nas estrelas para pontuar",
+  "guest_reviews_rating_1": "Muito mau",
+  "guest_reviews_rating_2": "Mau",
+  "guest_reviews_rating_3": "Regular",
+  "guest_reviews_rating_4": "Bom",
+  "guest_reviews_rating_5": "Excelente",
+  "guest_reviews_title_label": "Título (opcional)",
+  "guest_reviews_title_hint": "Resuma a sua experiência numa frase",
+  "guest_reviews_comment_required": "Por favor, escreva um comentário",
+  "guest_reviews_comment_min_length": "O comentário deve ter pelo menos 10 caracteres",
+  "guest_reviews_comment_label": "O seu comentário *",
+  "guest_reviews_comment_hint": "Conte-nos a sua experiência...",
+  "guest_reviews_save_changes": "Guardar alterações",
+  "guest_reviews_publish_review": "Publicar avaliação",
+  "guest_reviews_select_rating": "Por favor, selecione uma pontuação",
+  "guest_reviews_saving": "A guardar...",
+  "guest_alojamientos_title": "Os Nossos Alojamentos",
+  "guest_alojamientos_error_title": "Erro ao carregar",
+  "guest_alojamientos_empty_title": "Não há alojamentos",
+  "guest_alojamientos_empty_subtitle": "Não há alojamentos disponíveis neste momento",
+  "guest_alojamiento_detail_title": "Detalhe",
+  "guest_alojamiento_units_available": "Unidades disponíveis",
+  "guest_alojamiento_no_units": "Não há unidades disponíveis",
+  "guest_alojamiento_location": "Localização",
+  "guest_alojamiento_common_areas": "Zonas Comuns",
+  "guest_alojamiento_shared_spaces": "Espaços partilhados",
+  "guest_alojamiento_common_areas_subtitle": "Desfrute das áreas comuns do hotel",
+  "guest_alojamiento_no_photos": "Não há fotos",
+  "guest_alojamiento_no_photos_subtitle": "Não foram encontradas fotos de zonas comuns",
+  "guest_alojamiento_hotel_rooms_title": "Hotel Boutique Jerez",
+  "guest_alojamiento_no_rooms": "Não há quartos",
+  "guest_alojamiento_no_rooms_subtitle": "Não há quartos disponíveis neste momento",
+  "guest_alojamiento_rooms": "Quartos",
+  "guest_alojamiento_features": "Características",
+  "guest_alojamiento_feature_flexible_checkin": "Check-in flexível",
+  "guest_alojamiento_feature_wifi": "WiFi gratuito",
+  "guest_alojamiento_feature_ac": "Ar condicionado",
+  "guest_alojamiento_description": "Descrição",
+  "guest_alojamiento_services": "Serviços incluídos",
+  "guest_alojamiento_service_kitchen": "Cozinha equipada",
+  "guest_alojamiento_service_washer": "Máquina de lavar",
+  "guest_alojamiento_service_tv": "Smart TV",
+  "guest_alojamiento_service_bedding": "Roupa de cama",
+  "guest_alojamiento_service_towels": "Toalhas",
+  "guest_alojamiento_service_coffee": "Máquina de café",
+  "guest_alojamiento_access_info": "Informação de acesso",
+  "guest_alojamiento_box_location": "Localização da caixa",
+  "guest_alojamiento_access_instructions": "Instruções de acesso",
+  "guest_house_rules_title": "Normas da Casa",
+  "guest_house_rules_subtitle": "Consulte as normas e recomendações",
+  "guest_house_rules_empty_title": "Não há normas",
+  "guest_house_rules_empty_subtitle": "Este alojamento não tem normas registadas",
+  "guest_normas_title": "Normas",
+  "guest_normas_hotel_title": "Normas do Hotel",
+  "guest_normas_apartment_title": "Normas do Apartamento",
+  "guest_normas_not_available": "Não há normas disponíveis",
+  "guest_normas_image_error": "Não foi possível carregar a imagem",
+  "guest_normas_generic_error": "Ocorreu um erro",
+  "guest_que_ver_title": "O que visitar?",
+  "guest_que_ver_clear_filters": "Limpar",
+  "guest_que_ver_no_results": "Sem resultados",
+  "guest_que_ver_no_places": "Não há lugares",
+  "guest_que_ver_try_filters": "Tente alterar os filtros de pesquisa",
+  "guest_que_ver_coming_soon": "Em breve adicionaremos novos lugares",
+  "guest_que_ver_error_loading": "Erro ao carregar o lugar",
+  "guest_que_ver_place_not_found": "Lugar não encontrado",
+  "guest_que_ver_about_place": "Sobre este lugar",
+  "guest_que_ver_address": "Endereço",
+  "guest_que_ver_best_time": "Melhor momento",
+  "guest_que_ver_location": "Localização",
+  "guest_que_ver_practical_info": "Informação prática",
+  "guest_que_ver_tips": "Dicas",
+  "guest_que_ver_free_entry": "Entrada gratuita",
+  "guest_que_ver_how_to_get": "Como chegar",
+  "guest_que_ver_copy_link": "Copiar link",
+  "guest_que_ver_official_web": "Site oficial",
+  "guest_que_ver_link_copied": "Link copiado para a área de transferência",
+  "guest_reviews_verified": "Verificado",
+  "guest_reviews_show_less": "Ver menos",
+  "guest_reviews_show_more": "Ver mais",
+  "guest_reviews_empty_title": "Sem avaliações ainda",
+  "guest_reviews_empty_subtitle": "Seja o primeiro a partilhar a sua experiência",
+  "guest_reviews_write_first": "Escrever avaliação",
+  "guest_reviews_filter_empty_subtitle": "Tente selecionar outro filtro",
+  "guest_reviews_clear_filter": "Limpar filtro",
+  "guest_reviews_no_reviews_title": "Sem avaliações ainda",
+  "guest_reviews_be_first": "Seja o primeiro",
+  "guest_access_no_booking": "Não foi encontrada a reserva",
+  "guest_access_error_loading": "Erro ao carregar os dados de acesso",
+  "guest_access_title": "Acesso",
+  "guest_access_no_codes": "Não há códigos de acesso disponíveis",
+  "guest_access_codes_title": "Códigos de Acesso",
+  "guest_access_codes_subtitle": "Utilize estes códigos para aceder ao seu alojamento",
+  "guest_access_main_code": "Código principal",
+  "guest_access_main_door": "Porta principal",
+  "guest_access_wifi_title": "WiFi",
+  "guest_access_wifi_network": "Rede:",
+  "guest_access_wifi_password": "Palavra-passe:",
+  "guest_access_password_copied": "Palavra-passe copiada para a área de transferência",
+  "guest_access_other_accesses": "Outros acessos",
+  "guest_access_instructions": "Instruções de acesso",
+  "guest_guide_title": "Guia de Estadia",
+  "guest_guide_subtitle": "Toda a informação da sua estadia",
+  "guest_guide_contact": "Contacto",
+  "guest_guide_phone_1": "Telefone 1",
+  "guest_guide_phone_2": "Telefone 2",
+  "guest_guide_your_data": "Os Seus Dados",
+  "guest_guide_accommodation": "Alojamento",
+  "guest_guide_property": "Propriedade",
+  "guest_guide_checkin": "Check-in",
+  "guest_guide_checkout": "Check-out",
+  "guest_guide_guests": "Hóspedes",
+  "guest_guide_services": "Serviços",
+  "guest_guide_wifi": "WiFi",
+  "guest_guide_laundry": "Lavandaria",
+  "guest_guide_laundry_desc": "Serviço de lavandaria disponível",
+  "guest_guide_jacuzzi": "Jacuzzi",
+  "guest_guide_ac": "Ar Condicionado",
+  "guest_guide_ac_title": "Ar Condicionado",
+  "guest_guide_ac_desc": "Controlo de climatização no seu alojamento",
+  "guest_guide_tv": "TV",
+  "guest_guide_tv_title": "Televisão",
+  "guest_guide_tv_desc": "Smart TV com canais e aplicações",
+  "guest_guide_not_available": "Não disponível",
+  "guest_guide_wifi_desc": "Ligação WiFi incluída",
+  "guest_guide_house_rules": "Normas da Casa",
+  "guest_guide_rule_checkin": "Check-in a partir das 16:00",
+  "guest_guide_rule_no_smoking": "Não fumadores",
+  "guest_guide_rule_no_parties": "Não são permitidas festas",
+  "guest_guide_rule_no_pets": "Não são admitidos animais de estimação",
+  "guest_notifications_title": "Notificações",
+  "guest_notifications_delete_all": "Eliminar tudo",
+  "guest_notifications_delete_all_title": "Eliminar todas as notificações",
+  "guest_notifications_delete_all_confirm": "Tem a certeza de que deseja eliminar todas as notificações? Esta ação não pode ser desfeita.",
+  "guest_notifications_mark_all": "Marcar tudo como lido",
+  "guest_notifications_empty_title": "Sem notificações",
+  "guest_notifications_empty_subtitle": "Aqui aparecerão as notificações da sua estadia",
+  "guest_notifications_read": "Lido",
+  "guest_romantic_title": "Pack Romântico",
+  "guest_romantic_surprise": "Surpreenda o seu parceiro",
+  "guest_romantic_unforgettable": "Crie um momento inesquecível",
+  "guest_romantic_includes": "O que inclui?",
+  "guest_romantic_decoration_title": "Decoração Romântica",
+  "guest_romantic_decoration_desc": "Pétalas de rosa, velas e decoração especial no quarto",
+  "guest_romantic_choose_title": "Escolha o seu detalhe",
+  "guest_romantic_choose_desc": "Garrafa de cava ou chocolate artesanal para acompanhar a noite",
+  "guest_romantic_basic_pack": "Pack Romântico Básico",
+  "guest_romantic_price": "49,90 €",
+  "guest_romantic_book_now": "Reservar Agora",
+  "guest_romantic_customize": "Ou personalize com extras ao reservar",
+  "guest_romantic_redirect": "Vai ser redirecionado para o site para completar a reserva do Pack Romântico. Continuar?",
+  "guest_romantic_how_to": "Como reservar?",
+  "guest_romantic_step_1": "Selecione o Pack Romântico",
+  "guest_romantic_step_2": "Personalize os detalhes",
+  "guest_romantic_step_3": "Complete a reserva online",
+  "guest_romantic_step_4": "Desfrute da surpresa",
+  "guest_romantic_note": "A decoração é preparada durante a sua ausência para que seja uma surpresa completa.",
+  "guest_jacuzzi_title": "Jacuzzi",
+  "guest_jacuzzi_rules_title": "Normas de Utilização",
+  "guest_jacuzzi_subtitle": "Relaxe e desfrute",
+  "guest_jacuzzi_power": "Ligar",
+  "guest_jacuzzi_power_step_1": "Prima o botão POWER para ligar o jacuzzi",
+  "guest_jacuzzi_power_step_2": "Aguarde até o painel se iluminar",
+  "guest_jacuzzi_power_step_3": "Selecione a temperatura desejada com os botões + e -",
+  "guest_jacuzzi_lock": "Bloqueio do Painel",
+  "guest_jacuzzi_lock_step_1": "Para evitar ativações acidentais, pode bloquear o painel de controlo",
+  "guest_jacuzzi_lock_unlock": "Desbloqueio",
+  "guest_jacuzzi_lock_unlock_step": "Mantenha premido o botão LOCK durante 3 segundos",
+  "guest_jacuzzi_lock_manual": "Bloqueio Manual",
+  "guest_jacuzzi_lock_manual_step": "Prima e mantenha o botão LOCK durante 3 segundos para ativar",
+  "guest_jacuzzi_ozone": "Função Ozono",
+  "guest_jacuzzi_ozone_intro": "O sistema de ozono ajuda a manter a água limpa e desinfetada de forma automática.",
+  "guest_jacuzzi_ozone_step_1": "Prima o botão OZONE no painel",
+  "guest_jacuzzi_ozone_step_2": "A luz indicadora acender-se-á",
+  "guest_jacuzzi_ozone_step_3": "O sistema funcionará durante 30 minutos",
+  "guest_jacuzzi_ozone_step_4": "Desligar-se-á automaticamente ao terminar",
+  "guest_jacuzzi_massage": "Funções de Massagem",
+  "guest_jacuzzi_air_jets": "Jets de Ar",
+  "guest_jacuzzi_air_step_1": "Prima o botão AIR para ativar os jets de ar",
+  "guest_jacuzzi_air_step_2": "Ajuste a intensidade com os botões + e -",
+  "guest_jacuzzi_air_step_3": "Os jets criarão bolhas suaves na água",
+  "guest_jacuzzi_air_step_4": "Prima novamente para desativar",
+  "guest_jacuzzi_water_jets": "Jets de Água",
+  "guest_jacuzzi_water_step_1": "Prima o botão JET para ativar os jets de água",
+  "guest_jacuzzi_water_step_2": "Os jets de água proporcionam uma massagem mais intensa",
+  "guest_jacuzzi_water_step_3": "Dirija os jets para as zonas de tensão muscular",
+  "guest_jacuzzi_water_step_4": "Prima novamente para desativar",
+  "guest_jacuzzi_important": "Importante",
+  "guest_jacuzzi_water_level_info": "O nível da água deve estar sempre acima dos jets para um correto funcionamento.",
+  "guest_jacuzzi_low_water_title": "Se o nível estiver baixo:",
+  "guest_jacuzzi_low_water_stop": "Pare o jacuzzi imediatamente",
+  "guest_jacuzzi_low_water_icon": "Verifique o ícone de aviso no painel",
+  "guest_jacuzzi_low_water_resume": "Encha com água até cobrir os jets antes de retomar.",
+  "guest_jacuzzi_water_responsibility": "Uso Responsável da Água",
+  "guest_jacuzzi_water_refill_info": "O jacuzzi tem uma capacidade considerável de água. Por favor, utilize-o de forma responsável.",
+  "guest_jacuzzi_capacity": "Capacidade:",
+  "guest_jacuzzi_capacity_liters": "800 litros",
+  "guest_jacuzzi_water_regulation": "O enchimento e esvaziamento do jacuzzi está regulado pelas normas locais de uso da água.",
+  "guest_jacuzzi_thanks": "Obrigado pela sua colaboração no uso responsável da água.",
+  "guest_physical_registration_title": "Registo Físico",
+  "guest_physical_registration_header": "Registo na Receção",
+  "guest_physical_registration_subtitle": "Complete o seu registo de forma presencial",
+  "guest_physical_registration_instructions": "Instruções",
+  "guest_physical_registration_step_1_title": "Dirija-se à receção",
+  "guest_physical_registration_step_1_desc": "Vá à receção do hotel durante o horário de atendimento",
+  "guest_physical_registration_step_2_title": "Apresente o seu documento",
+  "guest_physical_registration_step_2_desc": "Mostre o seu documento de identidade original (DNI, passaporte ou carta de condução)",
+  "guest_physical_registration_step_3_title": "Assine o registo",
+  "guest_physical_registration_step_3_desc": "Assine o documento de registo de entrada",
+  "guest_physical_registration_step_4_title": "Receba a sua chave",
+  "guest_physical_registration_step_4_desc": "Entregaremos a chave do seu quarto",
+  "guest_physical_registration_schedule": "Horário da Receção",
+  "guest_physical_registration_schedule_hours": "Horário de atendimento",
+  "guest_physical_registration_schedule_days": "Segunda a Sexta",
+  "guest_physical_registration_documents": "Documentos Aceites",
+  "guest_physical_registration_doc_dni": "DNI",
+  "guest_physical_registration_doc_passport": "Passaporte",
+  "guest_physical_registration_doc_license": "Carta de condução",
+  "guest_checkin_child_no_data": "Menor de 14 anos, sem dados requeridos",
+  "guest_checkin_holder": "Titular",
+  "guest_checkin_full_name": "Nome completo",
+  "guest_checkin_email": "Email",
+  "guest_checkin_phone": "Telefone",
+  "guest_checkin_document_id": "Documento de identidade",
+  "guest_checkin_upload_document": "Carregar documento",
+  "guest_checkin_document": "Documento",
+  "guest_checkin_missing_photo": "Falta foto do documento",
+  "guest_checkin_upload_document_title": "Carregar Documento",
+  "guest_checkin_document_type": "Tipo de documento",
+  "guest_checkin_document_number": "Número de documento",
+  "guest_checkin_document_photo": "Foto do documento",
+  "guest_checkin_image_captured": "Imagem capturada",
+  "guest_checkin_tap_to_capture": "Toque para capturar documento",
+  "guest_checkin_camera_or_gallery": "Câmera ou galeria",
+  "guest_checkin_select_source": "Selecionar origem",
+  "guest_checkin_camera": "Câmera",
+  "guest_checkin_gallery": "Galeria",
+  "guest_checkin_photo_required": "Foto obrigatória",
+  "guest_checkin_confirm": "Confirmar",
+  "guest_access_checkin": "Check-in",
+  "guest_access_checkout": "Check-out",
+  "guest_access_checkout_label": "Saída",
+  "guest_access_checkout_deadline": "Hora limite de saída",
+  "guest_access_checkout_instructions": "Instruções de saída",
+  "guest_access_code_label": "Código",
+  "guest_access_code_provided_by_staff": "Fornecido pelo pessoal",
+  "guest_access_locker_code": "Código do cacifo",
+  "guest_access_locker_code_label": "Código cacifo",
+  "guest_access_key_locker": "Cacifo de chaves",
+  "guest_access_door_code": "Código da porta",
+  "guest_access_building_access": "Acesso ao edifício",
+  "guest_access_building_instructions": "Instruções de acesso ao edifício",
+  "guest_access_apartment_access": "Acesso ao apartamento",
+  "guest_access_apartment_instructions": "Instruções de acesso ao apartamento",
+  "guest_access_location": "Localização",
+  "guest_access_contact": "Contacto",
+  "guest_access_contact_description": "Contacte-nos se precisar de ajuda",
+  "guest_access_open_maps": "Abrir no Maps",
+  "guest_access_network": "Rede",
+  "guest_access_network_name": "Nome da rede",
+  "guest_access_password": "Palavra-passe",
+  "guest_access_company_name": "BF Stay",
+  "guest_access_house_rules": "Normas da casa",
+  "guest_access_rules_warning": "Por favor, leia as normas da casa antes da sua chegada",
+  "guest_access_your_accommodation": "O seu alojamento",
+  "guest_access_your_codes": "Os seus códigos",
+  "guest_access_guest": "Hóspede",
+  "guest_access_loading_instructions": "A carregar instruções...",
+  "guest_access_cannot_load_instructions": "Não é possível carregar as instruções",
+  "guest_access_rule_no_parties_title": "Sem festas",
+  "guest_access_rule_no_parties_description": "Não são permitidas festas nem eventos",
+  "guest_access_rule_no_smoking_title": "Sem fumo",
+  "guest_access_rule_smoke_free_description": "Esta é uma propriedade livre de fumo",
+  "guest_access_rule_registered_only_title": "Apenas registados",
+  "guest_access_rule_registered_only_description": "Apenas os hóspedes registados podem aceder",
+  "guest_accommodation_title": "Alojamento",
+  "guest_accommodation_error_loading": "Erro ao carregar",
+  "guest_accommodation_error_occurred": "Ocorreu um erro",
+  "guest_accommodation_no_booking": "Não foi encontrada a reserva",
+  "guest_accommodation_booking_not_found": "Reserva não encontrada",
+  "guest_accommodation_no_unit_info": "Não há informação da unidade",
+  "guest_accommodation_address": "Endereço",
+  "guest_accommodation_address_unavailable": "Endereço não disponível",
+  "guest_accommodation_box_location": "Localização da caixa",
+  "guest_accommodation_access_codes": "Códigos de acesso",
+  "guest_accommodation_access_instructions": "Instruções de acesso",
+  "guest_accommodation_main_door": "Porta principal",
+  "guest_accommodation_door_code": "Código da porta",
+  "guest_accommodation_portal_code": "Código do portal",
+  "guest_accommodation_key_box_code": "Código da caixa de chaves",
+  "guest_accommodation_keybox_description": "Código para a caixa de chaves",
+  "guest_accommodation_wifi_password": "Palavra-passe WiFi",
+  "guest_accommodation_hotel_rules": "Normas do hotel",
+  "guest_accommodation_apartment_rules": "Normas do apartamento",
+  "guest_accommodation_rules_description": "Consulte as normas do seu alojamento",
+  "guest_accommodation_cannot_open_document": "Não é possível abrir o documento",
+  "guest_accommodation_tap_for_access_info": "Toque para ver informação de acesso",
+  "guest_chat_default_title": "Chat",
+  "guest_chat_online": "Em linha",
+  "guest_chat_start_conversation": "Iniciar conversa",
+  "guest_chat_welcome_message": "Olá! Em que podemos ajudá-lo?",
+  "guest_checkin_label": "Check-in",
+  "guest_checkin_back": "Voltar",
+  "guest_checkin_continue": "Continuar",
+  "guest_checkin_complete": "Completar",
+  "guest_checkin_loading_booking": "A carregar dados da reserva...",
+  "guest_checkin_error_loading": "Erro ao carregar",
+  "guest_checkin_booking": "Reserva",
+  "guest_checkin_code": "Código",
+  "guest_checkin_guests_label": "Hóspedes",
+  "guest_checkin_guest_data": "Dados do hóspede",
+  "guest_checkin_guest_data_description": "Complete os dados de todos os hóspedes",
+  "guest_checkin_holder_badge": "TITULAR",
+  "guest_checkin_holder_signature": "Assinatura do titular",
+  "guest_checkin_no_name": "Sem nome",
+  "guest_checkin_guest_no_name": "Hóspede sem nome",
+  "guest_checkin_minor_badge": "MENOR",
+  "guest_checkin_document_required": "Documento requerido",
+  "guest_checkin_upload": "Carregar",
+  "guest_checkin_all_documents_uploaded": "Todos os documentos carregados",
+  "guest_checkin_upload_documents_description": "Carregue as fotos dos documentos de identidade de todos os hóspedes",
+  "guest_checkin_uploaded_documents": "Documentos carregados",
+  "guest_checkin_pending_documents": "Documentos pendentes",
+  "guest_checkin_identity_documents": "Documentos de identidade",
+  "guest_checkin_signature_description": "Assinatura do titular da reserva",
+  "guest_checkin_signature_pending": "Assinatura pendente",
+  "guest_checkin_signature_captured": "Assinatura capturada",
+  "guest_checkin_signature_captured_short": "Assinatura",
+  "guest_checkin_clear_signature": "Apagar assinatura",
+  "guest_checkin_step_guests": "Hóspedes",
+  "guest_checkin_step_documents": "Documentos",
+  "guest_checkin_step_signature": "Assinatura",
+  "guest_checkin_step_confirm": "Confirmar",
+  "guest_checkin_online": "Em linha",
+  "guest_checkin_pending": "Pendente",
+  "guest_checkin_validated": "Validado",
+  "guest_checkin_waiting_validation": "À espera de validação",
+  "guest_checkin_completed": "Concluído",
+  "guest_checkin_completed_success": "Check-in concluído corretamente",
+  "guest_checkin_sending": "A enviar...",
+  "guest_checkin_progress": "Progresso do check-in",
+  "guest_checkin_confirmation": "Confirmação de Check-in",
+  "guest_checkin_confirmation_description": "O seu check-in foi enviado. Agora é necessário aguardar que o alojamento o valide.",
+  "guest_checkin_legal_notice": "Aviso legal",
+  "guest_checkout_title": "Check-out",
+  "guest_checkout_label": "Saída",
+  "guest_checkout_checkin_label": "Entrada",
+  "guest_checkout_checkout_label": "Saída",
+  "guest_checkout_stay_summary": "Resumo da estadia",
+  "guest_checkout_confirm": "Confirmar",
+  "guest_checkout_confirm_button": "Confirmar saída",
+  "guest_checkout_confirm_dialog_title": "Confirmar saída?",
+  "guest_checkout_confirm_dialog_message": "Vai confirmar a sua saída. Deseja continuar?",
+  "guest_checkout_confirm_info": "A confirmar saída...",
+  "guest_checkout_processing": "A processar...",
+  "guest_checkout_completed": "Check-out concluído",
+  "guest_checkout_thank_you": "Obrigado pela sua estadia!",
+  "guest_checkout_feedback_title": "A sua opinião importa-nos",
+  "guest_checkout_feedback_hint": "Conte-nos como foi a sua experiência...",
+  "guest_checkout_rating_title": "Avalie a sua estadia",
+  "guest_checkout_review_description": "A sua opinião ajuda outros viajantes",
+  "guest_checkout_loading": "A carregar...",
+  "guest_checkout_error_loading": "Erro ao carregar",
+  "guest_checkout_already_done": "Check-out já realizado",
+  "guest_checkout_already_done_message": "Já realizou o check-out. Obrigado!",
+  "guest_home_welcome": "Bem-vindo",
+  "guest_home_welcome_stay": "Bem-vindo à sua estadia",
+  "guest_home_your_stay": "A Sua Estadia",
+  "guest_home_no_booking": "Não tem reservas",
+  "guest_home_not_authenticated": "Não autenticado",
+  "guest_home_stay_active_enjoy": "A sua estadia está ativa. Desfrute!",
+  "guest_home_quick_actions": "Ações rápidas",
+  "guest_home_checkin": "Check-in",
+  "guest_home_checkout": "Check-out",
+  "guest_home_chat": "Chat",
+  "guest_home_guide": "Guia",
+  "guest_home_rules": "Normas",
+  "guest_home_parkings": "Estacionamentos",
+  "guest_home_accommodations": "Alojamentos",
+  "guest_home_accommodation": "Alojamento",
+  "guest_home_guests": "Hóspedes",
+  "guest_home_what_to_see": "O que visitar",
+  "guest_home_instructions": "Instruções",
+  "guest_home_my_accommodation": "O meu alojamento",
+  "guest_home_booking_cancelled": "Reserva cancelada",
+  "guest_home_booking_cancelled_message": "A sua reserva foi cancelada. Contacte a receção.",
+  "guest_home_cancellation_reason": "Motivo de cancelamento",
+  "guest_home_checkin_pending": "Check-in pendente",
+  "guest_home_checkin_sent_waiting": "Check-in enviado, à espera de validação",
+  "guest_home_checkin_rejected": "Check-in rejeitado",
+  "guest_home_rejection_reason": "Motivo da rejeição",
+  "guest_home_pending_validation": "Pendente de validação",
+  "guest_home_complete_checkin_access": "Complete o check-in para aceder",
+  "guest_home_contact_reception": "Contacte a receção",
+  "guest_home_correct_errors_resend": "Corrija os erros e reenvie",
+  "guest_home_physical_registration": "Registo presencial",
+  "guest_home_romantic_pack": "Pack Romântico",
+  "public_services_title": "Os Nossos Serviços",
+  "public_service_rules_title": "Normas da Casa",
+  "public_service_rules_desc": "Regras e recomendações.",
+  "public_access_booking": "Aceder à minha Reserva",
+  "staff_dashboard_control_panel": "Painel de Controlo",
+  "staff_dashboard_daily_summary": "Resumo do dia",
+  "staff_dashboard_occupancy": "Ocupação",
+  "staff_dashboard_pending": "Pendentes",
+  "staff_dashboard_pending_checkin": "Check-ins pendentes",
+  "staff_dashboard_pending_checkout": "Check-outs pendentes",
+  "staff_dashboard_pending_tasks": "Tarefas pendentes",
+  "staff_dashboard_checkins_today": "Check-ins hoje",
+  "staff_dashboard_checkouts_today": "Check-outs hoje",
+  "staff_dashboard_quick_actions": "Ações rápidas",
+  "staff_dashboard_manage_checkins": "Gerir check-ins",
+  "staff_dashboard_view_guests": "Ver hóspedes",
+  "staff_dashboard_cleaning_request": "Pedido de limpeza",
+  "staff_dashboard_generate_report": "Gerar relatório",
+  "staff_checkins_title": "Check-ins",
+  "staff_checkins_tab_pending": "Pendentes",
+  "staff_checkins_tab_in_progress": "Em progresso",
+  "staff_checkins_tab_completed": "Concluídos",
+  "staff_checkins_status_pending": "Pendente",
+  "staff_checkins_status_in_progress": "Em progresso",
+  "staff_checkins_status_completed": "Concluído",
+  "staff_checkins_start": "Iniciar",
+  "staff_checkins_new_checkin": "Novo check-in",
+  "staff_checkins_complete": "Completar",
+  "staff_checkins_view_details": "Ver detalhes",
+  "guest_access_wifi_password_label": "Palavra-passe WiFi",
+  "guest_access_locker_provided_by_staff": "Fornecido pelo pessoal",
+  "guest_access_rule_smoke_free_title": "Sem fumo",
+  "guest_accommodation_view_rules_pdf": "Ver normas em PDF",
+  "public_hero_title_line1": "A Sua Estadia,",
+  "public_hero_title_line2": "Elevada",
+  "public_footer_copyright": "© {year} BF Stay • Todos os direitos reservados",
+  "notification_checkin_rejected_body_with_reason": "O seu check-in foi rejeitado: {reason}",
+  "notification_booking_cancelled_body_with_reason": "A sua reserva foi cancelada: {reason}",
+  "notification_checkin_status_update_body": "O estado do seu check-in mudou para: {status}",
+  "notification_admin_checkin_submitted_body": "{guestName} enviou o seu check-in para {unitName}. Pendente de revisão.",
+  "guest_parking_for_unit": "Estacionamentos para {unitName}",
+  "guest_parking_gps_label": "GPS: {label}",
+  "guest_checkin_camera_init_error": "Erro ao inicializar câmera: {error}",
+  "guest_checkin_camera_capture_error": "Erro ao capturar: {error}",
+  "admin_booking_error": "Erro: {error}",
+  "admin_booking_error_validating": "Erro ao validar: {error}",
+  "admin_booking_error_rejecting": "Erro ao rejeitar: {error}",
+  "admin_booking_error_validating_checkout": "Erro ao validar check-out: {error}",
+  "admin_booking_error_rejecting_checkout": "Erro ao rejeitar check-out: {error}",
+  "admin_booking_error_closing": "Erro ao fechar reserva: {error}",
+  "admin_booking_error_cancelling": "Erro ao cancelar reserva: {error}",
+  "admin_booking_error_deleting": "Erro ao eliminar reserva: {error}",
+  "admin_booking_error_updating": "Erro ao atualizar: {error}",
+  "admin_booking_cannot_delete_message": "Não é possível eliminar uma reserva em estado {status}.",
+  "admin_booking_share_code_message": "O seu código de acesso é: {code}",
+  "admin_booking_share_keybox_code": "Código keybox: {code}",
+  "admin_booking_share_dates": "Check-in: {checkIn} | Check-out: {checkOut}",
+  "guest_alojamientos_room_count": "{count} quartos",
+  "guest_alojamiento_photos_count": "{count} fotos",
+  "guest_alojamiento_description_text": "Descubra este {unitType} completamente equipado para que a sua estadia seja o mais confortável possível. Tem tudo o necessário para desfrutar de Jerez ao seu ritmo.",
+  "guest_reviews_filter_empty_title": "Sem resultados para {filter}",
+  "guest_access_valid_period": "Válido de {from} até {until}",
+  "guest_guide_rule_checkout": "Check-out antes das {time}",
+  "guest_notifications_unread_count": "{count} não lidos",
+  "guest_jacuzzi_ozone_note": "Nota: {note}",
+  "guest_checkin_young": "Menor ({age} anos)",
+  "guest_checkin_adult": "Adulto {number}",
+  "guest_checkin_guest": "Hóspede {number}",
+  "guest_checkin_capture_error": "Erro ao capturar imagem: {error}",
+  "guest_access_checkout_until": "Até às {time}",
+  "guest_access_code_available_at": "Disponível em {date} às {time}",
+  "guest_access_locker_available_at": "Disponível em {date}",
+  "guest_access_copied": "{label} copiado para a área de transferência",
+  "guest_access_welcome_message": "Bem-vindo a {unitName}",
+  "guest_access_hello": "Olá {name}",
+  "guest_access_codes_available_datetime": "Disponível em {date} às {time}",
+  "guest_access_codes_available_message": "O seu código estará disponível a partir das {time}",
+  "guest_accommodation_rooms_count": "{count} quartos",
+  "guest_accommodation_rules_load_error": "Erro ao carregar as normas: {error}",
+  "guest_accommodation_codes_available_datetime": "Disponível em {date} às {time}",
+  "guest_accommodation_codes_available_message": "Os seus códigos estarão disponíveis quando começar a sua estadia ({time})",
+  "guest_accommodation_file_not_found": "Ficheiro não encontrado: {message}",
+  "guest_checkin_guests_count": "{count} hóspedes",
+  "guest_checkin_guests_registered": "{count} registados",
+  "guest_checkin_guests_summary": "{count} hóspedes",
+  "guest_checkin_adults_children": "{adults} adultos e {children} menores",
+  "guest_checkin_young_document_required": "Menor de {age} anos, documento requerido",
+  "guest_checkin_documents_uploaded": "{completed} de {total} documentos carregados",
+  "guest_checkout_nights_count": "{count} noites",
+  "guest_checkout_guests_count": "{count} hóspedes",
+  "guest_home_hello_name": "Olá, {name}",
+  "guest_home_rooms_count": "{count} qts",
+  "guest_home_nights": "{count} noites",
+  "guest_jacuzzi_note": "Nota: {note}",
+  "public_copyright": "© {year} BF Stay • Todos os direitos reservados",
+  "staff_dashboard_greeting": "Olá {name}",
+  "staff_dashboard_room_extras": "Quarto {room} - Extras",
+  "staff_dashboard_room_guest": "Quarto {room} - {guest}",
+  "@common_exit_app_title": {
+    "description": "Title of the exit confirmation dialog"
+  },
+  "@common_exit_app_message": {
+    "description": "Message of the exit confirmation dialog"
+  },
+  "@common_update_version": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@common_copied_to_clipboard": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "@public_footer_copyright": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "@notification_checkin_rejected_body_with_reason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_booking_cancelled_body_with_reason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_checkin_status_update_body": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_admin_checkin_submitted_body": {
+    "placeholders": {
+      "guestName": {
+        "type": "String"
+      },
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_parking_for_unit": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_parking_gps_label": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_checkin_camera_init_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_checkin_camera_capture_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_validating": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_rejecting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_validating_checkout": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_rejecting_checkout": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_closing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_cancelling": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_deleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_error_updating": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_cannot_delete_message": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_share_code_message": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_share_keybox_code": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_booking_share_dates": {
+    "placeholders": {
+      "checkIn": {
+        "type": "String"
+      },
+      "checkOut": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_alojamientos_room_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_alojamiento_photos_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_alojamiento_description_text": {
+    "placeholders": {
+      "unitType": {
+        "type": "String"
+      }
+    }
+  },
+  "guest_que_ver_places_count": "{count, plural, =1{1 lugar} other{{count} lugares}}",
+  "@guest_que_ver_places_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_reviews_filter_empty_title": {
+    "placeholders": {
+      "filter": {
+        "type": "String"
+      }
+    }
+  },
+  "guest_reviews_count_label": "{count, plural, =1{1 avaliação} other{{count} avaliações}}",
+  "@guest_reviews_count_label": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_access_valid_period": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_guide_rule_checkout": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_notifications_unread_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_jacuzzi_ozone_note": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_checkin_young": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_adult": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_guest": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_capture_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_chat_error_deleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_checkin_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_pdf_saved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_paid_on": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_cancelled": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_issue_confirm_message": {
+    "placeholders": {
+      "invoiceNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_mark_paid_confirm_message": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_error_generate_pdf": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_error_share": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_invoice_error_download": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@admin_notifications_unread_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_access_checkout_until": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_access_code_available_at": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_access_locker_available_at": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_access_copied": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_access_welcome_message": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_access_hello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_access_codes_available_datetime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_access_codes_available_message": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_accommodation_rooms_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_accommodation_rules_load_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_accommodation_codes_available_datetime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_accommodation_codes_available_message": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_accommodation_file_not_found": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_checkin_guests_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_guests_registered": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_guests_summary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_adults_children": {
+    "placeholders": {
+      "adults": {
+        "type": "int"
+      },
+      "children": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_young_document_required": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkin_documents_uploaded": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkout_nights_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_checkout_guests_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_home_hello_name": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@guest_home_rooms_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_home_nights": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@guest_jacuzzi_note": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "@public_copyright": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "@staff_dashboard_greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@staff_dashboard_room_extras": {
+    "placeholders": {
+      "room": {
+        "type": "String"
+      }
+    }
+  },
+  "@staff_dashboard_room_guest": {
+    "placeholders": {
+      "room": {
+        "type": "String"
+      },
+      "guest": {
+        "type": "String"
+      }
+    }
+  }
+}

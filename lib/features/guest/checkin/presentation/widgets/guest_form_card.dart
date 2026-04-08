@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../domain/entities/guest_entity.dart';
 
 /// Card que muestra el formulario de un huésped
@@ -73,7 +74,7 @@ class GuestFormCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'No requiere datos (menor de 14)',
+                      S.of(context).guest_checkin_child_no_data,
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.success,
@@ -115,7 +116,7 @@ class GuestFormCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _getHeaderTitle(),
+                  _getHeaderTitle(context),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -130,9 +131,9 @@ class GuestFormCard extends StatelessWidget {
                     color: AppColors.goldWithAlpha20,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text(
-                    'TITULAR',
-                    style: TextStyle(
+                  child: Text(
+                    S.of(context).guest_checkin_holder,
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppColors.gold,
@@ -145,7 +146,8 @@ class GuestFormCard extends StatelessWidget {
 
           // Campos del formulario
           _buildTextField(
-            label: 'Nombre completo',
+            context: context,
+            label: S.of(context).guest_checkin_full_name,
             value: guest.fullName,
             onChanged: (value) => onChanged(guest.copyWith(fullName: value)),
             isRequired: true,
@@ -154,7 +156,8 @@ class GuestFormCard extends StatelessWidget {
           if (!guest.isPrimary) ...[
             const SizedBox(height: 12),
             _buildTextField(
-              label: 'Email',
+              context: context,
+              label: S.of(context).guest_checkin_email,
               value: guest.email ?? '',
               onChanged: (value) => onChanged(guest.copyWith(email: value.isEmpty ? null : value)),
               keyboardType: TextInputType.emailAddress,
@@ -163,7 +166,8 @@ class GuestFormCard extends StatelessWidget {
 
           const SizedBox(height: 12),
           _buildTextField(
-            label: 'Teléfono',
+            context: context,
+            label: S.of(context).guest_checkin_phone,
             value: guest.phone ?? '',
             onChanged: (value) => onChanged(guest.copyWith(phone: value.isEmpty ? null : value)),
             keyboardType: TextInputType.phone,
@@ -179,14 +183,15 @@ class GuestFormCard extends StatelessWidget {
     );
   }
 
-  String _getHeaderTitle() {
-    if (guest.isPrimary) return guest.fullName.isEmpty ? 'Titular' : guest.fullName;
-    if (guest.isChildOver14) return 'Joven (${guest.age} años)';
-    if (guest.isAdult) return 'Adulto ${index + 1}';
-    return 'Huésped ${index + 1}';
+  String _getHeaderTitle(BuildContext context) {
+    if (guest.isPrimary) return guest.fullName.isEmpty ? S.of(context).guest_checkin_holder : guest.fullName;
+    if (guest.isChildOver14) return S.of(context).guest_checkin_young(guest.age ?? 0);
+    if (guest.isAdult) return S.of(context).guest_checkin_adult(index + 1);
+    return S.of(context).guest_checkin_guest(index + 1);
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required String label,
     required String value,
     required ValueChanged<String> onChanged,
@@ -230,7 +235,7 @@ class GuestFormCard extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Documento de identidad',
+              S.of(context).guest_checkin_document_id,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -279,7 +284,7 @@ class GuestFormCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Subir documento',
+              S.of(context).guest_checkin_upload_document,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -313,7 +318,7 @@ class GuestFormCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  guest.documentType?.name.toUpperCase() ?? 'Documento',
+                  guest.documentType?.name.toUpperCase() ?? S.of(context).guest_checkin_document,
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.success,
@@ -365,7 +370,7 @@ class GuestFormCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${guest.documentType?.name.toUpperCase() ?? 'Documento'}: ${guest.documentNumber}',
+                  '${guest.documentType?.name.toUpperCase() ?? S.of(context).guest_checkin_document}: ${guest.documentNumber}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -374,7 +379,7 @@ class GuestFormCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Falta la foto del documento',
+                  S.of(context).guest_checkin_missing_photo,
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.warning,

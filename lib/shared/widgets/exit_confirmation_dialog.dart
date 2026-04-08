@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 import '../../core/theme/app_colors.dart';
 
@@ -70,7 +71,7 @@ class ExitConfirmationDialog extends StatelessWidget {
 
             // Título
             Text(
-              'Salir de BF Stay',
+              S.of(context).common_exit_app_title,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -83,8 +84,7 @@ class ExitConfirmationDialog extends StatelessWidget {
 
             // Descripción
             Text(
-              '¿Estás seguro de que deseas salir de la aplicación?\n\n'
-              'Tu sesión permanecerá activa cuando vuelvas a entrar.',
+              S.of(context).common_exit_app_message,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
@@ -115,7 +115,7 @@ class ExitConfirmationDialog extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Cancelar',
+                      S.of(context).common_cancel,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -145,9 +145,9 @@ class ExitConfirmationDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Salir',
-                      style: TextStyle(
+                    child: Text(
+                      S.of(context).common_exit,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/di/injection.dart';
@@ -111,6 +112,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
+    final s = S.of(context);
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
@@ -118,7 +120,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       title: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
-          final title = state is ChatLoaded ? state.otherParticipantName : 'Grupo H. BF';
+          final title = state is ChatLoaded ? state.otherParticipantName : s.guest_chat_default_title;
           final isOnline = state is ChatLoaded;
 
           return Row(
@@ -145,7 +147,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Text(title),
                   if (isOnline)
                     Text(
-                      'En línea',
+                      s.guest_chat_online,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.success,
                           ),
@@ -160,6 +162,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessagesList(BuildContext context, ChatState state) {
+    final s = S.of(context);
     if (state is ChatLoading || state is ChatInitial) {
       return const Center(
         child: CircularProgressIndicator(
@@ -200,7 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   }
                 }
               },
-              child: const Text('Reintentar'),
+              child: Text(s.common_retry),
             ),
           ],
         ),
@@ -239,6 +242,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final s = S.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -258,14 +262,14 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           const SizedBox(height: AppTheme.spacing24),
           Text(
-            '¡Hola! ¿En qué podemos ayudarte?',
+            s.guest_chat_welcome_message,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Escribe un mensaje para comenzar',
+            s.guest_chat_start_conversation,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.gray500,
                 ),

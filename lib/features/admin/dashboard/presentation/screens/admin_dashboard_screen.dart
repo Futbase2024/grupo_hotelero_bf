@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
@@ -96,7 +97,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final authState = _authBloc.state;
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
     final propertyName = isAdmin
-        ? 'BF-Stay Admin'
+        ? S.of(context).admin_dashboard_admin_title
         : (authState is AuthAuthenticated ? (authState.user.propertyId ?? '') : '');
 
     return AppBar(
@@ -245,7 +246,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final authState = _authBloc.state;
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
 
-    final tabNames = ['Resumen', 'Reservas', 'Check-ins', 'Facturas', 'Marketing', 'Alojamientos'];
+    final tabNames = [
+      S.of(context).admin_dashboard_tab_summary,
+      S.of(context).admin_dashboard_tab_bookings,
+      S.of(context).admin_dashboard_tab_checkins,
+      S.of(context).admin_dashboard_tab_invoices,
+      S.of(context).admin_dashboard_tab_marketing,
+      S.of(context).admin_dashboard_tab_properties,
+    ];
 
     return Container(
       decoration: const BoxDecoration(
@@ -269,41 +277,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
         unselectedLabelStyle: const TextStyle(fontSize: 11),
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Resumen',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.dashboard_outlined),
+            activeIcon: const Icon(Icons.dashboard),
+            label: S.of(context).admin_dashboard_tab_summary,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            activeIcon: Icon(Icons.calendar_month),
-            label: 'Reservas',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.calendar_month_outlined),
+            activeIcon: const Icon(Icons.calendar_month),
+            label: S.of(context).admin_dashboard_tab_bookings,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.how_to_reg_outlined),
-            activeIcon: Icon(Icons.how_to_reg),
-            label: 'Check-ins',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.how_to_reg_outlined),
+            activeIcon: const Icon(Icons.how_to_reg),
+            label: S.of(context).admin_dashboard_tab_checkins,
           ),
           // Tab de facturas solo visible para admin
           if (isAdmin)
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_outlined),
-              activeIcon: Icon(Icons.receipt_long),
-              label: 'Facturas',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.receipt_long_outlined),
+              activeIcon: const Icon(Icons.receipt_long),
+              label: S.of(context).admin_dashboard_tab_invoices,
             ),
           // Tab de marketing solo visible para admin
           if (isAdmin)
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.campaign_outlined),
-              activeIcon: Icon(Icons.campaign),
-              label: 'Marketing',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.campaign_outlined),
+              activeIcon: const Icon(Icons.campaign),
+              label: S.of(context).admin_dashboard_tab_marketing,
             ),
           // Tab de alojamientos solo visible para admin
           if (isAdmin)
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.apartment_outlined),
-              activeIcon: Icon(Icons.apartment),
-              label: 'Alojamientos',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.apartment_outlined),
+              activeIcon: const Icon(Icons.apartment),
+              label: S.of(context).admin_dashboard_tab_properties,
             ),
         ],
       ),
@@ -370,9 +378,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(height: 20),
 
               // Título
-              const Text(
-                'Cerrar sesión',
-                style: TextStyle(
+              Text(
+                S.of(dialogContext).common_logout_title,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
@@ -383,7 +391,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
               // Descripción
               Text(
-                '¿Estás seguro de que quieres cerrar sesión?\n\nPodrás volver a acceder con tu código de reserva cuando lo necesites.',
+                S.of(dialogContext).common_logout_message,
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.getTextSecondaryColor(dialogContext),
@@ -404,7 +412,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         side: BorderSide(color: AppColors.getBorderColor(dialogContext)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Cancelar'),
+                      child: Text(S.of(dialogContext).common_cancel),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -419,8 +427,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         foregroundColor: AppColors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'Cerrar sesión',
+                      child: Text(
+                        S.of(dialogContext).common_logout_button,
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),

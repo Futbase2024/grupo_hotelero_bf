@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bf_stay/core/router/app_router.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
+import 'package:bf_stay/core/locale/widgets/language_selector.dart';
+import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla de ajustes con enlace a política de privacidad
 class SettingsScreen extends StatelessWidget {
@@ -34,7 +36,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         title: Text(
-          'Ajustes',
+          S.of(context).guest_settings_title,
           style: TextStyle(
             color: AppColors.getTextPrimaryColor(context),
             fontSize: 18,
@@ -48,9 +50,22 @@ class SettingsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Sección Idioma
+              Text(
+                S.of(context).guest_settings_section_language,
+                style: TextStyle(
+                  color: AppColors.getTextSecondaryColor(context),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              const LanguageSelector(variant: LanguageSelectorVariant.list),
+              const SizedBox(height: AppTheme.spacing24),
+
               // Sección Legal
               Text(
-                'Legal',
+                S.of(context).guest_settings_section_legal,
                 style: TextStyle(
                   color: AppColors.getTextSecondaryColor(context),
                   fontSize: 14,
@@ -60,8 +75,8 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: AppTheme.spacing8),
               _SettingsTile(
                 icon: Icons.privacy_tip_outlined,
-                title: 'Política de Privacidad',
-                subtitle: 'Consulta nuestra política de privacidad',
+                title: S.of(context).guest_settings_privacy_policy_title,
+                subtitle: S.of(context).guest_settings_privacy_policy_subtitle,
                 onTap: () => _openPrivacyPolicy(context),
               ),
             ],
@@ -79,7 +94,7 @@ class SettingsScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('No se pudo abrir la política de privacidad'),
+            content: Text(S.of(context).guest_settings_privacy_open_error),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
