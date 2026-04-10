@@ -54,7 +54,10 @@ import '../../features/admin/dashboard/presentation/screens/admin_dashboard_scre
 import '../../features/admin/chat/presentation/screens/conversations_screen.dart';
 import '../../features/admin/chat/presentation/screens/admin_chat_screen.dart';
 import '../../features/admin/bookings/presentation/screens/booking_detail_screen.dart';
+import '../../features/admin/occupancy/presentation/screens/occupancy_stats_screen.dart';
 import '../../features/admin/domain/repositories/admin_panel_repository.dart';
+import '../../features/admin/chat/domain/bloc/conversations_bloc.dart';
+import '../../features/guest/chat/domain/repositories/chat_repository.dart';
 import '../di/injection.dart';
 
 /// GlobalKey para acceder al Navigator desde cualquier lugar
@@ -115,6 +118,7 @@ class AppRoutes {
   static const String adminChat = '/admin/chat';
   static const String adminChatConversation = '/admin/chat/:conversationId';
   static const String adminBookingDetail = '/admin/booking/:bookingId';
+  static const String adminOccupancy = '/admin/occupancy';
 }
 
 /// Router principal de la aplicación con redirección basada en roles
@@ -474,18 +478,29 @@ class AppRouter {
           name: 'admin-dashboard',
           builder: (context, state) => const AdminDashboardScreen(),
         ),
-        GoRoute(
-          path: AppRoutes.adminChat,
-          name: 'admin-chat',
-          builder: (context, state) => const ConversationsScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.adminChatConversation,
-          name: 'admin-chat-conversation',
-          builder: (context, state) {
-            final conversationId = state.pathParameters['conversationId']!;
-            return AdminChatScreen(conversationId: conversationId);
-          },
+        // Admin Chat — ShellRoute mantiene ConversationsBloc vivo al navegar
+        ShellRoute(
+          builder: (context, state, child) => BlocProvider(
+            create: (_) => ConversationsBloc(
+              chatRepository: getIt<ChatRepository>(),
+            ),
+            child: child,
+          ),
+          routes: [
+            GoRoute(
+              path: AppRoutes.adminChat,
+              name: 'admin-chat',
+              builder: (context, state) => const ConversationsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminChatConversation,
+              name: 'admin-chat-conversation',
+              builder: (context, state) {
+                final conversationId = state.pathParameters['conversationId']!;
+                return AdminChatScreen(conversationId: conversationId);
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: AppRoutes.adminBookingDetail,
@@ -497,6 +512,11 @@ class AppRouter {
               repository: getIt<AdminPanelRepository>(),
             );
           },
+        ),
+        GoRoute(
+          path: AppRoutes.adminOccupancy,
+          name: 'admin-occupancy',
+          builder: (context, state) => const OccupancyStatsScreen(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

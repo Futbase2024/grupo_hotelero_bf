@@ -98,35 +98,25 @@ class ChatLoading extends ChatState {
 
 /// Estado con conversación y mensajes cargados
 class ChatLoaded extends ChatState {
-  const ChatLoaded({
+  ChatLoaded({
     required this.conversation,
     required this.messages,
     required this.currentUserId,
     this.isLoadingMore = false,
     this.hasMoreMessages = true,
-  });
+  }) : sortedMessages = messages.sortedByDate(ascending: true);
 
   final ConversationEntity conversation;
   final List<MessageEntity> messages;
+  /// Mensajes ordenados por fecha (calculados una sola vez al crear el estado)
+  final List<MessageEntity> sortedMessages;
   final String currentUserId;
   final bool isLoadingMore;
   final bool hasMoreMessages;
 
-  /// Indica si hay mensajes
   bool get hasMessages => messages.isNotEmpty;
-
-  /// Último mensaje (para mostrar preview)
-  MessageEntity? get lastMessage =>
-      messages.isNotEmpty ? messages.last : null;
-
-  /// Mensajes ordenados por fecha (más antiguos primero)
-  List<MessageEntity> get sortedMessages =>
-      messages.sortedByDate(ascending: true);
-
-  /// Cantidad de mensajes
+  MessageEntity? get lastMessage => messages.isNotEmpty ? messages.last : null;
   int get messageCount => messages.length;
-
-  /// Nombre del otro participante (según el usuario actual)
   String get otherParticipantName =>
       conversation.getOtherParticipantName(currentUserId);
 

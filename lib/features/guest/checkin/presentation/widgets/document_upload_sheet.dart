@@ -194,6 +194,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
           controller: _documentController,
           style: const TextStyle(color: AppColors.white),
           textCapitalization: TextCapitalization.characters,
+          onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
             hintText: _getDocumentHint(),
             hintStyle: const TextStyle(color: AppColors.gray500),

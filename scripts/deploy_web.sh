@@ -26,8 +26,8 @@ echo "📤 Subiendo a Cloudflare Pages..."
 echo "   Proyecto: $PROJECT_NAME"
 echo ""
 
-# Deploy a Cloudflare Pages
-wrangler pages deploy $BUILD_DIR --project-name=$PROJECT_NAME --commit-dirty=true
+# Deploy a Cloudflare Pages (production)
+wrangler pages deploy $BUILD_DIR --project-name=$PROJECT_NAME --branch=main --commit-dirty=true
 
 echo ""
 echo "✅ Deploy completado!"

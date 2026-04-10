@@ -23,14 +23,14 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   late final ChatBloc _chatBloc;
-  late final AuthBloc _authBloc;
-  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
     _chatBloc = ChatBloc(chatRepository: getIt<ChatRepository>());
-    _authBloc = context.read<AuthBloc>();
+    // Inicializar con el estado actual de auth (sin esperar un rebuild)
+    final authState = context.read<AuthBloc>().state;
+    _tryInitChat(authState);
   }
 
   @override
@@ -41,9 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void _initializeChat(AuthState authState) {
-    if (_initialized) return;
-
+  void _tryInitChat(AuthState authState) {
     if (authState is AuthAuthenticated) {
       final user = authState.user;
       if (user.propertyId != null && user.propertyId!.isNotEmpty) {
@@ -53,7 +51,6 @@ class _ChatScreenState extends State<ChatScreen> {
           userId: user.id,
           userName: user.name ?? user.displayName,
         ));
-        _initialized = true;
       }
     }
   }
@@ -77,36 +74,36 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _chatBloc,
-      child: BlocBuilder<AuthBloc, AuthState>(
-        bloc: _authBloc,
-        builder: (context, authState) {
-          // Inicializar chat cuando el usuario esté autenticado
-          _initializeChat(authState);
-
-          return Scaffold(
-            appBar: _buildAppBar(context),
-            body: BlocConsumer<ChatBloc, ChatState>(
-              listener: (context, state) {
-                if (state is ChatLoaded) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-                }
-              },
-              builder: (context, state) {
-                return Column(
-                  children: [
-                    Expanded(
-                      child: _buildMessagesList(context, state),
-                    ),
-                    ChatInput(
-                      onSend: _onSendMessage,
-                      enabled: state is ChatLoaded || state is ChatSending,
-                    ),
-                  ],
-                );
-              },
-            ),
-          );
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, authState) {
+          // Solo inicializar si el chat aún no arrancó (auth tardó más que el build)
+          if (_chatBloc.state is ChatInitial) {
+            _tryInitChat(authState);
+          }
         },
+        child: Scaffold(
+          appBar: _buildAppBar(context),
+          body: BlocConsumer<ChatBloc, ChatState>(
+            listener: (context, state) {
+              if (state is ChatLoaded) {
+                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+              }
+            },
+            builder: (context, state) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: _buildMessagesList(context, state),
+                  ),
+                  ChatInput(
+                    onSend: _onSendMessage,
+                    enabled: state is ChatLoaded || state is ChatSending,
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -190,7 +187,7 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(height: AppTheme.spacing16),
             ElevatedButton(
               onPressed: () {
-                final authState = _authBloc.state;
+                final authState = context.read<AuthBloc>().state;
                 if (authState is AuthAuthenticated) {
                   final user = authState.user;
                   if (user.propertyId != null) {

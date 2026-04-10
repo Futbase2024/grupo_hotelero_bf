@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -85,40 +86,33 @@ class MessageBubble extends StatelessWidget {
   Widget _buildImageContent(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-      child: Image.network(
-        message.content,
+      child: CachedNetworkImage(
+        imageUrl: message.content,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: 200,
-            height: 150,
-            color: AppColors.blackWithAlpha20,
-            child: const Center(
-              child: Icon(
-                Icons.broken_image_outlined,
-                color: AppColors.gray500,
-              ),
+        width: 200,
+        height: 150,
+        errorWidget: (context, url, error) => Container(
+          width: 200,
+          height: 150,
+          color: AppColors.blackWithAlpha20,
+          child: const Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: AppColors.gray500,
             ),
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            width: 200,
-            height: 150,
-            color: AppColors.blackWithAlpha05,
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-                strokeWidth: 2,
-                color: AppColors.gold,
-              ),
+          ),
+        ),
+        placeholder: (context, url) => Container(
+          width: 200,
+          height: 150,
+          color: AppColors.blackWithAlpha05,
+          child: const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.gold,
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

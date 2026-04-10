@@ -61,7 +61,10 @@ class _CheckinScreenState extends State<CheckinScreen> {
                 );
               }
               if (state is CheckinError) {
-                return _ErrorView(message: state.message);
+                return _ErrorView(
+                  message: state.message,
+                  bookingId: widget.bookingId,
+                );
               }
               return const _LoadingView();
             },
@@ -82,6 +85,16 @@ class _CheckinScreenState extends State<CheckinScreen> {
   }
 
   void _handleStateChange(BuildContext context, CheckinState state) {
+    if (state is CheckinDocumentUploadError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(state.errorMessage),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (state is CheckinSuccess) {
       // Refrescar el estado del usuario para actualizar checkInCompleted
       context.read<AuthBloc>().add(const AuthCheckRequested());
@@ -310,9 +323,10 @@ class _CheckinCompletedView extends StatelessWidget {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
+  const _ErrorView({required this.message, required this.bookingId});
 
   final String message;
+  final String bookingId;
 
   @override
   Widget build(BuildContext context) {
@@ -341,12 +355,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                final currentState = context.read<CheckinBloc>().state;
-                if (currentState is CheckinLoaded) {
-                  context.read<CheckinBloc>().add(
-                    CheckinStarted(currentState.bookingData.bookingId),
-                  );
-                }
+                context.read<CheckinBloc>().add(CheckinStarted(bookingId));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
@@ -948,6 +957,30 @@ class _NavigationButtons extends StatelessWidget {
   }
 }
 
+/// Abre el sheet de subida de documento para el huésped en [guestIndex].
+/// Función compartida entre [_GuestsStep] y [_DocumentsStep].
+void _showDocumentUploadSheet(BuildContext context, int guestIndex) {
+  final currentState = context.read<CheckinBloc>().state;
+  if (currentState is! CheckinLoaded) return;
+
+  final guest = currentState.guests[guestIndex];
+
+  DocumentUploadSheet.show(
+    context: context,
+    guest: guest,
+    onConfirm: (type, number, imageBytes) {
+      context.read<CheckinBloc>().add(
+        CheckinGuestDocumentUpdated(
+          guestIndex: guestIndex,
+          documentType: type,
+          documentNumber: number,
+          imageBytes: imageBytes,
+        ),
+      );
+    },
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // GUESTS STEP
 // ═══════════════════════════════════════════════════════════════
@@ -1044,25 +1077,7 @@ class _GuestsStep extends StatelessWidget {
   }
 
   void _handleDocumentUpload(BuildContext context, int guestIndex) {
-    final currentState = context.read<CheckinBloc>().state;
-    if (currentState is! CheckinLoaded) return;
-
-    final guest = currentState.guests[guestIndex];
-
-    DocumentUploadSheet.show(
-      context: context,
-      guest: guest,
-      onConfirm: (type, number, imageBytes) {
-        context.read<CheckinBloc>().add(
-          CheckinGuestDocumentUpdated(
-            guestIndex: guestIndex,
-            documentType: type,
-            documentNumber: number,
-            imageBytes: imageBytes,
-          ),
-        );
-      },
-    );
+    _showDocumentUploadSheet(context, guestIndex);
   }
 }
 
@@ -1253,7 +1268,9 @@ class _DocumentsStep extends StatelessWidget {
           ),
           ElevatedButton.icon(
             onPressed: () {
-              // TODO: Implement document upload
+              final guestIndex = state.guests.indexOf(guest);
+              if (guestIndex == -1) return;
+              _showDocumentUploadSheet(context, guestIndex);
             },
             icon: const Icon(Icons.upload, size: 18),
             label: Text(s.guest_checkin_upload),
@@ -1317,7 +1334,9 @@ class _DocumentsStep extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit, color: AppColors.gray500, size: 20),
             onPressed: () {
-              // TODO: Implement edit document
+              final guestIndex = state.guests.indexOf(guest);
+              if (guestIndex == -1) return;
+              _showDocumentUploadSheet(context, guestIndex);
             },
           ),
         ],
@@ -1558,8 +1577,9 @@ class SignaturePainter extends CustomPainter {
       // Comparar valores de Offset, no referencias
       if (currentLast == null && oldLast == null) return false;
       if (currentLast == null || oldLast == null) return true;
-      if (currentLast.dx != oldLast.dx || currentLast.dy != oldLast.dy)
+      if (currentLast.dx != oldLast.dx || currentLast.dy != oldLast.dy) {
         return true;
+      }
     }
 
     return false;

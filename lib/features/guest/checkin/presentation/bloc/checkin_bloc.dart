@@ -57,11 +57,15 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
       // Cargar huéspedes existentes (si hay check-in guardado)
       final existingGuests = await _repository.getBookingGuests(event.bookingId);
 
-      // Si ya hay huéspedes guardados, usarlos
+      // Si ya hay huéspedes guardados, usarlos — pero completar los que falten
       if (existingGuests.isNotEmpty) {
+        final mergedGuests = _mergeGuestsWithBooking(
+          existing: existingGuests,
+          bookingData: bookingData,
+        );
         emit(CheckinLoaded(
           bookingData: bookingData,
-          guests: existingGuests,
+          guests: mergedGuests,
           currentStep: 0,
           completedSteps: {},
         ));
@@ -313,7 +317,15 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
       } catch (e, s) {
         debugPrint('❌ [CheckinBloc] Error al actualizar documento: $e');
         debugPrint('❌ [CheckinBloc] StackTrace: $s');
-        emit(CheckinError('Error al actualizar documento: $e'));
+        // Emitir error sin perder el estado cargado: el usuario sigue en el mismo paso
+        emit(CheckinDocumentUploadError(
+          bookingData: currentState.bookingData,
+          guests: currentState.guests,
+          currentStep: currentState.currentStep,
+          completedSteps: currentState.completedSteps,
+          signatureSvg: currentState.signatureSvg,
+          errorMessage: 'Error al subir documento. Inténtalo de nuevo.',
+        ));
       }
     }
   }
@@ -432,6 +444,55 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
     if (state is CheckinError) {
       emit(const CheckinInitial());
     }
+  }
+
+  /// Combina los huéspedes guardados en DB con los esperados según la reserva.
+  /// Si hay menos huéspedes guardados que los que indica la reserva, añade
+  /// placeholders para los que faltan (sin perder los datos ya guardados).
+  List<GuestEntity> _mergeGuestsWithBooking({
+    required List<GuestEntity> existing,
+    required CheckinBookingData bookingData,
+  }) {
+    final expectedTotal = bookingData.numAdults + bookingData.numChildren;
+
+    // Si ya tenemos todos los huéspedes, no hay nada que completar
+    if (existing.length >= expectedTotal) {
+      debugPrint('✅ [_mergeGuests] ${existing.length} huéspedes guardados, coincide con $expectedTotal esperados');
+      return existing;
+    }
+
+    debugPrint('⚠️ [_mergeGuests] ${existing.length} huéspedes guardados, esperados $expectedTotal — completando placeholders');
+
+    final merged = List<GuestEntity>.from(existing);
+
+    // Contar cuántos adultos y niños ya tenemos
+    final savedAdults = existing.where((g) => g.type == GuestType.adult).length;
+    final savedChildren = existing.where((g) => g.type == GuestType.child).length;
+
+    // Añadir adultos que faltan
+    for (var i = savedAdults; i < bookingData.numAdults; i++) {
+      merged.add(GuestEntity(
+        fullName: '',
+        type: GuestType.adult,
+        isPrimary: false,
+      ));
+    }
+
+    // Añadir niños que faltan, usando las edades de la reserva
+    for (var i = savedChildren; i < bookingData.childrenAges.length; i++) {
+      final age = bookingData.childrenAges[i];
+      final isUnder14 = age < 14;
+      merged.add(GuestEntity(
+        fullName: isUnder14 ? 'Niño ${i + 1} ($age años)' : '',
+        type: GuestType.child,
+        age: age,
+        isPrimary: false,
+        isReadOnly: isUnder14,
+      ));
+    }
+
+    debugPrint('✅ [_mergeGuests] Total tras merge: ${merged.length} huéspedes');
+    return merged;
   }
 
   /// Convierte string a DocumentType

@@ -1152,7 +1152,23 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 height: 1.5,
               ),
             ),
-            // TODO: Anadir boton para abrir en mapa cuando haya coordenadas
+            if (_unit?.lat != null && _unit?.lng != null) ...[
+              const SizedBox(height: AppTheme.spacing12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  final lat = _unit!.lat;
+                  final lng = _unit!.lng;
+                  final uri = Uri.parse('https://maps.google.com/?q=$lat,$lng');
+                  launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: const Text('Abrir en Maps'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.gold,
+                  side: const BorderSide(color: AppColors.gold),
+                ),
+              ),
+            ],
           ] else
             Text(
               s.guest_accommodation_address_unavailable,

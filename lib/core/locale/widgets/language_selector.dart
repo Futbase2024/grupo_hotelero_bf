@@ -8,26 +8,6 @@ import '../../theme/app_theme.dart';
 /// Variantes del selector de idioma
 enum LanguageSelectorVariant { compact, list }
 
-/// Función para obtener la ruta de la bandera
-String _getFlagAsset(String languageCode) {
-  switch (languageCode) {
-    case 'es':
-      return 'assets/banderas/es.png';
-    case 'en':
-      return 'assets/banderas/en.png';
-    case 'de':
-      return 'assets/banderas/de.png';
-    case 'fr':
-      return 'assets/banderas/fr.png';
-    case 'it':
-      return 'assets/banderas/it.png';
-    case 'pt':
-      return 'assets/banderas/pt.png';
-    default:
-      return 'assets/banderas/es.png';
-  }
-}
-
 /// Widget reutilizable para seleccionar el idioma de la aplicación.
 ///
 /// [compact] - Bandera + código de idioma (para Public Home)
@@ -52,58 +32,70 @@ class LanguageSelector extends StatelessWidget {
 }
 
 /// Selector compacto: bandera + código de idioma
+/// Diseñado para ser robusto en web release mode con fallback si
+/// LocaleCubit no está disponible.
 class _CompactSelector extends StatelessWidget {
   const _CompactSelector();
 
   @override
   Widget build(BuildContext context) {
-    final localeCubit = context.read<LocaleCubit>();
-    final currentLocale = context.select(
-      (LocaleCubit cubit) => cubit.state.languageCode,
-    );
+    String currentLocale = 'es';
+    LocaleCubit? localeCubit;
 
-    return InkWell(
-      onTap: () => _showLanguageMenu(context, localeCubit),
-      borderRadius: BorderRadius.circular(24),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    try {
+      localeCubit = context.read<LocaleCubit>();
+      currentLocale = localeCubit.state.languageCode;
+    } catch (_) {
+      // LocaleCubit no disponible - usar valores por defecto
+    }
+
+    final isDark = AppColors.isDarkMode(context);
+
+    return GestureDetector(
+      onTap: localeCubit != null
+          ? () => _showLanguageMenu(context, localeCubit!)
+          : null,
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 52, minHeight: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.blackWithAlpha50
+              : AppColors.blackWithAlpha05,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? AppColors.gold : AppColors.blackWithAlpha20,
+            width: 1.5,
+          ),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: Image.asset(
-                _getFlagAsset(currentLocale),
-                width: 24,
-                height: 16,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 24,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: AppColors.gold,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '?',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  );
-                },
+            // Bandera como texto sobre fondo gold (sin Image.asset para
+            // máxima compatibilidad en web release mode)
+            Container(
+              width: 22,
+              height: 15,
+              decoration: BoxDecoration(
+                color: AppColors.gold,
+                borderRadius: BorderRadius.circular(2),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                _getCountryCode(currentLocale),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 7,
+                  fontWeight: FontWeight.bold,
+                  height: 1.0,
+                ),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 5),
             Text(
               currentLocale.toUpperCase(),
               style: TextStyle(
-                color: AppColors.gold,
+                color: isDark ? AppColors.gold : AppColors.black,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -112,6 +104,26 @@ class _CompactSelector extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Código de país a partir del código de idioma para el indicador visual
+  String _getCountryCode(String languageCode) {
+    switch (languageCode) {
+      case 'es':
+        return 'ES';
+      case 'en':
+        return 'GB';
+      case 'de':
+        return 'DE';
+      case 'fr':
+        return 'FR';
+      case 'it':
+        return 'IT';
+      case 'pt':
+        return 'PT';
+      default:
+        return languageCode.toUpperCase();
+    }
   }
 
   void _showLanguageMenu(BuildContext context, LocaleCubit localeCubit) {
@@ -143,33 +155,21 @@ class _CompactSelector extends StatelessWidget {
           height: 44,
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: Image.asset(
-                  _getFlagAsset(locale.languageCode),
-                  width: 24,
-                  height: 16,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 24,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: AppColors.gold,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          '?',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+              Container(
+                width: 24,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: AppColors.gold,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  locale.languageCode.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -213,7 +213,8 @@ class _ListSelector extends StatelessWidget {
       children: LocaleCubit.supportedLocales.map((locale) {
         final code = locale.languageCode;
         final isSelected = code == currentCode;
-        final nativeName = LocaleCubit.nativeNames[code] ?? code.toUpperCase();
+        final nativeName =
+            LocaleCubit.nativeNames[code] ?? code.toUpperCase();
 
         return Container(
           margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
@@ -238,33 +239,21 @@ class _ListSelector extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: Image.asset(
-                      _getFlagAsset(code),
-                      width: 32,
-                      height: 22,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 32,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: AppColors.gold,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              '?',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                  Container(
+                    width: 32,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      code.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -272,9 +261,8 @@ class _ListSelector extends StatelessWidget {
                     nativeName,
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w400,
                       color: isSelected
                           ? AppColors.gold
                           : AppColors.getTextPrimaryColor(context),

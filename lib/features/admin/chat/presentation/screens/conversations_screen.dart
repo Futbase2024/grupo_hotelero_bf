@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
-import '../../../../guest/chat/domain/repositories/chat_repository.dart';
 import '../../domain/bloc/conversations_bloc.dart';
 import '../widgets/conversation_tile.dart';
 
@@ -27,74 +25,50 @@ class ConversationsScreen extends StatefulWidget {
 }
 
 class _ConversationsScreenState extends State<ConversationsScreen> {
-  late final ConversationsBloc _conversationsBloc;
-  late final AuthBloc _authBloc;
-  bool _initialized = false;
-
   @override
-  void initState() {
-    super.initState();
-    _Debug.log('initState');
-    _conversationsBloc = ConversationsBloc(
-      chatRepository: getIt<ChatRepository>(),
-    );
-    _authBloc = context.read<AuthBloc>();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Inicializar solo si el BLoC aún no ha cargado datos
+    // (evita recargar al volver desde una conversación)
+    final bloc = context.read<ConversationsBloc>();
+    if (bloc.state is ConversationsInitial) {
+      final authState = context.read<AuthBloc>().state;
+      _initializeConversations(bloc, authState);
+    }
   }
 
-  @override
-  void dispose() {
-    _Debug.log('dispose');
-    _conversationsBloc.close();
-    super.dispose();
-  }
+  void _initializeConversations(ConversationsBloc bloc, AuthState authState) {
+    if (authState is! AuthAuthenticated) return;
 
-  void _initializeConversations(AuthState authState) {
-    if (_initialized) return;
+    final user = authState.user;
+    _Debug.log('User: ${user.id}, role: ${user.role}, propertyId: ${user.propertyId}');
 
-    _Debug.log('_initializeConversations - authState: ${authState.runtimeType}');
-
-    if (authState is AuthAuthenticated) {
-      final user = authState.user;
-      _Debug.log('User: ${user.id}, role: ${user.role}, propertyId: ${user.propertyId}');
-
-      // Validar que propertyId no sea null, vacío ni solo espacios
-      final propertyId = user.propertyId?.trim();
-      if (propertyId != null && propertyId.isNotEmpty) {
-        // Si tiene propertyId válido, cargar conversaciones de la propiedad
-        _Debug.log('Cargando conversaciones por propertyId: $propertyId');
-        _conversationsBloc.add(
-          ConversationsStarted(propertyId: propertyId),
-        );
-      } else {
-        // Sin propertyId válido, cargar conversaciones donde el usuario es participante
-        _Debug.log('Sin propertyId - cargando conversaciones por userId: ${user.id}');
-        _conversationsBloc.add(
-          ConversationsLoadForUser(userId: user.id),
-        );
-      }
-      _initialized = true;
+    final propertyId = user.propertyId?.trim();
+    if (propertyId != null && propertyId.isNotEmpty) {
+      _Debug.log('Cargando conversaciones por propertyId: $propertyId');
+      bloc.add(ConversationsStarted(propertyId: propertyId));
+    } else {
+      _Debug.log('Sin propertyId - cargando conversaciones por userId: ${user.id}');
+      bloc.add(ConversationsLoadForUser(userId: user.id));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _conversationsBloc,
-      child: BlocBuilder<AuthBloc, AuthState>(
-        bloc: _authBloc,
-        builder: (context, authState) {
-          // Inicializar conversaciones cuando tengamos el estado de auth
-          _initializeConversations(authState);
-
-          return Scaffold(
-            appBar: _buildAppBar(context),
-            body: BlocBuilder<ConversationsBloc, ConversationsState>(
-              builder: (context, state) {
-                return _buildBody(context, state);
-              },
-            ),
-          );
-        },
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, authState) {
+        final bloc = context.read<ConversationsBloc>();
+        if (bloc.state is ConversationsInitial) {
+          _initializeConversations(bloc, authState);
+        }
+      },
+      child: Scaffold(
+        appBar: _buildAppBar(context),
+        body: BlocBuilder<ConversationsBloc, ConversationsState>(
+          builder: (context, state) {
+            return _buildBody(context, state);
+          },
+        ),
       ),
     );
   }
@@ -162,7 +136,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     return RefreshIndicator(
       color: AppColors.gold,
       onRefresh: () async {
-        _conversationsBloc.add(const ConversationsRefreshRequested());
+        context.read<ConversationsBloc>().add(const ConversationsRefreshRequested());
       },
       child: ListView.builder(
         itemCount: state.sortedConversations.length,
@@ -179,7 +153,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   }
 
   void _deleteConversation(BuildContext context, String conversationId) {
-    _conversationsBloc.add(ConversationsDeleteRequested(conversationId: conversationId));
+    context.read<ConversationsBloc>().add(ConversationsDeleteRequested(conversationId: conversationId));
 
     // Mostrar feedback al usuario
     ScaffoldMessenger.of(context).showSnackBar(
@@ -255,12 +229,11 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 // Validar que propertyId no sea null, vacío ni solo espacios
                 final propertyId = user.propertyId?.trim();
                 if (propertyId != null && propertyId.isNotEmpty) {
-                  _conversationsBloc.add(
+                  context.read<ConversationsBloc>().add(
                     ConversationsStarted(propertyId: propertyId),
                   );
                 } else {
-                  // Sin propertyId válido, cargar por userId
-                  _conversationsBloc.add(
+                  context.read<ConversationsBloc>().add(
                     ConversationsLoadForUser(userId: user.id),
                   );
                 }

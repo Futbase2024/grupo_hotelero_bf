@@ -184,16 +184,7 @@ class DashboardTab extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _StatCard(
-                  icon: Icons.apartment_outlined,
-                  value: summary?.totalUnits.toString() ?? '0',
-                  label: 'Alojamientos activos',
-                  onTap: () {
-                    context.read<AdminDashboardBloc>().add(
-                          const AdminDashboardTabChanged(5),
-                        );
-                  },
-                ),
+                child: _OccupancyStatCard(state: state),
               ),
             ],
           ),
@@ -270,7 +261,12 @@ class DashboardTab extends StatelessWidget {
               return _RecentCheckinTile(
                 checkin: checkin,
                 onTap: () {
-                  // TODO: Navigate to booking detail
+                  context.go(
+                    AppRoutes.adminBookingDetail.replaceFirst(
+                      ':bookingId',
+                      checkin.bookingId,
+                    ),
+                  );
                 },
               );
             }).toList(),
@@ -337,6 +333,111 @@ class _StatCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.whiteWithAlpha70,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Card de ocupación hoy que navega a la pantalla de estadísticas detalladas
+class _OccupancyStatCard extends StatelessWidget {
+  const _OccupancyStatCard({required this.state});
+
+  final AdminDashboardState state;
+
+  int get _occupiedToday {
+    final bookings = state.bookings;
+    final today = DateTime.now();
+    final tomorrow = DateTime(today.year, today.month, today.day + 1);
+    final todayStart = DateTime(today.year, today.month, today.day);
+    return bookings
+        .where((b) =>
+            !b.isCancelled &&
+            b.checkInDate.isBefore(tomorrow) &&
+            b.checkOutDate.isAfter(todayStart))
+        .length;
+  }
+
+  int get _totalUnits => state.summary?.totalUnits ?? 0;
+
+  double get _occupancyRate {
+    final total = _totalUnits;
+    if (total == 0) return 0.0;
+    return (_occupiedToday / total) * 100;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rate = _occupancyRate;
+    final rateText = '${rate.toStringAsFixed(0)}%';
+    final rateColor = rate >= 80
+        ? const Color(0xFF27AE60)
+        : rate >= 50
+            ? AppColors.gold
+            : const Color(0xFFE67E22);
+
+    return GestureDetector(
+      onTap: () => context.push(AppRoutes.adminOccupancy),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.darkSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.gold, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.goldWithAlpha20,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.pie_chart_outline,
+                    size: 20,
+                    color: AppColors.gold,
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 12,
+                  color: AppColors.whiteWithAlpha50,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              rateText,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: rateColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Ocupación hoy',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.whiteWithAlpha70,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: (rate / 100).clamp(0.0, 1.0),
+                backgroundColor: AppColors.darkBorder,
+                valueColor: AlwaysStoppedAnimation<Color>(rateColor),
+                minHeight: 3,
               ),
             ),
           ],

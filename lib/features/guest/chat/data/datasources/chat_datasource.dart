@@ -213,65 +213,52 @@ class ChatDatasource {
     final conversationId = data['id'] as String;
     final bookingId = data['booking_id'] as String?;
 
-    // Obtener participantes
-    final participantsResponse = await _client
-        .from(SupabaseTables.conversationParticipants)
-        .select('''
-          conversation_id,
-          user_id,
-          role,
-          created_at
-        ''')
-        .eq('conversation_id', conversationId);
+    // Obtener participantes y último mensaje en paralelo
+    final results = await Future.wait([
+      _client
+          .from(SupabaseTables.conversationParticipants)
+          .select('conversation_id, user_id, role, created_at')
+          .eq('conversation_id', conversationId),
+      _client
+          .from(SupabaseTables.messages)
+          .select('id, conversation_id, sender_user_id, msg_type, content, created_at, read_at')
+          .eq('conversation_id', conversationId)
+          .order('created_at', ascending: false)
+          .limit(1),
+    ]);
 
-    // Obtener IDs de participantes para buscar sus nombres
-    final participantUserIds = (participantsResponse as List)
+    final participantsResponse = results[0] as List;
+    final messagesResponse = results[1] as List;
+    final lastMessageRaw = messagesResponse.isNotEmpty ? messagesResponse.first as Map<String, dynamic> : null;
+
+    // Recopilar todos los user IDs en una sola llamada batch (participantes + remitente del mensaje)
+    final allUserIds = participantsResponse
         .map((p) => p['user_id'] as String)
-        .toList();
+        .toSet();
+    if (lastMessageRaw != null) {
+      allUserIds.add(lastMessageRaw['sender_user_id'] as String);
+    }
 
-    // Obtener información de todos los participantes en batch
-    final participantsInfo = await _getSendersInfo(participantUserIds);
+    final allUsersInfo = await _getSendersInfo(allUserIds.toList());
 
     // Mapear participantes incluyendo sus nombres
     final participants = participantsResponse.map((p) {
       final userId = p['user_id'] as String;
-      final info = participantsInfo[userId];
-
+      final info = allUsersInfo[userId];
       final flattenedMap = Map<String, dynamic>.from(p);
       flattenedMap['user_name'] = info?['full_name'];
-      // Usar el email de auth.users si está disponible
       flattenedMap['user_email'] = null;
-
       return ParticipantEntity.fromJson(flattenedMap);
     }).toList();
 
-    // Obtener último mensaje (sin joins, la relación es con auth.users)
-    final lastMessageResponse = await _client
-        .from(SupabaseTables.messages)
-        .select('''
-          id,
-          conversation_id,
-          sender_user_id,
-          msg_type,
-          content,
-          created_at,
-          read_at
-        ''')
-        .eq('conversation_id', conversationId)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-
+    // Construir último mensaje con info del remitente (ya en allUsersInfo, sin query extra)
     MessageEntity? lastMessage;
-    if (lastMessageResponse != null) {
-      // Obtener info del remitente
-      final senderUserId = lastMessageResponse['sender_user_id'] as String;
-      final senderInfo = await _getSenderInfo(senderUserId);
-
-      final flattenedMap = Map<String, dynamic>.from(lastMessageResponse);
-      flattenedMap['sender_name'] = senderInfo['full_name'];
-      flattenedMap['sender_role'] = senderInfo['role'];
-
+    if (lastMessageRaw != null) {
+      final senderUserId = lastMessageRaw['sender_user_id'] as String;
+      final senderInfo = allUsersInfo[senderUserId];
+      final flattenedMap = Map<String, dynamic>.from(lastMessageRaw);
+      flattenedMap['sender_name'] = senderInfo?['full_name'];
+      flattenedMap['sender_role'] = senderInfo?['role'];
       lastMessage = MessageEntity.fromJson(flattenedMap);
     }
 
@@ -330,35 +317,28 @@ class ChatDatasource {
   }
 
   /// Obtiene todas las conversaciones de una propiedad (para admin/staff)
+  /// ✅ OPTIMIZADO: batch queries en lugar de N+1
   Future<List<ConversationEntity>> getConversationsByProperty({
     required String propertyId,
   }) async {
     final response = await _client
         .from(SupabaseTables.conversations)
-        .select('''
-          id,
-          property_id,
-          booking_id,
-          created_at
-        ''')
-        .eq('property_id', propertyId)
-        .order('created_at', ascending: false);
+        .select('id')
+        .eq('property_id', propertyId);
 
-    final conversations = <ConversationEntity>[];
-    for (final data in response) {
-      final conversation = await _enrichConversation(data);
-      conversations.add(conversation);
-    }
+    final conversationIds = (response as List)
+        .map((c) => c['id'] as String)
+        .toList();
 
-    return conversations;
+    return _getConversationsBatch(conversationIds, propertyId);
   }
 
   /// Obtiene todas las conversaciones donde el usuario es participante
+  /// ✅ OPTIMIZADO: batch queries en lugar de N+1
   Future<List<ConversationEntity>> getConversationsForUser({
     required String userId,
     String? propertyId,
   }) async {
-    // Obtener conversaciones donde el usuario es participante
     final participantResponse = await _client
         .from(SupabaseTables.conversationParticipants)
         .select('conversation_id')
@@ -370,40 +350,7 @@ class ChatDatasource {
         .map((p) => p['conversation_id'] as String)
         .toList();
 
-    // Construir query con filtro opcional de propiedad
-    List<dynamic> response;
-    if (propertyId != null) {
-      response = await _client
-          .from(SupabaseTables.conversations)
-          .select('''
-            id,
-            property_id,
-            booking_id,
-            created_at
-          ''')
-          .inFilter('id', conversationIds)
-          .eq('property_id', propertyId)
-          .order('created_at', ascending: false);
-    } else {
-      response = await _client
-          .from(SupabaseTables.conversations)
-          .select('''
-            id,
-            property_id,
-            booking_id,
-            created_at
-          ''')
-          .inFilter('id', conversationIds)
-          .order('created_at', ascending: false);
-    }
-
-    final conversations = <ConversationEntity>[];
-    for (final data in response) {
-      final conversation = await _enrichConversation(data);
-      conversations.add(conversation);
-    }
-
-    return conversations;
+    return _getConversationsBatch(conversationIds, propertyId);
   }
 
   /// Obtiene los mensajes de una conversación
@@ -592,45 +539,30 @@ class ChatDatasource {
         .expand((messages) => messages);
   }
 
-  /// Obtiene información del remitente (nombre y rol) usando RPC
-  Future<Map<String, String?>> _getSenderInfo(String userId) async {
-    try {
-      // Usar función RPC con SECURITY DEFINER para evitar problemas de RLS
-      final response = await _client.rpc(
-        'get_senders_info',
-        params: {'user_ids': [userId]},
-      );
-
-      if (response != null && response is List && response.isNotEmpty) {
-        final data = response.first;
-        return {
-          'full_name': data['full_name'] as String?,
-          'role': data['role'] as String?,
-        };
-      }
-
-      return {'full_name': null, 'role': null};
-    } catch (e) {
-      _logError('Error obteniendo info del remitente', e);
-      return {'full_name': null, 'role': null};
-    }
-  }
-
   /// Suscribe a cambios en las conversaciones de un usuario en tiempo real
   /// Incluye actualización de unread_count y último mensaje
-  /// ✅ OPTIMIZADO: Batch queries para evitar N+1
+  /// ✅ OPTIMIZADO: Batch queries + throttle para evitar N+1 y disparos continuos
   Stream<List<ConversationEntity>> watchUserConversations({
     required String userId,
     String? propertyId,
   }) {
     _log('watchUserConversations - userId: $userId, propertyId: $propertyId');
 
-    // Obtener conversation_ids del usuario
+    DateTime? lastEmit;
+
     return _client
         .from(SupabaseTables.conversationParticipants)
         .stream(primaryKey: ['conversation_id', 'user_id'])
         .eq('user_id', userId)
         .asyncMap((participantData) async {
+          // Throttle: ignorar si el último emit fue hace menos de 800ms
+          final now = DateTime.now();
+          if (lastEmit != null &&
+              now.difference(lastEmit!) < const Duration(milliseconds: 800)) {
+            return null;
+          }
+          lastEmit = now;
+
           if (participantData.isEmpty) return <ConversationEntity>[];
 
           final conversationIds = (participantData as List)
@@ -639,9 +571,10 @@ class ChatDatasource {
 
           _log('watchUserConversations - ${conversationIds.length} conversaciones');
 
-          // ✅ OPTIMIZACIÓN: Batch queries en lugar de N+1
           return await _getConversationsBatch(conversationIds, propertyId);
-        });
+        })
+        .where((result) => result != null)
+        .cast<List<ConversationEntity>>();
   }
 
   /// ✅ OPTIMIZACIÓN: Obtiene múltiples conversaciones en batch (4 queries en lugar de N*3)

@@ -30,7 +30,7 @@ flutter build web --release \
   --dart-define=SUPABASE_URL=$SUPABASE_URL \
   --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
   --dart-define=ENVIRONMENT=prod \
-  --tree-shake-icons \
+  --no-tree-shake-icons \
   --no-wasm-dry-run
 
 if [ "$QUIET" = false ]; then

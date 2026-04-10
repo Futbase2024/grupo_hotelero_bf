@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/responsive.dart';
 import '../../../../../core/theme/widgets/theme_toggle.dart';
-import '../../../../../core/locale/widgets/language_selector.dart';
+import '../../../../../core/locale/cubit/locale_cubit.dart';
 import '../../../../../core/router/app_router.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../auth/presentation/widgets/logo_tap_trigger.dart';
@@ -163,73 +165,59 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                     children: [
                       // Selector de idioma + Badge superior + Theme toggle
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Selector de idioma (flex 2)
-                          Expanded(
-                            flex: 2,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: LanguageSelector(
-                                variant: LanguageSelectorVariant.compact,
+                          // Selector de idioma inlineado
+                          _buildLanguageSelector(context, isDark),
+                          // Espaciador flexible
+                          const Spacer(),
+                          // Exclusividad garantizada - centrado
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacing12,
+                              vertical: AppTheme.spacing8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.black
+                                  : AppColors.blackWithAlpha05,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusFull,
+                              ),
+                              border: Border.all(
+                                color: isDark ? _kDarkBorder : _kLightBorder,
                               ),
                             ),
-                          ),
-                          // Exclusividad garantizada (flex 6)
-                          Expanded(
-                            flex: 6,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.spacing12,
-                                vertical: AppTheme.spacing8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? AppColors.black
-                                    : AppColors.blackWithAlpha05,
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusFull,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.star_rounded,
+                                  color: isDark
+                                      ? AppColors.gold
+                                      : AppColors.black,
+                                  size: 14,
                                 ),
-                                border: Border.all(
-                                  color: isDark ? _kDarkBorder : _kLightBorder,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.star_rounded,
+                                const SizedBox(width: AppTheme.spacing8),
+                                Text(
+                                  S.of(context).public_badge_exclusivity,
+                                  style: TextStyle(
+                                    fontSize: 11,
                                     color: isDark
                                         ? AppColors.gold
                                         : AppColors.black,
-                                    size: 14,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.15,
                                   ),
-                                  const SizedBox(width: AppTheme.spacing8),
-                                  Text(
-                                    S.of(context).public_badge_exclusivity,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDark
-                                          ? AppColors.gold
-                                          : AppColors.black,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.15,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                          // Theme toggle (flex 2)
-                          Expanded(
-                            flex: 2,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: ThemeToggle(
-                                variant: ThemeToggleVariant.icon,
-                              ),
-                            ),
+                          // Espaciador flexible
+                          const Spacer(),
+                          // Theme toggle - tamaño natural
+                          ThemeToggle(
+                            variant: ThemeToggleVariant.icon,
                           ),
                         ],
                       ),
@@ -560,6 +548,161 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         child: Image.asset('assets/icons/logo.png', fit: BoxFit.cover),
       ),
     );
+  }
+
+  /// Selector de idioma inlineado directamente en la pantalla
+  /// (no usa el widget LanguageSelector para evitar problemas en web release)
+  Widget _buildLanguageSelector(BuildContext context, bool isDark) {
+    String currentLocale = 'es';
+    LocaleCubit? localeCubit;
+
+    try {
+      localeCubit = context.read<LocaleCubit>();
+      currentLocale = localeCubit.state.languageCode;
+    } catch (_) {
+      // LocaleCubit no disponible en este contexto - usar valores por defecto
+    }
+
+    return GestureDetector(
+      onTap: localeCubit != null
+          ? () => _showLanguageMenu(context, localeCubit!)
+          : null,
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 52, minHeight: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.blackWithAlpha50
+              : AppColors.blackWithAlpha05,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? AppColors.gold : AppColors.blackWithAlpha20,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: Image.asset(
+                'assets/banderas/$currentLocale.png',
+                width: 22,
+                height: 15,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 22,
+                  height: 15,
+                  decoration: BoxDecoration(
+                    color: AppColors.gold,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    currentLocale.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 7,
+                      fontWeight: FontWeight.bold,
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              currentLocale.toUpperCase(),
+              style: TextStyle(
+                color: isDark ? AppColors.gold : AppColors.black,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Muestra el menú de selección de idioma
+  void _showLanguageMenu(BuildContext context, LocaleCubit localeCubit) {
+    final button = context.findRenderObject()! as RenderBox;
+    final overlay =
+        Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(
+          button.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<String>(
+      context: context,
+      position: position,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+      ),
+      items: LocaleCubit.supportedLocales.map((locale) {
+        final isSelected =
+            locale.languageCode == localeCubit.state.languageCode;
+        return PopupMenuItem<String>(
+          value: locale.languageCode,
+          height: 44,
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: Image.asset(
+                  'assets/banderas/${locale.languageCode}.png',
+                  width: 24,
+                  height: 16,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 24,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      locale.languageCode.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                LocaleCubit.nativeNames[locale.languageCode] ??
+                    locale.languageCode,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? AppColors.gold : null,
+                ),
+              ),
+              const Spacer(),
+              if (isSelected)
+                Icon(Icons.check_rounded, color: AppColors.gold, size: 20),
+            ],
+          ),
+        );
+      }).toList(),
+    ).then((code) {
+      if (code != null) {
+        localeCubit.setLocale(Locale(code));
+      }
+    });
   }
 
   /// Título principal

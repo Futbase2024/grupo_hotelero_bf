@@ -5,8 +5,10 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/router/app_router.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../bookings/presentation/sheets/create_booking_bottom_sheet.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../domain/entities/admin_entities.dart';
+import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../shared/widgets/admin_widgets.dart';
 import '../../../../guest/chat/domain/repositories/chat_repository.dart';
 
@@ -179,7 +181,11 @@ class _BookingsTabState extends State<BookingsTab> {
         subtitle: 'Crea la primera reserva con el botón +',
         actionLabel: 'Crear reserva',
         onAction: () {
-          // TODO: Open CreateBookingBottomSheet
+          CreateBookingBottomSheet.show(
+            context,
+            repository: getIt<AdminPanelRepository>(),
+            dashboardBloc: context.read<AdminDashboardBloc>(),
+          );
         },
       );
     }

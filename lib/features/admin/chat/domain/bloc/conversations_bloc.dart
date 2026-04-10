@@ -112,53 +112,39 @@ class ConversationsLoading extends ConversationsState {
 
 /// Estado con conversaciones cargadas
 class ConversationsLoaded extends ConversationsState {
-  const ConversationsLoaded({
+  ConversationsLoaded({
     required this.conversations,
     required this.propertyId,
     this.userId,
     this.isRefreshing = false,
     this.selectedConversation,
-  });
+  }) : sortedConversations = _sort(conversations);
 
   final List<ConversationEntity> conversations;
+  /// Conversaciones ya ordenadas por último mensaje — calculadas una sola vez al crear el estado
+  final List<ConversationEntity> sortedConversations;
   final String propertyId;
-  /// ID del usuario actual (para refrescar cuando no hay propertyId)
   final String? userId;
   final bool isRefreshing;
   final ConversationEntity? selectedConversation;
 
-  /// Indica si hay conversaciones
-  bool get hasConversations => conversations.isNotEmpty;
-
-  /// Total de conversaciones
-  int get totalConversations => conversations.length;
-
-  /// Conversaciones ordenadas por último mensaje (más recientes primero)
-  List<ConversationEntity> get sortedConversations {
-    final sorted = List<ConversationEntity>.from(conversations);
+  static List<ConversationEntity> _sort(List<ConversationEntity> list) {
+    final sorted = List<ConversationEntity>.from(list);
     sorted.sort((a, b) {
-      // Si ambas tienen último mensaje, comparar por fecha
       if (a.lastMessage != null && b.lastMessage != null) {
         return b.lastMessage!.createdAt.compareTo(a.lastMessage!.createdAt);
       }
-      // Si solo una tiene mensaje, ponerla primero
       if (a.lastMessage != null) return -1;
       if (b.lastMessage != null) return 1;
-      // Si ninguna tiene mensaje, comparar por fecha de creación
       return b.createdAt.compareTo(a.createdAt);
     });
     return sorted;
   }
 
-  /// Total de mensajes no leídos
-  int get totalUnread {
-    return conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
-  }
-
-  /// Conversaciones con mensajes no leídos
-  List<ConversationEntity> get unreadConversations {
-    return conversations.where((c) => c.hasUnread).toList();
-  }
+  bool get hasConversations => conversations.isNotEmpty;
+  int get totalConversations => conversations.length;
+  int get totalUnread => conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
+  List<ConversationEntity> get unreadConversations => conversations.where((c) => c.hasUnread).toList();
 
   @override
   List<Object?> get props => [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:bf_stay/l10n/app_localizations.dart';
+import '../../../../../../core/router/app_router.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../domain/entities/collection_entity.dart';
 import '../../domain/entities/place_entity.dart';
@@ -130,7 +131,10 @@ class _CollectionBody extends StatelessWidget {
                   child: PlaceCard(
                     place: place,
                     onTap: () {
-                      // TODO: Navegar al detalle del lugar
+                      context.go(
+                        AppRoutes.placeDetail.replaceFirst(':id', place.id),
+                        extra: {'place': place},
+                      );
                     },
                   ),
                 );

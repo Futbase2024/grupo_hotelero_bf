@@ -146,6 +146,23 @@ class CheckinError extends CheckinState {
   List<Object?> get props => [message];
 }
 
+/// Error al subir un documento — preserva el estado cargado para no perder el progreso
+class CheckinDocumentUploadError extends CheckinLoaded {
+  const CheckinDocumentUploadError({
+    required super.bookingData,
+    required super.guests,
+    required super.currentStep,
+    required super.completedSteps,
+    super.signatureSvg,
+    required this.errorMessage,
+  });
+
+  final String errorMessage;
+
+  @override
+  List<Object?> get props => [...super.props, errorMessage];
+}
+
 /// Check-in ya completado anteriormente
 class CheckinAlreadyCompleted extends CheckinState {
   const CheckinAlreadyCompleted({
