@@ -517,15 +517,17 @@ class AccessInstructionsScreen extends StatelessWidget {
               children: [
                 Icon(Icons.event_outlined, size: 18, color: AppColors.black),
                 const SizedBox(width: 8),
-                Text(
-                  s.guest_access_codes_available_datetime(
-                    formattedDate,
-                    formattedTime,
-                  ),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
+                Flexible(
+                  child: Text(
+                    s.guest_access_codes_available_datetime(
+                      formattedDate,
+                      formattedTime,
+                    ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                    ),
                   ),
                 ),
               ],

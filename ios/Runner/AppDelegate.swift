@@ -49,6 +49,30 @@ import UserNotifications
     print("❌ Failed to register for remote notifications: \(error)")
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
+
+  // Mostrar notificación en foreground SIEMPRE
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    if #available(iOS 14.0, *) {
+      completionHandler([.banner, .badge, .sound])
+    } else {
+      completionHandler([.alert, .badge, .sound])
+    }
+  }
+
+  // Manejar tap en notificación cuando la app está en background
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    let userInfo = response.notification.request.content.userInfo
+    print("📱 Notification tapped with data: \(userInfo)")
+    completionHandler()
+  }
 }
 
 // Extension para Firebase Messaging Delegate
@@ -56,8 +80,5 @@ extension AppDelegate: MessagingDelegate {
   // Manejar cambios de token FCM
   func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
     print("📦 FCM Token received in AppDelegate: \(fcmToken ?? "nil")")
-
-    // Enviar token a Flutter vía MethodChannel si es necesario
-    // El plugin firebase_messaging ya maneja esto automáticamente
   }
 }

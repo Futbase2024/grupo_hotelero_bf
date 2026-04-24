@@ -129,10 +129,20 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     return path;
   }
 
+  bool _dataLoaded = false;
+
   @override
   void initState() {
     super.initState();
-    _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_dataLoaded) {
+      _dataLoaded = true;
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {
@@ -736,12 +746,14 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                   color: AppColors.black,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  s.guest_accommodation_codes_available_datetime(formattedDate, formattedTime),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
+                Flexible(
+                  child: Text(
+                    s.guest_accommodation_codes_available_datetime(formattedDate, formattedTime),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                    ),
                   ),
                 ),
               ],

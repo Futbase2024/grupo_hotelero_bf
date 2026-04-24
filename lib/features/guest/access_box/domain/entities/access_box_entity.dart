@@ -11,6 +11,8 @@ class AccessBoxEntity extends Equatable {
     required this.validUntil,
     this.accessInstructions,
     this.boxLocation,
+    this.earlyCheckinAvailableAt,
+    this.serverTime,
   });
 
   /// Código principal de acceso (keybox/puerta principal)
@@ -37,6 +39,15 @@ class AccessBoxEntity extends Equatable {
   /// Ubicación del box
   final String? boxLocation;
 
+  /// Timestamp en que el admin marcó early check-in (null = sin early check-in)
+  final DateTime? earlyCheckinAvailableAt;
+
+  /// Hora del servidor en el momento de carga (para evitar manipulación del reloj)
+  final DateTime? serverTime;
+
+  /// Hora por defecto a partir de la cual están disponibles los códigos (14:00)
+  static const int defaultKeysAvailableHour = 14;
+
   /// Duración de la estancia en noches
   int get nights => validUntil.difference(validFrom).inDays;
 
@@ -45,6 +56,51 @@ class AccessBoxEntity extends Equatable {
     final now = DateTime.now();
     return now.isAfter(validFrom.subtract(const Duration(hours: 12))) &&
         now.isBefore(validUntil.add(const Duration(hours: 12)));
+  }
+
+  /// Si los códigos están disponibles (respeta la restricción de las 14:00)
+  bool get areCodesAvailable {
+    final now = serverTime ?? DateTime.now();
+
+    // Si hay early check-in marcado el mismo día del check-in
+    if (earlyCheckinAvailableAt != null) {
+      final earlyTime = earlyCheckinAvailableAt!;
+      final isSameDay = earlyTime.year == validFrom.year &&
+          earlyTime.month == validFrom.month &&
+          earlyTime.day == validFrom.day;
+
+      if (isSameDay) {
+        return now.isAfter(earlyTime) || now.isAtSameMomentAs(earlyTime);
+      }
+    }
+
+    // Por defecto: 14:00 del día de check-in (hora local)
+    final keysAvailableTime = DateTime(
+      validFrom.year,
+      validFrom.month,
+      validFrom.day,
+      defaultKeysAvailableHour,
+    );
+
+    return now.isAfter(keysAvailableTime) ||
+        now.isAtSameMomentAs(keysAvailableTime);
+  }
+
+  /// Hora a la que estarán disponibles los códigos
+  DateTime get codesAvailableAt {
+    if (earlyCheckinAvailableAt != null) {
+      final earlyTime = earlyCheckinAvailableAt!;
+      final isSameDay = earlyTime.year == validFrom.year &&
+          earlyTime.month == validFrom.month &&
+          earlyTime.day == validFrom.day;
+      if (isSameDay) return earlyTime;
+    }
+    return DateTime(
+      validFrom.year,
+      validFrom.month,
+      validFrom.day,
+      defaultKeysAvailableHour,
+    );
   }
 
   factory AccessBoxEntity.fromJson(Map<String, dynamic> json) {
@@ -88,6 +144,8 @@ class AccessBoxEntity extends Equatable {
         validUntil,
         accessInstructions,
         boxLocation,
+        earlyCheckinAvailableAt,
+        serverTime,
       ];
 }
 

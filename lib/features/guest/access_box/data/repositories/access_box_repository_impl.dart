@@ -16,26 +16,33 @@ class AccessBoxRepositoryImpl implements AccessBoxRepository {
     try {
       debugPrint('🔑 [AccessBoxRepository] Obteniendo datos para booking: $bookingId');
 
-      // 1. Obtener datos de la reserva con información de la unidad
-      final bookingResponse = await _supabase
-          .from('bookings')
-          .select('''
-            id,
-            keybox_code,
-            checkin_date,
-            checkout_date,
-            unit_id,
-            units (
+      // 1. Obtener datos de la reserva y hora del servidor en paralelo
+      final results = await Future.wait([
+        _supabase
+            .from('bookings')
+            .select('''
               id,
-              name,
-              box_location_text,
-              access_instructions,
-              wifi_network,
-              wifi_password
-            )
-          ''')
-          .eq('id', bookingId)
-          .maybeSingle();
+              keybox_code,
+              checkin_date,
+              checkout_date,
+              early_checkin_available_at,
+              unit_id,
+              units (
+                id,
+                name,
+                box_location_text,
+                access_instructions,
+                wifi_network,
+                wifi_password
+              )
+            ''')
+            .eq('id', bookingId)
+            .maybeSingle(),
+        _supabase.rpc('get_server_time').then((r) => r).catchError((_) => null),
+      ]);
+
+      final bookingResponse = results[0] as Map<String, dynamic>?;
+      final serverTimeRaw = results[1];
 
       if (bookingResponse == null) {
         debugPrint('🔑 [AccessBoxRepository] No se encontró la reserva');
@@ -62,7 +69,22 @@ class AccessBoxRepositoryImpl implements AccessBoxRepository {
       final checkInDate = DateTime.parse(bookingResponse['checkin_date'] as String);
       final checkOutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
 
-      // 5. Construir códigos adicionales
+      // 5. Parsear early check-in y hora del servidor
+      final earlyCheckinStr = bookingResponse['early_checkin_available_at'] as String?;
+      final earlyCheckinAvailableAt = earlyCheckinStr != null
+          ? DateTime.parse(earlyCheckinStr)
+          : null;
+
+      DateTime? serverTime;
+      if (serverTimeRaw != null) {
+        serverTime = DateTime.tryParse(serverTimeRaw as String);
+      }
+      serverTime ??= DateTime.now().toUtc();
+
+      debugPrint('🔑 [AccessBoxRepository] Early check-in: $earlyCheckinAvailableAt');
+      debugPrint('🔑 [AccessBoxRepository] Hora servidor: $serverTime');
+
+      // 6. Construir códigos adicionales
       final additionalCodes = <AdditionalCode>[];
 
       // Añadir WiFi si está disponible
@@ -90,6 +112,8 @@ class AccessBoxRepositoryImpl implements AccessBoxRepository {
         validUntil: checkOutDate,
         accessInstructions: accessInstructions,
         boxLocation: boxLocation,
+        earlyCheckinAvailableAt: earlyCheckinAvailableAt,
+        serverTime: serverTime,
       );
     } catch (e, stackTrace) {
       debugPrint('❌ [AccessBoxRepository] Error: $e');

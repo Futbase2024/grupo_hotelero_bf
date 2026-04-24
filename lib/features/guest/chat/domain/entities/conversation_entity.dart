@@ -1,3 +1,4 @@
+import 'package:bf_stay/core/utils/timestamp_parser.dart';
 import 'package:equatable/equatable.dart';
 
 import 'message_entity.dart';
@@ -71,7 +72,7 @@ class ParticipantEntity extends Equatable {
       conversationId: json['conversation_id'] as String,
       userId: json['user_id'] as String,
       role: ParticipantRole.fromString(json['role'] as String? ?? 'guest'),
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: parseUtcTimestamp(json['created_at'] as String),
       userName: json['user_name'] as String?,
       userEmail: json['user_email'] as String?,
     );
@@ -229,7 +230,7 @@ class ConversationEntity extends Equatable {
       id: json['id'] as String,
       propertyId: json['property_id'] as String,
       bookingId: json['booking_id'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: parseUtcTimestamp(json['created_at'] as String),
       participants: json['participants'] != null
           ? (json['participants'] as List)
               .map((p) => ParticipantEntity.fromJson(p as Map<String, dynamic>))

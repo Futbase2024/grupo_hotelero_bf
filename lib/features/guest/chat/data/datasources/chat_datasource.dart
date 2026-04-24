@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bf_stay/core/utils/timestamp_parser.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../../core/config/supabase_config.dart';
@@ -173,34 +174,36 @@ class ChatDatasource {
     required String guestName,
   }) async {
     try {
-      // Asegurar que hay una sesión activa antes de hacer el insert
       await _ensureSession();
 
       _log('_createConversation - guestUserId: $guestUserId, guestName: $guestName');
 
-      // Crear la conversación
-      _log('_createConversation - insertando en conversations...');
+      // RPC con SECURITY DEFINER: crea conversación + añade guest como participante
+      // en una sola llamada atómica. No depende de las políticas RLS.
+      _log('_createConversation - llamando RPC create_guest_conversation...');
+      final conversationId = await _client.rpc(
+        'create_guest_conversation',
+        params: {
+          'p_property_id': propertyId,
+          'p_booking_id': bookingId,
+          'p_guest_user_id': guestUserId,
+          'p_guest_name': guestName,
+        },
+      ) as String;
+
+      _log('_createConversation - conversación creada via RPC: $conversationId');
+
+      // Ya somos participante, SELECT pasa la política RLS
       final conversationResponse = await _client
           .from(SupabaseTables.conversations)
-          .insert({
-            'property_id': propertyId,
-            'booking_id': bookingId,
-          })
-          .select()
+          .select('''
+            id,
+            property_id,
+            booking_id,
+            created_at
+          ''')
+          .eq('id', conversationId)
           .single();
-
-      final conversationId = conversationResponse['id'] as String;
-      _log('_createConversation - conversación creada: $conversationId');
-
-      // Añadir al huésped como participante usando el guestUserId pasado como parámetro
-      // Nota: El trigger de BD añade automáticamente los staff/admin de la propiedad
-      _log('_createConversation - insertando huésped como participante con ID: $guestUserId');
-      await _client.from(SupabaseTables.conversationParticipants).insert({
-        'conversation_id': conversationId,
-        'user_id': guestUserId, // Usar el ID del huésped (no auth.uid())
-        'role': 'guest',
-      });
-      _log('_createConversation - participante huésped insertado');
 
       return await _enrichConversation(conversationResponse);
     } catch (e) {
@@ -290,7 +293,7 @@ class ChatDatasource {
       id: conversationId,
       propertyId: data['property_id'] as String,
       bookingId: bookingId,
-      createdAt: DateTime.parse(data['created_at'] as String),
+      createdAt: parseUtcTimestamp(data['created_at'] as String),
       participants: participants,
       lastMessage: lastMessage,
       bookingCode: bookingCode,
@@ -747,7 +750,7 @@ class ChatDatasource {
           id: convId,
           propertyId: convData['property_id'] as String,
           bookingId: bookingId,
-          createdAt: DateTime.parse(convData['created_at'] as String),
+          createdAt: parseUtcTimestamp(convData['created_at'] as String),
           participants: participants,
           lastMessage: lastMessage,
           bookingCode: bookingCode,

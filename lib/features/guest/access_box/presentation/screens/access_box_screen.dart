@@ -187,6 +187,8 @@ class _AccessBoxContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final codesAvailable = accessBox.areCodesAvailable;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spacing20),
       child: Column(
@@ -196,19 +198,21 @@ class _AccessBoxContent extends StatelessWidget {
           _AccessBoxHeader(),
           const SizedBox(height: AppTheme.spacing24),
 
-          // Main access code
-          _MainAccessCodeCard(accessBox: accessBox),
+          // Main access code o tarjeta de espera
+          codesAvailable
+              ? _MainAccessCodeCard(accessBox: accessBox)
+              : _CodesNotAvailableCard(accessBox: accessBox),
           const SizedBox(height: AppTheme.spacing24),
 
-          // WiFi Card
+          // WiFi siempre visible (no depende de la hora)
           if (accessBox.wifiNetwork != null && accessBox.wifiPassword != null)
             _WiFiCard(
               network: accessBox.wifiNetwork!,
               password: accessBox.wifiPassword!,
             ),
 
-          // Additional codes
-          if (accessBox.additionalCodes.isNotEmpty) ...[
+          // Additional codes solo si los códigos están disponibles
+          if (codesAvailable && accessBox.additionalCodes.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spacing16),
             _AdditionalCodesSection(codes: accessBox.additionalCodes),
           ],
@@ -396,6 +400,94 @@ class _MainAccessCodeCard extends StatelessWidget {
         ],
       );
     }).toList();
+  }
+}
+
+/// Tarjeta que se muestra cuando los códigos aún no están disponibles
+class _CodesNotAvailableCard extends StatelessWidget {
+  const _CodesNotAvailableCard({required this.accessBox});
+
+  final AccessBoxEntity accessBox;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final availableAt = accessBox.codesAvailableAt;
+    final timeStr =
+        '${availableAt.hour.toString().padLeft(2, '0')}:${availableAt.minute.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${availableAt.day.toString().padLeft(2, '0')}/${availableAt.month.toString().padLeft(2, '0')}/${availableAt.year}';
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing24),
+      decoration: BoxDecoration(
+        color: AppColors.getCardColor(context),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+        border: Border.all(
+          color: AppColors.getGoldWithAlpha(context, alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            decoration: BoxDecoration(
+              color: AppColors.getGoldWithAlpha(context, alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.lock_clock_outlined,
+              size: 36,
+              color: AppColors.gold,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Text(
+            s.guest_access_codes_title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.getTextPrimaryColor(context),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            s.guest_access_codes_available_message(timeStr),
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.getTextSecondaryColor(context),
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.gold,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.event_outlined, size: 18, color: AppColors.black),
+                const SizedBox(width: 8),
+                Text(
+                  s.guest_access_codes_available_datetime(dateStr, timeStr),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

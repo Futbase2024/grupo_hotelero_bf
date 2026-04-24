@@ -29,10 +29,20 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
   bool _isLoading = true;
   String? _error;
 
+  bool _loadCalled = false;
+
   @override
   void initState() {
     super.initState();
-    _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loadCalled) {
+      _loadCalled = true;
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {

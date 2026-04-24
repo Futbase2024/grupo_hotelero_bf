@@ -17,6 +17,7 @@ class InvoiceLineItemDraft {
     this.quantity = 1,
     this.unitPrice = 0.0,
     this.taxRate = 10.0,
+    this.priceIncludesTax = false,
   }) : id = id ?? const Uuid().v4();
 
   final String id;
@@ -25,14 +26,21 @@ class InvoiceLineItemDraft {
   double unitPrice;
   double taxRate;
 
-  double get subtotal => quantity * unitPrice;
+  /// Si true, el precio introducido ya incluye IVA → se extrae la base
+  bool priceIncludesTax;
+
+  /// Precio base unitario sin IVA
+  double get baseUnitPrice =>
+      priceIncludesTax ? unitPrice / (1 + taxRate / 100) : unitPrice;
+
+  double get subtotal => quantity * baseUnitPrice;
   double get taxAmount => subtotal * (taxRate / 100);
   double get total => subtotal + taxAmount;
 
   InvoiceLineItem toEntity() => InvoiceLineItem(
         description: description,
         quantity: quantity,
-        unitPrice: unitPrice,
+        unitPrice: baseUnitPrice, // Siempre guardamos precio base sin IVA
         taxRate: taxRate,
       );
 
@@ -87,6 +95,9 @@ class _EditInvoiceBottomSheetState extends State<EditInvoiceBottomSheet> {
 
   // Tipo de IVA
   late double _globalTaxRate;
+
+  // Modo de precio: false = precio sin IVA, true = precio con IVA incluido
+  bool _priceIncludesTax = false;
 
   final List<Map<String, dynamic>> _taxRates = [
     {'rate': 10.0, 'label': '10% - Alojamiento turístico'},
@@ -148,7 +159,19 @@ class _EditInvoiceBottomSheetState extends State<EditInvoiceBottomSheet> {
 
   void _addLineItem() {
     setState(() {
-      _lineItems.add(InvoiceLineItemDraft(taxRate: _globalTaxRate));
+      _lineItems.add(InvoiceLineItemDraft(
+        taxRate: _globalTaxRate,
+        priceIncludesTax: _priceIncludesTax,
+      ));
+    });
+  }
+
+  void _onPriceModeChanged(bool includesTax) {
+    setState(() {
+      _priceIncludesTax = includesTax;
+      for (final item in _lineItems) {
+        item.priceIncludesTax = includesTax;
+      }
     });
   }
 
@@ -413,6 +436,11 @@ class _EditInvoiceBottomSheetState extends State<EditInvoiceBottomSheet> {
                           // Tipo de IVA global
                           _buildSectionTitle('Tipo de IVA'),
                           _buildTaxRateSelector(),
+                          const SizedBox(height: 24),
+
+                          // Modo de precio
+                          _buildSectionTitle('Precio introducido'),
+                          _buildPriceModeSelector(),
                           const SizedBox(height: 24),
 
                           // Resumen de totales
@@ -1033,24 +1061,39 @@ class _EditInvoiceBottomSheetState extends State<EditInvoiceBottomSheet> {
 
           if (item.subtotal > 0) ...[
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'IVA ${item.taxRate.toStringAsFixed(0)}%',
-                  style: const TextStyle(
-                    color: AppColors.gray500,
-                    fontSize: 11,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.darkBackground,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Base: ${item.subtotal.toStringAsFixed(2)} €',
+                    style: const TextStyle(
+                      color: AppColors.gray400,
+                      fontSize: 11,
+                    ),
                   ),
-                ),
-                Text(
-                  'Subtotal: ${item.subtotal.toStringAsFixed(2)} €',
-                  style: const TextStyle(
-                    color: AppColors.gray400,
-                    fontSize: 12,
+                  Text(
+                    'IVA ${item.taxRate.toStringAsFixed(0)}%: +${item.taxAmount.toStringAsFixed(2)} €',
+                    style: const TextStyle(
+                      color: AppColors.gray400,
+                      fontSize: 11,
+                    ),
                   ),
-                ),
-              ],
+                  Text(
+                    'Total: ${item.total.toStringAsFixed(2)} €',
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -1141,6 +1184,85 @@ class _EditInvoiceBottomSheetState extends State<EditInvoiceBottomSheet> {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildPriceModeSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.darkBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildPriceModeOption(
+              includesTax: false,
+              icon: Icons.add_circle_outline,
+              label: 'Sin IVA',
+              subtitle: 'El IVA se añade al precio',
+            ),
+          ),
+          Container(width: 1, height: 60, color: AppColors.darkBorder),
+          Expanded(
+            child: _buildPriceModeOption(
+              includesTax: true,
+              icon: Icons.check_circle_outline,
+              label: 'IVA incluido',
+              subtitle: 'Se calcula la base',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceModeOption({
+    required bool includesTax,
+    required IconData icon,
+    required String label,
+    required String subtitle,
+  }) {
+    final isSelected = _priceIncludesTax == includesTax;
+
+    return InkWell(
+      onTap: () => _onPriceModeChanged(includesTax),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.goldWithAlpha10 : null,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.gold : AppColors.gray500,
+              size: 22,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppColors.gold : AppColors.gray400,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: AppColors.gray600,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

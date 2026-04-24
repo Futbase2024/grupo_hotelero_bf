@@ -1,3 +1,4 @@
+import 'package:bf_stay/core/utils/timestamp_parser.dart';
 import 'package:equatable/equatable.dart';
 
 /// Tipo de mensaje
@@ -105,13 +106,13 @@ class MessageEntity extends Equatable {
       senderUserId: json['sender_user_id'] as String,
       msgType: MessageType.fromString(json['msg_type'] as String? ?? 'text'),
       content: json['content'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: parseUtcTimestamp(json['created_at'] as String),
       // Campos joined
       senderName: json['sender_name'] as String?,
       senderRole: json['sender_role'] as String?,
       // Campo de lectura
       readAt: json['read_at'] != null
-          ? DateTime.parse(json['read_at'] as String)
+          ? parseUtcTimestamp(json['read_at'] as String)
           : null,
     );
   }
@@ -208,3 +209,4 @@ extension MessageListSort on List<MessageEntity> {
     return map;
   }
 }
+
