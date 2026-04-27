@@ -26,6 +26,7 @@ class FcmServiceIo implements FcmService {
 
   StreamSubscription<RemoteMessage>? _onMessageSubscription;
   StreamSubscription<RemoteMessage>? _onMessageOpenedAppSubscription;
+  StreamSubscription<AuthState>? _authStateSubscription;
 
   @override
   String? get fcmToken => _fcmToken;
@@ -53,11 +54,20 @@ class FcmServiceIo implements FcmService {
     // Guardar token en Supabase
     await _saveTokenToSupabase();
 
-    // Escuchar cambios de token
+    // Escuchar cambios de token FCM
     _messaging.onTokenRefresh.listen((token) async {
       debugPrint('📦 Token FCM actualizado: $token');
       _fcmToken = token;
       await _saveTokenToSupabase();
+    });
+
+    // Escuchar cambios de auth para guardar token después del login
+    _authStateSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      if (event.event == AuthChangeEvent.signedIn && _fcmToken != null) {
+        debugPrint('📦 Usuario logueado, guardando token FCM pendiente');
+        _saveTokenToSupabase();
+      }
     });
 
     debugPrint('✅ FCM Service completamente inicializado');
@@ -96,7 +106,14 @@ class FcmServiceIo implements FcmService {
   Future<void> _getToken() async {
     try {
       _fcmToken = await _messaging.getToken();
-      debugPrint('📦 FCM Token: $_fcmToken');
+      if (_fcmToken == null) {
+        // Retry después de un breve delay por timing en release mode
+        await Future<void>.delayed(const Duration(seconds: 2));
+        _fcmToken = await _messaging.getToken();
+      }
+      if (_fcmToken != null) {
+        await _saveTokenToSupabase();
+      }
     } catch (e) {
       debugPrint('❌ Error obteniendo token FCM: $e');
     }
@@ -169,15 +186,10 @@ class FcmServiceIo implements FcmService {
     debugPrint('   Body: ${notification?.body}');
     debugPrint('   Data: $data');
 
-    // En iOS con setForegroundNotificationPresentationOptions(alert: true),
-    // FCM YA muestra la notificación automáticamente en foreground.
-    // No debemos mostrar notificación local para evitar duplicados.
-    if (Platform.isIOS && notification?.title != null && notification?.body != null) {
-      debugPrint('📱 iOS: FCM ya mostrará la notificación, no mostramos local');
-      return;
-    }
-
-    // En Android y en iOS para data-only messages, mostramos notificación local
+    // Mostrar notificación local en TODAS las plataformas.
+    // En release/profile mode, el plugin firebase_messaging puede no mostrar
+    // el banner automáticamente en iOS, así que SIEMPRE mostramos local.
+    // Si FCM también la muestra, iOS deduplica automáticamente.
     String title;
     String body;
 
@@ -300,6 +312,7 @@ class FcmServiceIo implements FcmService {
   void dispose() {
     _onMessageSubscription?.cancel();
     _onMessageOpenedAppSubscription?.cancel();
+    _authStateSubscription?.cancel();
   }
 }
 
