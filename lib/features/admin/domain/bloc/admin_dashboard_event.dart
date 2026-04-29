@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../entities/admin_entities.dart';
+import 'admin_dashboard_state.dart';
 
 /// Eventos del BLoC del dashboard de administración
 abstract class AdminDashboardEvent extends Equatable {
@@ -166,4 +167,46 @@ class AdminDashboardNotificationReceived extends AdminDashboardEvent {
 /// Cambio detectado en checkins (realtime)
 class AdminDashboardCheckinsChanged extends AdminDashboardEvent {
   const AdminDashboardCheckinsChanged();
+}
+
+/// Cambiar búsqueda de check-ins
+class AdminDashboardCheckinsSearchChanged extends AdminDashboardEvent {
+  const AdminDashboardCheckinsSearchChanged(this.searchQuery);
+
+  final String? searchQuery;
+
+  @override
+  List<Object?> get props => [searchQuery];
+}
+
+/// Cambiar filtro de fecha de check-ins
+class AdminDashboardCheckinsDateFilterChanged extends AdminDashboardEvent {
+  const AdminDashboardCheckinsDateFilterChanged({
+    required this.dateFilter,
+    this.customDateStart,
+    this.customDateEnd,
+  });
+
+  final DateFilter dateFilter;
+  final DateTime? customDateStart;
+  final DateTime? customDateEnd;
+
+  @override
+  List<Object?> get props => [dateFilter, customDateStart, customDateEnd];
+}
+
+/// Cambiar filtro de fecha de reservas
+class AdminDashboardBookingsDateFilterChanged extends AdminDashboardEvent {
+  const AdminDashboardBookingsDateFilterChanged({
+    required this.dateFilter,
+    this.customDateStart,
+    this.customDateEnd,
+  });
+
+  final DateFilter dateFilter;
+  final DateTime? customDateStart;
+  final DateTime? customDateEnd;
+
+  @override
+  List<Object?> get props => [dateFilter, customDateStart, customDateEnd];
 }

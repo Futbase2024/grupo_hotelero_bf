@@ -20,7 +20,10 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     on<AdminDashboardPropertiesLoadRequested>(_onPropertiesLoadRequested);
     on<AdminDashboardBookingsFilterChanged>(_onBookingsFilterChanged);
     on<AdminDashboardBookingsSearchChanged>(_onBookingsSearchChanged);
+    on<AdminDashboardBookingsDateFilterChanged>(_onBookingsDateFilterChanged);
     on<AdminDashboardCheckinsFilterChanged>(_onCheckinsFilterChanged);
+    on<AdminDashboardCheckinsSearchChanged>(_onCheckinsSearchChanged);
+    on<AdminDashboardCheckinsDateFilterChanged>(_onCheckinsDateFilterChanged);
     on<AdminDashboardUnitsLoadRequested>(_onUnitsLoadRequested);
     on<AdminDashboardUnitWifiUpdateRequested>(_onUnitWifiUpdateRequested);
     // Eventos de notificaciones
@@ -316,6 +319,37 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     Emitter<AdminDashboardState> emit,
   ) {
     emit(state.copyWith(checkinsStatusFilter: event.statusFilter));
+  }
+
+  void _onCheckinsSearchChanged(
+    AdminDashboardCheckinsSearchChanged event,
+    Emitter<AdminDashboardState> emit,
+  ) {
+    emit(state.copyWith(checkinsSearchQuery: event.searchQuery));
+  }
+
+  void _onCheckinsDateFilterChanged(
+    AdminDashboardCheckinsDateFilterChanged event,
+    Emitter<AdminDashboardState> emit,
+  ) {
+    emit(state.copyWith(
+      checkinsDateFilter: event.dateFilter,
+      checkinsCustomDateStart: event.customDateStart,
+      checkinsCustomDateEnd: event.customDateEnd,
+      clearCheckinsDates: event.dateFilter != DateFilter.customRange,
+    ));
+  }
+
+  void _onBookingsDateFilterChanged(
+    AdminDashboardBookingsDateFilterChanged event,
+    Emitter<AdminDashboardState> emit,
+  ) {
+    emit(state.copyWith(
+      bookingsDateFilter: event.dateFilter,
+      bookingsCustomDateStart: event.customDateStart,
+      bookingsCustomDateEnd: event.customDateEnd,
+      clearBookingsDates: event.dateFilter != DateFilter.customRange,
+    ));
   }
 
   Future<void> _onUnitsLoadRequested(

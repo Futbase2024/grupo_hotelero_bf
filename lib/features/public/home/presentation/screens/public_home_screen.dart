@@ -883,8 +883,9 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         } else {
           // Si no se puede abrir (ej: emulador sin app de teléfono), copiar al portapapeles
           await Clipboard.setData(ClipboardData(text: phone));
-          if (context.mounted)
+          if (context.mounted) {
             showCopiedSnackBar(phone, S.of(context).common_phone_type);
+          }
         }
       };
     } else if (email != null) {
@@ -895,8 +896,9 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
         } else {
           // Si no se puede abrir, copiar al portapapeles
           await Clipboard.setData(ClipboardData(text: email));
-          if (context.mounted)
+          if (context.mounted) {
             showCopiedSnackBar(email, S.of(context).common_email_type);
+          }
         }
       };
     }

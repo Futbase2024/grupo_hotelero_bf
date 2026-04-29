@@ -103,7 +103,6 @@ class NotificationService {
             'body': body,
             'data': data ?? {},
             'processed': false,
-            'created_at': DateTime.now().toIso8601String(),
           });
           successCount++;
         } catch (e) {
@@ -265,7 +264,6 @@ class NotificationService {
         'body': body,
         'data': data ?? {},
         'processed': false,
-        'created_at': DateTime.now().toIso8601String(),
       });
       return true;
     } catch (e) {
