@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/admin_entities.dart';
+import '../../../domain/entities/client_entity.dart';
 
 abstract class InvoicesEvent extends Equatable {
   const InvoicesEvent();
@@ -122,4 +123,29 @@ class InvoicesLoadBookingsRequested extends InvoicesEvent {
 /// Cargar propiedades disponibles para crear factura manual
 class InvoicesLoadPropertiesRequested extends InvoicesEvent {
   const InvoicesLoadPropertiesRequested();
+}
+
+/// Cargar clientes guardados
+class InvoicesLoadClientsRequested extends InvoicesEvent {
+  const InvoicesLoadClientsRequested();
+}
+
+/// Buscar clientes por texto
+class InvoicesSearchClients extends InvoicesEvent {
+  const InvoicesSearchClients(this.query);
+
+  final String query;
+
+  @override
+  List<Object?> get props => [query];
+}
+
+/// Guardar cliente desde datos de factura
+class InvoicesSaveClient extends InvoicesEvent {
+  const InvoicesSaveClient(this.client);
+
+  final ClientEntity client;
+
+  @override
+  List<Object?> get props => [client];
 }

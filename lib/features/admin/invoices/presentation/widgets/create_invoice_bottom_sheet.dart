@@ -5,11 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
+import '../../../domain/entities/client_entity.dart';
 import '../../../domain/entities/invoice_entity.dart';
 import '../bloc/invoices_bloc.dart';
 import '../bloc/invoices_event.dart';
 import '../bloc/invoices_state.dart';
 import 'booking_selector_dialog.dart';
+import 'client_selector_dialog.dart';
 
 /// Modo de creación de factura
 enum InvoiceCreationMode {
@@ -80,6 +82,9 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
 
   // Propiedad seleccionada (modo manual)
   Map<String, dynamic>? _selectedProperty;
+
+  // Cliente seleccionado (modo manual)
+  ClientEntity? _selectedClient;
 
   // Líneas de factura
   final List<InvoiceLineItemDraft> _lineItems = [];
@@ -191,6 +196,7 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       // Limpiar selección anterior
       _selectedBooking = null;
       _selectedProperty = null;
+      _selectedClient = null;
       _checkInDate = null;
       _checkOutDate = null;
       _clientNameController.clear();
@@ -203,6 +209,22 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
       _lineItems.clear();
       _addLineItem();
     });
+  }
+
+  Future<void> _showClientSelector() async {
+    final client = await showClientSelectorDialog(context);
+    if (client != null) {
+      setState(() {
+        _selectedClient = client;
+        _clientNameController.text = client.name;
+        _clientNifController.text = client.nif ?? '';
+        _clientEmailController.text = client.email ?? '';
+        _clientPhoneController.text = client.phone ?? '';
+        _clientAddressController.text = client.address ?? '';
+        _clientCityController.text = client.city ?? '';
+        _clientPostalCodeController.text = client.postalCode ?? '';
+      });
+    }
   }
 
   Future<void> _showBookingSelectorDialog() async {
@@ -399,6 +421,38 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
 
       if (widget.onSave != null) {
         await widget.onSave!(invoice);
+      }
+
+      // Guardar cliente automaticamente si hay datos y es modo manual
+      if (_creationMode == InvoiceCreationMode.manual &&
+          _clientNameController.text.trim().isNotEmpty) {
+        if (mounted) {
+          context.read<InvoicesBloc>().add(InvoicesSaveClient(
+                ClientEntity(
+                  id: '',
+                  name: _clientNameController.text.trim(),
+                  propertyId: _selectedProperty?['id'] as String?,
+                  nif: _clientNifController.text.trim().isNotEmpty
+                      ? _clientNifController.text.trim()
+                      : null,
+                  email: _clientEmailController.text.trim().isNotEmpty
+                      ? _clientEmailController.text.trim()
+                      : null,
+                  phone: _clientPhoneController.text.trim().isNotEmpty
+                      ? _clientPhoneController.text.trim()
+                      : null,
+                  address: _clientAddressController.text.trim().isNotEmpty
+                      ? _clientAddressController.text.trim()
+                      : null,
+                  city: _clientCityController.text.trim().isNotEmpty
+                      ? _clientCityController.text.trim()
+                      : null,
+                  postalCode: _clientPostalCodeController.text.trim().isNotEmpty
+                      ? _clientPostalCodeController.text.trim()
+                      : null,
+                ),
+              ));
+        }
       }
 
       if (mounted) {
@@ -913,16 +967,122 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
   }
 
   Widget _buildClientFields() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.darkBorder),
-      ),
-      child: Column(
-        children: [
-          // Nombre
+    return Column(
+      children: [
+        // Boton seleccionar cliente existente
+        InkWell(
+          onTap: _showClientSelector,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: _selectedClient != null
+                    ? AppColors.goldWithAlpha50
+                    : AppColors.darkBorder,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.goldWithAlpha10,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.person_search_outlined,
+                    color: AppColors.gold,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _selectedClient?.name ?? 'Usar cliente existente',
+                        style: TextStyle(
+                          color: _selectedClient != null
+                              ? AppColors.white
+                              : AppColors.gray500,
+                          fontWeight: _selectedClient != null
+                              ? FontWeight.w500
+                              : FontWeight.w400,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (_selectedClient != null &&
+                          _selectedClient!.nif != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'NIF: ${_selectedClient!.nif}',
+                          style: const TextStyle(
+                            color: AppColors.gray400,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Buscar entre clientes guardados',
+                          style: TextStyle(
+                            color: AppColors.gray600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppColors.goldWithAlpha50,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Separador
+        Row(
+          children: [
+            const Expanded(
+              child: Divider(color: AppColors.darkBorder),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'o introduce manualmente',
+                style: TextStyle(
+                  color: AppColors.gray600,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            const Expanded(
+              child: Divider(color: AppColors.darkBorder),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Campos editables
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.darkSurface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.darkBorder),
+          ),
+          child: Column(
+            children: [
+              // Nombre
           _buildEditableField(
             controller: _clientNameController,
             label: 'Nombre completo *',
@@ -989,6 +1149,8 @@ class _CreateInvoiceBottomSheetState extends State<CreateInvoiceBottomSheet> {
           ),
         ],
       ),
+    ),
+    ],
     );
   }
 

@@ -536,18 +536,14 @@ class _CheckinsTabState extends State<CheckinsTab> {
                   ),
                 ),
 
-                const Spacer(),
-
                 // Cancel
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(
+                  child: const Text(
                     'Cancelar',
                     style: TextStyle(color: AppColors.gray400),
                   ),
                 ),
-
-                const SizedBox(width: 8),
 
                 // Apply
                 ElevatedButton(

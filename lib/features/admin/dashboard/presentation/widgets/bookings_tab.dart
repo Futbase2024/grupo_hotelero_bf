@@ -470,17 +470,33 @@ class _BookingsTabState extends State<BookingsTab> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        ('all', 'Todas'),
-                        ('confirmed', 'Confirmadas'),
-                        ('active', 'Activas'),
-                        ('in_house', 'En casa'),
-                        ('checked_out', 'Finalizadas'),
-                        ('cancelled', 'Canceladas'),
+                        ('all', 'Todas', null),
+                        ('confirmed', 'Confirmadas', const Color(0xFF27AE60)),
+                        ('active', 'Activas', const Color(0xFF2980B9)),
+                        ('in_house', 'En casa', const Color(0xFFE5C962)),
+                        ('checked_out', 'Finalizadas', const Color(0xFF6B7280)),
+                        ('cancelled', 'Canceladas', const Color(0xFFC0392B)),
                       ].map((entry) {
-                        final (value, label) = entry;
+                        final (value, label, accentColor) = entry;
                         final isSelected = selectedStatusFilter == value;
                         return ChoiceChip(
-                          label: Text(label),
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (accentColor != null) ...[
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: accentColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Text(label),
+                            ],
+                          ),
                           selected: isSelected,
                           onSelected: (_) {
                             setDialogState(() {
@@ -531,19 +547,13 @@ class _BookingsTabState extends State<BookingsTab> {
                     ),
                   ),
                 ),
-
-                const Spacer(),
-
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(
+                  child: const Text(
                     'Cancelar',
                     style: TextStyle(color: AppColors.gray400),
                   ),
                 ),
-
-                const SizedBox(width: 8),
-
                 ElevatedButton(
                   onPressed: () {
                     final bloc = context.read<AdminDashboardBloc>();
@@ -555,9 +565,7 @@ class _BookingsTabState extends State<BookingsTab> {
                     ));
 
                     bloc.add(AdminDashboardBookingsFilterChanged(
-                      selectedStatusFilter == 'all'
-                          ? null
-                          : selectedStatusFilter,
+                      selectedStatusFilter,
                     ));
 
                     Navigator.pop(dialogContext);

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../../../domain/repositories/invoices_repository.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
+import '../../../data/repositories/clients_repository_impl.dart';
 import 'invoices_event.dart';
 import 'invoices_state.dart';
 
@@ -14,6 +16,7 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
   })  : _repository = repository,
         _adminRepository = adminRepository,
         _supabaseClient = supabaseClient ?? Supabase.instance.client,
+        _clientsRepository = ClientsRepositoryImpl(),
         super(const InvoicesState()) {
     on<InvoicesLoadRequested>(_onLoadRequested);
     on<InvoicesRefreshRequested>(_onRefreshRequested);
@@ -29,11 +32,15 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
     on<InvoiceSelectionCleared>(_onSelectionCleared);
     on<InvoicesLoadBookingsRequested>(_onLoadBookingsRequested);
     on<InvoicesLoadPropertiesRequested>(_onLoadPropertiesRequested);
+    on<InvoicesLoadClientsRequested>(_onLoadClientsRequested);
+    on<InvoicesSearchClients>(_onSearchClients);
+    on<InvoicesSaveClient>(_onSaveClient);
   }
 
   final InvoicesRepository _repository;
   final AdminPanelRepository _adminRepository;
   final SupabaseClient _supabaseClient;
+  final ClientsRepositoryImpl _clientsRepository;
 
   Future<void> _onLoadRequested(
     InvoicesLoadRequested event,
@@ -348,6 +355,84 @@ class InvoicesBloc extends Bloc<InvoicesEvent, InvoicesState> {
         isLoadingProperties: false,
         error: 'Error al cargar propiedades: $e',
       ));
+    }
+  }
+
+  Future<void> _onLoadClientsRequested(
+    InvoicesLoadClientsRequested event,
+    Emitter<InvoicesState> emit,
+  ) async {
+    debugPrint('🔵 [InvoicesBloc] _onLoadClientsRequested');
+    emit(state.copyWith(isLoadingClients: true, clearError: true));
+
+    try {
+      final clients = await _clientsRepository.getAll();
+      debugPrint('🔵 [InvoicesBloc] Loaded ${clients.length} clients');
+      emit(state.copyWith(
+        clients: clients,
+        isLoadingClients: false,
+      ));
+    } catch (e) {
+      debugPrint('🔴 [InvoicesBloc] Error loading clients: $e');
+      emit(state.copyWith(
+        isLoadingClients: false,
+        error: 'Error al cargar clientes: $e',
+      ));
+    }
+  }
+
+  Future<void> _onSearchClients(
+    InvoicesSearchClients event,
+    Emitter<InvoicesState> emit,
+  ) async {
+    if (event.query.isEmpty) {
+      add(const InvoicesLoadClientsRequested());
+      return;
+    }
+
+    try {
+      final results = await _clientsRepository.search(event.query);
+      emit(state.copyWith(clients: results));
+    } catch (e) {
+      debugPrint('🔴 [InvoicesBloc] Error searching clients: $e');
+    }
+  }
+
+  Future<void> _onSaveClient(
+    InvoicesSaveClient event,
+    Emitter<InvoicesState> emit,
+  ) async {
+    try {
+      final client = event.client;
+
+      // Buscar si ya existe un cliente con el mismo NIF
+      if (client.nif != null && client.nif!.isNotEmpty) {
+        final existing = await _clientsRepository.findByNif(client.nif!);
+        if (existing != null) {
+          // Actualizar cliente existente
+          final updated = existing.copyWith(
+            name: client.name,
+            email: client.email,
+            phone: client.phone,
+            address: client.address,
+            city: client.city,
+            postalCode: client.postalCode,
+          );
+          await _clientsRepository.update(updated);
+          debugPrint('🔵 [InvoicesBloc] Client updated: ${updated.name}');
+          return;
+        }
+      }
+
+      // Crear nuevo cliente
+      final newClient = client.copyWith(id: const Uuid().v4());
+      await _clientsRepository.create(newClient);
+      debugPrint('🔵 [InvoicesBloc] Client created: ${newClient.name}');
+
+      // Recargar lista de clientes
+      add(const InvoicesLoadClientsRequested());
+    } catch (e) {
+      debugPrint('🔴 [InvoicesBloc] Error saving client: $e');
     }
   }
 }
