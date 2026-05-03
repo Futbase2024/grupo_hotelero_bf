@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/config/supabase_config.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
@@ -154,6 +155,139 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         setState(() => _isResending = false);
       }
     }
+  }
+
+  Future<void> _sendViaWhatsApp() async {
+    if (_booking == null) return;
+
+    var phone = _booking!.guestPhone ?? '';
+    if (phone.trim().isEmpty) {
+      if (!mounted) return;
+      final inputPhone = await _showPhoneInputDialog();
+      if (inputPhone == null || inputPhone.trim().isEmpty) return;
+      phone = inputPhone;
+      try {
+        await widget.repository.updateBookingGuestPhone(
+          bookingId: _booking!.id,
+          guestPhone: phone,
+        );
+        await _loadBooking();
+      } catch (e) {
+        if (!mounted) return;
+        _showSnackBar(S.of(context).admin_booking_error(e.toString()), isError: true);
+        return;
+      }
+    }
+
+    final keyboxLine = (_booking!.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty)
+        ? '\n🔑 Keybox: ${_booking!.keyboxCode}'
+        : '';
+
+    final message = S.of(context).admin_booking_send_whatsapp_message(
+      _booking!.propertyName,
+      _booking!.bookingCode,
+      DateFormat('dd/MM/yyyy').format(_booking!.checkInDate),
+      DateFormat('dd/MM/yyyy').format(_booking!.checkOutDate),
+      keyboxLine,
+    );
+
+    final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    final phoneWithCode = cleanPhone.startsWith('+') ? cleanPhone : '+34$cleanPhone';
+
+    final uri = Uri.parse('https://wa.me/$phoneWithCode?text=${Uri.encodeComponent(message)}');
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (!mounted) return;
+      _showSnackBar(S.of(context).admin_booking_send_whatsapp_error, isError: true);
+    }
+  }
+
+  Future<String?> _showPhoneInputDialog() {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.all(24),
+        backgroundColor: const Color(0xFF1A1A1A),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF25D366).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.phone_android, size: 48, color: Color(0xFF25D366)),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              S.of(context).admin_booking_send_whatsapp_no_phone,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              S.of(context).admin_booking_send_whatsapp_no_phone_desc,
+              style: const TextStyle(fontSize: 15, color: Colors.white70, height: 1.4),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+              decoration: InputDecoration(
+                hintText: S.of(context).admin_booking_send_whatsapp_phone_hint,
+                hintStyle: const TextStyle(color: Colors.white38),
+                filled: true,
+                fillColor: const Color(0xFF0D0D0D),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(null),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(S.of(context).common_cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF25D366),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(S.of(context).common_send),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _validateCheckin() async {
@@ -2604,6 +2738,14 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 : S.of(context).admin_booking_not_sent_yet,
             onTap: _isResending ? null : _resendCode,
             isLoading: _isResending,
+          ),
+          const SizedBox(height: 12),
+          _buildActionTile(
+            icon: Icons.chat_outlined,
+            title: S.of(context).admin_booking_send_whatsapp_title,
+            subtitle: _booking!.guestPhone ?? S.of(context).admin_booking_send_whatsapp_no_phone,
+            onTap: _sendViaWhatsApp,
+            color: const Color(0xFF25D366),
           ),
           const SizedBox(height: 12),
           _buildActionTile(

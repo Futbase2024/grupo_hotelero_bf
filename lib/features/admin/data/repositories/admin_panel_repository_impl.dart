@@ -910,6 +910,23 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     }
   }
 
+  @override
+  Future<void> updateBookingGuestPhone({
+    required String bookingId,
+    required String guestPhone,
+  }) async {
+    try {
+      await _client
+          .from('bookings')
+          .update({'guest_phone': guestPhone})
+          .eq('id', bookingId);
+    } catch (e, s) {
+      debugPrint('❌ [updateBookingGuestPhone] Error: $e');
+      debugPrint('❌ [updateBookingGuestPhone] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   /// Marca que el early check-in está disponible para una reserva
   @override
   Future<void> setEarlyCheckinAvailable({

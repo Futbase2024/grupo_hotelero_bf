@@ -589,7 +589,7 @@
   "guest_romantic_choose_title": "Escolha o seu detalhe",
   "guest_romantic_choose_desc": "Garrafa de cava ou chocolate artesanal para acompanhar a noite",
   "guest_romantic_basic_pack": "Pack Romântico Básico",
-  "guest_romantic_price": "49,90 €",
+  "guest_romantic_price": "20,00 €",
   "guest_romantic_book_now": "Reservar Agora",
   "guest_romantic_customize": "Ou personalize com extras ao reservar",
   "guest_romantic_redirect": "Vai ser redirecionado para o site para completar a reserva do Pack Romântico. Continuar?",
@@ -1516,6 +1516,22 @@
       "guest": {
         "type": "String"
       }
+    }
+  },
+
+  "admin_booking_send_whatsapp_title": "Enviar código por WhatsApp",
+  "admin_booking_send_whatsapp_no_phone": "O hóspede não tem número de telefone",
+  "admin_booking_send_whatsapp_no_phone_desc": "Introduza um número de telefone para enviar o código por WhatsApp.",
+  "admin_booking_send_whatsapp_phone_hint": "+351 920 000 000",
+  "admin_booking_send_whatsapp_error": "Não foi possível abrir o WhatsApp",
+  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nDescarregue a app BF Stay para gerir a sua estadia.",
+  "@admin_booking_send_whatsapp_message": {
+    "placeholders": {
+      "propertyName": { "type": "String" },
+      "bookingCode": { "type": "String" },
+      "checkIn": { "type": "String" },
+      "checkOut": { "type": "String" },
+      "keyboxLine": { "type": "String" }
     }
   }
 }

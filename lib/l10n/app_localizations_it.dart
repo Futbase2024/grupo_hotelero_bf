@@ -78,205 +78,206 @@ class SIt extends S {
   String get common_understood => 'Capito';
 
   @override
-  String get common_exit_app_title => 'Exit BF Stay';
+  String get common_exit_app_title => 'Uscire da BF Stay';
 
   @override
   String get common_exit_app_message =>
-      'Are you sure you want to exit the app?\n\nYour session will remain active when you come back.';
+      'Sei sicuro di voler uscire dall\'app?\n\nLa tua sessione rimarrà attiva quando tornerai.';
 
   @override
-  String get common_logout_title => 'Sign Out';
+  String get common_logout_title => 'Disconnetti';
 
   @override
   String get common_logout_message =>
-      'Are you sure you want to sign out?\n\nYou can log back in with your booking code whenever you need to.';
+      'Sei sicuro di voler disconnetterti?\n\nPuoi accedere di nuovo con il tuo codice prenotazione quando vuoi.';
 
   @override
-  String get common_logout_button => 'Sign Out';
+  String get common_logout_button => 'Disconnetti';
 
   @override
-  String get common_splash_ready => 'Ready';
+  String get common_splash_ready => 'Pronto';
 
   @override
-  String get common_splash_loading => 'Loading...';
+  String get common_splash_loading => 'Caricamento...';
 
   @override
-  String get common_update_force_title => 'Update Required';
+  String get common_update_force_title => 'Aggiornamento richiesto';
 
   @override
-  String get common_update_available_title => 'New Version Available';
+  String get common_update_available_title => 'Nuova versione disponibile';
 
   @override
   String get common_update_force_message =>
-      'You need to update the app to continue using it. This version includes important improvements and security fixes.';
+      'Devi aggiornare l\'app per continuare a utilizzarla. Questa versione include importanti miglioramenti e correzioni di sicurezza.';
 
   @override
   String get common_update_available_message =>
-      'A new version is available with improvements and fixes. Would you like to update now?';
+      'È disponibile una nuova versione con miglioramenti e correzioni. Vuoi aggiornare adesso?';
 
   @override
   String common_update_version(String version) {
-    return 'Version $version';
+    return 'Versione $version';
   }
 
   @override
-  String get common_page_not_found => 'Page not found';
+  String get common_page_not_found => 'Pagina non trovata';
 
   @override
-  String get common_invalid_route => 'Invalid route';
+  String get common_invalid_route => 'Percorso non valido';
 
   @override
-  String get common_back_to_home => 'Back to home';
+  String get common_back_to_home => 'Torna alla home';
 
   @override
-  String get common_theme_light => 'Light';
+  String get common_theme_light => 'Chiaro';
 
   @override
-  String get common_theme_dark => 'Dark';
+  String get common_theme_dark => 'Scuro';
 
   @override
-  String get common_theme_mode_light => 'Light Mode';
+  String get common_theme_mode_light => 'Modalità chiara';
 
   @override
-  String get common_theme_mode_dark => 'Dark Mode';
+  String get common_theme_mode_dark => 'Modalità scura';
 
   @override
-  String get common_theme_system => 'System';
+  String get common_theme_system => 'Sistema';
 
   @override
-  String get common_theme_app_label => 'App theme';
+  String get common_theme_app_label => 'Tema dell\'app';
 
   @override
   String common_copied_to_clipboard(String type) {
-    return '$type copied to clipboard';
+    return '$type copiato negli appunti';
   }
 
   @override
-  String get common_phone_type => 'Phone';
+  String get common_phone_type => 'Telefono';
 
   @override
   String get common_email_type => 'Email';
 
   @override
-  String get enum_booking_status_created => 'Created';
+  String get enum_booking_status_created => 'Creata';
 
   @override
-  String get enum_booking_status_confirmed => 'Confirmed';
+  String get enum_booking_status_confirmed => 'Confermata';
 
   @override
-  String get enum_booking_status_active => 'Active';
+  String get enum_booking_status_active => 'Attiva';
 
   @override
-  String get enum_booking_status_in_house => 'In House';
+  String get enum_booking_status_in_house => 'In struttura';
 
   @override
-  String get enum_booking_status_checked_out => 'Checked Out';
+  String get enum_booking_status_checked_out => 'Check-out effettuato';
 
   @override
-  String get enum_booking_status_closed => 'Closed';
+  String get enum_booking_status_closed => 'Chiusa';
 
   @override
-  String get enum_booking_status_cancelled => 'Cancelled';
+  String get enum_booking_status_cancelled => 'Annullata';
 
   @override
   String get enum_booking_status_created_desc =>
-      'Booking created, pending confirmation';
+      'Prenotazione creata, in attesa di conferma';
 
   @override
   String get enum_booking_status_confirmed_desc =>
-      'Booking confirmed, pending check-in';
+      'Prenotazione confermata, in attesa di check-in';
 
   @override
   String get enum_booking_status_active_desc =>
-      'Check-in validated, full panel accessible';
+      'Check-in validato, pannello completo accessibile';
 
   @override
   String get enum_booking_status_in_house_desc =>
-      'Guest physically at the property';
+      'Ospite fisicamente nella struttura';
 
   @override
   String get enum_booking_status_checked_in_legacy_desc =>
-      'Check-in validated (legacy)';
+      'Check-in validato (legacy)';
 
   @override
   String get enum_booking_status_checked_out_desc =>
-      'Check-out completed, guest has left';
+      'Check-out completato, l\'ospite è partito';
 
   @override
-  String get enum_booking_status_closed_desc => 'Booking finished and closed';
+  String get enum_booking_status_closed_desc =>
+      'Prenotazione terminata e chiusa';
 
   @override
-  String get enum_booking_status_cancelled_desc => 'Booking cancelled';
+  String get enum_booking_status_cancelled_desc => 'Prenotazione annullata';
 
   @override
-  String get enum_checkin_status_not_started => 'Pending';
+  String get enum_checkin_status_not_started => 'In attesa';
 
   @override
-  String get enum_checkin_status_in_progress => 'In Progress';
+  String get enum_checkin_status_in_progress => 'In corso';
 
   @override
-  String get enum_checkin_status_submitted => 'Submitted';
+  String get enum_checkin_status_submitted => 'Inviato';
 
   @override
-  String get enum_checkin_status_validated => 'Validated';
+  String get enum_checkin_status_validated => 'Validato';
 
   @override
-  String get enum_checkin_status_rejected => 'Rejected';
+  String get enum_checkin_status_rejected => 'Rifiutato';
 
   @override
-  String get enum_checkin_status_cancelled => 'Cancelled';
+  String get enum_checkin_status_cancelled => 'Annullato';
 
   @override
   String get enum_checkin_status_not_started_desc =>
-      'The guest has not started check-in yet';
+      'L\'ospite non ha ancora iniziato il check-in';
 
   @override
   String get enum_checkin_status_in_progress_desc =>
-      'The guest is filling in their details';
+      'L\'ospite sta compilando i propri dati';
 
   @override
   String get enum_checkin_status_submitted_desc =>
-      'Pending review by the administrator';
+      'In attesa di revisione da parte dell\'amministratore';
 
   @override
   String get enum_checkin_status_validated_desc =>
-      'Check-in validated, stay authorized';
+      'Check-in validato, soggiorno autorizzato';
 
   @override
   String get enum_checkin_status_rejected_desc =>
-      'Requires correction by the guest';
+      'Richiede correzione da parte dell\'ospite';
 
   @override
   String get enum_checkin_status_cancelled_desc =>
-      'Booking cancelled, please contact reception';
+      'Prenotazione annullata, si prega di contattare la reception';
 
   @override
-  String get enum_checkout_status_not_started => 'Not Started';
+  String get enum_checkout_status_not_started => 'Non iniziato';
 
   @override
-  String get enum_checkout_status_requested => 'Requested';
+  String get enum_checkout_status_requested => 'Richiesto';
 
   @override
-  String get enum_checkout_status_validated => 'Validated';
+  String get enum_checkout_status_validated => 'Validato';
 
   @override
-  String get enum_checkout_status_rejected => 'Rejected';
+  String get enum_checkout_status_rejected => 'Rifiutato';
 
   @override
   String get enum_checkout_status_not_started_desc =>
-      'The stay is still in progress';
+      'Il soggiorno è ancora in corso';
 
   @override
   String get enum_checkout_status_requested_desc =>
-      'The guest has requested check-out';
+      'L\'ospite ha richiesto il check-out';
 
   @override
   String get enum_checkout_status_validated_desc =>
-      'Check-out validated, booking ready to close';
+      'Check-out validato, prenotazione pronta per la chiusura';
 
   @override
   String get enum_checkout_status_rejected_desc =>
-      'There are issues to resolve';
+      'Ci sono problemi da risolvere';
 
   @override
   String get public_badge_exclusivity => 'ESCLUSIVITÀ GARANTITA';
@@ -298,7 +299,7 @@ class SIt extends S {
 
   @override
   String public_footer_copyright(int year) {
-    return '© $year BF Stay • All rights reserved';
+    return '© $year BF Stay • Tutti i diritti riservati';
   }
 
   @override
@@ -326,44 +327,45 @@ class SIt extends S {
   String get public_service_what_to_see_title => 'Cosa visitare?';
 
   @override
-  String get public_service_what_to_see_desc => 'Nearby points of interest.';
+  String get public_service_what_to_see_desc =>
+      'Punti di interesse nelle vicinanze.';
 
   @override
   String get public_service_parking_title => 'Parcheggi';
 
   @override
-  String get public_service_parking_desc => 'Parking options.';
+  String get public_service_parking_desc => 'Opzioni di parcheggio.';
 
   @override
   String get public_service_chat_title => 'Chat';
 
   @override
-  String get public_service_chat_desc => '24/7 virtual concierge.';
+  String get public_service_chat_desc => 'Concierge virtuale 24/7.';
 
   @override
   String get public_service_accommodations_title => 'Alloggi';
 
   @override
-  String get public_service_accommodations_desc => 'Other properties.';
+  String get public_service_accommodations_desc => 'Altre proprietà.';
 
   @override
   String get public_service_reviews_title => 'Recensioni';
 
   @override
-  String get public_service_reviews_desc => 'Guest reviews.';
+  String get public_service_reviews_desc => 'Recensioni degli ospiti.';
 
   @override
-  String get public_service_parking_title_light => 'Nearby Parking';
+  String get public_service_parking_title_light => 'Parcheggi nelle vicinanze';
 
   @override
-  String get public_service_accommodations_title_light => 'Our Accommodations';
+  String get public_service_accommodations_title_light => 'I nostri alloggi';
 
   @override
   String get public_service_accommodations_desc_light =>
-      'Other available properties.';
+      'Altre proprietà disponibili.';
 
   @override
-  String get public_service_reviews_title_light => 'Reviews and Comments';
+  String get public_service_reviews_title_light => 'Recensioni e commenti';
 
   @override
   String get public_hero_subtitle =>
@@ -373,19 +375,19 @@ class SIt extends S {
   String get auth_login_brand_name => 'BF Stay';
 
   @override
-  String get auth_login_subtitle => 'Control Panel';
+  String get auth_login_subtitle => 'Pannello di controllo';
 
   @override
-  String get auth_feature_bookings => 'Booking management';
+  String get auth_feature_bookings => 'Gestione prenotazioni';
 
   @override
-  String get auth_feature_checkin => 'Digital check-in';
+  String get auth_feature_checkin => 'Check-in digitale';
 
   @override
-  String get auth_feature_chat => 'Guest chat';
+  String get auth_feature_chat => 'Chat con gli ospiti';
 
   @override
-  String get auth_feature_keyless => 'Keyless access';
+  String get auth_feature_keyless => 'Accesso senza chiave';
 
   @override
   String get auth_field_email => 'Email';
@@ -394,157 +396,157 @@ class SIt extends S {
   String get auth_field_password => 'Password';
 
   @override
-  String get auth_validation_email_required => 'Please enter your email';
+  String get auth_validation_email_required => 'Inserisci la tua email';
 
   @override
-  String get auth_validation_email_invalid => 'Please enter a valid email';
+  String get auth_validation_email_invalid => 'Inserisci un\'email valida';
 
   @override
-  String get auth_validation_password_required => 'Please enter your password';
+  String get auth_validation_password_required => 'Inserisci la tua password';
 
   @override
   String get auth_validation_password_min_length =>
-      'Password must be at least 6 characters';
+      'La password deve essere di almeno 6 caratteri';
 
   @override
-  String get auth_forgot_password => 'Forgot your password?';
+  String get auth_forgot_password => 'Password dimenticata?';
 
   @override
-  String get auth_login_button => 'Sign In';
+  String get auth_login_button => 'Accedi';
 
   @override
-  String get auth_divider_or => 'or';
+  String get auth_divider_or => 'o';
 
   @override
-  String get auth_guest_access_button => 'Access with booking code';
+  String get auth_guest_access_button => 'Accedi con codice prenotazione';
 
   @override
   String get auth_login_footer => 'BF Stay © 2026';
 
   @override
-  String get auth_recover_password_title => 'Recover Password';
+  String get auth_recover_password_title => 'Recupera password';
 
   @override
   String get auth_recover_password_body =>
-      'Enter your email and we will send you instructions to reset your password.';
+      'Inserisci la tua email e ti invieremo le istruzioni per reimpostare la password.';
 
   @override
-  String get auth_recover_password_sent => 'Recovery email sent';
+  String get auth_recover_password_sent => 'Email di recupero inviata';
 
   @override
-  String get auth_button_send => 'Send';
+  String get auth_button_send => 'Invia';
 
   @override
-  String get auth_booking_access_title => 'Guest Access';
+  String get auth_booking_access_title => 'Accesso ospiti';
 
   @override
-  String get auth_booking_benefit_code => 'Booking code';
+  String get auth_booking_benefit_code => 'Codice prenotazione';
 
   @override
-  String get auth_booking_benefit_personal => 'Personalized access';
+  String get auth_booking_benefit_personal => 'Accesso personalizzato';
 
   @override
-  String get auth_booking_benefit_instant => 'Instant access';
+  String get auth_booking_benefit_instant => 'Accesso immediato';
 
   @override
-  String get auth_booking_benefit_secure_checkin => 'Secure check-in';
+  String get auth_booking_benefit_secure_checkin => 'Check-in sicuro';
 
   @override
   String get auth_booking_code_info_short =>
-      'You received your booking code in the confirmation email.';
+      'Hai ricevuto il tuo codice prenotazione nell\'email di conferma.';
 
   @override
   String get auth_booking_code_info_full =>
-      'You received your booking code in your booking confirmation email.';
+      'Hai ricevuto il tuo codice prenotazione nell\'email di conferma della prenotazione.';
 
   @override
   String get auth_booking_desktop_subtitle =>
-      'Enjoy your stay with digital access';
+      'Goditi il tuo soggiorno con accesso digitale';
 
   @override
   String get auth_booking_form_subtitle =>
-      'Enter your booking code to access your accommodation';
+      'Inserisci il tuo codice prenotazione per accedere al tuo alloggio';
 
   @override
-  String get auth_booking_field_code => 'Booking Code';
+  String get auth_booking_field_code => 'Codice prenotazione';
 
   @override
   String get auth_booking_code_hint => 'XX-XXXX-XXXX';
 
   @override
   String get auth_booking_validation_code_required =>
-      'Please enter your booking code';
+      'Inserisci il tuo codice prenotazione';
 
   @override
   String get auth_booking_validation_code_invalid =>
-      'The code format is not valid';
+      'Il formato del codice non è valido';
 
   @override
-  String get auth_booking_access_button => 'Access';
+  String get auth_booking_access_button => 'Accedi';
 
   @override
-  String get auth_booking_help_title => 'Where do I find my code?';
+  String get auth_booking_help_title => 'Dove trovo il mio codice?';
 
   @override
   String get auth_booking_help_body =>
-      'You received your booking code in the booking confirmation email. It has the format BF-XXXXX.';
+      'Hai ricevuto il tuo codice prenotazione nell\'email di conferma. Ha il formato BF-XXXXX.';
 
   @override
   String get auth_booking_footer => 'BF Stay © 2026';
 
   @override
-  String get auth_booking_error_title => 'Access Error';
+  String get auth_booking_error_title => 'Errore di accesso';
 
   @override
   String get auth_booking_error_code_not_found =>
-      'The booking code does not exist. Please check that you have entered it correctly.';
+      'Il codice prenotazione non esiste. Verifica di averlo inserito correttamente.';
 
   @override
   String get auth_booking_error_code_expired =>
-      'This booking code has expired. Contact reception to get a new one.';
+      'Questo codice prenotazione è scaduto. Contatta la reception per ottenerne uno nuovo.';
 
   @override
   String get auth_booking_error_email_mismatch =>
-      'The email does not match the booking. Please make sure it is the same email you used when booking.';
+      'L\'email non corrisponde alla prenotazione. Assicurati di usare la stessa email con cui hai prenotato.';
 
   @override
   String get auth_booking_error_generic =>
-      'Could not verify the booking code. Please try again.';
+      'Impossibile verificare il codice prenotazione. Riprova.';
 
   @override
-  String get auth_booking_error_dismiss => 'Understood';
+  String get auth_booking_error_dismiss => 'Capito';
 
   @override
-  String get auth_sheet_title => 'Access your booking';
+  String get auth_sheet_title => 'Accedi alla tua prenotazione';
 
   @override
   String get auth_sheet_subtitle =>
-      'Enter your email and the code you received';
+      'Inserisci la tua email e il codice ricevuto';
 
   @override
   String get auth_sheet_label_email => 'EMAIL';
 
   @override
-  String get auth_sheet_hint_email => 'you@email.com';
+  String get auth_sheet_hint_email => 'tu@email.com';
 
   @override
-  String get auth_sheet_label_code => 'BOOKING CODE';
+  String get auth_sheet_label_code => 'CODICE PRENOTAZIONE';
 
   @override
   String get auth_sheet_hint_code => 'BF-XXXX-XXXX';
 
   @override
-  String get auth_sheet_submit_button => 'Access my booking';
+  String get auth_sheet_submit_button => 'Accedi alla mia prenotazione';
 
   @override
   String get auth_sheet_help_text =>
-      'Don\'t have your code? Contact your accommodation';
+      'Non hai il codice? Contatta il tuo alloggio';
 
   @override
-  String get auth_admin_sheet_title => 'Private access';
+  String get auth_admin_sheet_title => 'Accesso privato';
 
   @override
-  String get auth_admin_sheet_subtitle => 'BF-Stay authorized staff only';
+  String get auth_admin_sheet_subtitle => 'Solo personale autorizzato BF-Stay';
 
   @override
   String get auth_admin_label_email => 'EMAIL';
@@ -560,117 +562,119 @@ class SIt extends S {
 
   @override
   String get auth_admin_error_unauthorized =>
-      'You do not have access to this panel';
+      'Non hai accesso a questo pannello';
 
   @override
-  String get auth_admin_submit_button => 'Access panel';
+  String get auth_admin_submit_button => 'Accedi al pannello';
 
   @override
-  String get guest_settings_title => 'Settings';
+  String get guest_settings_title => 'Impostazioni';
 
   @override
-  String get guest_settings_section_language => 'Language';
+  String get guest_settings_section_language => 'Lingua';
 
   @override
-  String get guest_settings_language_title => 'App language';
+  String get guest_settings_language_title => 'Lingua dell\'app';
 
   @override
   String get guest_settings_language_subtitle =>
-      'Select the interface language';
+      'Seleziona la lingua dell\'interfaccia';
 
   @override
-  String get guest_settings_section_legal => 'Legal';
+  String get guest_settings_section_legal => 'Legale';
 
   @override
   String get guest_settings_privacy_policy_title => 'Privacy Policy';
 
   @override
   String get guest_settings_privacy_policy_subtitle =>
-      'View our privacy policy';
+      'Visualizza la nostra informativa sulla privacy';
 
   @override
   String get guest_settings_privacy_open_error =>
-      'Could not open the privacy policy';
+      'Impossibile aprire l\'informativa sulla privacy';
 
   @override
-  String get notification_channel_name => 'BF Stay Notifications';
+  String get notification_channel_name => 'Notifiche BF Stay';
 
   @override
-  String get notification_channel_description => 'BF Stay notification channel';
+  String get notification_channel_description => 'Canale di notifiche BF Stay';
 
   @override
-  String get notification_checkin_validated_title => '✅ Check-in Validated';
+  String get notification_checkin_validated_title => '✅ Check-in validato';
 
   @override
   String get notification_checkin_validated_body =>
-      'Your check-in has been successfully validated. Welcome!';
+      'Il tuo check-in è stato validato con successo. Benvenuto!';
 
   @override
-  String get notification_checkin_rejected_title => '❌ Check-in Rejected';
+  String get notification_checkin_rejected_title => '❌ Check-in rifiutato';
 
   @override
   String get notification_checkin_rejected_body =>
-      'Your check-in has been rejected. Please review your documentation.';
+      'Il tuo check-in è stato rifiutato. Verifica la tua documentazione.';
 
   @override
   String notification_checkin_rejected_body_with_reason(String reason) {
-    return 'Your check-in has been rejected: $reason';
+    return 'Il tuo check-in è stato rifiutato: $reason';
   }
 
   @override
-  String get notification_booking_cancelled_title => '🚫 Booking Cancelled';
+  String get notification_booking_cancelled_title =>
+      '🚫 Prenotazione annullata';
 
   @override
   String get notification_booking_cancelled_body =>
-      'Your booking has been cancelled. Contact reception.';
+      'La tua prenotazione è stata annullata. Contatta la reception.';
 
   @override
   String notification_booking_cancelled_body_with_reason(String reason) {
-    return 'Your booking has been cancelled: $reason';
+    return 'La tua prenotazione è stata annullata: $reason';
   }
 
   @override
-  String get notification_checkin_status_update_title => '📋 Check-in Update';
+  String get notification_checkin_status_update_title =>
+      '📋 Aggiornamento check-in';
 
   @override
   String notification_checkin_status_update_body(String status) {
-    return 'Your check-in status has changed to: $status';
+    return 'Il tuo stato di check-in è cambiato a: $status';
   }
 
   @override
   String get notification_admin_checkin_submitted_title =>
-      '📝 New Pending Check-in';
+      '📝 Nuovo check-in in attesa';
 
   @override
   String notification_admin_checkin_submitted_body(
     String guestName,
     String unitName,
   ) {
-    return '$guestName has submitted their check-in for $unitName. Pending review.';
+    return '$guestName ha inviato il check-in per $unitName. In attesa di revisione.';
   }
 
   @override
-  String get guest_parking_title => 'Parking';
+  String get guest_parking_title => 'Parcheggio';
 
   @override
-  String get guest_parking_available_singular => 'parking available';
+  String get guest_parking_available_singular => 'parcheggio disponibile';
 
   @override
-  String get guest_parking_available_plural => 'parkings available';
+  String get guest_parking_available_plural => 'parcheggi disponibili';
 
   @override
-  String get guest_parking_error_loading => 'Error loading';
+  String get guest_parking_error_loading => 'Errore di caricamento';
 
   @override
-  String get guest_parking_empty_title => 'No parkings';
+  String get guest_parking_empty_title => 'Nessun parcheggio';
 
   @override
   String get guest_parking_empty_subtitle =>
-      'We will soon add information about nearby parking';
+      'Presto aggiungeremo informazioni sui parcheggi vicini';
 
   @override
   String guest_parking_for_unit(String unitName) {
-    return 'Parking for $unitName';
+    return 'Parcheggio per $unitName';
   }
 
   @override
@@ -679,261 +683,264 @@ class SIt extends S {
   }
 
   @override
-  String get guest_parking_info_zones_title => 'PARKING ZONES INFORMATION';
+  String get guest_parking_info_zones_title => 'INFORMAZIONI ZONE PARCHEGGIO';
 
   @override
-  String get guest_parking_plaza_arenal_title => 'PLAZA ARENAL PARKING';
+  String get guest_parking_plaza_arenal_title => 'PARCHEGGIO PLAZA ARENAL';
 
   @override
-  String get guest_parking_plaza_arenal_subtitle => 'About a 5-minute walk';
+  String get guest_parking_plaza_arenal_subtitle => 'A circa 5 minuti a piedi';
 
   @override
   String get guest_parking_plaza_arenal_content =>
-      '• Paying via El Parking app: 6,95€/24h\n• Booking through their website: 8€/24h (minimum 24h)\n• Paying ticket at the machine: 16€/24h';
+      '• Pagamento tramite app El Parking: 6,95€/24h\n• Prenotazione tramite il loro sito web: 8€/24h (minimo 24h)\n• Pagamento biglietto alla cassa: 16€/24h';
 
   @override
-  String get guest_parking_centro_title => 'CITY CENTRE PARKING';
+  String get guest_parking_centro_title => 'PARCHEGGIO CENTRO CITTÀ';
 
   @override
-  String get guest_parking_centro_subtitle => 'O.R.A BLUE ZONE';
+  String get guest_parking_centro_subtitle => 'ZONA BLU O.R.A';
 
   @override
   String get guest_parking_centro_content =>
-      '• Monday to Friday: 9:00 - 13:30 and 17:00 - 20:00\n• Saturday: 9:00 - 14:00\n• July and August: 9:00 - 14:00';
+      '• Dal lunedì al venerdì: 9:00 - 13:30 e 17:00 - 20:00\n• Sabato: 9:00 - 14:00\n• Luglio e agosto: 9:00 - 14:00';
 
   @override
-  String get guest_parking_free_zone_title => 'FREE PARKING ZONE';
+  String get guest_parking_free_zone_title => 'ZONA PARCHEGGIO GRATUITO';
 
   @override
-  String get guest_parking_free_zone_subtitle => 'About a 10-minute walk';
+  String get guest_parking_free_zone_subtitle => 'A circa 10 minuti a piedi';
 
   @override
-  String get guest_parking_free_zone_content => 'Free rotating parking area.';
+  String get guest_parking_free_zone_content =>
+      'Area di parcheggio rotante gratuita.';
 
   @override
-  String get guest_checkin_camera_not_available => 'No cameras available';
+  String get guest_checkin_camera_not_available =>
+      'Nessuna fotocamera disponibile';
 
   @override
   String guest_checkin_camera_init_error(String error) {
-    return 'Error initializing camera: $error';
+    return 'Errore di inizializzazione fotocamera: $error';
   }
 
   @override
   String guest_checkin_camera_capture_error(String error) {
-    return 'Capture error: $error';
+    return 'Errore di acquisizione: $error';
   }
 
   @override
-  String get guest_checkin_camera_scan_title => 'Scan Document';
+  String get guest_checkin_camera_scan_title => 'Scansiona documento';
 
   @override
-  String get guest_checkin_camera_starting => 'Starting camera...';
+  String get guest_checkin_camera_starting => 'Avvio fotocamera...';
 
   @override
   String get guest_checkin_camera_frame_hint =>
-      'Frame the document inside the box';
+      'Inquadra il documento all\'interno del riquadro';
 
   @override
-  String get guest_checkin_camera_document_label => 'Identity Document';
+  String get guest_checkin_camera_document_label => 'Documento d\'identità';
 
   @override
-  String get admin_chat_messages => 'Messages';
+  String get admin_chat_messages => 'Messaggi';
 
   @override
-  String get admin_chat_conversation_deleted => 'Conversation deleted';
+  String get admin_chat_conversation_deleted => 'Conversazione eliminata';
 
   @override
-  String get admin_chat_empty_title => 'No conversations';
+  String get admin_chat_empty_title => 'Nessuna conversazione';
 
   @override
   String get admin_chat_empty_subtitle =>
-      'Conversations with guests\nwill appear here';
+      'Le conversazioni con gli ospiti\nappariranno qui';
 
   @override
-  String get guest_chat_input_hint => 'Type a message...';
+  String get guest_chat_input_hint => 'Scrivi un messaggio...';
 
   @override
-  String get admin_booking_detail_title => 'Detalle de Reserva';
+  String get admin_booking_detail_title => 'Dettaglio prenotazione';
 
   @override
-  String get admin_booking_not_found => 'Reserva no encontrada';
+  String get admin_booking_not_found => 'Prenotazione non trovata';
 
   @override
   String admin_booking_error(String error) {
-    return 'Error: $error';
+    return 'Errore: $error';
   }
 
   @override
   String admin_booking_error_validating(String error) {
-    return 'Error al validar: $error';
+    return 'Errore nella validazione: $error';
   }
 
   @override
   String admin_booking_error_rejecting(String error) {
-    return 'Error al rechazar: $error';
+    return 'Errore nel rifiuto: $error';
   }
 
   @override
   String admin_booking_error_validating_checkout(String error) {
-    return 'Error al validar check-out: $error';
+    return 'Errore nella validazione del check-out: $error';
   }
 
   @override
   String admin_booking_error_rejecting_checkout(String error) {
-    return 'Error al rechazar check-out: $error';
+    return 'Errore nel rifiuto del check-out: $error';
   }
 
   @override
   String admin_booking_error_closing(String error) {
-    return 'Error al cerrar reserva: $error';
+    return 'Errore nella chiusura della prenotazione: $error';
   }
 
   @override
   String admin_booking_error_cancelling(String error) {
-    return 'Error al cancelar reserva: $error';
+    return 'Errore nell\'annullamento della prenotazione: $error';
   }
 
   @override
   String admin_booking_error_deleting(String error) {
-    return 'Error al eliminar reserva: $error';
+    return 'Errore nell\'eliminazione della prenotazione: $error';
   }
 
   @override
   String admin_booking_error_updating(String error) {
-    return 'Error al actualizar: $error';
+    return 'Errore nell\'aggiornamento: $error';
   }
 
   @override
-  String get admin_booking_resend_error => 'No se pudo reenviar el código';
+  String get admin_booking_resend_error => 'Impossibile reinviare il codice';
 
   @override
   String get admin_booking_notification_sent =>
-      'Notificación enviada correctamente';
+      'Notifica inviata correttamente';
 
   @override
   String get admin_booking_notification_error =>
-      'Error al enviar la notificación';
+      'Errore nell\'invio della notifica';
 
   @override
-  String get admin_booking_code_resent => 'Código reenviado correctamente';
+  String get admin_booking_code_resent => 'Codice reinviato correttamente';
 
   @override
   String get admin_booking_checkin_validated =>
-      'Check-in validado correctamente';
+      'Check-in validato correttamente';
 
   @override
-  String get admin_booking_checkin_rejected => 'Check-in rechazado';
+  String get admin_booking_checkin_rejected => 'Check-in rifiutato';
 
   @override
   String get admin_booking_checkout_validated =>
-      'Check-out validado correctamente';
+      'Check-out validato correttamente';
 
   @override
-  String get admin_booking_checkout_rejected => 'Check-out rechazado';
+  String get admin_booking_checkout_rejected => 'Check-out rifiutato';
 
   @override
-  String get admin_booking_incidents_detected => 'Incidencias detectadas';
+  String get admin_booking_incidents_detected => 'Incidenze rilevate';
 
   @override
   String get admin_booking_closed_successfully =>
-      'Reserva cerrada correctamente';
+      'Prenotazione chiusa correttamente';
 
   @override
   String get admin_booking_cancelled_successfully =>
-      'Reserva cancelada correctamente';
+      'Prenotazione annullata correttamente';
 
   @override
   String get admin_booking_deleted_successfully =>
-      'Reserva eliminada correctamente';
+      'Prenotazione eliminata correttamente';
 
   @override
-  String get admin_booking_keybox_updated => 'Código keybox actualizado';
+  String get admin_booking_keybox_updated => 'Codice keybox aggiornato';
 
   @override
-  String get admin_booking_already_closed_title => 'Reserva ya cerrada';
+  String get admin_booking_already_closed_title => 'Prenotazione già chiusa';
 
   @override
   String get admin_booking_already_closed_message =>
-      'Esta reserva ya se encuentra cerrada.';
+      'Questa prenotazione è già chiusa.';
 
   @override
-  String get admin_booking_already_cancelled_title => 'Reserva ya cancelada';
+  String get admin_booking_already_cancelled_title =>
+      'Prenotazione già annullata';
 
   @override
   String get admin_booking_already_cancelled_message =>
-      'Esta reserva ya se encuentra cancelada.';
+      'Questa prenotazione è già annullata.';
 
   @override
-  String get admin_booking_cannot_delete_title => 'No se puede eliminar';
+  String get admin_booking_cannot_delete_title => 'Impossibile eliminare';
 
   @override
   String admin_booking_cannot_delete_message(String status) {
-    return 'No se puede eliminar una reserva en estado $status.';
+    return 'Impossibile eliminare una prenotazione nello stato $status.';
   }
 
   @override
-  String get admin_booking_cancel_booking => 'Cancelar Reserva';
+  String get admin_booking_cancel_booking => 'Annulla prenotazione';
 
   @override
   String get admin_booking_cancel_booking_confirm =>
-      '¿Estás seguro de que deseas cancelar esta reserva? Esta acción no se puede deshacer.';
+      'Sei sicuro di voler annullare questa prenotazione? Questa azione non può essere annullata.';
 
   @override
-  String get admin_booking_no_keep => 'No, mantener';
+  String get admin_booking_no_keep => 'No, mantieni';
 
   @override
-  String get admin_booking_yes_cancel => 'Sí, cancelar';
+  String get admin_booking_yes_cancel => 'Sì, annulla';
 
   @override
-  String get admin_booking_delete_booking => 'Eliminar Reserva';
+  String get admin_booking_delete_booking => 'Elimina prenotazione';
 
   @override
   String get admin_booking_delete_confirm =>
-      '¿Estás seguro de que deseas eliminar completamente esta reserva y todos sus datos asociados? Esta acción es irreversible.';
+      'Sei sicuro di voler eliminare completamente questa prenotazione e tutti i dati associati? Questa azione è irreversibile.';
 
   @override
-  String get admin_booking_close_booking => 'Cerrar Reserva';
+  String get admin_booking_close_booking => 'Chiudi prenotazione';
 
   @override
   String get admin_booking_close_confirm =>
-      '¿Deseas cerrar manualmente esta reserva? Se registrará la fecha de cierre.';
+      'Vuoi chiudere manualmente questa prenotazione? Verrà registrata la data di chiusura.';
 
   @override
-  String get admin_booking_close_notes_hint => 'Notas de cierre (opcional)';
+  String get admin_booking_close_notes_hint => 'Note di chiusura (opzionale)';
 
   @override
-  String get admin_booking_reject_checkout => 'Rechazar Check-out';
+  String get admin_booking_reject_checkout => 'Rifiuta check-out';
 
   @override
   String get admin_booking_reject_checkout_desc =>
-      'Indica las incidencias detectadas para rechazar el check-out.';
+      'Indica le incidenze rilevate per rifiutare il check-out.';
 
   @override
   String get admin_booking_incidents_hint =>
-      'Describe las incidencias detectadas...';
+      'Descrivi le incidenze rilevate...';
 
   @override
-  String get admin_booking_reject => 'Rechazar';
+  String get admin_booking_reject => 'Rifiuta';
 
   @override
-  String get admin_booking_reject_checkin => 'Rechazar Check-in';
+  String get admin_booking_reject_checkin => 'Rifiuta check-in';
 
   @override
   String get admin_booking_reject_checkin_desc =>
-      'Indica el motivo del rechazo del check-in.';
+      'Indica il motivo del rifiuto del check-in.';
 
   @override
   String get admin_booking_reject_reason_hint =>
-      'Motivo del rechazo (opcional)...';
+      'Motivo del rifiuto (opzionale)...';
 
   @override
   String admin_booking_share_code_message(String code) {
-    return 'Tu código de acceso es: $code';
+    return 'Il tuo codice di accesso è: $code';
   }
 
   @override
   String admin_booking_share_keybox_code(String code) {
-    return 'Código keybox: $code';
+    return 'Codice keybox: $code';
   }
 
   @override
@@ -942,56 +949,56 @@ class SIt extends S {
   }
 
   @override
-  String get admin_booking_share_download_app => 'Descarga la app: BF Stay';
+  String get admin_booking_share_download_app => 'Scarica l\'app: BF Stay';
 
   @override
-  String get admin_booking_edit_keybox_title => 'Código Keybox';
+  String get admin_booking_edit_keybox_title => 'Codice Keybox';
 
   @override
   String get admin_booking_edit_keybox_desc =>
-      'Introduce el código de la caja de llaves';
+      'Inserisci il codice della cassetta delle chiavi';
 
   @override
-  String get admin_booking_checkin_done => 'Check-in realizado';
+  String get admin_booking_checkin_done => 'Check-in effettuato';
 
   @override
-  String get admin_booking_checkout_done => 'Check-out realizado';
+  String get admin_booking_checkout_done => 'Check-out effettuato';
 
   @override
-  String get admin_booking_units_label => 'habitaciones';
+  String get admin_booking_units_label => 'camere';
 
   @override
-  String get admin_booking_email_sent => 'Email enviado';
+  String get admin_booking_email_sent => 'Email inviata';
 
   @override
-  String get admin_booking_email_pending => 'Email pendiente';
+  String get admin_booking_email_pending => 'Email in attesa';
 
   @override
-  String get admin_booking_code_used => 'Código usado';
+  String get admin_booking_code_used => 'Codice utilizzato';
 
   @override
-  String get admin_booking_code_unused => 'Código sin usar';
+  String get admin_booking_code_unused => 'Codice non utilizzato';
 
   @override
   String get admin_booking_checkin_ok => 'Check-in OK';
 
   @override
-  String get admin_booking_checkin_pending => 'Pendiente validación';
+  String get admin_booking_checkin_pending => 'Validazione in attesa';
 
   @override
-  String get admin_booking_checkin_in_progress => 'En progreso';
+  String get admin_booking_checkin_in_progress => 'In corso';
 
   @override
-  String get admin_booking_no_checkin => 'Sin check-in';
+  String get admin_booking_no_checkin => 'Nessun check-in';
 
   @override
-  String get admin_booking_guest_section => 'HUÉSPED';
+  String get admin_booking_guest_section => 'OSPITE';
 
   @override
-  String get admin_booking_no_name => 'Sin nombre';
+  String get admin_booking_no_name => 'Nessun nome';
 
   @override
-  String get admin_booking_reservation_section => 'RESERVA';
+  String get admin_booking_reservation_section => 'PRENOTAZIONE';
 
   @override
   String get admin_booking_checkin_label => 'Check-in';
@@ -1000,618 +1007,620 @@ class SIt extends S {
   String get admin_booking_checkout_label => 'Check-out';
 
   @override
-  String get admin_booking_night_singular => 'noche';
+  String get admin_booking_night_singular => 'notte';
 
   @override
-  String get admin_booking_night_plural => 'noches';
+  String get admin_booking_night_plural => 'notti';
 
   @override
-  String get admin_booking_years_label => 'años';
+  String get admin_booking_years_label => 'anni';
 
   @override
-  String get admin_booking_rooms_section => 'Habitaciones';
+  String get admin_booking_rooms_section => 'Camere';
 
   @override
   String get admin_booking_wifi_label => 'WiFi';
 
   @override
-  String get admin_booking_wifi_network_label => 'Red:';
+  String get admin_booking_wifi_network_label => 'Rete:';
 
   @override
-  String get admin_booking_wifi_password_label => 'Contraseña:';
+  String get admin_booking_wifi_password_label => 'Password:';
 
   @override
-  String get admin_booking_wifi_password_clipboard => 'Contraseña WiFi';
+  String get admin_booking_wifi_password_clipboard => 'Password WiFi';
 
   @override
-  String get admin_booking_access_code_label => 'Código de acceso';
+  String get admin_booking_access_code_label => 'Codice di accesso';
 
   @override
-  String get admin_booking_access_code_clipboard => 'Código de acceso';
+  String get admin_booking_access_code_clipboard => 'Codice di accesso';
 
   @override
-  String get admin_booking_access_instructions_label =>
-      'Instrucciones de acceso';
+  String get admin_booking_access_instructions_label => 'Istruzioni di accesso';
 
   @override
-  String get admin_booking_access_codes_section => 'CÓDIGOS DE ACCESO';
+  String get admin_booking_access_codes_section => 'CODICI DI ACCESSO';
 
   @override
-  String get admin_booking_reservation_code_label => 'Código de reserva';
+  String get admin_booking_reservation_code_label => 'Codice prenotazione';
 
   @override
-  String get admin_booking_share_button => 'Compartir';
+  String get admin_booking_share_button => 'Condividi';
 
   @override
-  String get admin_booking_keybox_not_set => 'No configurado';
+  String get admin_booking_keybox_not_set => 'Non configurato';
 
   @override
-  String get admin_booking_keybox_code_label => 'Código Keybox';
+  String get admin_booking_keybox_code_label => 'Codice Keybox';
 
   @override
-  String get admin_booking_keybox_code_clipboard => 'Código Keybox';
+  String get admin_booking_keybox_code_clipboard => 'Codice Keybox';
 
   @override
-  String get admin_booking_checkin_not_started => 'Check-in no iniciado';
+  String get admin_booking_checkin_not_started => 'Check-in non iniziato';
 
   @override
-  String get admin_booking_checkin_validated_status => 'Check-in validado';
+  String get admin_booking_checkin_validated_status => 'Check-in validato';
 
   @override
-  String get admin_booking_checkin_rejected_status => 'Check-in rechazado';
+  String get admin_booking_checkin_rejected_status => 'Check-in rifiutato';
 
   @override
   String get admin_booking_checkin_pending_validation =>
-      'Pendiente de validación';
+      'In attesa di validazione';
 
   @override
-  String get admin_booking_checkin_in_progress_status => 'Check-in en progreso';
+  String get admin_booking_checkin_in_progress_status => 'Check-in in corso';
 
   @override
   String get admin_booking_checkin_section => 'CHECK-IN';
 
   @override
-  String get admin_booking_docs_pending => 'documentos pendientes';
+  String get admin_booking_docs_pending => 'documenti in attesa';
 
   @override
-  String get admin_booking_validate_button => 'Validar';
+  String get admin_booking_validate_button => 'Valida';
 
   @override
-  String get admin_booking_reject_button => 'Rechazar';
+  String get admin_booking_reject_button => 'Rifiuta';
 
   @override
-  String get admin_booking_internal_notes_section => 'NOTAS INTERNAS';
+  String get admin_booking_internal_notes_section => 'NOTE INTERNE';
 
   @override
-  String get admin_booking_closed_status => 'Reserva cerrada';
+  String get admin_booking_closed_status => 'Prenotazione chiusa';
 
   @override
-  String get admin_booking_checkout_validated_status => 'Check-out validado';
+  String get admin_booking_checkout_validated_status => 'Check-out validato';
 
   @override
   String get admin_booking_checkout_incidents_status =>
-      'Check-out con incidencias';
+      'Check-out con incidenze';
 
   @override
-  String get admin_booking_checkout_requested_status => 'Check-out solicitado';
+  String get admin_booking_checkout_requested_status => 'Check-out richiesto';
 
   @override
-  String get admin_booking_checkout_pending_status => 'Check-out pendiente';
+  String get admin_booking_checkout_pending_status => 'Check-out in attesa';
 
   @override
   String get admin_booking_checkout_section => 'CHECK-OUT';
 
   @override
-  String get admin_booking_requested_label => 'Solicitado:';
+  String get admin_booking_requested_label => 'Richiesto:';
 
   @override
-  String get admin_booking_notes_label => 'Notas:';
+  String get admin_booking_notes_label => 'Note:';
 
   @override
-  String get admin_booking_incidents_button => 'Incidencias';
+  String get admin_booking_incidents_button => 'Incidenze';
 
   @override
-  String get admin_booking_close_booking_button => 'Cerrar Reserva';
+  String get admin_booking_close_booking_button => 'Chiudi prenotazione';
 
   @override
   String get admin_booking_close_booking_description =>
-      'El huésped no ha solicitado check-out. Puedes cerrar la reserva manualmente.';
+      'L\'ospite non ha richiesto il check-out. Puoi chiudere la prenotazione manualmente.';
 
   @override
-  String get admin_booking_signature_section => 'FIRMA DEL TITULAR';
+  String get admin_booking_signature_section => 'FIRMA DEL TITOLARE';
 
   @override
-  String get admin_booking_signature_unavailable => 'Firma no disponible';
+  String get admin_booking_signature_unavailable => 'Firma non disponibile';
 
   @override
-  String get admin_booking_actions_section => 'ACCIONES';
+  String get admin_booking_actions_section => 'AZIONI';
 
   @override
-  String get admin_booking_resend_code_title => 'Reenviar código por email';
+  String get admin_booking_resend_code_title => 'Reinvia codice via email';
 
   @override
-  String get admin_booking_last_sent_label => 'Último envío:';
+  String get admin_booking_last_sent_label => 'Ultimo invio:';
 
   @override
-  String get admin_booking_na => 'N/A';
+  String get admin_booking_na => 'N/D';
 
   @override
-  String get admin_booking_not_sent_yet => 'Aún no se ha enviado';
+  String get admin_booking_not_sent_yet => 'Non ancora inviato';
 
   @override
-  String get admin_booking_room_ready_title => 'Habitación disponible';
+  String get admin_booking_room_ready_title => 'Camera disponibile';
 
   @override
   String get admin_booking_room_ready_subtitle =>
-      'Notifica al huésped que la habitación está lista y puede acceder';
+      'Notifica all\'ospite che la camera è pronta e può accedere';
 
   @override
-  String get admin_booking_cancel_booking_title => 'Cancelar reserva';
+  String get admin_booking_cancel_booking_title => 'Annulla prenotazione';
 
   @override
   String get admin_booking_cancel_booking_subtitle =>
-      'Marca la reserva como cancelada';
+      'Segna la prenotazione come annullata';
 
   @override
-  String get admin_booking_delete_booking_title => 'Eliminar reserva';
+  String get admin_booking_delete_booking_title => 'Elimina prenotazione';
 
   @override
   String get admin_booking_delete_booking_subtitle =>
-      'Borra completamente la reserva y sus datos (solo si no está finalizada)';
+      'Elimina completamente la prenotazione e i suoi dati (solo se non è finalizzata)';
 
   @override
   String get admin_dashboard_admin_title => 'BF-Stay Admin';
 
   @override
-  String get admin_dashboard_tab_summary => 'Resumen';
+  String get admin_dashboard_tab_summary => 'Riepilogo';
 
   @override
-  String get admin_dashboard_tab_bookings => 'Reservas';
+  String get admin_dashboard_tab_bookings => 'Prenotazioni';
 
   @override
-  String get admin_dashboard_tab_checkins => 'Check-ins';
+  String get admin_dashboard_tab_checkins => 'Check-in';
 
   @override
-  String get admin_dashboard_tab_invoices => 'Facturas';
+  String get admin_dashboard_tab_invoices => 'Fatture';
 
   @override
   String get admin_dashboard_tab_marketing => 'Marketing';
 
   @override
-  String get admin_dashboard_tab_properties => 'Alojamientos';
+  String get admin_dashboard_tab_properties => 'Alloggi';
 
   @override
-  String get guest_reviews_title => 'Reseñas';
+  String get guest_reviews_title => 'Recensioni';
 
   @override
-  String get guest_reviews_write_review => 'Escribir reseña';
+  String get guest_reviews_write_review => 'Scrivi recensione';
 
   @override
-  String get guest_reviews_published => 'Reseña publicada correctamente';
+  String get guest_reviews_published => 'Recensione pubblicata correttamente';
 
   @override
-  String get guest_reviews_publishing => 'Publicando reseña...';
+  String get guest_reviews_publishing => 'Pubblicazione recensione...';
 
   @override
-  String get guest_reviews_updating => 'Actualizando reseña...';
+  String get guest_reviews_updating => 'Aggiornamento recensione...';
 
   @override
-  String get guest_reviews_deleting => 'Eliminando reseña...';
+  String get guest_reviews_deleting => 'Eliminazione recensione...';
 
   @override
-  String get guest_reviews_loading => 'Cargando reseñas...';
+  String get guest_reviews_loading => 'Caricamento recensioni...';
 
   @override
-  String get guest_reviews_delete_review => 'Eliminar reseña';
+  String get guest_reviews_delete_review => 'Elimina recensione';
 
   @override
   String get guest_reviews_delete_confirm =>
-      '¿Estás seguro de que quieres eliminar tu reseña? Esta acción no se puede deshacer.';
+      'Sei sicuro di voler eliminare la tua recensione? Questa azione non può essere annullata.';
 
   @override
-  String get guest_reviews_filter_all => 'Todas';
+  String get guest_reviews_filter_all => 'Tutte';
 
   @override
-  String get guest_reviews_edit_review => 'Editar reseña';
+  String get guest_reviews_edit_review => 'Modifica recensione';
 
   @override
-  String get guest_reviews_new_review => 'Nueva reseña';
+  String get guest_reviews_new_review => 'Nuova recensione';
 
   @override
-  String get guest_reviews_updated => 'Reseña actualizada';
+  String get guest_reviews_updated => 'Recensione aggiornata';
 
   @override
   String get guest_reviews_info_public =>
-      'Tu reseña será pública y ayudará a otros huéspedes a tomar decisiones.';
+      'La tua recensione sarà pubblica e aiuterà altri ospiti a prendere decisioni.';
 
   @override
-  String get guest_reviews_your_rating => 'Tu valoración';
+  String get guest_reviews_your_rating => 'La tua valutazione';
 
   @override
-  String get guest_reviews_tap_stars => 'Toca las estrellas para puntuar';
+  String get guest_reviews_tap_stars => 'Tocca le stelle per valutare';
 
   @override
-  String get guest_reviews_rating_1 => 'Muy malo';
+  String get guest_reviews_rating_1 => 'Molto scarso';
 
   @override
-  String get guest_reviews_rating_2 => 'Malo';
+  String get guest_reviews_rating_2 => 'Scarso';
 
   @override
-  String get guest_reviews_rating_3 => 'Regular';
+  String get guest_reviews_rating_3 => 'Nella media';
 
   @override
-  String get guest_reviews_rating_4 => 'Bueno';
+  String get guest_reviews_rating_4 => 'Buono';
 
   @override
-  String get guest_reviews_rating_5 => 'Excelente';
+  String get guest_reviews_rating_5 => 'Eccellente';
 
   @override
-  String get guest_reviews_title_label => 'Título (opcional)';
+  String get guest_reviews_title_label => 'Titolo (opzionale)';
 
   @override
-  String get guest_reviews_title_hint => 'Resume tu experiencia en una frase';
+  String get guest_reviews_title_hint =>
+      'Riassumi la tua esperienza in una frase';
 
   @override
-  String get guest_reviews_comment_required =>
-      'Por favor, escribe un comentario';
+  String get guest_reviews_comment_required => 'Per favore, scrivi un commento';
 
   @override
   String get guest_reviews_comment_min_length =>
-      'El comentario debe tener al menos 10 caracteres';
+      'Il commento deve avere almeno 10 caratteri';
 
   @override
-  String get guest_reviews_comment_label => 'Tu comentario *';
+  String get guest_reviews_comment_label => 'Il tuo commento *';
 
   @override
-  String get guest_reviews_comment_hint => 'Cuéntanos tu experiencia...';
+  String get guest_reviews_comment_hint => 'Raccontaci la tua esperienza...';
 
   @override
-  String get guest_reviews_save_changes => 'Guardar cambios';
+  String get guest_reviews_save_changes => 'Salva modifiche';
 
   @override
-  String get guest_reviews_publish_review => 'Publicar reseña';
+  String get guest_reviews_publish_review => 'Pubblica recensione';
 
   @override
   String get guest_reviews_select_rating =>
-      'Por favor, selecciona una puntuación';
+      'Per favore, seleziona una valutazione';
 
   @override
-  String get guest_reviews_saving => 'Guardando...';
+  String get guest_reviews_saving => 'Salvataggio...';
 
   @override
-  String get guest_alojamientos_title => 'Our Accommodations';
+  String get guest_alojamientos_title => 'I nostri alloggi';
 
   @override
-  String get guest_alojamientos_error_title => 'Error loading';
+  String get guest_alojamientos_error_title => 'Errore di caricamento';
 
   @override
-  String get guest_alojamientos_empty_title => 'No accommodations';
+  String get guest_alojamientos_empty_title => 'Nessun alloggio';
 
   @override
   String get guest_alojamientos_empty_subtitle =>
-      'No accommodations available at this time';
+      'Nessun alloggio disponibile al momento';
 
   @override
   String guest_alojamientos_room_count(int count) {
-    return '$count rooms';
+    return '$count camere';
   }
 
   @override
-  String get guest_alojamiento_detail_title => 'Details';
+  String get guest_alojamiento_detail_title => 'Dettagli';
 
   @override
-  String get guest_alojamiento_units_available => 'Available units';
+  String get guest_alojamiento_units_available => 'Unità disponibili';
 
   @override
-  String get guest_alojamiento_no_units => 'No units available';
+  String get guest_alojamiento_no_units => 'Nessuna unità disponibile';
 
   @override
-  String get guest_alojamiento_location => 'Location';
+  String get guest_alojamiento_location => 'Posizione';
 
   @override
-  String get guest_alojamiento_common_areas => 'Common Areas';
+  String get guest_alojamiento_common_areas => 'Aree comuni';
 
   @override
-  String get guest_alojamiento_shared_spaces => 'Shared spaces';
+  String get guest_alojamiento_shared_spaces => 'Spazi condivisi';
 
   @override
   String get guest_alojamiento_common_areas_subtitle =>
-      'Enjoy the hotel\'s common areas';
+      'Goditi le aree comuni dell\'hotel';
 
   @override
-  String get guest_alojamiento_no_photos => 'No photos';
+  String get guest_alojamiento_no_photos => 'Nessuna foto';
 
   @override
   String get guest_alojamiento_no_photos_subtitle =>
-      'No common area photos found';
+      'Nessuna foto delle aree comuni trovata';
 
   @override
   String guest_alojamiento_photos_count(int count) {
-    return '$count photos';
+    return '$count foto';
   }
 
   @override
   String get guest_alojamiento_hotel_rooms_title => 'Hotel Boutique Jerez';
 
   @override
-  String get guest_alojamiento_no_rooms => 'No rooms';
+  String get guest_alojamiento_no_rooms => 'Nessuna camera';
 
   @override
   String get guest_alojamiento_no_rooms_subtitle =>
-      'No rooms available at this time';
+      'Nessuna camera disponibile al momento';
 
   @override
-  String get guest_alojamiento_rooms => 'Rooms';
+  String get guest_alojamiento_rooms => 'Camere';
 
   @override
-  String get guest_alojamiento_features => 'Features';
+  String get guest_alojamiento_features => 'Caratteristiche';
 
   @override
-  String get guest_alojamiento_feature_flexible_checkin => 'Flexible check-in';
+  String get guest_alojamiento_feature_flexible_checkin =>
+      'Check-in flessibile';
 
   @override
-  String get guest_alojamiento_feature_wifi => 'Free WiFi';
+  String get guest_alojamiento_feature_wifi => 'WiFi gratuito';
 
   @override
-  String get guest_alojamiento_feature_ac => 'Air conditioning';
+  String get guest_alojamiento_feature_ac => 'Aria condizionata';
 
   @override
-  String get guest_alojamiento_description => 'Description';
+  String get guest_alojamiento_description => 'Descrizione';
 
   @override
   String guest_alojamiento_description_text(String unitType) {
-    return 'Discover this fully equipped $unitType to make your stay as comfortable as possible. It has everything you need to enjoy Jerez at your own pace.';
+    return 'Scopri questo $unitType completamente attrezzato per rendere il tuo soggiorno il più confortevole possibile. Ha tutto il necessario per goderti Jerez al tuo ritmo.';
   }
 
   @override
-  String get guest_alojamiento_services => 'Included services';
+  String get guest_alojamiento_services => 'Servizi inclusi';
 
   @override
-  String get guest_alojamiento_service_kitchen => 'Equipped kitchen';
+  String get guest_alojamiento_service_kitchen => 'Cucina attrezzata';
 
   @override
-  String get guest_alojamiento_service_washer => 'Washing machine';
+  String get guest_alojamiento_service_washer => 'Lavatrice';
 
   @override
   String get guest_alojamiento_service_tv => 'Smart TV';
 
   @override
-  String get guest_alojamiento_service_bedding => 'Bedding';
+  String get guest_alojamiento_service_bedding => 'Biancheria da letto';
 
   @override
-  String get guest_alojamiento_service_towels => 'Towels';
+  String get guest_alojamiento_service_towels => 'Asciugamani';
 
   @override
-  String get guest_alojamiento_service_coffee => 'Coffee maker';
+  String get guest_alojamiento_service_coffee => 'Macchina del caffè';
 
   @override
-  String get guest_alojamiento_access_info => 'Access information';
+  String get guest_alojamiento_access_info => 'Informazioni di accesso';
 
   @override
-  String get guest_alojamiento_box_location => 'Box location';
+  String get guest_alojamiento_box_location => 'Posizione cassaforte';
 
   @override
-  String get guest_alojamiento_access_instructions => 'Access instructions';
+  String get guest_alojamiento_access_instructions => 'Istruzioni di accesso';
 
   @override
-  String get guest_house_rules_title => 'House Rules';
+  String get guest_house_rules_title => 'Regole della casa';
 
   @override
   String get guest_house_rules_subtitle =>
-      'Check the rules and recommendations';
+      'Consulta le regole e le raccomandazioni';
 
   @override
-  String get guest_house_rules_empty_title => 'No rules';
+  String get guest_house_rules_empty_title => 'Nessuna regola';
 
   @override
   String get guest_house_rules_empty_subtitle =>
-      'This accommodation has no registered rules';
+      'Questo alloggio non ha regole registrate';
 
   @override
-  String get guest_normas_title => 'Rules';
+  String get guest_normas_title => 'Regole';
 
   @override
-  String get guest_normas_hotel_title => 'Hotel Rules';
+  String get guest_normas_hotel_title => 'Regole dell\'hotel';
 
   @override
-  String get guest_normas_apartment_title => 'Apartment Rules';
+  String get guest_normas_apartment_title => 'Regole dell\'appartamento';
 
   @override
-  String get guest_normas_not_available => 'No rules available';
+  String get guest_normas_not_available => 'Nessuna regola disponibile';
 
   @override
-  String get guest_normas_image_error => 'Could not load the image';
+  String get guest_normas_image_error => 'Impossibile caricare l\'immagine';
 
   @override
-  String get guest_normas_generic_error => 'An error has occurred';
+  String get guest_normas_generic_error => 'Si è verificato un errore';
 
   @override
-  String get guest_que_ver_title => 'What to see?';
+  String get guest_que_ver_title => 'Cosa vedere?';
 
   @override
-  String get guest_que_ver_clear_filters => 'Clear';
+  String get guest_que_ver_clear_filters => 'Cancella';
 
   @override
   String guest_que_ver_places_count(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count places',
-      one: '1 place',
+      other: '$count luoghi',
+      one: '1 luogo',
     );
     return '$_temp0';
   }
 
   @override
-  String get guest_que_ver_no_results => 'No results';
+  String get guest_que_ver_no_results => 'Nessun risultato';
 
   @override
-  String get guest_que_ver_no_places => 'No places';
+  String get guest_que_ver_no_places => 'Nessun luogo';
 
   @override
-  String get guest_que_ver_try_filters => 'Try changing the search filters';
+  String get guest_que_ver_try_filters =>
+      'Prova a cambiare i filtri di ricerca';
 
   @override
-  String get guest_que_ver_coming_soon => 'We will soon add new places';
+  String get guest_que_ver_coming_soon => 'Presto aggiungeremo nuovi luoghi';
 
   @override
-  String get guest_que_ver_error_loading => 'Error loading the place';
+  String get guest_que_ver_error_loading => 'Errore nel caricamento del luogo';
 
   @override
-  String get guest_que_ver_place_not_found => 'Place not found';
+  String get guest_que_ver_place_not_found => 'Luogo non trovato';
 
   @override
-  String get guest_que_ver_about_place => 'About this place';
+  String get guest_que_ver_about_place => 'Su questo luogo';
 
   @override
-  String get guest_que_ver_address => 'Address';
+  String get guest_que_ver_address => 'Indirizzo';
 
   @override
-  String get guest_que_ver_best_time => 'Best time to visit';
+  String get guest_que_ver_best_time => 'Orario migliore per visitare';
 
   @override
-  String get guest_que_ver_location => 'Location';
+  String get guest_que_ver_location => 'Posizione';
 
   @override
-  String get guest_que_ver_practical_info => 'Practical information';
+  String get guest_que_ver_practical_info => 'Informazioni pratiche';
 
   @override
-  String get guest_que_ver_tips => 'Tips';
+  String get guest_que_ver_tips => 'Consigli';
 
   @override
-  String get guest_que_ver_free_entry => 'Free entry';
+  String get guest_que_ver_free_entry => 'Ingresso gratuito';
 
   @override
-  String get guest_que_ver_how_to_get => 'How to get there';
+  String get guest_que_ver_how_to_get => 'Come arrivarci';
 
   @override
-  String get guest_que_ver_copy_link => 'Copy link';
+  String get guest_que_ver_copy_link => 'Copia link';
 
   @override
-  String get guest_que_ver_official_web => 'Official website';
+  String get guest_que_ver_official_web => 'Sito web ufficiale';
 
   @override
-  String get guest_que_ver_link_copied => 'Link copied to clipboard';
+  String get guest_que_ver_link_copied => 'Link copiato negli appunti';
 
   @override
-  String get guest_reviews_verified => 'Verified';
+  String get guest_reviews_verified => 'Verificato';
 
   @override
-  String get guest_reviews_show_less => 'Show less';
+  String get guest_reviews_show_less => 'Mostra meno';
 
   @override
-  String get guest_reviews_show_more => 'Show more';
+  String get guest_reviews_show_more => 'Mostra di più';
 
   @override
-  String get guest_reviews_empty_title => 'No reviews yet';
+  String get guest_reviews_empty_title => 'Nessuna recensione ancora';
 
   @override
   String get guest_reviews_empty_subtitle =>
-      'Be the first to share your experience';
+      'Sii il primo a condividere la tua esperienza';
 
   @override
-  String get guest_reviews_write_first => 'Write review';
+  String get guest_reviews_write_first => 'Scrivi recensione';
 
   @override
   String guest_reviews_filter_empty_title(String filter) {
-    return 'No results for $filter';
+    return 'Nessun risultato per $filter';
   }
 
   @override
   String get guest_reviews_filter_empty_subtitle =>
-      'Try selecting another filter';
+      'Prova a selezionare un altro filtro';
 
   @override
-  String get guest_reviews_clear_filter => 'Clear filter';
+  String get guest_reviews_clear_filter => 'Cancella filtro';
 
   @override
   String guest_reviews_count_label(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count reviews',
-      one: '1 review',
+      other: '$count recensioni',
+      one: '1 recensione',
     );
     return '$_temp0';
   }
 
   @override
-  String get guest_reviews_no_reviews_title => 'No reviews yet';
+  String get guest_reviews_no_reviews_title => 'Nessuna recensione ancora';
 
   @override
-  String get guest_reviews_be_first => 'Be the first';
+  String get guest_reviews_be_first => 'Sii il primo';
 
   @override
-  String get guest_access_no_booking => 'Booking not found';
+  String get guest_access_no_booking => 'Prenotazione non trovata';
 
   @override
-  String get guest_access_error_loading => 'Error loading access data';
+  String get guest_access_error_loading =>
+      'Errore nel caricamento dei dati di accesso';
 
   @override
-  String get guest_access_title => 'Access';
+  String get guest_access_title => 'Accesso';
 
   @override
-  String get guest_access_no_codes => 'No access codes available';
+  String get guest_access_no_codes => 'Nessun codice di accesso disponibile';
 
   @override
-  String get guest_access_codes_title => 'Access Codes';
+  String get guest_access_codes_title => 'Codici di accesso';
 
   @override
   String get guest_access_codes_subtitle =>
-      'Use these codes to access your accommodation';
+      'Usa questi codici per accedere al tuo alloggio';
 
   @override
-  String get guest_access_main_code => 'Main code';
+  String get guest_access_main_code => 'Codice principale';
 
   @override
-  String get guest_access_main_door => 'Main door';
+  String get guest_access_main_door => 'Porta principale';
 
   @override
   String guest_access_valid_period(String from, String until) {
-    return 'Valid from $from to $until';
+    return 'Valido da $from a $until';
   }
 
   @override
   String get guest_access_wifi_title => 'WiFi';
 
   @override
-  String get guest_access_wifi_network => 'Network:';
+  String get guest_access_wifi_network => 'Rete:';
 
   @override
   String get guest_access_wifi_password => 'Password:';
 
   @override
-  String get guest_access_password_copied => 'Password copied to clipboard';
+  String get guest_access_password_copied => 'Password copiata negli appunti';
 
   @override
-  String get guest_access_other_accesses => 'Other accesses';
+  String get guest_access_other_accesses => 'Altri accessi';
 
   @override
-  String get guest_access_instructions => 'Access instructions';
+  String get guest_access_instructions => 'Istruzioni di accesso';
 
   @override
-  String get guest_guide_title => 'Stay Guide';
+  String get guest_guide_title => 'Guida al soggiorno';
 
   @override
-  String get guest_guide_subtitle => 'All the information about your stay';
+  String get guest_guide_subtitle => 'Tutte le informazioni sul tuo soggiorno';
 
   @override
-  String get guest_guide_contact => 'Contact';
+  String get guest_guide_contact => 'Contatto';
 
   @override
-  String get guest_guide_phone_1 => 'Phone 1';
+  String get guest_guide_phone_1 => 'Telefono 1';
 
   @override
-  String get guest_guide_phone_2 => 'Phone 2';
+  String get guest_guide_phone_2 => 'Telefono 2';
 
   @override
-  String get guest_guide_your_data => 'Your Data';
+  String get guest_guide_your_data => 'I tuoi dati';
 
   @override
-  String get guest_guide_accommodation => 'Accommodation';
+  String get guest_guide_accommodation => 'Alloggio';
 
   @override
-  String get guest_guide_property => 'Property';
+  String get guest_guide_property => 'Struttura';
 
   @override
   String get guest_guide_checkin => 'Check-in';
@@ -1620,224 +1629,226 @@ class SIt extends S {
   String get guest_guide_checkout => 'Check-out';
 
   @override
-  String get guest_guide_guests => 'Guests';
+  String get guest_guide_guests => 'Ospiti';
 
   @override
-  String get guest_guide_services => 'Services';
+  String get guest_guide_services => 'Servizi';
 
   @override
   String get guest_guide_wifi => 'WiFi';
 
   @override
-  String get guest_guide_laundry => 'Laundry';
+  String get guest_guide_laundry => 'Lavanderia';
 
   @override
-  String get guest_guide_laundry_desc => 'Laundry service available';
+  String get guest_guide_laundry_desc => 'Servizio lavanderia disponibile';
 
   @override
   String get guest_guide_jacuzzi => 'Jacuzzi';
 
   @override
-  String get guest_guide_ac => 'Air Conditioning';
+  String get guest_guide_ac => 'Aria condizionata';
 
   @override
-  String get guest_guide_ac_title => 'Air Conditioning';
+  String get guest_guide_ac_title => 'Aria condizionata';
 
   @override
-  String get guest_guide_ac_desc => 'Climate control in your accommodation';
+  String get guest_guide_ac_desc => 'Clima controllato nel tuo alloggio';
 
   @override
   String get guest_guide_tv => 'TV';
 
   @override
-  String get guest_guide_tv_title => 'Television';
+  String get guest_guide_tv_title => 'Televisione';
 
   @override
-  String get guest_guide_tv_desc => 'Smart TV with channels and apps';
+  String get guest_guide_tv_desc => 'Smart TV con canali e app';
 
   @override
-  String get guest_guide_not_available => 'Not available';
+  String get guest_guide_not_available => 'Non disponibile';
 
   @override
-  String get guest_guide_wifi_desc => 'WiFi connection included';
+  String get guest_guide_wifi_desc => 'Connessione WiFi inclusa';
 
   @override
-  String get guest_guide_house_rules => 'House Rules';
+  String get guest_guide_house_rules => 'Regole della casa';
 
   @override
-  String get guest_guide_rule_checkin => 'Check-in from 4:00 PM';
+  String get guest_guide_rule_checkin => 'Check-in dalle 16:00';
 
   @override
   String guest_guide_rule_checkout(String time) {
-    return 'Check-out before $time';
+    return 'Check-out entro le $time';
   }
 
   @override
-  String get guest_guide_rule_no_smoking => 'No smoking';
+  String get guest_guide_rule_no_smoking => 'Vietato fumare';
 
   @override
-  String get guest_guide_rule_no_parties => 'No parties allowed';
+  String get guest_guide_rule_no_parties => 'Niente feste consentite';
 
   @override
-  String get guest_guide_rule_no_pets => 'No pets allowed';
+  String get guest_guide_rule_no_pets => 'Animali non ammessi';
 
   @override
-  String get guest_notifications_title => 'Notifications';
+  String get guest_notifications_title => 'Notifiche';
 
   @override
-  String get guest_notifications_delete_all => 'Delete all';
+  String get guest_notifications_delete_all => 'Elimina tutte';
 
   @override
-  String get guest_notifications_delete_all_title => 'Delete all notifications';
+  String get guest_notifications_delete_all_title =>
+      'Elimina tutte le notifiche';
 
   @override
   String get guest_notifications_delete_all_confirm =>
-      'Are you sure you want to delete all notifications? This action cannot be undone.';
+      'Sei sicuro di voler eliminare tutte le notifiche? Questa azione non può essere annullata.';
 
   @override
   String guest_notifications_unread_count(int count) {
-    return '$count unread';
+    return '$count non lette';
   }
 
   @override
-  String get guest_notifications_mark_all => 'Mark all as read';
+  String get guest_notifications_mark_all => 'Segna tutte come lette';
 
   @override
-  String get guest_notifications_empty_title => 'No notifications';
+  String get guest_notifications_empty_title => 'Nessuna notifica';
 
   @override
   String get guest_notifications_empty_subtitle =>
-      'Notifications about your stay will appear here';
+      'Le notifiche sul tuo soggiorno appariranno qui';
 
   @override
-  String get guest_notifications_read => 'Read';
+  String get guest_notifications_read => 'Letto';
 
   @override
-  String get guest_romantic_title => 'Romantic Pack';
+  String get guest_romantic_title => 'Pacchetto romantico';
 
   @override
-  String get guest_romantic_surprise => 'Surprise your partner';
+  String get guest_romantic_surprise => 'Sorprendi il tuo partner';
 
   @override
-  String get guest_romantic_unforgettable => 'Create an unforgettable moment';
+  String get guest_romantic_unforgettable => 'Crea un momento indimenticabile';
 
   @override
-  String get guest_romantic_includes => 'What\'s included?';
+  String get guest_romantic_includes => 'Cosa è incluso?';
 
   @override
-  String get guest_romantic_decoration_title => 'Romantic Decoration';
+  String get guest_romantic_decoration_title => 'Decorazione romantica';
 
   @override
   String get guest_romantic_decoration_desc =>
-      'Rose petals, candles and special room decoration';
+      'Petali di rosa, candele e decorazione speciale della camera';
 
   @override
-  String get guest_romantic_choose_title => 'Choose your detail';
+  String get guest_romantic_choose_title => 'Scegli il tuo dettaglio';
 
   @override
   String get guest_romantic_choose_desc =>
-      'Bottle of cava or artisan chocolate to accompany the evening';
+      'Bottiglia di cava o cioccolato artigianale per accompagnare la serata';
 
   @override
-  String get guest_romantic_basic_pack => 'Basic Romantic Pack';
+  String get guest_romantic_basic_pack => 'Pacchetto romantico base';
 
   @override
-  String get guest_romantic_price => '€49.90';
+  String get guest_romantic_price => '€20,00';
 
   @override
-  String get guest_romantic_book_now => 'Book Now';
+  String get guest_romantic_book_now => 'Prenota ora';
 
   @override
   String get guest_romantic_customize =>
-      'Or customize with extras when booking';
+      'O personalizza con extra al momento della prenotazione';
 
   @override
   String get guest_romantic_redirect =>
-      'You will be redirected to the website to complete the Romantic Pack reservation. Continue?';
+      'Sarai reindirizzato al sito web per completare la prenotazione del Pacchetto Romantico. Continuare?';
 
   @override
-  String get guest_romantic_how_to => 'How to book?';
+  String get guest_romantic_how_to => 'Come prenotare?';
 
   @override
-  String get guest_romantic_step_1 => 'Select the Romantic Pack';
+  String get guest_romantic_step_1 => 'Seleziona il Pacchetto Romantico';
 
   @override
-  String get guest_romantic_step_2 => 'Customize the details';
+  String get guest_romantic_step_2 => 'Personalizza i dettagli';
 
   @override
-  String get guest_romantic_step_3 => 'Complete the reservation online';
+  String get guest_romantic_step_3 => 'Completa la prenotazione online';
 
   @override
-  String get guest_romantic_step_4 => 'Enjoy the surprise';
+  String get guest_romantic_step_4 => 'Goditi la sorpresa';
 
   @override
   String get guest_romantic_note =>
-      'The decoration is prepared during your absence so it comes as a complete surprise.';
+      'La decorazione viene preparata durante la tua assenza così sarà una sorpresa completa.';
 
   @override
   String get guest_jacuzzi_title => 'Jacuzzi';
 
   @override
-  String get guest_jacuzzi_rules_title => 'Usage Rules';
+  String get guest_jacuzzi_rules_title => 'Regole d\'uso';
 
   @override
-  String get guest_jacuzzi_subtitle => 'Relax and enjoy';
+  String get guest_jacuzzi_subtitle => 'Rilassati e goditi';
 
   @override
-  String get guest_jacuzzi_power => 'Power';
+  String get guest_jacuzzi_power => 'Accensione';
 
   @override
   String get guest_jacuzzi_power_step_1 =>
-      'Pulsa el botón POWER para encender el jacuzzi';
+      'Premi il tasto POWER per accendere il jacuzzi';
 
   @override
-  String get guest_jacuzzi_power_step_2 => 'Espera a que el panel se ilumine';
+  String get guest_jacuzzi_power_step_2 =>
+      'Attendi che il pannello si illumini';
 
   @override
   String get guest_jacuzzi_power_step_3 =>
-      'Selecciona la temperatura deseada con los botones + y -';
+      'Seleziona la temperatura desiderata con i tasti + e -';
 
   @override
-  String get guest_jacuzzi_lock => 'Panel Lock';
+  String get guest_jacuzzi_lock => 'Blocco pannello';
 
   @override
   String get guest_jacuzzi_lock_step_1 =>
-      'Para evitar activaciones accidentales, puedes bloquear el panel de control';
+      'Per evitare attivazioni accidentali, puoi bloccare il pannello di controllo';
 
   @override
-  String get guest_jacuzzi_lock_unlock => 'Unlock';
+  String get guest_jacuzzi_lock_unlock => 'Sblocca';
 
   @override
   String get guest_jacuzzi_lock_unlock_step =>
-      'Press and hold the LOCK button for 3 seconds';
+      'Tieni premuto il tasto LOCK per 3 secondi';
 
   @override
-  String get guest_jacuzzi_lock_manual => 'Manual Lock';
+  String get guest_jacuzzi_lock_manual => 'Blocco manuale';
 
   @override
   String get guest_jacuzzi_lock_manual_step =>
-      'Press and hold the LOCK button for 3 seconds to activate';
+      'Tieni premuto il tasto LOCK per 3 secondi per attivare';
 
   @override
-  String get guest_jacuzzi_ozone => 'Ozone Function';
+  String get guest_jacuzzi_ozone => 'Funzione ozono';
 
   @override
   String get guest_jacuzzi_ozone_intro =>
-      'The ozone system helps keep the water clean and disinfected automatically.';
+      'Il sistema a ozono aiuta a mantenere l\'acqua pulita e disinfettata automaticamente.';
 
   @override
-  String get guest_jacuzzi_ozone_step_1 => 'Pulsa el botón OZONE en el panel';
+  String get guest_jacuzzi_ozone_step_1 => 'Premi il tasto OZONE sul pannello';
 
   @override
-  String get guest_jacuzzi_ozone_step_2 => 'Se activará la luz indicadora';
+  String get guest_jacuzzi_ozone_step_2 => 'Si attiverà la spia luminosa';
 
   @override
   String get guest_jacuzzi_ozone_step_3 =>
-      'El sistema se ejecutará durante 30 minutos';
+      'Il sistema funzionerà per 30 minuti';
 
   @override
   String get guest_jacuzzi_ozone_step_4 =>
-      'Se desactivará automáticamente al finalizar';
+      'Si disattiverà automaticamente al termine';
 
   @override
   String guest_jacuzzi_ozone_note(String note) {
@@ -1845,230 +1856,234 @@ class SIt extends S {
   }
 
   @override
-  String get guest_jacuzzi_massage => 'Massage Functions';
+  String get guest_jacuzzi_massage => 'Funzioni massaggio';
 
   @override
-  String get guest_jacuzzi_air_jets => 'Air Jets';
+  String get guest_jacuzzi_air_jets => 'Getti d\'aria';
 
   @override
   String get guest_jacuzzi_air_step_1 =>
-      'Pulsa el botón AIR para activar los jets de aire';
+      'Premi il tasto AIR per attivare i getti d\'aria';
 
   @override
   String get guest_jacuzzi_air_step_2 =>
-      'Ajusta la intensidad con los botones + y -';
+      'Regola l\'intensità con i tasti + e -';
 
   @override
   String get guest_jacuzzi_air_step_3 =>
-      'Los jets crearán burbujas suaves en el agua';
+      'I getti creeranno bolle delicate nell\'acqua';
 
   @override
-  String get guest_jacuzzi_air_step_4 => 'Pulsa de nuevo para desactivar';
+  String get guest_jacuzzi_air_step_4 => 'Premi di nuovo per disattivare';
 
   @override
-  String get guest_jacuzzi_water_jets => 'Water Jets';
+  String get guest_jacuzzi_water_jets => 'Getti d\'acqua';
 
   @override
   String get guest_jacuzzi_water_step_1 =>
-      'Pulsa el botón JET para activar los jets de agua';
+      'Premi il tasto JET per attivare i getti d\'acqua';
 
   @override
   String get guest_jacuzzi_water_step_2 =>
-      'Los jets de agua proporcionan un masaje más intenso';
+      'I getti d\'acqua offrono un massaggio più intenso';
 
   @override
   String get guest_jacuzzi_water_step_3 =>
-      'Dirige los jets hacia las zonas de tensión muscular';
+      'Dirigi i getti verso le zone di tensione muscolare';
 
   @override
-  String get guest_jacuzzi_water_step_4 => 'Pulsa de nuevo para desactivar';
+  String get guest_jacuzzi_water_step_4 => 'Premi di nuovo per disattivare';
 
   @override
-  String get guest_jacuzzi_important => 'Important';
+  String get guest_jacuzzi_important => 'Importante';
 
   @override
   String get guest_jacuzzi_water_level_info =>
-      'The water level must always be above the jets for proper functioning.';
+      'Il livello dell\'acqua deve essere sempre sopra i getti per un corretto funzionamento.';
 
   @override
-  String get guest_jacuzzi_low_water_title => 'If the level is low:';
+  String get guest_jacuzzi_low_water_title => 'Se il livello è basso:';
 
   @override
-  String get guest_jacuzzi_low_water_stop => 'Stop the jacuzzi immediately';
+  String get guest_jacuzzi_low_water_stop => 'Ferma immediatamente il jacuzzi';
 
   @override
   String get guest_jacuzzi_low_water_icon =>
-      'Check the warning icon on the panel';
+      'Controlla l\'icona di avvertimento sul pannello';
 
   @override
   String get guest_jacuzzi_low_water_resume =>
-      'Fill with water to cover the jets before resuming.';
+      'Riempi con acqua fino a coprire i getti prima di riprendere.';
 
   @override
-  String get guest_jacuzzi_water_responsibility => 'Responsible Water Use';
+  String get guest_jacuzzi_water_responsibility =>
+      'Uso responsabile dell\'acqua';
 
   @override
   String get guest_jacuzzi_water_refill_info =>
-      'The jacuzzi has a considerable water capacity. Please use it responsibly.';
+      'Il jacuzzi ha una notevole capacità d\'acqua. Ti preghiamo di usarla responsabilmente.';
 
   @override
-  String get guest_jacuzzi_capacity => 'Capacity:';
+  String get guest_jacuzzi_capacity => 'Capacità:';
 
   @override
-  String get guest_jacuzzi_capacity_liters => '800 liters';
+  String get guest_jacuzzi_capacity_liters => '800 litri';
 
   @override
   String get guest_jacuzzi_water_regulation =>
-      'Filling and draining the jacuzzi is regulated by local water usage regulations.';
+      'Il riempimento e lo svuotamento del jacuzzi è regolato dalle normative locali sull\'uso dell\'acqua.';
 
   @override
   String get guest_jacuzzi_thanks =>
-      'Thank you for your collaboration in responsible water use.';
+      'Grazie per la tua collaborazione nell\'uso responsabile dell\'acqua.';
 
   @override
-  String get guest_physical_registration_title => 'Physical Registration';
+  String get guest_physical_registration_title => 'Registrazione fisica';
 
   @override
-  String get guest_physical_registration_header => 'Registration at Reception';
+  String get guest_physical_registration_header =>
+      'Registrazione alla reception';
 
   @override
   String get guest_physical_registration_subtitle =>
-      'Complete your registration in person';
+      'Completa la tua registrazione di persona';
 
   @override
-  String get guest_physical_registration_instructions => 'Instructions';
+  String get guest_physical_registration_instructions => 'Istruzioni';
 
   @override
-  String get guest_physical_registration_step_1_title => 'Acude a recepción';
+  String get guest_physical_registration_step_1_title => 'Vai alla reception';
 
   @override
   String get guest_physical_registration_step_1_desc =>
-      'Dirígete a la recepción del hotel durante el horario de atención';
+      'Recati alla reception dell\'hotel durante l\'orario di attenzione';
 
   @override
   String get guest_physical_registration_step_2_title =>
-      'Presenta tu documento';
+      'Presenta il tuo documento';
 
   @override
   String get guest_physical_registration_step_2_desc =>
-      'Muestra tu documento de identidad original (DNI, pasaporte o carnet de conducir)';
+      'Mostra il tuo documento d\'identità originale (DNI, passaporto o patente di guida)';
 
   @override
-  String get guest_physical_registration_step_3_title => 'Firma el registro';
+  String get guest_physical_registration_step_3_title => 'Firma il registro';
 
   @override
   String get guest_physical_registration_step_3_desc =>
-      'Firma el documento de registro de entrada';
+      'Firma il documento di registrazione all\'arrivo';
 
   @override
-  String get guest_physical_registration_step_4_title => 'Recibe tu llave';
+  String get guest_physical_registration_step_4_title => 'Ricevi la tua chiave';
 
   @override
   String get guest_physical_registration_step_4_desc =>
-      'Te entregaremos la llave de tu habitación';
+      'Ti consegneremo la chiave della tua camera';
 
   @override
-  String get guest_physical_registration_schedule => 'Reception Hours';
+  String get guest_physical_registration_schedule => 'Orari reception';
 
   @override
-  String get guest_physical_registration_schedule_hours => 'Business hours';
+  String get guest_physical_registration_schedule_hours => 'Orario lavorativo';
 
   @override
-  String get guest_physical_registration_schedule_days => 'Monday to Friday';
+  String get guest_physical_registration_schedule_days =>
+      'Dal lunedì al venerdì';
 
   @override
-  String get guest_physical_registration_documents => 'Accepted Documents';
+  String get guest_physical_registration_documents => 'Documenti accettati';
 
   @override
   String get guest_physical_registration_doc_dni => 'DNI';
 
   @override
-  String get guest_physical_registration_doc_passport => 'Passport';
+  String get guest_physical_registration_doc_passport => 'Passaporto';
 
   @override
-  String get guest_physical_registration_doc_license => 'Driver\'s license';
+  String get guest_physical_registration_doc_license => 'Patente di guida';
 
   @override
-  String get guest_checkin_child_no_data => 'Under 14, no data required';
+  String get guest_checkin_child_no_data =>
+      'Sotto i 14 anni, nessun dato richiesto';
 
   @override
-  String get guest_checkin_holder => 'Primary';
+  String get guest_checkin_holder => 'Principale';
 
   @override
-  String get guest_checkin_full_name => 'Full name';
+  String get guest_checkin_full_name => 'Nome completo';
 
   @override
   String get guest_checkin_email => 'Email';
 
   @override
-  String get guest_checkin_phone => 'Phone';
+  String get guest_checkin_phone => 'Telefono';
 
   @override
   String guest_checkin_young(int age) {
-    return 'Minor ($age years old)';
+    return 'Minore ($age anni)';
   }
 
   @override
   String guest_checkin_adult(int number) {
-    return 'Adult $number';
+    return 'Adulto $number';
   }
 
   @override
   String guest_checkin_guest(int number) {
-    return 'Guest $number';
+    return 'Ospite $number';
   }
 
   @override
-  String get guest_checkin_document_id => 'Identity document';
+  String get guest_checkin_document_id => 'Documento d\'identità';
 
   @override
-  String get guest_checkin_upload_document => 'Upload document';
+  String get guest_checkin_upload_document => 'Carica documento';
 
   @override
-  String get guest_checkin_document => 'Document';
+  String get guest_checkin_document => 'Documento';
 
   @override
-  String get guest_checkin_missing_photo => 'Document photo missing';
+  String get guest_checkin_missing_photo => 'Foto del documento mancante';
 
   @override
-  String get guest_checkin_upload_document_title => 'Upload Document';
+  String get guest_checkin_upload_document_title => 'Carica documento';
 
   @override
-  String get guest_checkin_document_type => 'Document type';
+  String get guest_checkin_document_type => 'Tipo di documento';
 
   @override
-  String get guest_checkin_document_number => 'Document number';
+  String get guest_checkin_document_number => 'Numero documento';
 
   @override
-  String get guest_checkin_document_photo => 'Document photo';
+  String get guest_checkin_document_photo => 'Foto del documento';
 
   @override
-  String get guest_checkin_image_captured => 'Image captured';
+  String get guest_checkin_image_captured => 'Immagine acquisita';
 
   @override
-  String get guest_checkin_tap_to_capture => 'Tap to capture document';
+  String get guest_checkin_tap_to_capture => 'Tocca per acquisire il documento';
 
   @override
-  String get guest_checkin_camera_or_gallery => 'Camera or gallery';
+  String get guest_checkin_camera_or_gallery => 'Fotocamera o galleria';
 
   @override
-  String get guest_checkin_select_source => 'Select source';
+  String get guest_checkin_select_source => 'Seleziona origine';
 
   @override
-  String get guest_checkin_camera => 'Camera';
+  String get guest_checkin_camera => 'Fotocamera';
 
   @override
-  String get guest_checkin_gallery => 'Gallery';
+  String get guest_checkin_gallery => 'Galleria';
 
   @override
-  String get guest_checkin_photo_required => 'Photo required';
+  String get guest_checkin_photo_required => 'Foto richiesta';
 
   @override
-  String get guest_checkin_confirm => 'Confirm';
+  String get guest_checkin_confirm => 'Conferma';
 
   @override
   String guest_checkin_capture_error(String error) {
-    return 'Error al capturar imagen: $error';
+    return 'Errore nell\'acquisizione dell\'immagine: $error';
   }
 
   @override
@@ -2078,79 +2093,80 @@ class SIt extends S {
   String get admin_chat_online => 'Online';
 
   @override
-  String get admin_chat_delete_conversation => 'Delete conversation';
+  String get admin_chat_delete_conversation => 'Elimina conversazione';
 
   @override
   String get admin_chat_delete_confirm_body =>
-      'Are you sure you want to delete this conversation?';
+      'Sei sicuro di voler eliminare questa conversazione?';
 
   @override
-  String get admin_chat_deleted_success => 'Conversation deleted successfully';
+  String get admin_chat_deleted_success =>
+      'Conversazione eliminata con successo';
 
   @override
   String admin_chat_error_deleting(String error) {
-    return 'Error deleting conversation: $error';
+    return 'Errore nell\'eliminazione della conversazione: $error';
   }
 
   @override
-  String get admin_checkin_detail_title => 'Check-in Detail';
+  String get admin_checkin_detail_title => 'Dettaglio check-in';
 
   @override
-  String get admin_checkin_validate => 'Validate';
+  String get admin_checkin_validate => 'Valida';
 
   @override
-  String get admin_checkin_reject => 'Reject';
+  String get admin_checkin_reject => 'Rifiuta';
 
   @override
-  String get admin_checkin_cancel_booking => 'Cancel Booking';
+  String get admin_checkin_cancel_booking => 'Annulla prenotazione';
 
   @override
-  String get admin_checkin_error_loading => 'Error loading';
+  String get admin_checkin_error_loading => 'Errore di caricamento';
 
   @override
-  String get admin_checkin_not_found => 'Check-in not found';
+  String get admin_checkin_not_found => 'Check-in non trovato';
 
   @override
-  String get admin_checkin_status_pending => 'Pending';
+  String get admin_checkin_status_pending => 'In attesa';
 
   @override
-  String get admin_checkin_status_validated => 'Validated';
+  String get admin_checkin_status_validated => 'Validato';
 
   @override
-  String get admin_checkin_status_rejected => 'Rejected';
+  String get admin_checkin_status_rejected => 'Rifiutato';
 
   @override
-  String get admin_checkin_status_cancelled => 'Cancelled';
+  String get admin_checkin_status_cancelled => 'Annullato';
 
   @override
-  String get admin_checkin_status_draft => 'Draft';
+  String get admin_checkin_status_draft => 'Bozza';
 
   @override
-  String get admin_checkin_submitted_label => 'Submitted:';
+  String get admin_checkin_submitted_label => 'Inviato:';
 
   @override
-  String get admin_checkin_validated_label => 'Validated:';
+  String get admin_checkin_validated_label => 'Validato:';
 
   @override
-  String get admin_checkin_rejected_label => 'Rejected:';
+  String get admin_checkin_rejected_label => 'Rifiutato:';
 
   @override
-  String get admin_checkin_cancelled_label => 'Cancelled:';
+  String get admin_checkin_cancelled_label => 'Annullato:';
 
   @override
-  String get admin_checkin_booking_info => 'Booking Info';
+  String get admin_checkin_booking_info => 'Info prenotazione';
 
   @override
-  String get admin_checkin_property_label => 'Property:';
+  String get admin_checkin_property_label => 'Struttura:';
 
   @override
-  String get admin_checkin_units_label => 'rooms';
+  String get admin_checkin_units_label => 'camere';
 
   @override
-  String get admin_checkin_unit_label => 'room';
+  String get admin_checkin_unit_label => 'camera';
 
   @override
-  String get admin_checkin_code_label => 'Code:';
+  String get admin_checkin_code_label => 'Codice:';
 
   @override
   String get admin_checkin_checkin_date_label => 'Check-in:';
@@ -2159,22 +2175,22 @@ class SIt extends S {
   String get admin_checkin_checkout_date_label => 'Check-out:';
 
   @override
-  String get admin_checkin_guests_section => 'GUESTS';
+  String get admin_checkin_guests_section => 'OSPITI';
 
   @override
-  String get admin_checkin_primary_badge => 'Primary';
+  String get admin_checkin_primary_badge => 'Principale';
 
   @override
-  String get admin_checkin_na => 'N/A';
+  String get admin_checkin_na => 'N/D';
 
   @override
-  String get admin_checkin_documents_section => 'DOCUMENTS';
+  String get admin_checkin_documents_section => 'DOCUMENTI';
 
   @override
-  String get admin_checkin_unknown_guest => 'Unknown guest';
+  String get admin_checkin_unknown_guest => 'Ospite sconosciuto';
 
   @override
-  String get admin_checkin_signature_section => 'SIGNATURE';
+  String get admin_checkin_signature_section => 'FIRMA';
 
   @override
   String get admin_checkin_doc_type_dni => 'DNI';
@@ -2183,224 +2199,228 @@ class SIt extends S {
   String get admin_checkin_doc_type_nie => 'NIE';
 
   @override
-  String get admin_checkin_doc_type_passport => 'Passport';
+  String get admin_checkin_doc_type_passport => 'Passaporto';
 
   @override
-  String get admin_checkin_image_load_error => 'Error loading image';
+  String get admin_checkin_image_load_error =>
+      'Errore nel caricamento dell\'immagine';
 
   @override
-  String get admin_checkin_validate_title => 'Validate Check-in';
+  String get admin_checkin_validate_title => 'Valida check-in';
 
   @override
   String get admin_checkin_validate_message =>
-      'Are you sure you want to validate this check-in?';
+      'Sei sicuro di voler validare questo check-in?';
 
   @override
   String get admin_checkin_validated_success =>
-      'Check-in validated successfully';
+      'Check-in validato con successo';
 
   @override
   String admin_checkin_error(String error) {
-    return 'Error: $error';
+    return 'Errore: $error';
   }
 
   @override
-  String get admin_checkin_reject_title => 'Reject Check-in';
+  String get admin_checkin_reject_title => 'Rifiuta check-in';
 
   @override
   String get admin_checkin_reject_message =>
-      'Are you sure you want to reject this check-in?';
+      'Sei sicuro di voler rifiutare questo check-in?';
 
   @override
-  String get admin_checkin_reject_hint => 'Reason for rejection (optional)...';
+  String get admin_checkin_reject_hint => 'Motivo del rifiuto (opzionale)...';
 
   @override
-  String get admin_checkin_no_reason => 'No reason';
+  String get admin_checkin_no_reason => 'Nessun motivo';
 
   @override
-  String get admin_checkin_rejected_success => 'Check-in rejected successfully';
+  String get admin_checkin_rejected_success =>
+      'Check-in rifiutato con successo';
 
   @override
   String get admin_checkin_cancel_message =>
-      'Are you sure you want to cancel this booking?';
+      'Sei sicuro di voler annullare questa prenotazione?';
 
   @override
-  String get admin_checkin_cancel_warning => 'This action cannot be undone.';
+  String get admin_checkin_cancel_warning =>
+      'Questa azione non può essere annullata.';
 
   @override
-  String get admin_checkin_cancel_reason_label => 'Cancellation reason';
+  String get admin_checkin_cancel_reason_label => 'Motivo dell\'annullamento';
 
   @override
   String get admin_checkin_cancel_reason_hint =>
-      'Describe the reason for cancellation...';
+      'Descrivi il motivo dell\'annullamento...';
 
   @override
   String get admin_checkin_cancelled_success =>
-      'Booking cancelled successfully';
+      'Prenotazione annullata con successo';
 
   @override
-  String get admin_invoice_generate_pdf => 'Generate PDF';
+  String get admin_invoice_generate_pdf => 'Genera PDF';
 
   @override
-  String get admin_invoice_share => 'Share';
+  String get admin_invoice_share => 'Condividi';
 
   @override
-  String get admin_invoice_download => 'Download';
+  String get admin_invoice_download => 'Scarica';
 
   @override
-  String get admin_invoice_share_title => 'Share Invoice';
+  String get admin_invoice_share_title => 'Condividi fattura';
 
   @override
-  String get admin_invoice_copy_link => 'Copy link';
+  String get admin_invoice_copy_link => 'Copia link';
 
   @override
   String admin_invoice_pdf_saved(String path) {
-    return 'PDF saved to: $path';
+    return 'PDF salvato in: $path';
   }
 
   @override
-  String get admin_invoice_issue => 'Issue';
+  String get admin_invoice_issue => 'Emetti';
 
   @override
-  String get admin_invoice_mark_paid => 'Mark as paid';
+  String get admin_invoice_mark_paid => 'Segna come pagata';
 
   @override
   String admin_invoice_paid_on(String date) {
-    return 'Paid on $date';
+    return 'Pagata il $date';
   }
 
   @override
   String admin_invoice_cancelled(String reason) {
-    return 'Cancelled: $reason';
+    return 'Annullata: $reason';
   }
 
   @override
-  String get admin_invoice_issue_confirm_title => 'Issue Invoice';
+  String get admin_invoice_issue_confirm_title => 'Emetti fattura';
 
   @override
   String admin_invoice_issue_confirm_message(String invoiceNumber) {
-    return 'Are you sure you want to issue invoice $invoiceNumber?';
+    return 'Sei sicuro di voler emettere la fattura $invoiceNumber?';
   }
 
   @override
-  String get admin_invoice_mark_paid_confirm_title => 'Mark as Paid';
+  String get admin_invoice_mark_paid_confirm_title => 'Segna come pagata';
 
   @override
   String admin_invoice_mark_paid_confirm_message(String total) {
-    return 'Do you confirm that payment of $total has been received?';
+    return 'Confermi di aver ricevuto il pagamento di $total?';
   }
 
   @override
-  String get admin_invoice_confirm_payment => 'Confirm payment';
+  String get admin_invoice_confirm_payment => 'Conferma pagamento';
 
   @override
-  String get admin_invoice_cancel_confirm_title => 'Cancel Invoice';
+  String get admin_invoice_cancel_confirm_title => 'Annulla fattura';
 
   @override
-  String get admin_invoice_cancel_reason_label => 'Cancellation reason';
+  String get admin_invoice_cancel_reason_label => 'Motivo dell\'annullamento';
 
   @override
   String get admin_invoice_cancel_reason_hint =>
-      'Describe the reason for cancellation...';
+      'Descrivi il motivo dell\'annullamento...';
 
   @override
-  String get admin_invoice_dont_cancel => 'Don\'t cancel';
+  String get admin_invoice_dont_cancel => 'Non annullare';
 
   @override
-  String get admin_invoice_cancel_invoice => 'Cancel invoice';
+  String get admin_invoice_cancel_invoice => 'Annulla fattura';
 
   @override
   String admin_invoice_error_generate_pdf(String error) {
-    return 'Error generating PDF: $error';
+    return 'Errore nella generazione del PDF: $error';
   }
 
   @override
   String admin_invoice_error_share(String error) {
-    return 'Error sharing: $error';
+    return 'Errore nella condivisione: $error';
   }
 
   @override
   String admin_invoice_error_download(String error) {
-    return 'Error downloading: $error';
+    return 'Errore nel download: $error';
   }
 
   @override
   String get admin_invoice_nif_label => 'NIF/CIF:';
 
   @override
-  String get admin_invoice_label => 'Invoice';
+  String get admin_invoice_label => 'Fattura';
 
   @override
-  String get admin_invoice_bill_to => 'Bill to';
+  String get admin_invoice_bill_to => 'Intestata a';
 
   @override
-  String get admin_invoice_issue_date_label => 'Issue date:';
+  String get admin_invoice_issue_date_label => 'Data emissione:';
 
   @override
-  String get admin_invoice_due_date_label => 'Due date:';
+  String get admin_invoice_due_date_label => 'Data scadenza:';
 
   @override
-  String get admin_invoice_period_label => 'Period';
+  String get admin_invoice_period_label => 'Periodo';
 
   @override
-  String get admin_invoice_booking_label => 'Booking';
+  String get admin_invoice_booking_label => 'Prenotazione';
 
   @override
-  String get admin_invoice_no_line_items => 'No items';
+  String get admin_invoice_no_line_items => 'Nessuna voce';
 
   @override
-  String get admin_invoice_col_description => 'Description';
+  String get admin_invoice_col_description => 'Descrizione';
 
   @override
-  String get admin_invoice_col_qty => 'Qty';
+  String get admin_invoice_col_qty => 'Qtà';
 
   @override
-  String get admin_invoice_col_price => 'Price';
+  String get admin_invoice_col_price => 'Prezzo';
 
   @override
-  String get admin_invoice_col_total => 'Total';
+  String get admin_invoice_col_total => 'Totale';
 
   @override
-  String get admin_invoice_tax_base => 'Tax base';
+  String get admin_invoice_tax_base => 'Imponibile';
 
   @override
-  String get admin_invoice_tax_label => 'VAT';
+  String get admin_invoice_tax_label => 'IVA';
 
   @override
-  String get admin_invoice_total_label => 'Total';
+  String get admin_invoice_total_label => 'Totale';
 
   @override
-  String get admin_invoice_notes_label => 'Notes';
+  String get admin_invoice_notes_label => 'Note';
 
   @override
-  String get admin_notifications_title => 'Notifications';
+  String get admin_notifications_title => 'Notifiche';
 
   @override
-  String get admin_notifications_empty_title => 'No notifications';
+  String get admin_notifications_empty_title => 'Nessuna notifica';
 
   @override
   String get admin_notifications_empty_subtitle =>
-      'Notifications will appear here';
+      'Le notifiche appariranno qui';
 
   @override
-  String get admin_notifications_mark_all_read => 'Mark all as read';
+  String get admin_notifications_mark_all_read => 'Segna tutte come lette';
 
   @override
-  String get admin_notifications_mark_read => 'Mark as read';
+  String get admin_notifications_mark_read => 'Segna come letta';
 
   @override
-  String get admin_notifications_delete_all => 'Delete all';
+  String get admin_notifications_delete_all => 'Elimina tutte';
 
   @override
-  String get admin_notifications_delete_all_title => 'Delete all notifications';
+  String get admin_notifications_delete_all_title =>
+      'Elimina tutte le notifiche';
 
   @override
   String get admin_notifications_delete_all_confirm =>
-      'Are you sure you want to delete all notifications?';
+      'Sei sicuro di voler eliminare tutte le notifiche?';
 
   @override
   String admin_notifications_unread_count(int count) {
-    return '$count unread';
+    return '$count non lette';
   }
 
   @override
@@ -2410,83 +2430,85 @@ class SIt extends S {
   String get guest_access_checkout => 'Check-out';
 
   @override
-  String get guest_access_checkout_label => 'Checkout';
+  String get guest_access_checkout_label => 'Check-out';
 
   @override
   String guest_access_checkout_until(String time) {
-    return 'Until $time';
+    return 'Fino alle $time';
   }
 
   @override
-  String get guest_access_checkout_deadline => 'Checkout deadline';
+  String get guest_access_checkout_deadline => 'Scadenza check-out';
 
   @override
-  String get guest_access_checkout_instructions => 'Checkout instructions';
+  String get guest_access_checkout_instructions =>
+      'Istruzioni per il check-out';
 
   @override
-  String get guest_access_code_label => 'Code';
+  String get guest_access_code_label => 'Codice';
 
   @override
   String guest_access_code_available_at(String date, String time) {
-    return 'Available on $date at $time';
+    return 'Disponibile il $date alle $time';
   }
 
   @override
-  String get guest_access_code_provided_by_staff => 'Provided by staff';
+  String get guest_access_code_provided_by_staff => 'Fornito dal personale';
 
   @override
-  String get guest_access_locker_code => 'Locker code';
+  String get guest_access_locker_code => 'Codice armadietto';
 
   @override
-  String get guest_access_locker_code_label => 'Locker code';
+  String get guest_access_locker_code_label => 'Codice armadietto';
 
   @override
   String guest_access_locker_available_at(String date) {
-    return 'Available on $date';
+    return 'Disponibile il $date';
   }
 
   @override
-  String get guest_access_key_locker => 'Key locker';
+  String get guest_access_key_locker => 'Cassetta delle chiavi';
 
   @override
-  String get guest_access_door_code => 'Door code';
+  String get guest_access_door_code => 'Codice porta';
 
   @override
-  String get guest_access_building_access => 'Building access';
+  String get guest_access_building_access => 'Accesso all\'edificio';
 
   @override
   String get guest_access_building_instructions =>
-      'Building access instructions';
+      'Istruzioni per l\'accesso all\'edificio';
 
   @override
-  String get guest_access_apartment_access => 'Apartment access';
+  String get guest_access_apartment_access => 'Accesso all\'appartamento';
 
   @override
   String get guest_access_apartment_instructions =>
-      'Apartment access instructions';
+      'Istruzioni per l\'accesso all\'appartamento';
 
   @override
-  String get guest_access_location => 'Location';
+  String get guest_access_location => 'Posizione';
 
   @override
-  String get guest_access_contact => 'Contact';
+  String get guest_access_contact => 'Contatto';
 
   @override
-  String get guest_access_contact_description => 'Contact us if you need help';
+  String get guest_access_contact_description =>
+      'Contattaci se hai bisogno di aiuto';
 
   @override
   String guest_access_copied(String label) {
-    return '$label copied to clipboard';
+    return '$label copiato negli appunti';
   }
 
   @override
-  String get guest_access_open_maps => 'Open in Maps';
+  String get guest_access_open_maps => 'Apri in Maps';
 
   @override
-  String get guest_access_network => 'Network';
+  String get guest_access_network => 'Rete';
 
   @override
-  String get guest_access_network_name => 'Network name';
+  String get guest_access_network_name => 'Nome rete';
 
   @override
   String get guest_access_password => 'Password';
@@ -2495,138 +2517,142 @@ class SIt extends S {
   String get guest_access_company_name => 'BF Stay';
 
   @override
-  String get guest_access_house_rules => 'House rules';
+  String get guest_access_house_rules => 'Regole della casa';
 
   @override
   String get guest_access_rules_warning =>
-      'Please read the house rules before your arrival';
+      'Ti preghiamo di leggere le regole della casa prima del tuo arrivo';
 
   @override
-  String get guest_access_your_accommodation => 'Your accommodation';
+  String get guest_access_your_accommodation => 'Il tuo alloggio';
 
   @override
-  String get guest_access_your_codes => 'Your codes';
+  String get guest_access_your_codes => 'I tuoi codici';
 
   @override
-  String get guest_access_guest => 'Guest';
+  String get guest_access_guest => 'Ospite';
 
   @override
   String guest_access_welcome_message(String unitName) {
-    return 'Welcome to $unitName';
+    return 'Benvenuto a $unitName';
   }
 
   @override
   String guest_access_hello(String name) {
-    return 'Hello $name';
+    return 'Ciao $name';
   }
 
   @override
   String guest_access_codes_available_datetime(String date, String time) {
-    return 'Available on $date at $time';
+    return 'Disponibile il $date alle $time';
   }
 
   @override
   String guest_access_codes_available_message(String time) {
-    return 'Your code will be available from $time';
+    return 'Il tuo codice sarà disponibile dalle $time';
   }
 
   @override
-  String get guest_access_loading_instructions => 'Loading instructions...';
+  String get guest_access_loading_instructions => 'Caricamento istruzioni...';
 
   @override
   String get guest_access_cannot_load_instructions =>
-      'Cannot load instructions';
+      'Impossibile caricare le istruzioni';
 
   @override
-  String get guest_access_rule_no_parties_title => 'No parties';
+  String get guest_access_rule_no_parties_title => 'Niente feste';
 
   @override
   String get guest_access_rule_no_parties_description =>
-      'No parties or events allowed';
+      'Non sono consentite feste o eventi';
 
   @override
-  String get guest_access_rule_no_smoking_title => 'No smoking';
+  String get guest_access_rule_no_smoking_title => 'Vietato fumare';
 
   @override
   String get guest_access_rule_smoke_free_description =>
-      'This is a smoke-free property';
+      'Questa è una struttura non fumatori';
 
   @override
-  String get guest_access_rule_registered_only_title => 'Registered only';
+  String get guest_access_rule_registered_only_title => 'Solo registrati';
 
   @override
   String get guest_access_rule_registered_only_description =>
-      'Only registered guests can access';
+      'Solo gli ospiti registrati possono accedere';
 
   @override
-  String get guest_accommodation_title => 'Accommodation';
+  String get guest_accommodation_title => 'Alloggio';
 
   @override
-  String get guest_accommodation_error_loading => 'Error loading';
+  String get guest_accommodation_error_loading => 'Errore di caricamento';
 
   @override
-  String get guest_accommodation_error_occurred => 'An error occurred';
+  String get guest_accommodation_error_occurred => 'Si è verificato un errore';
 
   @override
-  String get guest_accommodation_no_booking => 'Booking not found';
+  String get guest_accommodation_no_booking => 'Prenotazione non trovata';
 
   @override
-  String get guest_accommodation_booking_not_found => 'Booking not found';
+  String get guest_accommodation_booking_not_found =>
+      'Prenotazione non trovata';
 
   @override
-  String get guest_accommodation_no_unit_info => 'No unit info available';
+  String get guest_accommodation_no_unit_info =>
+      'Nessuna informazione sull\'unità disponibile';
 
   @override
-  String get guest_accommodation_address => 'Address';
+  String get guest_accommodation_address => 'Indirizzo';
 
   @override
-  String get guest_accommodation_address_unavailable => 'Address unavailable';
+  String get guest_accommodation_address_unavailable =>
+      'Indirizzo non disponibile';
 
   @override
-  String get guest_accommodation_box_location => 'Box location';
+  String get guest_accommodation_box_location => 'Posizione cassaforte';
 
   @override
-  String get guest_accommodation_access_codes => 'Access codes';
+  String get guest_accommodation_access_codes => 'Codici di accesso';
 
   @override
-  String get guest_accommodation_access_instructions => 'Access instructions';
+  String get guest_accommodation_access_instructions => 'Istruzioni di accesso';
 
   @override
-  String get guest_accommodation_main_door => 'Main door';
+  String get guest_accommodation_main_door => 'Porta principale';
 
   @override
-  String get guest_accommodation_door_code => 'Door code';
+  String get guest_accommodation_door_code => 'Codice porta';
 
   @override
-  String get guest_accommodation_portal_code => 'Portal code';
+  String get guest_accommodation_portal_code => 'Codice portone';
 
   @override
-  String get guest_accommodation_key_box_code => 'Key box code';
+  String get guest_accommodation_key_box_code => 'Codice cassetta chiavi';
 
   @override
-  String get guest_accommodation_keybox_description => 'Code for key box';
+  String get guest_accommodation_keybox_description =>
+      'Codice per la cassetta delle chiavi';
 
   @override
-  String get guest_accommodation_wifi_password => 'WiFi password';
+  String get guest_accommodation_wifi_password => 'Password WiFi';
 
   @override
   String guest_accommodation_rooms_count(int count) {
-    return '$count rooms';
+    return '$count camere';
   }
 
   @override
-  String get guest_accommodation_hotel_rules => 'Hotel rules';
+  String get guest_accommodation_hotel_rules => 'Regole dell\'hotel';
 
   @override
-  String get guest_accommodation_apartment_rules => 'Apartment rules';
+  String get guest_accommodation_apartment_rules => 'Regole dell\'appartamento';
 
   @override
   String get guest_accommodation_rules_description =>
-      'Check your accommodation rules';
+      'Consulta le regole del tuo alloggio';
 
   @override
   String guest_accommodation_rules_load_error(String error) {
-    return 'Error loading rules: $error';
+    return 'Errore nel caricamento delle regole: $error';
   }
 
   @override
@@ -2634,24 +2660,26 @@ class SIt extends S {
     String date,
     String time,
   ) {
-    return 'Available on $date at $time';
+    return 'Disponibile il $date alle $time';
   }
 
   @override
   String guest_accommodation_codes_available_message(String time) {
-    return 'Your codes will be available when your stay begins ($time)';
+    return 'I tuoi codici saranno disponibili quando inizia il tuo soggiorno ($time)';
   }
 
   @override
   String guest_accommodation_file_not_found(String message) {
-    return 'File not found: $message';
+    return 'File non trovato: $message';
   }
 
   @override
-  String get guest_accommodation_cannot_open_document => 'Cannot open document';
+  String get guest_accommodation_cannot_open_document =>
+      'Impossibile aprire il documento';
 
   @override
-  String get guest_accommodation_tap_for_access_info => 'Tap for access info';
+  String get guest_accommodation_tap_for_access_info =>
+      'Tocca per le informazioni di accesso';
 
   @override
   String get guest_chat_default_title => 'Chat';
@@ -2660,180 +2688,182 @@ class SIt extends S {
   String get guest_chat_online => 'Online';
 
   @override
-  String get guest_chat_start_conversation => 'Start conversation';
+  String get guest_chat_start_conversation => 'Inizia conversazione';
 
   @override
-  String get guest_chat_welcome_message => 'Hello! How can we help you?';
+  String get guest_chat_welcome_message => 'Ciao! Come possiamo aiutarti?';
 
   @override
   String get guest_checkin_label => 'Check-in';
 
   @override
-  String get guest_checkin_back => 'Back';
+  String get guest_checkin_back => 'Indietro';
 
   @override
-  String get guest_checkin_continue => 'Continue';
+  String get guest_checkin_continue => 'Continua';
 
   @override
-  String get guest_checkin_complete => 'Complete';
+  String get guest_checkin_complete => 'Completa';
 
   @override
-  String get guest_checkin_loading_booking => 'Loading booking data...';
+  String get guest_checkin_loading_booking =>
+      'Caricamento dati prenotazione...';
 
   @override
-  String get guest_checkin_error_loading => 'Error loading';
+  String get guest_checkin_error_loading => 'Errore di caricamento';
 
   @override
-  String get guest_checkin_booking => 'Booking';
+  String get guest_checkin_booking => 'Prenotazione';
 
   @override
-  String get guest_checkin_code => 'Code';
+  String get guest_checkin_code => 'Codice';
 
   @override
-  String get guest_checkin_guests_label => 'Guests';
+  String get guest_checkin_guests_label => 'Ospiti';
 
   @override
   String guest_checkin_guests_count(int count) {
-    return '$count guests';
+    return '$count ospiti';
   }
 
   @override
   String guest_checkin_guests_registered(int count) {
-    return '$count registered';
+    return '$count registrati';
   }
 
   @override
   String guest_checkin_guests_summary(int count) {
-    return '$count guests';
+    return '$count ospiti';
   }
 
   @override
-  String get guest_checkin_guest_data => 'Guest data';
+  String get guest_checkin_guest_data => 'Dati ospite';
 
   @override
   String get guest_checkin_guest_data_description =>
-      'Complete the data for all guests';
+      'Compila i dati di tutti gli ospiti';
 
   @override
-  String get guest_checkin_holder_badge => 'PRIMARY';
+  String get guest_checkin_holder_badge => 'PRINCIPALE';
 
   @override
-  String get guest_checkin_holder_signature => 'Primary guest signature';
+  String get guest_checkin_holder_signature => 'Firma dell\'ospite principale';
 
   @override
-  String get guest_checkin_no_name => 'No name';
+  String get guest_checkin_no_name => 'Nessun nome';
 
   @override
-  String get guest_checkin_guest_no_name => 'Guest without name';
+  String get guest_checkin_guest_no_name => 'Ospite senza nome';
 
   @override
   String guest_checkin_adults_children(int adults, int children) {
-    return '$adults adults and $children minors';
+    return '$adults adulti e $children minori';
   }
 
   @override
-  String get guest_checkin_minor_badge => 'MINOR';
+  String get guest_checkin_minor_badge => 'MINORE';
 
   @override
   String guest_checkin_young_document_required(int age) {
-    return 'Under $age, document required';
+    return 'Sotto i $age anni, documento richiesto';
   }
 
   @override
-  String get guest_checkin_document_required => 'Document required';
+  String get guest_checkin_document_required => 'Documento richiesto';
 
   @override
-  String get guest_checkin_upload => 'Upload';
+  String get guest_checkin_upload => 'Carica';
 
   @override
   String guest_checkin_documents_uploaded(int completed, int total) {
-    return '$completed of $total documents uploaded';
+    return '$completed di $total documenti caricati';
   }
 
   @override
-  String get guest_checkin_all_documents_uploaded => 'All documents uploaded';
+  String get guest_checkin_all_documents_uploaded =>
+      'Tutti i documenti caricati';
 
   @override
   String get guest_checkin_upload_documents_description =>
-      'Upload photos of identity documents for all guests';
+      'Carica le foto dei documenti d\'identità di tutti gli ospiti';
 
   @override
-  String get guest_checkin_uploaded_documents => 'Uploaded documents';
+  String get guest_checkin_uploaded_documents => 'Documenti caricati';
 
   @override
-  String get guest_checkin_pending_documents => 'Pending documents';
+  String get guest_checkin_pending_documents => 'Documenti in attesa';
 
   @override
-  String get guest_checkin_identity_documents => 'Identity documents';
+  String get guest_checkin_identity_documents => 'Documenti d\'identità';
 
   @override
   String get guest_checkin_signature_description =>
-      'Signature of the booking primary guest';
+      'Firma dell\'ospite principale della prenotazione';
 
   @override
-  String get guest_checkin_signature_pending => 'Signature pending';
+  String get guest_checkin_signature_pending => 'Firma in attesa';
 
   @override
-  String get guest_checkin_signature_captured => 'Signature captured';
+  String get guest_checkin_signature_captured => 'Firma acquisita';
 
   @override
-  String get guest_checkin_signature_captured_short => 'Signature';
+  String get guest_checkin_signature_captured_short => 'Firma';
 
   @override
-  String get guest_checkin_clear_signature => 'Clear signature';
+  String get guest_checkin_clear_signature => 'Cancella firma';
 
   @override
-  String get guest_checkin_step_guests => 'Guests';
+  String get guest_checkin_step_guests => 'Ospiti';
 
   @override
-  String get guest_checkin_step_documents => 'Documents';
+  String get guest_checkin_step_documents => 'Documenti';
 
   @override
-  String get guest_checkin_step_signature => 'Signature';
+  String get guest_checkin_step_signature => 'Firma';
 
   @override
-  String get guest_checkin_step_confirm => 'Confirm';
+  String get guest_checkin_step_confirm => 'Conferma';
 
   @override
   String get guest_checkin_online => 'Online';
 
   @override
-  String get guest_checkin_pending => 'Pending';
+  String get guest_checkin_pending => 'In attesa';
 
   @override
-  String get guest_checkin_validated => 'Validated';
+  String get guest_checkin_validated => 'Validato';
 
   @override
-  String get guest_checkin_waiting_validation => 'Waiting validation';
+  String get guest_checkin_waiting_validation => 'In attesa di validazione';
 
   @override
-  String get guest_checkin_completed => 'Completed';
+  String get guest_checkin_completed => 'Completato';
 
   @override
   String get guest_checkin_completed_success =>
-      'Check-in completed successfully';
+      'Check-in completato con successo';
 
   @override
-  String get guest_checkin_sending => 'Sending...';
+  String get guest_checkin_sending => 'Invio in corso...';
 
   @override
-  String get guest_checkin_progress => 'Check-in progress';
+  String get guest_checkin_progress => 'Avanzamento check-in';
 
   @override
-  String get guest_checkin_confirmation => 'Check-in Confirmation';
+  String get guest_checkin_confirmation => 'Conferma check-in';
 
   @override
   String get guest_checkin_confirmation_description =>
-      'Your check-in has been sent. Now you need to wait for the accommodation to validate it.';
+      'Il tuo check-in è stato inviato. Ora devi aspettare che l\'alloggio lo validi.';
 
   @override
-  String get guest_checkin_legal_notice => 'Legal notice';
+  String get guest_checkin_legal_notice => 'Avviso legale';
 
   @override
   String get guest_checkout_title => 'Check-out';
 
   @override
-  String get guest_checkout_label => 'Checkout';
+  String get guest_checkout_label => 'Check-out';
 
   @override
   String get guest_checkout_checkin_label => 'Check-in';
@@ -2843,93 +2873,94 @@ class SIt extends S {
 
   @override
   String guest_checkout_nights_count(int count) {
-    return '$count nights';
+    return '$count notti';
   }
 
   @override
   String guest_checkout_guests_count(int count) {
-    return '$count guests';
+    return '$count ospiti';
   }
 
   @override
-  String get guest_checkout_stay_summary => 'Stay summary';
+  String get guest_checkout_stay_summary => 'Riepilogo soggiorno';
 
   @override
-  String get guest_checkout_confirm => 'Confirm';
+  String get guest_checkout_confirm => 'Conferma';
 
   @override
-  String get guest_checkout_confirm_button => 'Confirm checkout';
+  String get guest_checkout_confirm_button => 'Conferma check-out';
 
   @override
-  String get guest_checkout_confirm_dialog_title => 'Confirm checkout?';
+  String get guest_checkout_confirm_dialog_title => 'Confermare il check-out?';
 
   @override
   String get guest_checkout_confirm_dialog_message =>
-      'You are about to confirm your checkout. Do you want to continue?';
+      'Stai per confermare il tuo check-out. Vuoi continuare?';
 
   @override
-  String get guest_checkout_confirm_info => 'Confirming checkout...';
+  String get guest_checkout_confirm_info => 'Conferma check-out in corso...';
 
   @override
-  String get guest_checkout_processing => 'Processing...';
+  String get guest_checkout_processing => 'Elaborazione in corso...';
 
   @override
-  String get guest_checkout_completed => 'Checkout completed';
+  String get guest_checkout_completed => 'Check-out completato';
 
   @override
-  String get guest_checkout_thank_you => 'Thank you for your stay!';
+  String get guest_checkout_thank_you => 'Grazie per il tuo soggiorno!';
 
   @override
-  String get guest_checkout_feedback_title => 'Your opinion matters';
+  String get guest_checkout_feedback_title => 'La tua opinione è importante';
 
   @override
-  String get guest_checkout_feedback_hint => 'Tell us about your experience...';
+  String get guest_checkout_feedback_hint => 'Raccontaci la tua esperienza...';
 
   @override
-  String get guest_checkout_rating_title => 'Rate your stay';
+  String get guest_checkout_rating_title => 'Valuta il tuo soggiorno';
 
   @override
   String get guest_checkout_review_description =>
-      'Your opinion helps other travelers';
+      'La tua opinione aiuta altri viaggiatori';
 
   @override
-  String get guest_checkout_loading => 'Loading...';
+  String get guest_checkout_loading => 'Caricamento...';
 
   @override
-  String get guest_checkout_error_loading => 'Error loading';
+  String get guest_checkout_error_loading => 'Errore di caricamento';
 
   @override
-  String get guest_checkout_already_done => 'Checkout already done';
+  String get guest_checkout_already_done => 'Check-out già effettuato';
 
   @override
   String get guest_checkout_already_done_message =>
-      'You have already checked out. Thank you!';
+      'Hai già effettuato il check-out. Grazie!';
 
   @override
-  String get guest_home_welcome => 'Welcome';
+  String get guest_home_welcome => 'Benvenuto';
 
   @override
-  String get guest_home_welcome_stay => 'Welcome to your stay';
+  String get guest_home_welcome_stay => 'Benvenuto nel tuo soggiorno';
 
   @override
   String guest_home_hello_name(String name) {
-    return 'Hello, $name';
+    return 'Ciao, $name';
   }
 
   @override
-  String get guest_home_your_stay => 'Your Stay';
+  String get guest_home_your_stay => 'Il tuo soggiorno';
 
   @override
-  String get guest_home_no_booking => 'No bookings';
+  String get guest_home_no_booking => 'Nessuna prenotazione';
 
   @override
-  String get guest_home_not_authenticated => 'Not authenticated';
+  String get guest_home_not_authenticated => 'Non autenticato';
 
   @override
-  String get guest_home_stay_active_enjoy => 'Your stay is active. Enjoy!';
+  String get guest_home_stay_active_enjoy =>
+      'Il tuo soggiorno è attivo. Buon divertimento!';
 
   @override
-  String get guest_home_quick_actions => 'Quick actions';
+  String get guest_home_quick_actions => 'Azioni rapide';
 
   @override
   String get guest_home_checkin => 'Check-in';
@@ -2941,211 +2972,240 @@ class SIt extends S {
   String get guest_home_chat => 'Chat';
 
   @override
-  String get guest_home_guide => 'Guide';
+  String get guest_home_guide => 'Guida';
 
   @override
-  String get guest_home_rules => 'Rules';
+  String get guest_home_rules => 'Regole';
 
   @override
-  String get guest_home_parkings => 'Parking';
+  String get guest_home_parkings => 'Parcheggio';
 
   @override
-  String get guest_home_accommodations => 'Accommodations';
+  String get guest_home_accommodations => 'Alloggi';
 
   @override
-  String get guest_home_accommodation => 'Accommodation';
+  String get guest_home_accommodation => 'Alloggio';
 
   @override
   String guest_home_rooms_count(int count) {
-    return '$count rooms';
+    return '$count camere';
   }
 
   @override
-  String get guest_home_guests => 'Guests';
+  String get guest_home_guests => 'Ospiti';
 
   @override
   String guest_home_nights(int count) {
-    return '$count nights';
+    return '$count notti';
   }
 
   @override
-  String get guest_home_what_to_see => 'What to see';
+  String get guest_home_what_to_see => 'Cosa vedere';
 
   @override
-  String get guest_home_instructions => 'Instructions';
+  String get guest_home_instructions => 'Istruzioni';
 
   @override
-  String get guest_home_my_accommodation => 'My accommodation';
+  String get guest_home_my_accommodation => 'Il mio alloggio';
 
   @override
-  String get guest_home_booking_cancelled => 'Booking cancelled';
+  String get guest_home_booking_cancelled => 'Prenotazione annullata';
 
   @override
   String get guest_home_booking_cancelled_message =>
-      'Your booking has been cancelled. Contact reception.';
+      'La tua prenotazione è stata annullata. Contatta la reception.';
 
   @override
-  String get guest_home_cancellation_reason => 'Cancellation reason';
+  String get guest_home_cancellation_reason => 'Motivo dell\'annullamento';
 
   @override
-  String get guest_home_checkin_pending => 'Check-in pending';
+  String get guest_home_checkin_pending => 'Check-in in attesa';
 
   @override
   String get guest_home_checkin_sent_waiting =>
-      'Check-in sent, waiting validation';
+      'Check-in inviato, in attesa di validazione';
 
   @override
-  String get guest_home_checkin_rejected => 'Check-in rejected';
+  String get guest_home_checkin_rejected => 'Check-in rifiutato';
 
   @override
-  String get guest_home_rejection_reason => 'Rejection reason';
+  String get guest_home_rejection_reason => 'Motivo del rifiuto';
 
   @override
-  String get guest_home_pending_validation => 'Pending validation';
+  String get guest_home_pending_validation => 'In attesa di validazione';
 
   @override
   String get guest_home_complete_checkin_access =>
-      'Complete check-in to access';
+      'Completa il check-in per accedere';
 
   @override
-  String get guest_home_contact_reception => 'Contact reception';
+  String get guest_home_contact_reception => 'Contatta la reception';
 
   @override
-  String get guest_home_correct_errors_resend => 'Correct errors and resend';
+  String get guest_home_correct_errors_resend =>
+      'Correggi gli errori e reinvia';
 
   @override
-  String get guest_home_physical_registration => 'In-person registration';
+  String get guest_home_physical_registration => 'Registrazione di persona';
 
   @override
-  String get guest_home_romantic_pack => 'Romantic Pack';
+  String get guest_home_romantic_pack => 'Pacchetto romantico';
 
   @override
   String guest_jacuzzi_note(String note) {
-    return 'Note: $note';
+    return 'Nota: $note';
   }
 
   @override
-  String get public_services_title => 'Our Services';
+  String get public_services_title => 'I nostri servizi';
 
   @override
-  String get public_service_rules_title => 'House Rules';
+  String get public_service_rules_title => 'Regole della casa';
 
   @override
-  String get public_service_rules_desc => 'Rules and recommendations.';
+  String get public_service_rules_desc => 'Regole e raccomandazioni.';
 
   @override
   String public_copyright(int year) {
-    return '© $year BF Stay • All rights reserved';
+    return '© $year BF Stay • Tutti i diritti riservati';
   }
 
   @override
-  String get public_access_booking => 'Access My Booking';
+  String get public_access_booking => 'Accedi alla mia prenotazione';
 
   @override
   String staff_dashboard_greeting(String name) {
-    return 'Hello $name';
+    return 'Ciao $name';
   }
 
   @override
-  String get staff_dashboard_control_panel => 'Control Panel';
+  String get staff_dashboard_control_panel => 'Pannello di controllo';
 
   @override
-  String get staff_dashboard_daily_summary => 'Daily Summary';
+  String get staff_dashboard_daily_summary => 'Riepilogo giornaliero';
 
   @override
-  String get staff_dashboard_occupancy => 'Occupancy';
+  String get staff_dashboard_occupancy => 'Occupazione';
 
   @override
-  String get staff_dashboard_pending => 'Pending';
+  String get staff_dashboard_pending => 'In attesa';
 
   @override
-  String get staff_dashboard_pending_checkin => 'Pending check-ins';
+  String get staff_dashboard_pending_checkin => 'Check-in in attesa';
 
   @override
-  String get staff_dashboard_pending_checkout => 'Pending check-outs';
+  String get staff_dashboard_pending_checkout => 'Check-out in attesa';
 
   @override
-  String get staff_dashboard_pending_tasks => 'Pending tasks';
+  String get staff_dashboard_pending_tasks => 'Attività in attesa';
 
   @override
-  String get staff_dashboard_checkins_today => 'Check-ins today';
+  String get staff_dashboard_checkins_today => 'Check-in di oggi';
 
   @override
-  String get staff_dashboard_checkouts_today => 'Check-outs today';
+  String get staff_dashboard_checkouts_today => 'Check-out di oggi';
 
   @override
-  String get staff_dashboard_quick_actions => 'Quick actions';
+  String get staff_dashboard_quick_actions => 'Azioni rapide';
 
   @override
-  String get staff_dashboard_manage_checkins => 'Manage check-ins';
+  String get staff_dashboard_manage_checkins => 'Gestisci check-in';
 
   @override
-  String get staff_dashboard_view_guests => 'View guests';
+  String get staff_dashboard_view_guests => 'Visualizza ospiti';
 
   @override
   String staff_dashboard_room_extras(String room) {
-    return 'Room $room - Extras';
+    return 'Camera $room - Extra';
   }
 
   @override
-  String get staff_dashboard_cleaning_request => 'Cleaning request';
+  String get staff_dashboard_cleaning_request => 'Richiesta di pulizia';
 
   @override
   String staff_dashboard_room_guest(String room, String guest) {
-    return 'Room $room - $guest';
+    return 'Camera $room - $guest';
   }
 
   @override
-  String get staff_dashboard_generate_report => 'Generate report';
+  String get staff_dashboard_generate_report => 'Genera report';
 
   @override
-  String get staff_checkins_title => 'Check-ins';
+  String get staff_checkins_title => 'Check-in';
 
   @override
-  String get staff_checkins_tab_pending => 'Pending';
+  String get staff_checkins_tab_pending => 'In attesa';
 
   @override
-  String get staff_checkins_tab_in_progress => 'In Progress';
+  String get staff_checkins_tab_in_progress => 'In corso';
 
   @override
-  String get staff_checkins_tab_completed => 'Completed';
+  String get staff_checkins_tab_completed => 'Completati';
 
   @override
-  String get staff_checkins_status_pending => 'Pending';
+  String get staff_checkins_status_pending => 'In attesa';
 
   @override
-  String get staff_checkins_status_in_progress => 'In Progress';
+  String get staff_checkins_status_in_progress => 'In corso';
 
   @override
-  String get staff_checkins_status_completed => 'Completed';
+  String get staff_checkins_status_completed => 'Completato';
 
   @override
-  String get staff_checkins_start => 'Start';
+  String get staff_checkins_start => 'Inizia';
 
   @override
-  String get staff_checkins_new_checkin => 'New check-in';
+  String get staff_checkins_new_checkin => 'Nuovo check-in';
 
   @override
-  String get staff_checkins_complete => 'Complete';
+  String get staff_checkins_complete => 'Completa';
 
   @override
-  String get staff_checkins_view_details => 'View details';
+  String get staff_checkins_view_details => 'Visualizza dettagli';
 
   @override
-  String get guest_access_wifi_password_label => 'WiFi Password';
+  String get guest_access_wifi_password_label => 'Password WiFi';
 
   @override
-  String get guest_access_locker_provided_by_staff => 'Provided by staff';
+  String get guest_access_locker_provided_by_staff => 'Fornito dal personale';
 
   @override
-  String get guest_access_rule_smoke_free_title => 'No smoking';
+  String get guest_access_rule_smoke_free_title => 'Vietato fumare';
 
   @override
-  String get guest_accommodation_view_rules_pdf => 'View rules as PDF';
+  String get guest_accommodation_view_rules_pdf => 'Visualizza regole come PDF';
 
   @override
   String get public_hero_title_line1 => 'Il tuo soggiorno,';
 
   @override
   String get public_hero_title_line2 => 'Elevato';
+
+  @override
+  String get admin_booking_send_whatsapp_title => 'Invia codice via WhatsApp';
+
+  @override
+  String get admin_booking_send_whatsapp_no_phone =>
+      'L\'ospite non ha un numero di telefono';
+
+  @override
+  String get admin_booking_send_whatsapp_no_phone_desc =>
+      'Inserisci un numero di telefono per inviare il codice via WhatsApp.';
+
+  @override
+  String get admin_booking_send_whatsapp_phone_hint => '+39 320 000 000';
+
+  @override
+  String get admin_booking_send_whatsapp_error => 'Impossibile aprire WhatsApp';
+
+  @override
+  String admin_booking_send_whatsapp_message(
+    String propertyName,
+    String bookingCode,
+    String checkIn,
+    String checkOut,
+    String keyboxLine,
+  ) {
+    return '🏠 *$propertyName*\n📋 Prenotazione: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nScarica l\'app BF Stay per gestire il tuo soggiorno.';
+  }
 }

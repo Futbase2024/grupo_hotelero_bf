@@ -1738,7 +1738,7 @@ class SEn extends S {
   String get guest_romantic_basic_pack => 'Basic Romantic Pack';
 
   @override
-  String get guest_romantic_price => '€49.90';
+  String get guest_romantic_price => '€20.00';
 
   @override
   String get guest_romantic_book_now => 'Book Now';
@@ -3144,4 +3144,32 @@ class SEn extends S {
 
   @override
   String get public_hero_title_line2 => 'Elevated';
+
+  @override
+  String get admin_booking_send_whatsapp_title => 'Send code via WhatsApp';
+
+  @override
+  String get admin_booking_send_whatsapp_no_phone =>
+      'Guest has no phone number';
+
+  @override
+  String get admin_booking_send_whatsapp_no_phone_desc =>
+      'Enter a phone number to send the code via WhatsApp.';
+
+  @override
+  String get admin_booking_send_whatsapp_phone_hint => '+44 700 000 000';
+
+  @override
+  String get admin_booking_send_whatsapp_error => 'Could not open WhatsApp';
+
+  @override
+  String admin_booking_send_whatsapp_message(
+    String propertyName,
+    String bookingCode,
+    String checkIn,
+    String checkOut,
+    String keyboxLine,
+  ) {
+    return '🏠 *$propertyName*\n📋 Booking: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nDownload the BF Stay app to manage your stay.';
+  }
 }

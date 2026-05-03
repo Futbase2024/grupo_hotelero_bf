@@ -668,7 +668,7 @@
   "guest_romantic_choose_title": "Elige tu detalle",
   "guest_romantic_choose_desc": "Botella de cava o chocolate artesanal para acompañar la velada",
   "guest_romantic_basic_pack": "Pack Romántico Básico",
-  "guest_romantic_price": "49,90 €",
+  "guest_romantic_price": "20,00 €",
   "guest_romantic_book_now": "Reservar Ahora",
   "guest_romantic_customize": "O personalízalo con extras al reservar",
   "guest_romantic_redirect": "Vas a ser redirigido a la web para completar la reserva del Pack Romántico. ¿Continuar?",
@@ -1370,7 +1370,7 @@
   "guest_romantic_choose_title": "Elige tu detalle",
   "guest_romantic_choose_desc": "Botella de cava o chocolate artesanal para acompañar la velada",
   "guest_romantic_basic_pack": "Pack Romántico Básico",
-  "guest_romantic_price": "49,90 €",
+  "guest_romantic_price": "20,00 €",
   "guest_romantic_book_now": "Reservar Ahora",
   "guest_romantic_customize": "O personalízalo con extras al reservar",
   "guest_romantic_redirect": "Vas a ser redirigido a la web para completar la reserva del Pack Romántico. ¿Continuar?",
@@ -1439,5 +1439,21 @@
   "guest_accommodation_view_rules_pdf": "Ver normas en PDF",
 
   "public_hero_title_line1": "Tu Estancia,",
-  "public_hero_title_line2": "Elevada"
+  "public_hero_title_line2": "Elevada",
+
+  "admin_booking_send_whatsapp_title": "Enviar código por WhatsApp",
+  "admin_booking_send_whatsapp_no_phone": "El huésped no tiene teléfono",
+  "admin_booking_send_whatsapp_no_phone_desc": "Introduce un número de teléfono para enviar el código por WhatsApp.",
+  "admin_booking_send_whatsapp_phone_hint": "+34 600 000 000",
+  "admin_booking_send_whatsapp_error": "No se pudo abrir WhatsApp",
+  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nDescarga la app BF Stay para gestionar tu estancia.",
+  "@admin_booking_send_whatsapp_message": {
+    "placeholders": {
+      "propertyName": { "type": "String" },
+      "bookingCode": { "type": "String" },
+      "checkIn": { "type": "String" },
+      "checkOut": { "type": "String" },
+      "keyboxLine": { "type": "String" }
+    }
+  }
 }

@@ -1753,7 +1753,7 @@ class SEs extends S {
   String get guest_romantic_basic_pack => 'Pack Romántico Básico';
 
   @override
-  String get guest_romantic_price => '49,90 €';
+  String get guest_romantic_price => '20,00 €';
 
   @override
   String get guest_romantic_book_now => 'Reservar Ahora';
@@ -3178,4 +3178,32 @@ class SEs extends S {
 
   @override
   String get public_hero_title_line2 => 'Elevada';
+
+  @override
+  String get admin_booking_send_whatsapp_title => 'Enviar código por WhatsApp';
+
+  @override
+  String get admin_booking_send_whatsapp_no_phone =>
+      'El huésped no tiene teléfono';
+
+  @override
+  String get admin_booking_send_whatsapp_no_phone_desc =>
+      'Introduce un número de teléfono para enviar el código por WhatsApp.';
+
+  @override
+  String get admin_booking_send_whatsapp_phone_hint => '+34 600 000 000';
+
+  @override
+  String get admin_booking_send_whatsapp_error => 'No se pudo abrir WhatsApp';
+
+  @override
+  String admin_booking_send_whatsapp_message(
+    String propertyName,
+    String bookingCode,
+    String checkIn,
+    String checkOut,
+    String keyboxLine,
+  ) {
+    return '🏠 *$propertyName*\n📋 Reserva: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nDescarga la app BF Stay para gestionar tu estancia.';
+  }
 }

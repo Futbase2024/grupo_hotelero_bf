@@ -12,6 +12,12 @@ enum DateFilter {
   customRange,
 }
 
+/// Orden de clasificación
+enum SortOrder {
+  descending,
+  ascending,
+}
+
 /// Extensión para obtener label del filtro de fechas
 extension DateFilterLabel on DateFilter {
   String get label {
@@ -51,11 +57,13 @@ class AdminDashboardState extends Equatable {
     this.bookingsDateFilter = DateFilter.all,
     this.bookingsCustomDateStart,
     this.bookingsCustomDateEnd,
+    this.bookingsSortOrder = SortOrder.descending,
     this.checkinsStatusFilter = 'submitted',
     this.checkinsSearchQuery,
     this.checkinsDateFilter = DateFilter.all,
     this.checkinsCustomDateStart,
     this.checkinsCustomDateEnd,
+    this.checkinsSortOrder = SortOrder.descending,
     this.isLoading = false,
     this.isLoadingBookings = false,
     this.isLoadingCheckins = false,
@@ -108,6 +116,9 @@ class AdminDashboardState extends Equatable {
   /// Fecha fin rango personalizado (reservas)
   final DateTime? bookingsCustomDateEnd;
 
+  /// Orden de clasificación de reservas
+  final SortOrder bookingsSortOrder;
+
   // ── Filtros de check-ins ──
 
   /// Filtro de estado de check-ins
@@ -124,6 +135,9 @@ class AdminDashboardState extends Equatable {
 
   /// Fecha fin rango personalizado (check-ins)
   final DateTime? checkinsCustomDateEnd;
+
+  /// Orden de clasificación de check-ins
+  final SortOrder checkinsSortOrder;
 
   /// Estados de carga
   final bool isLoading;
@@ -155,12 +169,14 @@ class AdminDashboardState extends Equatable {
     DateTime? bookingsCustomDateStart,
     DateTime? bookingsCustomDateEnd,
     bool clearBookingsDates = false,
+    SortOrder? bookingsSortOrder,
     String? checkinsStatusFilter,
     String? checkinsSearchQuery,
     DateFilter? checkinsDateFilter,
     DateTime? checkinsCustomDateStart,
     DateTime? checkinsCustomDateEnd,
     bool clearCheckinsDates = false,
+    SortOrder? checkinsSortOrder,
     bool? isLoading,
     bool? isLoadingBookings,
     bool? isLoadingCheckins,
@@ -197,6 +213,8 @@ class AdminDashboardState extends Equatable {
       bookingsCustomDateEnd: clearFilters || clearBookingsDates
           ? null
           : (bookingsCustomDateEnd ?? this.bookingsCustomDateEnd),
+      bookingsSortOrder:
+          clearFilters ? SortOrder.descending : (bookingsSortOrder ?? this.bookingsSortOrder),
       // Checkins filters
       checkinsStatusFilter: clearFilters
           ? null
@@ -213,6 +231,8 @@ class AdminDashboardState extends Equatable {
       checkinsCustomDateEnd: clearFilters || clearCheckinsDates
           ? null
           : (checkinsCustomDateEnd ?? this.checkinsCustomDateEnd),
+      checkinsSortOrder:
+          clearFilters ? SortOrder.descending : (checkinsSortOrder ?? this.checkinsSortOrder),
       // Loading
       isLoading: isLoading ?? this.isLoading,
       isLoadingBookings: isLoadingBookings ?? this.isLoadingBookings,
@@ -252,7 +272,14 @@ class AdminDashboardState extends Equatable {
           customEnd: bookingsCustomDateEnd,
         )).toList();
 
-    return result;
+    // Ordenar por fecha de check-in
+    final sorted = List<AdminBookingEntity>.from(result);
+    sorted.sort((a, b) {
+      final cmp = a.checkInDate.compareTo(b.checkInDate);
+      return bookingsSortOrder == SortOrder.ascending ? cmp : -cmp;
+    });
+
+    return sorted;
   }
 
   /// Filtra los check-ins según el filtro actual
@@ -282,16 +309,19 @@ class AdminDashboardState extends Equatable {
           customEnd: checkinsCustomDateEnd,
         )).toList();
 
-    // Ordenar: submitted primero (requieren acción)
+    // Ordenar: submitted primero (requieren acción), luego por fecha
     final sortedResult = List<AdminBookingEntity>.from(result);
     sortedResult.sort((a, b) {
+      // Prioridad: submitted primero
       if (a.checkinStatus == 'submitted' && b.checkinStatus != 'submitted') {
         return -1;
       }
       if (a.checkinStatus != 'submitted' && b.checkinStatus == 'submitted') {
         return 1;
       }
-      return 0;
+      // Luego por fecha
+      final cmp = a.checkInDate.compareTo(b.checkInDate);
+      return checkinsSortOrder == SortOrder.ascending ? cmp : -cmp;
     });
 
     return sortedResult;
@@ -357,11 +387,13 @@ class AdminDashboardState extends Equatable {
         bookingsDateFilter,
         bookingsCustomDateStart,
         bookingsCustomDateEnd,
+        bookingsSortOrder,
         checkinsStatusFilter,
         checkinsSearchQuery,
         checkinsDateFilter,
         checkinsCustomDateStart,
         checkinsCustomDateEnd,
+        checkinsSortOrder,
         isLoading,
         isLoadingBookings,
         isLoadingCheckins,

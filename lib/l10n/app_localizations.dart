@@ -3231,7 +3231,7 @@ abstract class S {
   /// No description provided for @guest_romantic_price.
   ///
   /// In es, this message translates to:
-  /// **'49,90 €'**
+  /// **'20,00 €'**
   String get guest_romantic_price;
 
   /// No description provided for @guest_romantic_book_now.
@@ -5741,6 +5741,48 @@ abstract class S {
   /// In es, this message translates to:
   /// **'Elevada'**
   String get public_hero_title_line2;
+
+  /// No description provided for @admin_booking_send_whatsapp_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar código por WhatsApp'**
+  String get admin_booking_send_whatsapp_title;
+
+  /// No description provided for @admin_booking_send_whatsapp_no_phone.
+  ///
+  /// In es, this message translates to:
+  /// **'El huésped no tiene teléfono'**
+  String get admin_booking_send_whatsapp_no_phone;
+
+  /// No description provided for @admin_booking_send_whatsapp_no_phone_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un número de teléfono para enviar el código por WhatsApp.'**
+  String get admin_booking_send_whatsapp_no_phone_desc;
+
+  /// No description provided for @admin_booking_send_whatsapp_phone_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'+34 600 000 000'**
+  String get admin_booking_send_whatsapp_phone_hint;
+
+  /// No description provided for @admin_booking_send_whatsapp_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir WhatsApp'**
+  String get admin_booking_send_whatsapp_error;
+
+  /// No description provided for @admin_booking_send_whatsapp_message.
+  ///
+  /// In es, this message translates to:
+  /// **'🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nDescarga la app BF Stay para gestionar tu estancia.'**
+  String admin_booking_send_whatsapp_message(
+    String propertyName,
+    String bookingCode,
+    String checkIn,
+    String checkOut,
+    String keyboxLine,
+  );
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

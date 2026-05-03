@@ -21,9 +21,11 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     on<AdminDashboardBookingsFilterChanged>(_onBookingsFilterChanged);
     on<AdminDashboardBookingsSearchChanged>(_onBookingsSearchChanged);
     on<AdminDashboardBookingsDateFilterChanged>(_onBookingsDateFilterChanged);
+    on<AdminDashboardBookingsSortChanged>(_onBookingsSortChanged);
     on<AdminDashboardCheckinsFilterChanged>(_onCheckinsFilterChanged);
     on<AdminDashboardCheckinsSearchChanged>(_onCheckinsSearchChanged);
     on<AdminDashboardCheckinsDateFilterChanged>(_onCheckinsDateFilterChanged);
+    on<AdminDashboardCheckinsSortChanged>(_onCheckinsSortChanged);
     on<AdminDashboardUnitsLoadRequested>(_onUnitsLoadRequested);
     on<AdminDashboardUnitWifiUpdateRequested>(_onUnitWifiUpdateRequested);
     // Eventos de notificaciones
@@ -340,6 +342,13 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     ));
   }
 
+  void _onCheckinsSortChanged(
+    AdminDashboardCheckinsSortChanged event,
+    Emitter<AdminDashboardState> emit,
+  ) {
+    emit(state.copyWith(checkinsSortOrder: event.sortOrder));
+  }
+
   void _onBookingsDateFilterChanged(
     AdminDashboardBookingsDateFilterChanged event,
     Emitter<AdminDashboardState> emit,
@@ -350,6 +359,13 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
       bookingsCustomDateEnd: event.customDateEnd,
       clearBookingsDates: event.dateFilter != DateFilter.customRange,
     ));
+  }
+
+  void _onBookingsSortChanged(
+    AdminDashboardBookingsSortChanged event,
+    Emitter<AdminDashboardState> emit,
+  ) {
+    emit(state.copyWith(bookingsSortOrder: event.sortOrder));
   }
 
   Future<void> _onUnitsLoadRequested(

@@ -210,3 +210,23 @@ class AdminDashboardBookingsDateFilterChanged extends AdminDashboardEvent {
   @override
   List<Object?> get props => [dateFilter, customDateStart, customDateEnd];
 }
+
+/// Cambiar orden de clasificación de reservas
+class AdminDashboardBookingsSortChanged extends AdminDashboardEvent {
+  const AdminDashboardBookingsSortChanged(this.sortOrder);
+
+  final SortOrder sortOrder;
+
+  @override
+  List<Object?> get props => [sortOrder];
+}
+
+/// Cambiar orden de clasificación de check-ins
+class AdminDashboardCheckinsSortChanged extends AdminDashboardEvent {
+  const AdminDashboardCheckinsSortChanged(this.sortOrder);
+
+  final SortOrder sortOrder;
+
+  @override
+  List<Object?> get props => [sortOrder];
+}

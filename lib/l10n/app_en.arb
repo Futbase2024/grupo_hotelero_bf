@@ -1147,7 +1147,7 @@
   "guest_romantic_choose_title": "Choose your detail",
   "guest_romantic_choose_desc": "Bottle of cava or artisan chocolate to accompany the evening",
   "guest_romantic_basic_pack": "Basic Romantic Pack",
-  "guest_romantic_price": "€49.90",
+  "guest_romantic_price": "€20.00",
   "guest_romantic_book_now": "Book Now",
   "guest_romantic_customize": "Or customize with extras when booking",
   "guest_romantic_redirect": "You will be redirected to the website to complete the Romantic Pack reservation. Continue?",
@@ -1409,5 +1409,21 @@
   "guest_physical_registration_step_3_desc": "Firma el documento de registro de entrada",
   "guest_physical_registration_step_4_title": "Recibe tu llave",
   "guest_physical_registration_step_4_desc": "Te entregaremos la llave de tu habitación",
-  "guest_checkin_capture_error": "Error al capturar imagen: {error}"
+  "guest_checkin_capture_error": "Error al capturar imagen: {error}",
+
+  "admin_booking_send_whatsapp_title": "Send code via WhatsApp",
+  "admin_booking_send_whatsapp_no_phone": "Guest has no phone number",
+  "admin_booking_send_whatsapp_no_phone_desc": "Enter a phone number to send the code via WhatsApp.",
+  "admin_booking_send_whatsapp_phone_hint": "+44 700 000 000",
+  "admin_booking_send_whatsapp_error": "Could not open WhatsApp",
+  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Booking: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nDownload the BF Stay app to manage your stay.",
+  "@admin_booking_send_whatsapp_message": {
+    "placeholders": {
+      "propertyName": { "type": "String" },
+      "bookingCode": { "type": "String" },
+      "checkIn": { "type": "String" },
+      "checkOut": { "type": "String" },
+      "keyboxLine": { "type": "String" }
+    }
+  }
 }

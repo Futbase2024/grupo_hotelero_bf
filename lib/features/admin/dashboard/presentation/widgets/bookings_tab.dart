@@ -84,6 +84,17 @@ class _BookingsTabState extends State<BookingsTab> {
             ),
           ),
           const Spacer(),
+          _SortButton(
+            sortOrder: state.bookingsSortOrder,
+            onPressed: () {
+              final newOrder = state.bookingsSortOrder == SortOrder.descending
+                  ? SortOrder.ascending
+                  : SortOrder.descending;
+              context.read<AdminDashboardBloc>().add(
+                    AdminDashboardBookingsSortChanged(newOrder),
+                  );
+            },
+          ),
           IconButton(
             onPressed: count > 0 ? () => _printBookings(context, state) : null,
             icon: const Icon(Icons.print, size: 22),
@@ -837,5 +848,30 @@ class _BookingsTabState extends State<BookingsTab> {
       'cancelled' => BookingStatus.cancelled,
       _ => BookingStatus.created,
     };
+  }
+}
+
+/// Botón de ordenación por fecha (ascendente/descendente)
+class _SortButton extends StatelessWidget {
+  const _SortButton({
+    required this.sortOrder,
+    required this.onPressed,
+  });
+
+  final SortOrder sortOrder;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesc = sortOrder == SortOrder.descending;
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(
+        isDesc ? Icons.arrow_downward : Icons.arrow_upward,
+        size: 20,
+      ),
+      color: AppColors.gold,
+      tooltip: isDesc ? 'Más recientes primero' : 'Más antiguos primero',
+    );
   }
 }

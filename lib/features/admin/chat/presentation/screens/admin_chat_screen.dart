@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/router/app_router.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
@@ -119,44 +120,66 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
       title: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
           final title = state is ChatLoaded ? state.otherParticipantName : S.of(context).admin_chat_title;
+          final bookingId = state is ChatLoaded ? state.conversation.bookingId : null;
 
-          return Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.gold,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 20,
+          return GestureDetector(
+            onTap: bookingId != null
+                ? () => context.push(
+                      AppRoutes.adminBookingDetail.replaceFirst(':bookingId', bookingId),
+                    )
+                : null,
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.gold,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (state is ChatLoaded)
-                      Text(
-                        S.of(context).admin_chat_online,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.success,
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              title,
+                              overflow: TextOverflow.ellipsis,
                             ),
+                          ),
+                          if (bookingId != null) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.open_in_new_rounded,
+                              size: 14,
+                              color: AppColors.gold,
+                            ),
+                          ],
+                        ],
                       ),
-                  ],
+                      if (state is ChatLoaded)
+                        Text(
+                          S.of(context).admin_chat_online,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.success,
+                              ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
