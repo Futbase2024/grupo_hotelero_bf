@@ -1524,14 +1524,13 @@
   "admin_booking_send_whatsapp_no_phone_desc": "Introduza um número de telefone para enviar o código por WhatsApp.",
   "admin_booking_send_whatsapp_phone_hint": "+351 920 000 000",
   "admin_booking_send_whatsapp_error": "Não foi possível abrir o WhatsApp",
-  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nDescarregue a app BF Stay para gerir a sua estadia.",
+  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}\n\nDescarregue a app BF Stay para gerir a sua estadia.",
   "@admin_booking_send_whatsapp_message": {
     "placeholders": {
       "propertyName": { "type": "String" },
       "bookingCode": { "type": "String" },
       "checkIn": { "type": "String" },
-      "checkOut": { "type": "String" },
-      "keyboxLine": { "type": "String" }
+      "checkOut": { "type": "String" }
     }
   }
 }

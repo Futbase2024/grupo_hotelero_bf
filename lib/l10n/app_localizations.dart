@@ -5775,13 +5775,12 @@ abstract class S {
   /// No description provided for @admin_booking_send_whatsapp_message.
   ///
   /// In es, this message translates to:
-  /// **'🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nDescarga la app BF Stay para gestionar tu estancia.'**
+  /// **'🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}\n\nDescarga la app BF Stay para gestionar tu estancia.'**
   String admin_booking_send_whatsapp_message(
     String propertyName,
     String bookingCode,
     String checkIn,
     String checkOut,
-    String keyboxLine,
   );
 }
 

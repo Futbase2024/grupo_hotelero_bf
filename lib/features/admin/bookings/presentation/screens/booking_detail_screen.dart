@@ -1,14 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/config/supabase_config.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../data/services/booking_email_pdf_service.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
 import '../../../domain/entities/booking_unit_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
@@ -157,6 +160,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
   }
 
+  bool _isSendingWhatsApp = false;
+
   Future<void> _sendViaWhatsApp() async {
     if (_booking == null) return;
 
@@ -179,28 +184,30 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       }
     }
 
-    final keyboxLine = (_booking!.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty)
-        ? '\n🔑 Keybox: ${_booking!.keyboxCode}'
-        : '';
+    setState(() => _isSendingWhatsApp = true);
 
-    final message = S.of(context).admin_booking_send_whatsapp_message(
-      _booking!.propertyName,
-      _booking!.bookingCode,
-      DateFormat('dd/MM/yyyy').format(_booking!.checkInDate),
-      DateFormat('dd/MM/yyyy').format(_booking!.checkOutDate),
-      keyboxLine,
-    );
+    try {
+      final pdfService = BookingEmailPdfService();
+      final pdfBytes = await pdfService.generateEmailPdf(_booking!);
 
-    final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
-    final phoneWithCode = cleanPhone.startsWith('+') ? cleanPhone : '+34$cleanPhone';
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'reserva_${_booking!.bookingCode.replaceAll('-', '_')}.pdf';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(pdfBytes);
 
-    final uri = Uri.parse('https://wa.me/$phoneWithCode?text=${Uri.encodeComponent(message)}');
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
       if (!mounted) return;
-      _showSnackBar(S.of(context).admin_booking_send_whatsapp_error, isError: true);
+
+      final box = context.findRenderObject() as RenderBox?;
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Reserva ${_booking!.bookingCode} - ${_booking!.propertyName}',
+        sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(S.of(context).admin_booking_error(e.toString()), isError: true);
+    } finally {
+      if (mounted) setState(() => _isSendingWhatsApp = false);
     }
   }
 
@@ -2744,7 +2751,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             icon: Icons.chat_outlined,
             title: S.of(context).admin_booking_send_whatsapp_title,
             subtitle: _booking!.guestPhone ?? S.of(context).admin_booking_send_whatsapp_no_phone,
-            onTap: _sendViaWhatsApp,
+            onTap: _isSendingWhatsApp ? null : _sendViaWhatsApp,
+            isLoading: _isSendingWhatsApp,
             color: const Color(0xFF25D366),
           ),
           const SizedBox(height: 12),

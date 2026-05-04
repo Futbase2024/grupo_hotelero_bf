@@ -3168,8 +3168,7 @@ class SEn extends S {
     String bookingCode,
     String checkIn,
     String checkOut,
-    String keyboxLine,
   ) {
-    return '🏠 *$propertyName*\n📋 Booking: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nDownload the BF Stay app to manage your stay.';
+    return '🏠 *$propertyName*\n📋 Booking: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut\n\nDownload the BF Stay app to manage your stay.';
   }
 }

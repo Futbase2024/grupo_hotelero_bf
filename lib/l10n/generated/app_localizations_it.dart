@@ -3204,8 +3204,7 @@ class SIt extends S {
     String bookingCode,
     String checkIn,
     String checkOut,
-    String keyboxLine,
   ) {
-    return '🏠 *$propertyName*\n📋 Prenotazione: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nScarica l\'app BF Stay per gestire il tuo soggiorno.';
+    return '🏠 *$propertyName*\n📋 Prenotazione: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut\n\nScarica l\'app BF Stay per gestire il tuo soggiorno.';
   }
 }

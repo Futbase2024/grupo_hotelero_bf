@@ -3202,8 +3202,7 @@ class SEs extends S {
     String bookingCode,
     String checkIn,
     String checkOut,
-    String keyboxLine,
   ) {
-    return '🏠 *$propertyName*\n📋 Reserva: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nDescarga la app BF Stay para gestionar tu estancia.';
+    return '🏠 *$propertyName*\n📋 Reserva: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut\n\nDescarga la app BF Stay para gestionar tu estancia.';
   }
 }

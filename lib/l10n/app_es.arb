@@ -1446,14 +1446,13 @@
   "admin_booking_send_whatsapp_no_phone_desc": "Introduce un número de teléfono para enviar el código por WhatsApp.",
   "admin_booking_send_whatsapp_phone_hint": "+34 600 000 000",
   "admin_booking_send_whatsapp_error": "No se pudo abrir WhatsApp",
-  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nDescarga la app BF Stay para gestionar tu estancia.",
+  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Reserva: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}\n\nDescarga la app BF Stay para gestionar tu estancia.",
   "@admin_booking_send_whatsapp_message": {
     "placeholders": {
       "propertyName": { "type": "String" },
       "bookingCode": { "type": "String" },
       "checkIn": { "type": "String" },
-      "checkOut": { "type": "String" },
-      "keyboxLine": { "type": "String" }
+      "checkOut": { "type": "String" }
     }
   }
 }

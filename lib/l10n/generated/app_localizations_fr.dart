@@ -3211,8 +3211,7 @@ class SFr extends S {
     String bookingCode,
     String checkIn,
     String checkOut,
-    String keyboxLine,
   ) {
-    return '🏠 *$propertyName*\n📋 Réservation : *$bookingCode*\n📅 Check-in : $checkIn\n📅 Check-out : $checkOut$keyboxLine\n\nTéléchargez l\'application BF Stay pour gérer votre séjour.';
+    return '🏠 *$propertyName*\n📋 Réservation : *$bookingCode*\n📅 Check-in : $checkIn\n📅 Check-out : $checkOut\n\nTéléchargez l\'application BF Stay pour gérer votre séjour.';
   }
 }

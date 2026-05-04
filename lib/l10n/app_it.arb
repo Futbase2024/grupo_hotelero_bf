@@ -1416,14 +1416,13 @@
   "admin_booking_send_whatsapp_no_phone_desc": "Inserisci un numero di telefono per inviare il codice via WhatsApp.",
   "admin_booking_send_whatsapp_phone_hint": "+39 320 000 000",
   "admin_booking_send_whatsapp_error": "Impossibile aprire WhatsApp",
-  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Prenotazione: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nScarica l'app BF Stay per gestire il tuo soggiorno.",
+  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Prenotazione: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}\n\nScarica l'app BF Stay per gestire il tuo soggiorno.",
   "@admin_booking_send_whatsapp_message": {
     "placeholders": {
       "propertyName": { "type": "String" },
       "bookingCode": { "type": "String" },
       "checkIn": { "type": "String" },
-      "checkOut": { "type": "String" },
-      "keyboxLine": { "type": "String" }
+      "checkOut": { "type": "String" }
     }
   }
 }

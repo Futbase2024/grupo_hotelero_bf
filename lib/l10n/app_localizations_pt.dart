@@ -3197,8 +3197,7 @@ class SPt extends S {
     String bookingCode,
     String checkIn,
     String checkOut,
-    String keyboxLine,
   ) {
-    return '🏠 *$propertyName*\n📋 Reserva: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nDescarregue a app BF Stay para gerir a sua estadia.';
+    return '🏠 *$propertyName*\n📋 Reserva: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut\n\nDescarregue a app BF Stay para gerir a sua estadia.';
   }
 }

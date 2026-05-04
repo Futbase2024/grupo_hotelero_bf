@@ -1416,14 +1416,13 @@
   "admin_booking_send_whatsapp_no_phone_desc": "Geben Sie eine Telefonnummer ein, um den Code per WhatsApp zu senden.",
   "admin_booking_send_whatsapp_phone_hint": "+49 170 000 000",
   "admin_booking_send_whatsapp_error": "WhatsApp konnte nicht geöffnet werden",
-  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Buchung: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}{keyboxLine}\n\nLaden Sie die BF Stay App herunter, um Ihren Aufenthalt zu verwalten.",
+  "admin_booking_send_whatsapp_message": "🏠 *{propertyName}*\n📋 Buchung: *{bookingCode}*\n📅 Check-in: {checkIn}\n📅 Check-out: {checkOut}\n\nLaden Sie die BF Stay App herunter, um Ihren Aufenthalt zu verwalten.",
   "@admin_booking_send_whatsapp_message": {
     "placeholders": {
       "propertyName": { "type": "String" },
       "bookingCode": { "type": "String" },
       "checkIn": { "type": "String" },
-      "checkOut": { "type": "String" },
-      "keyboxLine": { "type": "String" }
+      "checkOut": { "type": "String" }
     }
   }
 }

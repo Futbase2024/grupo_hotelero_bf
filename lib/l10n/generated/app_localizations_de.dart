@@ -3216,8 +3216,7 @@ class SDe extends S {
     String bookingCode,
     String checkIn,
     String checkOut,
-    String keyboxLine,
   ) {
-    return '🏠 *$propertyName*\n📋 Buchung: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut$keyboxLine\n\nLaden Sie die BF Stay App herunter, um Ihren Aufenthalt zu verwalten.';
+    return '🏠 *$propertyName*\n📋 Buchung: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut\n\nLaden Sie die BF Stay App herunter, um Ihren Aufenthalt zu verwalten.';
   }
 }
