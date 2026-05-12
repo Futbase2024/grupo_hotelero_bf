@@ -2091,6 +2091,10 @@ class SDe extends S {
   String get guest_checkin_photo_required => 'Foto erforderlich';
 
   @override
+  String get guest_checkin_document_number_required =>
+      'Dokumentnummer erforderlich';
+
+  @override
   String get guest_checkin_confirm => 'Bestätigen';
 
   @override

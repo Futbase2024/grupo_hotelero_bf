@@ -3798,6 +3798,12 @@ abstract class S {
   /// **'Foto obligatoria'**
   String get guest_checkin_photo_required;
 
+  /// No description provided for @guest_checkin_document_number_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce el número de documento'**
+  String get guest_checkin_document_number_required;
+
   /// No description provided for @guest_checkin_confirm.
   ///
   /// In es, this message translates to:

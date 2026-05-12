@@ -2060,6 +2060,10 @@ class SEn extends S {
   String get guest_checkin_photo_required => 'Photo required';
 
   @override
+  String get guest_checkin_document_number_required =>
+      'Document number is required';
+
+  @override
   String get guest_checkin_confirm => 'Confirm';
 
   @override

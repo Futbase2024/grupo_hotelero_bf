@@ -313,7 +313,10 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardBookingsSearchChanged event,
     Emitter<AdminDashboardState> emit,
   ) {
-    emit(state.copyWith(bookingsSearchQuery: event.searchQuery));
+    emit(state.copyWith(
+      bookingsSearchQuery: event.searchQuery,
+      clearBookingsSearchQuery: event.searchQuery == null,
+    ));
   }
 
   void _onCheckinsFilterChanged(
@@ -327,7 +330,10 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardCheckinsSearchChanged event,
     Emitter<AdminDashboardState> emit,
   ) {
-    emit(state.copyWith(checkinsSearchQuery: event.searchQuery));
+    emit(state.copyWith(
+      checkinsSearchQuery: event.searchQuery,
+      clearCheckinsSearchQuery: event.searchQuery == null,
+    ));
   }
 
   void _onCheckinsDateFilterChanged(
@@ -340,13 +346,6 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
       checkinsCustomDateEnd: event.customDateEnd,
       clearCheckinsDates: event.dateFilter != DateFilter.customRange,
     ));
-  }
-
-  void _onCheckinsSortChanged(
-    AdminDashboardCheckinsSortChanged event,
-    Emitter<AdminDashboardState> emit,
-  ) {
-    emit(state.copyWith(checkinsSortOrder: event.sortOrder));
   }
 
   void _onBookingsDateFilterChanged(
@@ -366,6 +365,13 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     Emitter<AdminDashboardState> emit,
   ) {
     emit(state.copyWith(bookingsSortOrder: event.sortOrder));
+  }
+
+  void _onCheckinsSortChanged(
+    AdminDashboardCheckinsSortChanged event,
+    Emitter<AdminDashboardState> emit,
+  ) {
+    emit(state.copyWith(checkinsSortOrder: event.sortOrder));
   }
 
   Future<void> _onUnitsLoadRequested(

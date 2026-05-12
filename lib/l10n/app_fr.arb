@@ -876,6 +876,7 @@
   "guest_checkin_document_required": "Document requis",
   "guest_checkin_missing_photo": "Photo du document manquante",
   "guest_checkin_photo_required": "Photo requise",
+  "guest_checkin_document_number_required": "Numéro de document requis",
   "guest_checkin_upload_document": "Télécharger le document",
   "guest_checkin_upload_document_title": "Télécharger le document",
   "guest_checkin_image_captured": "Image capturée",

@@ -2081,6 +2081,10 @@ class SPt extends S {
   String get guest_checkin_photo_required => 'Foto obrigatória';
 
   @override
+  String get guest_checkin_document_number_required =>
+      'Número de documento obrigatório';
+
+  @override
   String get guest_checkin_confirm => 'Confirmar';
 
   @override

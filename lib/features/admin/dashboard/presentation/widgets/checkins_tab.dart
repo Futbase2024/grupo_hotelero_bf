@@ -78,8 +78,7 @@ class _CheckinsTabState extends State<CheckinsTab> {
             ),
           ),
           const Spacer(),
-          _CheckinSortButton(
-            sortOrder: state.checkinsSortOrder,
+          IconButton(
             onPressed: () {
               final newOrder = state.checkinsSortOrder == SortOrder.descending
                   ? SortOrder.ascending
@@ -88,6 +87,16 @@ class _CheckinsTabState extends State<CheckinsTab> {
                     AdminDashboardCheckinsSortChanged(newOrder),
                   );
             },
+            icon: Icon(
+              state.checkinsSortOrder == SortOrder.descending
+                  ? Icons.arrow_downward
+                  : Icons.arrow_upward,
+              size: 20,
+            ),
+            color: AppColors.gold,
+            tooltip: state.checkinsSortOrder == SortOrder.descending
+                ? 'Más recientes primero'
+                : 'Más antiguos primero',
           ),
         ],
       ),
@@ -1276,31 +1285,6 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Botón de ordenación por fecha para check-ins
-class _CheckinSortButton extends StatelessWidget {
-  const _CheckinSortButton({
-    required this.sortOrder,
-    required this.onPressed,
-  });
-
-  final SortOrder sortOrder;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDesc = sortOrder == SortOrder.descending;
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(
-        isDesc ? Icons.arrow_downward : Icons.arrow_upward,
-        size: 20,
-      ),
-      color: AppColors.gold,
-      tooltip: isDesc ? 'Más recientes primero' : 'Más antiguos primero',
     );
   }
 }

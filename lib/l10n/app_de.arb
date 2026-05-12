@@ -876,6 +876,7 @@
   "guest_checkin_document_required": "Dokument erforderlich",
   "guest_checkin_missing_photo": "Dokumentfoto fehlt",
   "guest_checkin_photo_required": "Foto erforderlich",
+  "guest_checkin_document_number_required": "Dokumentnummer erforderlich",
   "guest_checkin_upload_document": "Dokument hochladen",
   "guest_checkin_upload_document_title": "Dokument hochladen",
   "guest_checkin_image_captured": "Bild aufgenommen",

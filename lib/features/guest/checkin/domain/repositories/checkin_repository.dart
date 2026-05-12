@@ -29,6 +29,14 @@ abstract class CheckinRepository {
     required String mimeType,
   });
 
+  /// Elimina documentos previos de un huésped para un tipo de documento concreto
+  /// Se usa antes de subir uno nuevo para evitar duplicados
+  Future<void> deleteGuestDocuments({
+    required String bookingId,
+    required String guestId,
+    required String docKind,
+  });
+
   /// Obtiene la URL firmada para ver un documento
   Future<String> getDocumentUrl(String storagePath);
 

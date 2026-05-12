@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../entities/conversation_entity.dart';
 import '../entities/message_entity.dart';
 import '../repositories/chat_repository.dart';
@@ -309,9 +307,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         currentUserId: currentState.currentUserId,
       ));
 
-      // Procesar cola de notificaciones para enviar push
-      await _triggerNotificationProcessing();
-      debugPrint('✅ [ChatBloc] Mensaje enviado y cola de notificaciones procesada');
+      debugPrint('✅ [ChatBloc] Mensaje enviado (la BD se encarga de las notificaciones)');
     } catch (e) {
       debugPrint('❌ [ChatBloc] Error enviando mensaje: $e');
       // Volver al estado anterior con error
@@ -376,17 +372,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _messagesSubscription?.cancel();
     _messagesSubscription = null;
     _chatRepository.dispose();
-  }
-
-  /// Invoca la Edge Function para procesar la cola de notificaciones
-  Future<void> _triggerNotificationProcessing() async {
-    try {
-      await Supabase.instance.client.functions.invoke('send-fcm-notifications');
-      debugPrint('✅ [ChatBloc] Edge Function send-fcm-notifications invocada');
-    } catch (e) {
-      debugPrint('⚠️ [ChatBloc] No se pudo invocar Edge Function: $e');
-      // No es crítico, la cola se procesará después
-    }
   }
 
   /// Obtiene un mensaje de error amigable

@@ -12,7 +12,7 @@ enum DateFilter {
   customRange,
 }
 
-/// Orden de clasificación
+/// Orden de clasificación por fecha
 enum SortOrder {
   descending,
   ascending,
@@ -169,9 +169,11 @@ class AdminDashboardState extends Equatable {
     DateTime? bookingsCustomDateStart,
     DateTime? bookingsCustomDateEnd,
     bool clearBookingsDates = false,
+    bool clearBookingsSearchQuery = false,
     SortOrder? bookingsSortOrder,
     String? checkinsStatusFilter,
     String? checkinsSearchQuery,
+    bool clearCheckinsSearchQuery = false,
     DateFilter? checkinsDateFilter,
     DateTime? checkinsCustomDateStart,
     DateTime? checkinsCustomDateEnd,
@@ -203,7 +205,9 @@ class AdminDashboardState extends Equatable {
       bookingsStatusFilter:
           clearFilters ? null : (bookingsStatusFilter ?? this.bookingsStatusFilter),
       bookingsSearchQuery:
-          clearFilters ? null : (bookingsSearchQuery ?? this.bookingsSearchQuery),
+          clearFilters || clearBookingsSearchQuery
+              ? null
+              : (bookingsSearchQuery ?? this.bookingsSearchQuery),
       bookingsDateFilter: clearFilters
           ? DateFilter.all
           : (bookingsDateFilter ?? this.bookingsDateFilter),
@@ -213,13 +217,14 @@ class AdminDashboardState extends Equatable {
       bookingsCustomDateEnd: clearFilters || clearBookingsDates
           ? null
           : (bookingsCustomDateEnd ?? this.bookingsCustomDateEnd),
-      bookingsSortOrder:
-          clearFilters ? SortOrder.descending : (bookingsSortOrder ?? this.bookingsSortOrder),
+      bookingsSortOrder: clearFilters
+          ? SortOrder.descending
+          : (bookingsSortOrder ?? this.bookingsSortOrder),
       // Checkins filters
       checkinsStatusFilter: clearFilters
           ? null
           : (checkinsStatusFilter ?? this.checkinsStatusFilter),
-      checkinsSearchQuery: clearFilters
+      checkinsSearchQuery: clearFilters || clearCheckinsSearchQuery
           ? null
           : (checkinsSearchQuery ?? this.checkinsSearchQuery),
       checkinsDateFilter: clearFilters
@@ -231,8 +236,9 @@ class AdminDashboardState extends Equatable {
       checkinsCustomDateEnd: clearFilters || clearCheckinsDates
           ? null
           : (checkinsCustomDateEnd ?? this.checkinsCustomDateEnd),
-      checkinsSortOrder:
-          clearFilters ? SortOrder.descending : (checkinsSortOrder ?? this.checkinsSortOrder),
+      checkinsSortOrder: clearFilters
+          ? SortOrder.descending
+          : (checkinsSortOrder ?? this.checkinsSortOrder),
       // Loading
       isLoading: isLoading ?? this.isLoading,
       isLoadingBookings: isLoadingBookings ?? this.isLoadingBookings,
@@ -312,14 +318,12 @@ class AdminDashboardState extends Equatable {
     // Ordenar: submitted primero (requieren acción), luego por fecha
     final sortedResult = List<AdminBookingEntity>.from(result);
     sortedResult.sort((a, b) {
-      // Prioridad: submitted primero
       if (a.checkinStatus == 'submitted' && b.checkinStatus != 'submitted') {
         return -1;
       }
       if (a.checkinStatus != 'submitted' && b.checkinStatus == 'submitted') {
         return 1;
       }
-      // Luego por fecha
       final cmp = a.checkInDate.compareTo(b.checkInDate);
       return checkinsSortOrder == SortOrder.ascending ? cmp : -cmp;
     });

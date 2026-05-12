@@ -530,7 +530,20 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
   }
 
   Widget _buildConfirmButton() {
-    final canConfirm = _documentController.text.isNotEmpty && _imageBytes != null;
+    final hasDocumentNumber = _documentController.text.isNotEmpty;
+    final hasImage = _imageBytes != null;
+    final canConfirm = hasDocumentNumber && hasImage;
+
+    String buttonText;
+    if (_isLoading) {
+      buttonText = '';
+    } else if (!hasImage) {
+      buttonText = S.of(context).guest_checkin_photo_required;
+    } else if (!hasDocumentNumber) {
+      buttonText = S.of(context).guest_checkin_document_number_required;
+    } else {
+      buttonText = S.of(context).guest_checkin_confirm;
+    }
 
     return SizedBox(
       width: double.infinity,
@@ -564,7 +577,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                 ),
               )
             : Text(
-                _imageBytes == null ? S.of(context).guest_checkin_photo_required : S.of(context).guest_checkin_confirm,
+                buttonText,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

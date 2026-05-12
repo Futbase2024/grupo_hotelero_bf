@@ -2087,6 +2087,10 @@ class SFr extends S {
   String get guest_checkin_photo_required => 'Photo requise';
 
   @override
+  String get guest_checkin_document_number_required =>
+      'Numéro de document requis';
+
+  @override
   String get guest_checkin_confirm => 'Confirmer';
 
   @override

@@ -476,6 +476,13 @@ class CheckinRepositoryImpl implements CheckinRepository {
         throw Exception('No hay usuario autenticado para subir documentos');
       }
 
+      // Eliminar documentos previos del mismo tipo para evitar duplicados
+      await deleteGuestDocuments(
+        bookingId: bookingId,
+        guestId: guestId,
+        docKind: docKind,
+      );
+
       // Generar nombre de archivo único
       // Estructura: guests/{booking_id}/{guest_id}/{doc_kind}/{fileName}
       // Esto coincide con las políticas RLS del bucket guest-documents
@@ -512,6 +519,56 @@ class CheckinRepositoryImpl implements CheckinRepository {
         information: ['bookingId: $bookingId', 'guestId: $guestId', 'docKind: $docKind'],
       );
       rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteGuestDocuments({
+    required String bookingId,
+    required String guestId,
+    required String docKind,
+  }) async {
+    try {
+      debugPrint('🗑️ [deleteGuestDocuments] Buscando documentos previos: $docKind para huésped $guestId');
+
+      // Buscar documentos existentes
+      final existing = await _client
+          .from('guest_documents')
+          .select('id, storage_path')
+          .eq('booking_id', bookingId)
+          .eq('guest_id', guestId)
+          .eq('doc_kind', docKind);
+
+      if (existing.isEmpty) {
+        debugPrint('🗑️ [deleteGuestDocuments] No hay documentos previos');
+        return;
+      }
+
+      debugPrint('🗑️ [deleteGuestDocuments] Encontrados ${existing.length} documentos previos');
+
+      // Eliminar archivos del storage
+      final storagePaths = (existing as List)
+          .map((doc) => doc['storage_path'] as String)
+          .toList();
+
+      for (final path in storagePaths) {
+        try {
+          await _client.storage.from(_documentsBucket).remove([path]);
+          debugPrint('🗑️ [deleteGuestDocuments] Archivo eliminado del storage: $path');
+        } catch (e) {
+          debugPrint('⚠️ [deleteGuestDocuments] Error eliminando archivo del storage: $e');
+        }
+      }
+
+      // Eliminar filas de la base de datos
+      final docIds = (existing as List).map((doc) => doc['id'] as String).toList();
+      await _client.from('guest_documents').delete().inFilter('id', docIds);
+
+      debugPrint('🗑️ [deleteGuestDocuments] ${docIds.length} registros eliminados de BD');
+    } catch (e) {
+      debugPrint('⚠️ [deleteGuestDocuments] Error: $e');
+      // No relanzar — la subida del nuevo documento debe poder continuar
+      // Si falla la limpieza, el nuevo documento se sube igualmente
     }
   }
 

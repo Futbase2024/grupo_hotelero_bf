@@ -2079,6 +2079,10 @@ class SIt extends S {
   String get guest_checkin_photo_required => 'Foto richiesta';
 
   @override
+  String get guest_checkin_document_number_required =>
+      'Numero documento obbligatorio';
+
+  @override
   String get guest_checkin_confirm => 'Conferma';
 
   @override

@@ -779,6 +779,7 @@
   "guest_checkin_camera": "Cámara",
   "guest_checkin_gallery": "Galería",
   "guest_checkin_photo_required": "Foto obligatoria",
+  "guest_checkin_document_number_required": "Introduce el número de documento",
   "guest_checkin_confirm": "Confirmar",
   "guest_checkin_capture_error": "Error al capturar imagen: {error}",
   "@guest_checkin_capture_error": {

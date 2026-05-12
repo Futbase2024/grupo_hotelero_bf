@@ -732,6 +732,22 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
     }
   }
 
+  String _parseBookingError(Object error) {
+    final msg = error.toString().toLowerCase();
+    if (msg.contains('no_overlapping_bookings') ||
+        msg.contains('exclusion constraint') ||
+        msg.contains('ya existe una reserva') ||
+        msg.contains('fechas solapadas') ||
+        msg.contains('conflicts with key')) {
+      return 'Ya existe una reserva para este alojamiento en las fechas seleccionadas. '
+          'Cambia las fechas o el alojamiento.';
+    }
+    if (msg.contains('exception:')) {
+      return error.toString().replaceFirst('Exception: ', '');
+    }
+    return 'Error al crear la reserva. Inténtalo de nuevo.';
+  }
+
   Future<void> submitForm() async {
     Debug.log('submitForm - Iniciando envío del formulario');
     if (!formKey.currentState!.validate()) {
@@ -838,7 +854,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       Debug.error('submitForm - Error al crear reserva', e);
       debugPrint('🔴 StackTrace: $stackTrace');
       setState(() {
-        error = e.toString();
+        error = _parseBookingError(e);
         isLoading = false;
       });
     }

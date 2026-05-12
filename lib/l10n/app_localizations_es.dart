@@ -2077,6 +2077,10 @@ class SEs extends S {
   String get guest_checkin_photo_required => 'Foto obligatoria';
 
   @override
+  String get guest_checkin_document_number_required =>
+      'Introduce el número de documento';
+
+  @override
   String get guest_checkin_confirm => 'Confirmar';
 
   @override

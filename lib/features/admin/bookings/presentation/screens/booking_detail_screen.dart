@@ -1,12 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/config/supabase_config.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
@@ -187,25 +186,57 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     setState(() => _isSendingWhatsApp = true);
 
     try {
+      // 1. Generar PDF
       final pdfService = BookingEmailPdfService();
       final pdfBytes = await pdfService.generateEmailPdf(_booking!);
 
-      final tempDir = await getTemporaryDirectory();
-      final fileName = 'reserva_${_booking!.bookingCode.replaceAll('-', '_')}.pdf';
-      final file = File('${tempDir.path}/$fileName');
-      await file.writeAsBytes(pdfBytes);
+      // 2. Subir PDF a Supabase Storage
+      final storagePath = 'booking-pdfs/${_booking!.bookingCode}.pdf';
+      await SupabaseConfig.client.storage.from('email-assets').uploadBinary(
+            storagePath,
+            pdfBytes,
+            fileOptions: const FileOptions(
+              contentType: 'application/pdf',
+              upsert: true,
+            ),
+          );
+
+      // 3. Obtener URL publica
+      final pdfUrl = SupabaseConfig.client.storage
+          .from('email-assets')
+          .getPublicUrl(storagePath);
 
       if (!mounted) return;
 
-      final box = context.findRenderObject() as RenderBox?;
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Reserva ${_booking!.bookingCode} - ${_booking!.propertyName}',
-        sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+      // 4. Abrir WhatsApp directamente con el numero y enlace al PDF
+      final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+      final phoneWithCode =
+          cleanPhone.startsWith('+') ? cleanPhone : '+34$cleanPhone';
+
+      final guestName = _booking!.guestFirstName ?? _booking!.guestFullName;
+      final message =
+          'Hola $guestName, aqui tienes tu reserva en ${_booking!.propertyName}.\n\n'
+          'Codigo de acceso: ${_booking!.bookingCode}\n'
+          'Check-in: ${DateFormat('dd/MM/yyyy').format(_booking!.checkInDate)}\n'
+          'Check-out: ${DateFormat('dd/MM/yyyy').format(_booking!.checkOutDate)}\n\n'
+          'Descarga tu PDF con toda la info:\n$pdfUrl';
+
+      final whatsappUri = Uri.parse(
+        'https://wa.me/$phoneWithCode?text=${Uri.encodeComponent(message)}',
       );
+
+      if (await canLaunchUrl(whatsappUri)) {
+        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        _showSnackBar(
+            S.of(context).admin_booking_send_whatsapp_error,
+            isError: true);
+      }
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar(S.of(context).admin_booking_error(e.toString()), isError: true);
+      _showSnackBar(S.of(context).admin_booking_error(e.toString()),
+          isError: true);
     } finally {
       if (mounted) setState(() => _isSendingWhatsApp = false);
     }

@@ -680,6 +680,7 @@
   "guest_checkin_camera": "Câmera",
   "guest_checkin_gallery": "Galeria",
   "guest_checkin_photo_required": "Foto obrigatória",
+  "guest_checkin_document_number_required": "Número de documento obrigatório",
   "guest_checkin_confirm": "Confirmar",
   "guest_access_checkin": "Check-in",
   "guest_access_checkout": "Check-out",
