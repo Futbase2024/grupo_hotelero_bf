@@ -1,4 +1,5 @@
 import '../entities/conversation_entity.dart';
+import '../entities/message_change.dart';
 import '../entities/message_entity.dart';
 
 /// Contrato del repositorio de Chat
@@ -53,9 +54,10 @@ abstract class ChatRepository {
     required String imagePath,
   });
 
-  /// Suscribe a nuevos mensajes en tiempo real
-  /// Solo emite cuando llega un mensaje nuevo (no re-emite mensajes existentes)
-  Stream<MessageEntity> watchMessages(String conversationId);
+  /// Suscribe a cambios de mensajes en tiempo real (altas y borrados)
+  /// Emite [MessageAdded] al llegar un mensaje nuevo y [MessageDeleted] cuando
+  /// un mensaje existente es eliminado.
+  Stream<MessageChange> watchMessages(String conversationId);
 
   /// Marca mensajes como leídos
   Future<void> markAsRead({
@@ -80,6 +82,12 @@ abstract class ChatRepository {
   /// Solo disponible para admin/staff
   Future<void> deleteConversation({
     required String conversationId,
+  });
+
+  /// Elimina de forma permanente un mensaje concreto.
+  /// Cada usuario solo puede eliminar los mensajes que él mismo envió (RLS).
+  Future<void> deleteMessage({
+    required String messageId,
   });
 
   /// Dispose de recursos (cancelar suscripciones)

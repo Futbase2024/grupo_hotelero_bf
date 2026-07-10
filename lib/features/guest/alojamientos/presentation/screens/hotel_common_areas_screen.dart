@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -314,25 +315,22 @@ class _PhotoCard extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Image.network(
-                      imageUrl,
+                  : CachedNetworkImage(
+                      imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
+                      progressIndicatorBuilder: (context, url, downloadProgress) {
                         return Container(
                           color: isDark ? AppColors.gray800 : AppColors.gray200,
                           child: Center(
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                  : null,
+                              value: downloadProgress.progress,
                               color: AppColors.gold,
                             ),
                           ),
                         );
                       },
-                      errorBuilder: (context, error, stackTrace) => Container(
+                      errorWidget: (context, url, error) => Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -479,22 +477,19 @@ class _PhotoViewerScreenState extends State<_PhotoViewerScreen> {
                         ),
                       ),
                     )
-                  : Image.network(
-                      widget.photos[index],
+                  : CachedNetworkImage(
+                      imageUrl: widget.photos[index],
                       fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
+                      progressIndicatorBuilder: (context, url, downloadProgress) {
                         return Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                : null,
+                            value: downloadProgress.progress,
                             color: AppColors.gold,
                           ),
                         );
                       },
-                      errorBuilder: (context, error, stackTrace) => Container(
+                      errorWidget: (context, url, error) => Container(
                         color: AppColors.gray800,
                         child: const Center(
                           child: Icon(

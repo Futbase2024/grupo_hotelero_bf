@@ -6,6 +6,7 @@ import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../admin/shared/widgets/confirmation_dialog.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../domain/bloc/chat_bloc.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -68,6 +69,24 @@ class _ChatScreenState extends State<ChatScreen> {
   void _onSendMessage(String message) {
     _chatBloc.add(ChatSendMessage(content: message));
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  Future<void> _confirmDeleteMessage(
+    BuildContext context,
+    String messageId,
+  ) async {
+    final s = S.of(context);
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: s.chat_delete_message,
+      body: s.chat_delete_message_confirm_body,
+      confirmText: s.common_delete,
+      cancelText: s.common_cancel,
+      isDestructive: true,
+    );
+    if (confirmed) {
+      _chatBloc.add(ChatDeleteMessage(messageId: messageId));
+    }
   }
 
   @override
@@ -230,6 +249,9 @@ class _ChatScreenState extends State<ChatScreen> {
           return MessageBubble(
             message: message,
             isFromMe: isFromMe,
+            onDelete: isFromMe
+                ? () => _confirmDeleteMessage(context, message.id)
+                : null,
           );
         },
       );

@@ -53,6 +53,7 @@ class _MarketingTabState extends State<MarketingTab> {
         };
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _properties = properties;
         _isLoadingProperties = false;
@@ -63,6 +64,7 @@ class _MarketingTabState extends State<MarketingTab> {
       });
     } catch (e) {
       debugPrint('Error loading properties: $e');
+      if (!mounted) return;
       setState(() {
         _isLoadingProperties = false;
       });

@@ -2105,6 +2105,16 @@ class SFr extends S {
   String get admin_chat_online => 'En ligne';
 
   @override
+  String get chat_delete_message => 'Supprimer le message';
+
+  @override
+  String get chat_delete_message_confirm_body =>
+      'Voulez-vous vraiment supprimer ce message ? Cette action est irréversible.';
+
+  @override
+  String get chat_delete_message_error => 'Impossible de supprimer le message';
+
+  @override
   String get admin_chat_delete_conversation => 'Supprimer la conversation';
 
   @override

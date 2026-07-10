@@ -34,6 +34,18 @@ class _BookingsTabState extends State<BookingsTab> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
+      // Solo reconstruir cuando cambian datos/filtros relevantes para reservas.
+      // Evita rebuilds de este tab por cambios ajenos (check-ins, notificaciones,
+      // resumen), que antes reconstruían los 3 tabs del IndexedStack a la vez.
+      buildWhen: (prev, curr) =>
+          prev.bookings != curr.bookings ||
+          prev.bookingsStatusFilter != curr.bookingsStatusFilter ||
+          prev.bookingsSearchQuery != curr.bookingsSearchQuery ||
+          prev.bookingsDateFilter != curr.bookingsDateFilter ||
+          prev.bookingsCustomDateStart != curr.bookingsCustomDateStart ||
+          prev.bookingsCustomDateEnd != curr.bookingsCustomDateEnd ||
+          prev.bookingsSortOrder != curr.bookingsSortOrder ||
+          prev.isLoadingBookings != curr.isLoadingBookings,
       builder: (context, state) {
         return SizedBox.expand(
           child: Column(

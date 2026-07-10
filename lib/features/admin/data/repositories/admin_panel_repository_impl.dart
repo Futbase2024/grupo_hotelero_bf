@@ -212,8 +212,6 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         final unitId = row['unit_id'] as String?;
         final propertyId = row['property_id'] as String?;
 
-        debugPrint('📋 [listBookings] Procesando booking: ${row['booking_code']}');
-
         final bookingId = row['id'] as String;
         // Para booking_status, priorizar el campo 'status' (legacy) que tiene valores correctos
         // sobre 'booking_status' que puede estar desactualizado en la BD

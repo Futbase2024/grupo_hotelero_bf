@@ -2099,6 +2099,17 @@ class SPt extends S {
   String get admin_chat_online => 'Online';
 
   @override
+  String get chat_delete_message => 'Eliminar mensagem';
+
+  @override
+  String get chat_delete_message_confirm_body =>
+      'Tem a certeza de que deseja eliminar esta mensagem? Esta ação não pode ser desfeita.';
+
+  @override
+  String get chat_delete_message_error =>
+      'Não foi possível eliminar a mensagem';
+
+  @override
   String get admin_chat_delete_conversation => 'Eliminar conversa';
 
   @override

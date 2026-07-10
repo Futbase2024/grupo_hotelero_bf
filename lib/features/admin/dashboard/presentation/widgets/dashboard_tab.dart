@@ -13,6 +13,14 @@ class DashboardTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
+      // Solo reconstruir el resumen cuando cambian los datos que muestra.
+      // Evita rebuilds por cambios de filtros de reservas/check-ins de otros tabs.
+      buildWhen: (prev, curr) =>
+          prev.summary != curr.summary ||
+          prev.isLoading != curr.isLoading ||
+          prev.error != curr.error ||
+          prev.bookings != curr.bookings ||
+          prev.checkins != curr.checkins,
       builder: (context, state) {
         if (state.isLoading) {
           return const Center(

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -706,22 +707,18 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
             ),
             Flexible(
               child: InteractiveViewer(
-                child: Image.network(
-                  url,
+                child: CachedNetworkImage(
+                  imageUrl: url,
                   fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
+                  progressIndicatorBuilder: (context, url, downloadProgress) {
                     return Center(
                       child: CircularProgressIndicator(
                         color: AppColors.gold,
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
+                        value: downloadProgress.progress,
                       ),
                     );
                   },
-                  errorBuilder: (context, error, stackTrace) {
+                  errorWidget: (context, url, error) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

@@ -1,20 +1,88 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../data/repositories/translation_repository.dart';
 import '../../domain/entities/message_entity.dart';
 
-/// Widget que muestra una burbuja de mensaje en el chat
-class MessageBubble extends StatelessWidget {
+/// Widget que muestra una burbuja de mensaje en el chat.
+///
+/// Si el mensaje es de texto, muestra un botón «Traducir» que invoca la Edge
+/// Function `translate-message` (vía [TranslationRepository]) y pinta la
+/// traducción bajo el original. La traducción se cachea en memoria y se
+/// restaura al reciclar la burbuja (scroll).
+class MessageBubble extends StatefulWidget {
   const MessageBubble({
     super.key,
     required this.message,
     required this.isFromMe,
+    this.onDelete,
   });
 
   final MessageEntity message;
   final bool isFromMe;
+
+  /// Callback opcional para eliminar el mensaje. Solo se ofrece la acción
+  /// (mantener pulsado) cuando el mensaje es propio y este callback existe.
+  final VoidCallback? onDelete;
+
+  @override
+  State<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<MessageBubble> {
+  String? _translation;
+  bool _isTranslating = false;
+  bool _showTranslation = true;
+
+  MessageEntity get message => widget.message;
+  bool get isFromMe => widget.isFromMe;
+
+  /// Indica si se puede eliminar este mensaje (propio + callback disponible).
+  bool get _canDelete => isFromMe && widget.onDelete != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restaura la traducción cacheada al reciclar la burbuja (scroll).
+    _translation = getIt<TranslationRepository>().getCached(message.id);
+  }
+
+  Future<void> _onTranslate() async {
+    if (_translation != null) {
+      setState(() => _showTranslation = !_showTranslation);
+      return;
+    }
+    setState(() => _isTranslating = true);
+    try {
+      final result = await getIt<TranslationRepository>().translate(
+        messageId: message.id,
+        text: message.content,
+      );
+      if (!mounted) return;
+      setState(() {
+        _translation = result.translatedText;
+        _showTranslation = true;
+        _isTranslating = false;
+      });
+    } on TranslationException catch (e) {
+      if (!mounted) return;
+      setState(() => _isTranslating = false);
+      _showError(e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isTranslating = false);
+      _showError('No se pudo traducir el mensaje');
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +91,14 @@ class MessageBubble extends StatelessWidget {
 
     return Align(
       alignment: alignment,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
-        padding: const EdgeInsets.all(AppTheme.spacing12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
+      child: GestureDetector(
+        onLongPress: _canDelete ? () => widget.onDelete!() : null,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
         decoration: BoxDecoration(
           color: isFromMe ? AppColors.gold : Colors.white,
           borderRadius: BorderRadius.only(
@@ -56,17 +126,110 @@ class MessageBubble extends StatelessWidget {
             const SizedBox(height: 4),
             _buildTimeLabel(context),
           ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTextContent(BuildContext context) {
-    return Text(
-      message.content,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.black,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          message.content,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.black,
+              ),
+        ),
+        if (_translation != null && _showTranslation) ...[
+          const SizedBox(height: 4),
+          Divider(height: 1, thickness: 1, color: AppColors.blackWithAlpha20),
+          const SizedBox(height: 4),
+          Text(
+            _translation!,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.gray700,
+                  fontStyle: FontStyle.italic,
+                ),
           ),
+        ],
+        if (message.isText && message.content.trim().isNotEmpty)
+          _buildTranslateAction(context),
+      ],
+    );
+  }
+
+  /// Botón/spinner de traducción bajo el texto.
+  Widget _buildTranslateAction(BuildContext context) {
+    // Ya traducido: toggle mostrar/ocultar.
+    if (_translation != null) {
+      return _translateButton(
+        context,
+        label: _showTranslation ? 'Ocultar traducción' : 'Mostrar traducción',
+        onTap: () => setState(() => _showTranslation = !_showTranslation),
+      );
+    }
+    // Cargando.
+    if (_isTranslating) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.gold,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Traduciendo…',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.gray700,
+                  ),
+            ),
+          ],
+        ),
+      );
+    }
+    // Acción inicial.
+    return _translateButton(
+      context,
+      label: 'Traducir',
+      icon: Icons.translate,
+      onTap: _onTranslate,
+    );
+  }
+
+  Widget _translateButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    return TextButton.icon(
+      onPressed: onTap,
+      icon: icon != null
+          ? Icon(icon, size: 16, color: AppColors.gray700)
+          : const SizedBox.shrink(),
+      label: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppColors.gray700,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.only(top: 2),
+        minimumSize: const Size(0, 28),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        alignment: Alignment.centerLeft,
+      ),
     );
   }
 

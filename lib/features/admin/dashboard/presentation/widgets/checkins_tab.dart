@@ -28,6 +28,18 @@ class _CheckinsTabState extends State<CheckinsTab> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
+      // Solo reconstruir cuando cambian datos/filtros relevantes para check-ins.
+      // Evita rebuilds de este tab por cambios ajenos (reservas, notificaciones,
+      // resumen), que antes reconstruían los 3 tabs del IndexedStack a la vez.
+      buildWhen: (prev, curr) =>
+          prev.checkins != curr.checkins ||
+          prev.checkinsStatusFilter != curr.checkinsStatusFilter ||
+          prev.checkinsSearchQuery != curr.checkinsSearchQuery ||
+          prev.checkinsDateFilter != curr.checkinsDateFilter ||
+          prev.checkinsCustomDateStart != curr.checkinsCustomDateStart ||
+          prev.checkinsCustomDateEnd != curr.checkinsCustomDateEnd ||
+          prev.checkinsSortOrder != curr.checkinsSortOrder ||
+          prev.isLoadingCheckins != curr.isLoadingCheckins,
       builder: (context, state) {
         return SizedBox.expand(
           child: Column(

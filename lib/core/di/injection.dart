@@ -17,6 +17,7 @@ import '../../features/guest/reviews/data/repositories/reviews_repository_impl.d
 import '../../features/guest/reviews/domain/repositories/reviews_repository.dart';
 import '../../features/guest/chat/data/repositories/chat_repository_impl.dart';
 import '../../features/guest/chat/domain/repositories/chat_repository.dart';
+import '../../features/guest/chat/data/repositories/translation_repository.dart';
 import '../../features/guest/checkin/data/repositories/checkin_repository_impl.dart';
 import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
 import '../../features/guest/access_box/data/repositories/access_box_repository_impl.dart';
@@ -61,6 +62,11 @@ Future<void> configureDependencies() async {
   // Chat repository
   getIt.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(),
+  );
+
+  // Translation repository (traducción de mensajes de chat vía Edge Function)
+  getIt.registerLazySingleton<TranslationRepository>(
+    () => TranslationRepository(client: getIt<SupabaseClient>()),
   );
 
   // Checkin repository

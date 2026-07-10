@@ -41,8 +41,12 @@ extension DateFilterLabel on DateFilter {
 }
 
 /// Estado del BLoC del dashboard de administración
+// ignore: must_be_immutable
 class AdminDashboardState extends Equatable {
-  const AdminDashboardState({
+  // Nota: el constructor no es `const` porque el estado memoiza de forma
+  // perezosa los resultados de `filteredBookings`/`filteredCheckins` (campos
+  // mutables privados que NO participan en la igualdad de Equatable).
+  AdminDashboardState({
     this.currentTabIndex = 0,
     this.summary,
     this.bookings = const [],
@@ -149,8 +153,15 @@ class AdminDashboardState extends Equatable {
   /// Error general
   final String? error;
 
+  // ── Caché perezoso de listas filtradas ──
+  // Se calculan una sola vez por instancia de estado (la primera vez que se
+  // accede al getter) y se reutilizan en los siguientes accesos dentro del
+  // mismo build. NO forman parte de `props` (no afectan a la igualdad).
+  List<AdminBookingEntity>? _filteredBookingsCache;
+  List<AdminBookingEntity>? _filteredCheckinsCache;
+
   /// Factory para estado inicial
-  factory AdminDashboardState.initial() => const AdminDashboardState();
+  factory AdminDashboardState.initial() => AdminDashboardState();
 
   /// Copia con nuevos valores
   AdminDashboardState copyWith({
@@ -249,8 +260,12 @@ class AdminDashboardState extends Equatable {
     );
   }
 
-  /// Filtra las reservas según el filtro y búsqueda actuales
-  List<AdminBookingEntity> get filteredBookings {
+  /// Filtra las reservas según el filtro y búsqueda actuales.
+  /// Memoizado: se calcula una vez por instancia de estado.
+  List<AdminBookingEntity> get filteredBookings =>
+      _filteredBookingsCache ??= _computeFilteredBookings();
+
+  List<AdminBookingEntity> _computeFilteredBookings() {
     var result = bookings;
 
     // Filtrar por estado
@@ -288,8 +303,12 @@ class AdminDashboardState extends Equatable {
     return sorted;
   }
 
-  /// Filtra los check-ins según el filtro actual
-  List<AdminBookingEntity> get filteredCheckins {
+  /// Filtra los check-ins según el filtro actual.
+  /// Memoizado: se calcula una vez por instancia de estado.
+  List<AdminBookingEntity> get filteredCheckins =>
+      _filteredCheckinsCache ??= _computeFilteredCheckins();
+
+  List<AdminBookingEntity> _computeFilteredCheckins() {
     var result = checkins;
 
     // Filtrar por estado

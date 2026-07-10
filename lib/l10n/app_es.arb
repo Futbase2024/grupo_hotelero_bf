@@ -788,6 +788,9 @@
 
   "admin_chat_title": "Chat",
   "admin_chat_online": "En línea",
+  "chat_delete_message": "Eliminar mensaje",
+  "chat_delete_message_confirm_body": "¿Seguro que quieres eliminar este mensaje? Esta acción no se puede deshacer.",
+  "chat_delete_message_error": "No se pudo eliminar el mensaje",
   "admin_chat_delete_conversation": "Eliminar conversación",
   "admin_chat_delete_confirm_body": "¿Estás seguro de que deseas eliminar esta conversación?",
   "admin_chat_deleted_success": "Conversación eliminada correctamente",

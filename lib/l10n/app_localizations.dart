@@ -3828,6 +3828,24 @@ abstract class S {
   /// **'En línea'**
   String get admin_chat_online;
 
+  /// No description provided for @chat_delete_message.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar mensaje'**
+  String get chat_delete_message;
+
+  /// No description provided for @chat_delete_message_confirm_body.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Seguro que quieres eliminar este mensaje? Esta acción no se puede deshacer.'**
+  String get chat_delete_message_confirm_body;
+
+  /// No description provided for @chat_delete_message_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar el mensaje'**
+  String get chat_delete_message_error;
+
   /// No description provided for @admin_chat_delete_conversation.
   ///
   /// In es, this message translates to:

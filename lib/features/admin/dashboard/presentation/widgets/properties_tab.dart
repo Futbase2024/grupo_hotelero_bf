@@ -32,6 +32,7 @@ class _PropertiesTabState extends State<PropertiesTab> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -44,6 +45,9 @@ class _PropertiesTabState extends State<PropertiesTab> {
       final propertiesResponse = await getIt<SupabaseClient>()
           .from('properties')
           .select('id, name, main_door_keycode');
+
+      // Si el widget fue disposed durante la petición, salir silenciosamente
+      if (!mounted) return;
 
       final propertyMap = <String, String>{};
       final keycodeMap = <String, String?>{};
@@ -72,6 +76,9 @@ class _PropertiesTabState extends State<PropertiesTab> {
           ''')
           .order('name');
 
+      // Si el widget fue disposed durante la petición, salir silenciosamente
+      if (!mounted) return;
+
       debugPrint('✅ [PropertiesTab] ${unitsResponse.length} unidades encontradas');
 
       final units = <AdminUnitEntity>[];
@@ -86,6 +93,8 @@ class _PropertiesTabState extends State<PropertiesTab> {
 
       debugPrint('✅ [PropertiesTab] ${units.length} unidades parseadas correctamente');
 
+      // Verificar mounted justo antes del setState para prevenir memory leak
+      if (!mounted) return;
       setState(() {
         _propertyNames = propertyMap;
         _propertyKeycodes = keycodeMap;
@@ -95,6 +104,7 @@ class _PropertiesTabState extends State<PropertiesTab> {
     } catch (e, s) {
       debugPrint('❌ [PropertiesTab] Error loading data: $e');
       debugPrint('❌ [PropertiesTab] StackTrace: $s');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString();
@@ -288,7 +298,7 @@ class _PropertiesTabState extends State<PropertiesTab> {
       repository: getIt<AdminPanelRepository>(),
     ).then((_) {
       // Recargar datos después de editar
-      _loadData();
+      if (mounted) _loadData();
     });
   }
 
@@ -301,7 +311,7 @@ class _PropertiesTabState extends State<PropertiesTab> {
       currentKeycode: currentKeycode,
     ).then((_) {
       // Recargar datos después de editar
-      _loadData();
+      if (mounted) _loadData();
     });
   }
 }

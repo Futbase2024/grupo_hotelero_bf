@@ -42,7 +42,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _chatBloc.add(const ChatDisposed());
+    // `close()` ya cancela la suscripción de mensajes y libera el repositorio
+    // (mismo trabajo que el evento ChatDisposed), así que no hace falta
+    // encolar ChatDisposed justo antes de cerrar el bloc.
     _chatBloc.close();
     super.dispose();
   }
@@ -72,6 +74,24 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
   void _onSendMessage(String message) {
     _chatBloc.add(ChatSendMessage(content: message));
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  Future<void> _confirmDeleteMessage(
+    BuildContext context,
+    String messageId,
+  ) async {
+    final s = S.of(context);
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: s.chat_delete_message,
+      body: s.chat_delete_message_confirm_body,
+      confirmText: s.common_delete,
+      cancelText: s.common_cancel,
+      isDestructive: true,
+    );
+    if (confirmed) {
+      _chatBloc.add(ChatDeleteMessage(messageId: messageId));
+    }
   }
 
   @override
@@ -326,6 +346,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           return MessageBubble(
             message: message,
             isFromMe: isFromMe,
+            onDelete: isFromMe
+                ? () => _confirmDeleteMessage(context, message.id)
+                : null,
           );
         },
       );

@@ -89,6 +89,9 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
     if (state is AuthLoading) {
       // Loading state
     } else if (state is AuthAuthenticated) {
+      // Evitar reentrada si ya se procesó el login exitoso
+      if (_isSuccess) return;
+
       // Verificar que es admin o staff
       final role = state.user.role.name;
       if (role == 'admin' || role == 'staff') {
@@ -97,8 +100,9 @@ class _AdminLoginBottomSheetState extends State<AdminLoginBottomSheet> {
 
         Future.delayed(const Duration(milliseconds: 800), () {
           if (mounted) {
-            Navigator.of(context).pop();
+            // Primero navegar, luego cerrar el bottom sheet
             context.go(AppRoutes.staffDashboard);
+            Navigator.of(context).pop();
           }
         });
       } else {

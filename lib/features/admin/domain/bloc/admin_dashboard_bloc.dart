@@ -47,6 +47,63 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
   StreamSubscription<StaffNotificationEntity>? _notificationSubscription;
   StreamSubscription<void>? _checkinsSubscription;
 
+  /// Ventana deslizante por defecto para la carga inicial de reservas/check-ins.
+  /// Al abrir el dashboard solo se cargan las reservas cuyo check-in cae dentro
+  /// de esta ventana (últimos N días) más el futuro. La carga deja así de crecer
+  /// con el histórico total. Las búsquedas y los rangos de fecha personalizados
+  /// IGNORAN esta ventana y consultan todo el histórico en el servidor.
+  static const int _bookingsWindowDays = 90;
+
+  /// Debounce de la búsqueda server-side (evita una query por pulsación).
+  static const Duration _searchDebounceDuration = Duration(milliseconds: 350);
+  Timer? _bookingsSearchDebounce;
+  Timer? _checkinsSearchDebounce;
+
+  /// Inicio de la ventana deslizante (medianoche de hace [_bookingsWindowDays]).
+  DateTime get _windowStart {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day)
+        .subtract(const Duration(days: _bookingsWindowDays));
+  }
+
+  /// Decide los parámetros server-side para cargar RESERVAS según los filtros
+  /// activos:
+  /// - búsqueda activa → consulta todo el histórico por texto (ignora ventana);
+  /// - rango de fechas personalizado → consulta ese rango exacto (histórico);
+  /// - resto → ventana deslizante de [_bookingsWindowDays] días.
+  Future<List<AdminBookingEntity>> _fetchBookings() {
+    final search = state.bookingsSearchQuery?.trim();
+    if (search != null && search.isNotEmpty) {
+      return _repository.listBookings(searchQuery: search);
+    }
+    if (state.bookingsDateFilter == DateFilter.customRange &&
+        state.bookingsCustomDateStart != null &&
+        state.bookingsCustomDateEnd != null) {
+      return _repository.listBookings(
+        fromDate: state.bookingsCustomDateStart,
+        toDate: state.bookingsCustomDateEnd,
+      );
+    }
+    return _repository.listBookings(fromDate: _windowStart);
+  }
+
+  /// Igual que [_fetchBookings] pero usando los filtros del tab de CHECK-INS.
+  Future<List<AdminBookingEntity>> _fetchCheckinsSource() {
+    final search = state.checkinsSearchQuery?.trim();
+    if (search != null && search.isNotEmpty) {
+      return _repository.listBookings(searchQuery: search);
+    }
+    if (state.checkinsDateFilter == DateFilter.customRange &&
+        state.checkinsCustomDateStart != null &&
+        state.checkinsCustomDateEnd != null) {
+      return _repository.listBookings(
+        fromDate: state.checkinsCustomDateStart,
+        toDate: state.checkinsCustomDateEnd,
+      );
+    }
+    return _repository.listBookings(fromDate: _windowStart);
+  }
+
   Timer? _notificationsDebounce;
 
   void _subscribeToNotifications() {
@@ -89,6 +146,8 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
   Future<void> close() {
     _notificationsDebounce?.cancel();
     _checkinsDebounce?.cancel();
+    _bookingsSearchDebounce?.cancel();
+    _checkinsSearchDebounce?.cancel();
     _notificationSubscription?.cancel();
     _checkinsSubscription?.cancel();
     return super.close();
@@ -122,13 +181,11 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
       unreadNotificationsCount: unreadCount,
     ));
 
-    // Si es una notificación de check-in, recargar solo checkins (no todo el dashboard)
-    if (event.notification.type == 'checkin_submitted' ||
-        event.notification.type == 'checkin_completed') {
-      if (!state.isLoading && !state.isLoadingCheckins) {
-        add(const AdminDashboardCheckinsLoadRequested());
-      }
-    }
+    // NOTA: no recargamos check-ins aquí aunque la notificación sea de check-in.
+    // La suscripción realtime a la tabla `checkins` (`_subscribeToCheckins`) ya
+    // dispara `AdminDashboardCheckinsLoadRequested` ante el mismo cambio, así que
+    // hacerlo también aquí provocaba un doble refetch (dos veces la lista completa
+    // de reservas) por cada check-in. Se deja un único punto de recarga.
   }
 
   Future<void> _onLoadRequested(
@@ -138,16 +195,24 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     emit(state.copyWith(isLoading: true, clearError: true));
 
     try {
-      // Cargar resumen y reservas en paralelo
-      final results = await Future.wait([
+      // Cargar datos principales y notificaciones por separado
+      // para que un fallo de notificaciones no bloquee todo el dashboard
+      final mainResults = await Future.wait<dynamic>([
         _repository.getDashboardSummary(),
-        _repository.listBookings(),
-        _repository.getNotifications(unreadOnly: true),
+        // Carga inicial acotada a la ventana deslizante (últimos 90 días + futuro).
+        _fetchBookings(),
       ]);
 
-      final summary = results[0] as DashboardSummaryEntity;
-      final bookings = results[1] as List<AdminBookingEntity>;
-      final notifications = results[2] as List<StaffNotificationEntity>;
+      final summary = mainResults[0] as DashboardSummaryEntity;
+      final bookings = mainResults[1] as List<AdminBookingEntity>;
+
+      // Cargar notificaciones de forma independiente (no bloquea el dashboard)
+      List<StaffNotificationEntity> notifications = [];
+      try {
+        notifications = await _repository.getNotifications(unreadOnly: true);
+      } catch (e) {
+        debugPrint('⚠️ [AdminDashboard] Error cargando notificaciones (no crítico): $e');
+      }
 
       // Extraer check-ins de las reservas
       final checkins = bookings.where((b) => b.hasCheckin).toList();
@@ -220,19 +285,26 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardBookingsLoadRequested event,
     Emitter<AdminDashboardState> emit,
   ) async {
-    emit(state.copyWith(isLoadingBookings: true, clearError: true));
+    // Aplicar filtros que vengan en el evento (compatibilidad con llamadas
+    // directas). Cuando el load lo dispara el debounce de búsqueda o un cambio
+    // de filtro, el estado ya trae los filtros correctos y el evento va vacío.
+    var working = state;
+    if (event.statusFilter != null) {
+      working = working.copyWith(bookingsStatusFilter: event.statusFilter);
+    }
+    if (event.searchQuery != null) {
+      working = working.copyWith(bookingsSearchQuery: event.searchQuery);
+    }
+    emit(working.copyWith(isLoadingBookings: true, clearError: true));
 
     try {
-      final bookings = await _repository.listBookings(
-        statusFilter: event.statusFilter,
-        searchQuery: event.searchQuery,
-      );
+      // Solo actualiza `bookings`; no toca la lista de check-ins (tienen
+      // filtros independientes).
+      final bookings = await _fetchBookings();
 
       emit(state.copyWith(
         bookings: bookings,
         isLoadingBookings: false,
-        bookingsStatusFilter: event.statusFilter,
-        bookingsSearchQuery: event.searchQuery,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -249,18 +321,22 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     // Evitar recargas solapadas
     if (state.isLoadingCheckins) return;
 
-    emit(state.copyWith(isLoadingCheckins: true, clearError: true));
+    var working = state;
+    if (event.statusFilter != null) {
+      working = working.copyWith(checkinsStatusFilter: event.statusFilter);
+    }
+    emit(working.copyWith(isLoadingCheckins: true, clearError: true));
 
     try {
-      // Cargar todas las reservas y filtrar las que tienen check-in
-      final bookings = await _repository.listBookings();
-      final checkins = bookings.where((b) => b.hasCheckin).toList();
+      // Cargar reservas según los filtros de check-ins y quedarnos con las que
+      // tienen check-in. Solo actualiza `checkins`; no pisa `bookings` (el tab
+      // de reservas tiene sus propios filtros).
+      final source = await _fetchCheckinsSource();
+      final checkins = source.where((b) => b.hasCheckin).toList();
 
       emit(state.copyWith(
-        bookings: bookings,
         checkins: checkins,
         isLoadingCheckins: false,
-        checkinsStatusFilter: event.statusFilter,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -313,10 +389,18 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardBookingsSearchChanged event,
     Emitter<AdminDashboardState> emit,
   ) {
+    // Feedback inmediato del texto en el input.
     emit(state.copyWith(
       bookingsSearchQuery: event.searchQuery,
       clearBookingsSearchQuery: event.searchQuery == null,
     ));
+    // Recargar desde el servidor con debounce: la búsqueda consulta el
+    // histórico completo (ignora la ventana deslizante), así se encuentran
+    // reservas de meses anteriores. Al borrar el texto vuelve a la ventana.
+    _bookingsSearchDebounce?.cancel();
+    _bookingsSearchDebounce = Timer(_searchDebounceDuration, () {
+      if (!isClosed) add(const AdminDashboardBookingsLoadRequested());
+    });
   }
 
   void _onCheckinsFilterChanged(
@@ -334,30 +418,49 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
       checkinsSearchQuery: event.searchQuery,
       clearCheckinsSearchQuery: event.searchQuery == null,
     ));
+    // Búsqueda server-side con debounce sobre el histórico completo.
+    _checkinsSearchDebounce?.cancel();
+    _checkinsSearchDebounce = Timer(_searchDebounceDuration, () {
+      if (!isClosed) add(const AdminDashboardCheckinsLoadRequested());
+    });
   }
 
   void _onCheckinsDateFilterChanged(
     AdminDashboardCheckinsDateFilterChanged event,
     Emitter<AdminDashboardState> emit,
   ) {
+    final wasCustom = state.checkinsDateFilter == DateFilter.customRange;
+    final isCustom = event.dateFilter == DateFilter.customRange;
     emit(state.copyWith(
       checkinsDateFilter: event.dateFilter,
       checkinsCustomDateStart: event.customDateStart,
       checkinsCustomDateEnd: event.customDateEnd,
       clearCheckinsDates: event.dateFilter != DateFilter.customRange,
     ));
+    // Entrar o salir de un rango personalizado cambia el conjunto server-side
+    // (histórico vs ventana). Los demás filtros de fecha caen dentro de la
+    // ventana y se resuelven en cliente sin recargar.
+    if (isCustom || wasCustom) {
+      add(const AdminDashboardCheckinsLoadRequested());
+    }
   }
 
   void _onBookingsDateFilterChanged(
     AdminDashboardBookingsDateFilterChanged event,
     Emitter<AdminDashboardState> emit,
   ) {
+    final wasCustom = state.bookingsDateFilter == DateFilter.customRange;
+    final isCustom = event.dateFilter == DateFilter.customRange;
     emit(state.copyWith(
       bookingsDateFilter: event.dateFilter,
       bookingsCustomDateStart: event.customDateStart,
       bookingsCustomDateEnd: event.customDateEnd,
       clearBookingsDates: event.dateFilter != DateFilter.customRange,
     ));
+    // Ver comentario en _onCheckinsDateFilterChanged.
+    if (isCustom || wasCustom) {
+      add(const AdminDashboardBookingsLoadRequested());
+    }
   }
 
   void _onBookingsSortChanged(
@@ -443,6 +546,8 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardNotificationsLoadRequested event,
     Emitter<AdminDashboardState> emit,
   ) async {
+    // Limpiar error previo para que la UI no muestre estado de error viejo
+    emit(state.copyWith(clearError: true));
     try {
       final notifications = await _repository.getNotifications(unreadOnly: false);
       final unreadCount = notifications.where((n) => !n.read).length;

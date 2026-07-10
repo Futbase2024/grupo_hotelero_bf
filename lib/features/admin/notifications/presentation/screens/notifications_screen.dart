@@ -55,7 +55,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         actions: [
           BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
             buildWhen: (prev, curr) =>
-                prev.notifications.isNotEmpty != curr.notifications.isNotEmpty,
+                prev.notifications.isNotEmpty != curr.notifications.isNotEmpty ||
+                prev.error != curr.error,
             builder: (context, state) {
               if (state.notifications.isEmpty) {
                 return const SizedBox.shrink();
@@ -85,8 +86,79 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
         buildWhen: (prev, curr) =>
             prev.notifications != curr.notifications ||
-            prev.unreadNotificationsCount != curr.unreadNotificationsCount,
+            prev.unreadNotificationsCount != curr.unreadNotificationsCount ||
+            prev.error != curr.error,
         builder: (context, state) {
+          // Mostrar error si existe y no hay notificaciones
+          if (state.error != null && state.notifications.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkSurface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.cloud_off_outlined,
+                        size: 48,
+                        color: AppColors.error,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Error de conexión',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No se pudieron cargar las notificaciones. Comprueba tu conexión.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.gray400,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        context.read<AdminDashboardBloc>().add(
+                              const AdminDashboardNotificationsLoadRequested(),
+                            );
+                      },
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Reintentar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.gold,
+                        foregroundColor: AppColors.black,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           if (state.notifications.isEmpty) {
             return const _EmptyNotificationsView();
           }

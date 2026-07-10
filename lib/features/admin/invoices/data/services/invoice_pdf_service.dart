@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../domain/entities/invoice_entity.dart';
 
 /// Servicio para generar PDFs de facturas con soporte Unicode completo
@@ -740,8 +742,8 @@ class InvoicePdfService {
     );
   }
 
-  /// Descarga el PDF a un archivo
-  Future<File> saveInvoiceToFile(InvoiceEntity invoice) async {
+  /// Descarga el PDF a un archivo (nativo) o lo devuelve como XFile (web)
+  Future<dynamic> saveInvoiceToFile(InvoiceEntity invoice) async {
     debugPrint('🔵 [PDF] Iniciando guardado de factura: ${invoice.invoiceNumber}');
 
     try {
@@ -749,11 +751,21 @@ class InvoicePdfService {
       final pdfBytes = await generateInvoicePdf(invoice);
       debugPrint('✅ [PDF] PDF generado: ${pdfBytes.length} bytes');
 
+      final sanitizedNumber = invoice.invoiceNumber.replaceAll('/', '-');
+
+      if (kIsWeb) {
+        debugPrint('🌐 [PDF] Plataforma web - creando XFile desde bytes');
+        return XFile.fromData(
+          pdfBytes,
+          name: 'Factura_$sanitizedNumber.pdf',
+          mimeType: 'application/pdf',
+        );
+      }
+
       debugPrint('🔵 [PDF] Obteniendo directorio de documentos...');
       final directory = await getApplicationDocumentsDirectory();
       debugPrint('✅ [PDF] Directorio: ${directory.path}');
 
-      final sanitizedNumber = invoice.invoiceNumber.replaceAll('/', '-');
       final filePath = '${directory.path}/Factura_$sanitizedNumber.pdf';
       debugPrint('🔵 [PDF] Ruta del archivo: $filePath');
 
@@ -776,13 +788,29 @@ class InvoicePdfService {
     debugPrint('🔵 [SHARE] shareRect: $shareRect');
 
     try {
+      final sanitizedNumber = invoice.invoiceNumber.replaceAll('/', '-');
+
+      if (kIsWeb) {
+        debugPrint('🌐 [SHARE] Plataforma web - compartiendo desde bytes');
+        final pdfBytes = await generateInvoicePdf(invoice);
+        final xFile = XFile.fromData(
+          pdfBytes,
+          name: 'Factura_$sanitizedNumber.pdf',
+          mimeType: 'application/pdf',
+        );
+
+        await Share.shareXFiles(
+          [xFile],
+          subject: 'Factura $sanitizedNumber - Grupo Hotelero BF',
+          text: 'Adjunto encontrará la factura $sanitizedNumber.',
+        );
+        debugPrint('✅ [SHARE] Compartido correctamente (web)');
+        return;
+      }
+
       debugPrint('🔵 [SHARE] Paso 1: Guardando archivo...');
       final file = await saveInvoiceToFile(invoice);
       debugPrint('✅ [SHARE] Archivo listo: ${file.path}');
-      debugPrint('🔵 [SHARE] ¿Archivo existe?: ${await file.exists()}');
-      debugPrint('🔵 [SHARE] Tamaño archivo: ${await file.length()} bytes');
-
-      final sanitizedNumber = invoice.invoiceNumber.replaceAll('/', '-');
 
       debugPrint('🔵 [SHARE] Paso 2: Llamando a Share.shareXFiles...');
       await Share.shareXFiles(
@@ -796,6 +824,45 @@ class InvoicePdfService {
       debugPrint('❌ [SHARE] Error al compartir: $e');
       debugPrint('❌ [SHARE] StackTrace: $stackTrace');
       rethrow;
+    }
+  }
+
+  /// Descarga directa del PDF en el navegador (solo web)
+  Future<void> downloadInvoiceWeb(InvoiceEntity invoice) async {
+    final pdfBytes = await generateInvoicePdf(invoice);
+    final sanitizedNumber = invoice.invoiceNumber.replaceAll('/', '-');
+    final xFile = XFile.fromData(
+      pdfBytes,
+      name: 'Factura_$sanitizedNumber.pdf',
+      mimeType: 'application/pdf',
+    );
+    await Share.shareXFiles([xFile]);
+  }
+
+  /// Comparte por WhatsApp en web con descarga previa
+  Future<void> shareViaWhatsAppWeb(InvoiceEntity invoice) async {
+    final sanitizedNumber = invoice.invoiceNumber.replaceAll('/', '-');
+    await downloadInvoiceWeb(invoice);
+    final text = Uri.encodeComponent(
+      'Adjunto encontrará la factura $sanitizedNumber - Grupo Hotelero BF',
+    );
+    final url = Uri.parse('https://wa.me/?text=$text');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, webOnlyWindowName: '_blank');
+    }
+  }
+
+  /// Comparte por email en web
+  Future<void> shareViaEmailWeb(InvoiceEntity invoice) async {
+    final sanitizedNumber = invoice.invoiceNumber.replaceAll('/', '-');
+    await downloadInvoiceWeb(invoice);
+    final subject = Uri.encodeComponent('Factura $sanitizedNumber - Grupo Hotelero BF');
+    final body = Uri.encodeComponent(
+      'Adjunto encontrará la factura $sanitizedNumber.\n\nDescargue el PDF desde la aplicación.',
+    );
+    final url = Uri.parse('mailto:?subject=$subject&body=$body');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
     }
   }
 

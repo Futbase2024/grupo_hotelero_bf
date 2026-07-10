@@ -2097,6 +2097,16 @@ class SIt extends S {
   String get admin_chat_online => 'Online';
 
   @override
+  String get chat_delete_message => 'Elimina messaggio';
+
+  @override
+  String get chat_delete_message_confirm_body =>
+      'Vuoi davvero eliminare questo messaggio? Questa azione non può essere annullata.';
+
+  @override
+  String get chat_delete_message_error => 'Impossibile eliminare il messaggio';
+
+  @override
   String get admin_chat_delete_conversation => 'Elimina conversazione';
 
   @override

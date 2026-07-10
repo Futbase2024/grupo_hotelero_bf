@@ -2078,6 +2078,16 @@ class SEn extends S {
   String get admin_chat_online => 'Online';
 
   @override
+  String get chat_delete_message => 'Delete message';
+
+  @override
+  String get chat_delete_message_confirm_body =>
+      'Are you sure you want to delete this message? This action cannot be undone.';
+
+  @override
+  String get chat_delete_message_error => 'Could not delete the message';
+
+  @override
   String get admin_chat_delete_conversation => 'Delete conversation';
 
   @override

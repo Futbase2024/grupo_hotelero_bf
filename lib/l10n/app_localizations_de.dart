@@ -2109,6 +2109,17 @@ class SDe extends S {
   String get admin_chat_online => 'Online';
 
   @override
+  String get chat_delete_message => 'Nachricht löschen';
+
+  @override
+  String get chat_delete_message_confirm_body =>
+      'Möchtest du diese Nachricht wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get chat_delete_message_error =>
+      'Die Nachricht konnte nicht gelöscht werden';
+
+  @override
   String get admin_chat_delete_conversation => 'Konversation löschen';
 
   @override

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -138,7 +140,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
 
     // Escuchar cambios de autenticación
-    _authRepository.authStateChanges.listen((user) {
+    _authStateSubscription = _authRepository.authStateChanges.listen((user) {
       if (user != null) {
         add(AuthCheckRequested());
       }
@@ -146,6 +148,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   final AuthRepository _authRepository;
+  StreamSubscription<UserEntity?>? _authStateSubscription;
+
+  @override
+  Future<void> close() {
+    _authStateSubscription?.cancel();
+    return super.close();
+  }
 
   /// Verifica el estado de autenticación actual
   Future<void> _onAuthCheckRequested(

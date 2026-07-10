@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../entities/conversation_entity.dart';
+import '../entities/message_change.dart';
 import '../entities/message_entity.dart';
 import '../repositories/chat_repository.dart';
 
@@ -62,6 +63,26 @@ class ChatMessageReceived extends ChatEvent {
 
   @override
   List<Object?> get props => [message];
+}
+
+/// Evento para eliminar un mensaje propio (acción del usuario)
+class ChatDeleteMessage extends ChatEvent {
+  const ChatDeleteMessage({required this.messageId});
+
+  final String messageId;
+
+  @override
+  List<Object?> get props => [messageId];
+}
+
+/// Evento cuando un mensaje es eliminado (detectado por realtime)
+class ChatMessageDeleted extends ChatEvent {
+  const ChatMessageDeleted({required this.messageId});
+
+  final String messageId;
+
+  @override
+  List<Object?> get props => [messageId];
 }
 
 /// Evento para marcar mensajes como leídos
@@ -166,13 +187,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatLoadMessages>(_onLoadMessages);
     on<ChatSendMessage>(_onSendMessage);
     on<ChatMessageReceived>(_onMessageReceived);
+    on<ChatDeleteMessage>(_onDeleteMessage);
+    on<ChatMessageDeleted>(_onMessageDeleted);
     on<ChatMarkAsRead>(_onMarkAsRead);
     on<ChatDisposed>(_onDisposed);
   }
 
   final ChatRepository _chatRepository;
 
-  StreamSubscription<MessageEntity>? _messagesSubscription;
+  StreamSubscription<MessageChange>? _messagesSubscription;
 
   /// Maneja el evento de inicio
   Future<void> _onStarted(
@@ -214,8 +237,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _messagesSubscription?.cancel();
       _messagesSubscription = _chatRepository
           .watchMessages(conversation.id)
-          .listen((message) {
-        add(ChatMessageReceived(message: message));
+          .listen((change) {
+        switch (change) {
+          case MessageAdded(:final message):
+            add(ChatMessageReceived(message: message));
+          case MessageDeleted(:final messageId):
+            add(ChatMessageDeleted(messageId: messageId));
+        }
       });
 
       emit(ChatLoaded(
@@ -342,6 +370,77 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     // Añadir mensaje a la lista
     final updatedMessages = [...currentState.messages, event.message];
+
+    emit(ChatLoaded(
+      conversation: currentState.conversation,
+      messages: updatedMessages,
+      currentUserId: currentState.currentUserId,
+    ));
+  }
+
+  /// Maneja la eliminación de un mensaje propio (acción del usuario).
+  /// Optimista: quita el mensaje de la lista y, si falla el borrado, lo restaura.
+  Future<void> _onDeleteMessage(
+    ChatDeleteMessage event,
+    Emitter<ChatState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+
+    final previousMessages = currentState.messages;
+    final deletedMessage = previousMessages
+        .where((m) => m.id == event.messageId)
+        .firstOrNull;
+
+    // Si el mensaje ya no está en la lista, no hay nada que hacer
+    if (deletedMessage == null) return;
+
+    // Quitar optimísticamente
+    final updatedMessages = previousMessages
+        .where((m) => m.id != event.messageId)
+        .toList();
+
+    emit(ChatLoaded(
+      conversation: currentState.conversation,
+      messages: updatedMessages,
+      currentUserId: currentState.currentUserId,
+    ));
+
+    try {
+      await _chatRepository.deleteMessage(messageId: event.messageId);
+      debugPrint('✅ [ChatBloc] Mensaje eliminado');
+    } catch (e) {
+      debugPrint('❌ [ChatBloc] Error eliminando mensaje: $e');
+      // Restaurar la lista previa
+      emit(ChatLoaded(
+        conversation: currentState.conversation,
+        messages: previousMessages,
+        currentUserId: currentState.currentUserId,
+      ));
+      // Emitir error temporal y volver al estado restaurado
+      emit(ChatError(message: _getErrorMessage(e)));
+      emit(ChatLoaded(
+        conversation: currentState.conversation,
+        messages: previousMessages,
+        currentUserId: currentState.currentUserId,
+      ));
+    }
+  }
+
+  /// Maneja un mensaje eliminado detectado por realtime (por cualquier lado).
+  Future<void> _onMessageDeleted(
+    ChatMessageDeleted event,
+    Emitter<ChatState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+
+    // Solo emitir si el mensaje realmente está en la lista
+    if (!currentState.messages.any((m) => m.id == event.messageId)) return;
+
+    final updatedMessages = currentState.messages
+        .where((m) => m.id != event.messageId)
+        .toList();
 
     emit(ChatLoaded(
       conversation: currentState.conversation,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -517,10 +518,12 @@ class InvoiceDetailScreen extends StatelessWidget {
 
   void _shareViaEmail(BuildContext context, InvoiceEntity currentInvoice) async {
     try {
-      // Obtener posición del botón para iPad
+      if (kIsWeb) {
+        await _pdfService.shareViaEmailWeb(currentInvoice);
+        return;
+      }
       final box = context.findRenderObject() as RenderBox?;
       final rect = _getShareRect(box);
-
       await _pdfService.shareInvoice(currentInvoice, rect);
     } catch (e) {
       if (context.mounted) {
@@ -536,10 +539,12 @@ class InvoiceDetailScreen extends StatelessWidget {
 
   void _shareViaWhatsApp(BuildContext context, InvoiceEntity currentInvoice) async {
     try {
-      // Obtener posición del botón para iPad
+      if (kIsWeb) {
+        await _pdfService.shareViaWhatsAppWeb(currentInvoice);
+        return;
+      }
       final box = context.findRenderObject() as RenderBox?;
       final rect = _getShareRect(box);
-
       await _pdfService.shareInvoice(currentInvoice, rect);
     } catch (e) {
       if (context.mounted) {
@@ -555,10 +560,12 @@ class InvoiceDetailScreen extends StatelessWidget {
 
   void _copyLink(BuildContext context, InvoiceEntity currentInvoice) async {
     try {
-      // Obtener posición del botón para iPad
+      if (kIsWeb) {
+        await _pdfService.downloadInvoiceWeb(currentInvoice);
+        return;
+      }
       final box = context.findRenderObject() as RenderBox?;
       final rect = _getShareRect(box);
-
       await _pdfService.shareInvoice(currentInvoice, rect);
     } catch (e) {
       if (context.mounted) {
@@ -582,6 +589,10 @@ class InvoiceDetailScreen extends StatelessWidget {
 
   void _downloadPdf(BuildContext context, InvoiceEntity currentInvoice) async {
     try {
+      if (kIsWeb) {
+        await _pdfService.shareInvoice(currentInvoice, Rect.zero);
+        return;
+      }
       final file = await _pdfService.saveInvoiceToFile(currentInvoice);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

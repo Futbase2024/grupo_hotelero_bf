@@ -248,9 +248,6 @@ class AdminBookingEntity extends Equatable {
 
   /// Convierte desde un mapa JSON (respuesta de Supabase/Edge Function)
   factory AdminBookingEntity.fromJson(Map<String, dynamic> json) {
-    debugPrint('🟢 [AdminBookingEntity.fromJson] Starting parse...');
-    debugPrint('🟢 [AdminBookingEntity.fromJson] JSON keys: ${json.keys.toList()}');
-
     try {
       // Parsear children_ages como lista de int
       List<int> childrenAges = [];
@@ -323,11 +320,9 @@ class AdminBookingEntity extends Equatable {
 
       // Guest first name
       final guestFirstName = getStringField(['guest_first_name', 'first_name']);
-      debugPrint('🟢 [AdminBookingEntity.fromJson] guest_first_name: $guestFirstName');
 
       // Guest last name
       final guestLastNameRaw = getStringField(['guest_last_name', 'last_name']);
-      debugPrint('🟢 [AdminBookingEntity.fromJson] guest_last_name raw: $guestLastNameRaw');
 
       final guestFirstNameFinal = guestFirstName ?? '';
       final guestLastNameFinal = guestLastNameRaw ?? '';
@@ -356,7 +351,6 @@ class AdminBookingEntity extends Equatable {
         units = unitsList
             .map((u) => BookingUnitEntity.fromJson(u as Map<String, dynamic>))
             .toList();
-        debugPrint('🟢 [AdminBookingEntity.fromJson] Parsed ${units.length} units');
       }
 
       // Timestamps
@@ -370,7 +364,6 @@ class AdminBookingEntity extends Equatable {
       final checkoutValidatedAt = getDateTimeField(['checkout_validated_at']);
       final earlyCheckinAvailableAt = getDateTimeField(['early_checkin_available_at']);
 
-      debugPrint('🟢 [AdminBookingEntity.fromJson] Creating entity...');
       final entity = AdminBookingEntity(
         id: id,
         bookingCode: bookingCode,
@@ -418,7 +411,6 @@ class AdminBookingEntity extends Equatable {
         primaryGuestUserId: json['primary_guest_user_id'] as String?,
       );
 
-      debugPrint('🟢 [AdminBookingEntity.fromJson] Parse completed successfully');
       return entity;
     } catch (e, stackTrace) {
       debugPrint('🔴 [AdminBookingEntity.fromJson] ERROR: $e');

@@ -209,9 +209,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       if (!mounted) return;
 
       // 4. Abrir WhatsApp directamente con el numero y enlace al PDF
-      final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+      final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
       final phoneWithCode =
-          cleanPhone.startsWith('+') ? cleanPhone : '+34$cleanPhone';
+          cleanPhone.startsWith('34') ? cleanPhone : '34$cleanPhone';
 
       final guestName = _booking!.guestFirstName ?? _booking!.guestFullName;
       final message =
@@ -221,17 +221,33 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           'Check-out: ${DateFormat('dd/MM/yyyy').format(_booking!.checkOutDate)}\n\n'
           'Descarga tu PDF con toda la info:\n$pdfUrl';
 
-      final whatsappUri = Uri.parse(
-        'https://wa.me/$phoneWithCode?text=${Uri.encodeComponent(message)}',
+      final encodedMessage = Uri.encodeComponent(message);
+
+      // Intentar primero con el esquema nativo de WhatsApp (mas fiable)
+      final whatsappAppUri = Uri.parse(
+        'whatsapp://send?phone=$phoneWithCode&text=$encodedMessage',
+      );
+      final whatsappWebUri = Uri.parse(
+        'https://wa.me/$phoneWithCode?text=$encodedMessage',
       );
 
-      if (await canLaunchUrl(whatsappUri)) {
-        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
-      } else {
+      bool launched = false;
+
+      // Intentar con la app nativa de WhatsApp
+      if (await canLaunchUrl(whatsappAppUri)) {
+        launched = await launchUrl(whatsappAppUri,
+            mode: LaunchMode.externalApplication);
+      }
+
+      // Fallback: intentar con wa.me (abre en navegador o app)
+      if (!launched && await canLaunchUrl(whatsappWebUri)) {
+        launched = await launchUrl(whatsappWebUri,
+            mode: LaunchMode.externalApplication);
+      }
+
+      if (!launched) {
         if (!mounted) return;
-        _showSnackBar(
-            S.of(context).admin_booking_send_whatsapp_error,
-            isError: true);
+        _showWhatsAppNotInstalledDialog();
       }
     } catch (e) {
       if (!mounted) return;
@@ -240,6 +256,78 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } finally {
       if (mounted) setState(() => _isSendingWhatsApp = false);
     }
+  }
+
+  void _showWhatsAppNotInstalledDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.all(24),
+        backgroundColor: const Color(0xFF1A1A1A),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF25D366).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Color(0xFFE57373),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'WhatsApp no disponible',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'No se ha podido abrir WhatsApp. Asegúrate de que está instalado en este dispositivo.',
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.white70,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Entendido',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<String?> _showPhoneInputDialog() {

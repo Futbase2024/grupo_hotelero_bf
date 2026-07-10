@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../../core/config/supabase_config.dart';
 import '../../domain/entities/conversation_entity.dart';
+import '../../domain/entities/message_change.dart';
 import '../../domain/entities/message_entity.dart';
 
 /// DataSource para operaciones de chat con Supabase
@@ -484,14 +485,16 @@ class ChatDatasource {
     return MessageEntity.fromJson(response);
   }
 
-  /// Suscribe a nuevos mensajes en tiempo real usando Supabase Realtime
-  /// Usa el stream nativo de Supabase con filtro por conversation_id
-  /// Emite SOLO cuando llega un mensaje nuevo (no re-emite mensajes existentes)
-  Stream<MessageEntity> watchMessages(String conversationId) {
+  /// Suscribe a cambios de mensajes en tiempo real usando Supabase Realtime.
+  ///
+  /// Usa el stream nativo de Supabase con filtro por conversation_id. Emite:
+  /// - [MessageAdded] cuando llega un mensaje nuevo (no re-emite existentes).
+  /// - [MessageDeleted] cuando un mensaje previamente visto desaparece (borrado).
+  Stream<MessageChange> watchMessages(String conversationId) {
     _log('watchMessages - Iniciando stream para conversación: $conversationId');
 
-    // Trackear IDs de mensajes ya emitidos para evitar duplicados
-    final emittedMessageIds = <String>{};
+    // Trackear IDs de mensajes ya vistos para detectar altas y bajas
+    final knownMessageIds = <String>{};
 
     return _client
         .from(SupabaseTables.messages)
@@ -499,47 +502,54 @@ class ChatDatasource {
         .eq('conversation_id', conversationId)
         .order('created_at', ascending: true)
         .asyncMap((messages) async {
-          if (messages.isEmpty) return <MessageEntity>[];
+          final changes = <MessageChange>[];
 
-          // Obtener IDs únicos de remitentes para consulta batch
-          final senderIds = messages
-              .map((m) => m['sender_user_id'] as String)
-              .toSet()
-              .toList();
+          // IDs presentes en el snapshot actual
+          final currentIds = messages
+              .map((m) => m['id'] as String)
+              .toSet();
 
-          // Obtener información de todos los remitentes en batch
-          final sendersInfo = await _getSendersInfo(senderIds);
-
-          // Filtrar solo mensajes NUEVOS (no emitidos previamente)
-          final newMessages = <MessageEntity>[];
-
-          for (final m in messages) {
-            final messageId = m['id'] as String;
-
-            // Si ya emitimos este mensaje, lo saltamos
-            if (emittedMessageIds.contains(messageId)) {
-              continue;
-            }
-
-            // Marcar como emitido
-            emittedMessageIds.add(messageId);
-
-            // Construir el mensaje con info del remitente
-            final senderUserId = m['sender_user_id'] as String;
-            final senderInfo = sendersInfo[senderUserId];
-
-            final flattenedMap = Map<String, dynamic>.from(m);
-            flattenedMap['sender_name'] = senderInfo?['full_name'];
-            flattenedMap['sender_role'] = senderInfo?['role'];
-
-            newMessages.add(MessageEntity.fromJson(flattenedMap));
-            _log('watchMessages - Nuevo mensaje emitido: $messageId');
+          // ── Detectar BORRADOS: IDs vistos que ya no están ──
+          final deletedIds = knownMessageIds.difference(currentIds);
+          for (final id in deletedIds) {
+            knownMessageIds.remove(id);
+            changes.add(MessageDeleted(id));
+            _log('watchMessages - Mensaje eliminado: $id');
           }
 
-          return newMessages;
+          // ── Detectar ALTAS: IDs nuevos no vistos previamente ──
+          final newRaw = messages
+              .where((m) => !knownMessageIds.contains(m['id'] as String))
+              .toList();
+
+          if (newRaw.isNotEmpty) {
+            // Obtener info de remitentes de los mensajes nuevos en batch
+            final senderIds = newRaw
+                .map((m) => m['sender_user_id'] as String)
+                .toSet()
+                .toList();
+            final sendersInfo = await _getSendersInfo(senderIds);
+
+            for (final m in newRaw) {
+              final messageId = m['id'] as String;
+              knownMessageIds.add(messageId);
+
+              final senderUserId = m['sender_user_id'] as String;
+              final senderInfo = sendersInfo[senderUserId];
+
+              final flattenedMap = Map<String, dynamic>.from(m);
+              flattenedMap['sender_name'] = senderInfo?['full_name'];
+              flattenedMap['sender_role'] = senderInfo?['role'];
+
+              changes.add(MessageAdded(MessageEntity.fromJson(flattenedMap)));
+              _log('watchMessages - Nuevo mensaje emitido: $messageId');
+            }
+          }
+
+          return changes;
         })
-        // Expandir la lista de mensajes nuevos en mensajes individuales
-        .expand((messages) => messages);
+        // Expandir la lista de cambios en eventos individuales
+        .expand((changes) => changes);
   }
 
   /// Suscribe a cambios en las conversaciones de un usuario en tiempo real
@@ -580,6 +590,23 @@ class ChatDatasource {
         .cast<List<ConversationEntity>>();
   }
 
+  /// Carga info de bookings en batch de forma tolerante a fallos: si la query
+  /// falla, devuelve lista vacía y el flujo continúa sin esa información
+  /// (mismo comportamiento que el try/catch original, pero paralelizable).
+  Future<List<dynamic>> _fetchBookingsInfoBatch(List<String> bookingIds) async {
+    if (bookingIds.isEmpty) return const [];
+    try {
+      final response = await _client
+          .from(SupabaseTables.bookings)
+          .select('id, booking_code, guest_first_name, last_name')
+          .inFilter('id', bookingIds);
+      return response as List<dynamic>;
+    } catch (e) {
+      _logError('Error obteniendo info de bookings', e);
+      return const [];
+    }
+  }
+
   /// ✅ OPTIMIZACIÓN: Obtiene múltiples conversaciones en batch (4 queries en lugar de N*3)
   Future<List<ConversationEntity>> _getConversationsBatch(
     List<String> conversationIds,
@@ -612,24 +639,57 @@ class ChatDatasource {
           .map((c) => c['id'] as String)
           .toList();
 
-      // 2. Obtener todos los participantes de todas las conversaciones en un solo query
-      final participantsResponse = await _client
-          .from(SupabaseTables.conversationParticipants)
-          .select('''
-            conversation_id,
-            user_id,
-            role,
-            created_at
-          ''')
-          .inFilter('conversation_id', filteredConversationIds);
-
-      // 3. Obtener todos los user_ids únicos para buscar sus nombres
-      final userIds = (participantsResponse as List)
-          .map((p) => p['user_id'] as String)
+      // Ids de bookings a partir de las conversaciones (ya disponibles).
+      final bookingIds = (conversationsResponse as List)
+          .map((c) => c['booking_id'] as String?)
+          .whereType<String>()
           .toSet()
           .toList();
 
-      // 4. Obtener info de todos los usuarios en batch
+      // ── Consultas independientes lanzadas en PARALELO ──
+      // Participantes (2), últimos mensajes (6) e info de bookings (7) solo
+      // dependen de ids ya conocidos y no entre sí, así que se lanzan a la vez
+      // (antes eran round-trips secuenciales que sumaban latencia).
+      final batchResults = await Future.wait<List<dynamic>>([
+        // 2. Participantes de todas las conversaciones
+        _client
+            .from(SupabaseTables.conversationParticipants)
+            .select('''
+              conversation_id,
+              user_id,
+              role,
+              created_at
+            ''')
+            .inFilter('conversation_id', filteredConversationIds)
+            .then((r) => r as List<dynamic>),
+        // 6. Mensajes de todas las conversaciones (nos quedamos con el último)
+        _client
+            .from(SupabaseTables.messages)
+            .select('''
+              id,
+              conversation_id,
+              sender_user_id,
+              msg_type,
+              content,
+              created_at,
+              read_at
+            ''')
+            .inFilter('conversation_id', filteredConversationIds)
+            .order('created_at', ascending: false)
+            .then((r) => r as List<dynamic>),
+        // 7. Info de bookings (tolerante a fallos)
+        _fetchBookingsInfoBatch(bookingIds),
+      ]);
+
+      final participantsResponse = batchResults[0];
+      final lastMessagesResponse = batchResults[1];
+      final bookingsRows = batchResults[2];
+
+      // 3. user_ids únicos → 4. info de usuarios (depende de participantes)
+      final userIds = participantsResponse
+          .map((p) => p['user_id'] as String)
+          .toSet()
+          .toList();
       final usersInfo = await _getSendersInfo(userIds);
 
       // 5. Agrupar participantes por conversation_id
@@ -638,22 +698,6 @@ class ChatDatasource {
         final convId = p['conversation_id'] as String;
         participantsByConversation.putIfAbsent(convId, () => []).add(p);
       }
-
-      // 6. Obtener últimos mensajes de todas las conversaciones en un solo query
-      // Usamos una subquery para obtener el mensaje más reciente de cada conversación
-      final lastMessagesResponse = await _client
-          .from(SupabaseTables.messages)
-          .select('''
-            id,
-            conversation_id,
-            sender_user_id,
-            msg_type,
-            content,
-            created_at,
-            read_at
-          ''')
-          .inFilter('conversation_id', filteredConversationIds)
-          .order('created_at', ascending: false);
 
       // Filtrar para mantener solo el último mensaje de cada conversación
       final lastMessagesByConversation = <String, Map<String, dynamic>>{};
@@ -666,27 +710,10 @@ class ChatDatasource {
         }
       }
 
-      // 7. Obtener información de bookings en batch
-      final bookingIds = (conversationsResponse as List)
-          .map((c) => c['booking_id'] as String?)
-          .whereType<String>()
-          .toSet()
-          .toList();
-
+      // Indexar info de bookings por id
       final bookingsInfo = <String, Map<String, dynamic>>{};
-      if (bookingIds.isNotEmpty) {
-        try {
-          final bookingsResponse = await _client
-              .from(SupabaseTables.bookings)
-              .select('id, booking_code, guest_first_name, last_name')
-              .inFilter('id', bookingIds);
-
-          for (final b in bookingsResponse) {
-            bookingsInfo[b['id'] as String] = b;
-          }
-        } catch (e) {
-          _logError('Error obteniendo info de bookings', e);
-        }
+      for (final b in bookingsRows) {
+        bookingsInfo[b['id'] as String] = b as Map<String, dynamic>;
       }
 
       // 8. Construir las entidades de conversación
@@ -861,6 +888,25 @@ class ChatDatasource {
       _log('deleteConversation - conversación eliminada');
     } catch (e) {
       _logError('Error en deleteConversation', e);
+      rethrow;
+    }
+  }
+
+  /// Elimina de forma permanente un mensaje concreto.
+  ///
+  /// La política RLS `messages_delete_own` garantiza que solo se puede borrar
+  /// un mensaje si `sender_user_id = auth.uid()` (cada usuario solo los suyos).
+  /// Las traducciones asociadas se eliminan en cascada.
+  Future<void> deleteMessage({required String messageId}) async {
+    _log('deleteMessage - messageId: $messageId');
+    try {
+      await _client
+          .from(SupabaseTables.messages)
+          .delete()
+          .eq('id', messageId);
+      _log('deleteMessage - mensaje eliminado');
+    } catch (e) {
+      _logError('Error en deleteMessage', e);
       rethrow;
     }
   }

@@ -1,5 +1,6 @@
 import '../datasources/chat_datasource.dart';
 import '../../domain/entities/conversation_entity.dart';
+import '../../domain/entities/message_change.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/repositories/chat_repository.dart';
 
@@ -99,7 +100,7 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Stream<MessageEntity> watchMessages(String conversationId) {
+  Stream<MessageChange> watchMessages(String conversationId) {
     return _datasource.watchMessages(conversationId);
   }
 
@@ -142,6 +143,15 @@ class ChatRepositoryImpl implements ChatRepository {
   }) async {
     return await _datasource.deleteConversation(
       conversationId: conversationId,
+    );
+  }
+
+  @override
+  Future<void> deleteMessage({
+    required String messageId,
+  }) async {
+    return await _datasource.deleteMessage(
+      messageId: messageId,
     );
   }
 

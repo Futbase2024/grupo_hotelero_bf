@@ -35,6 +35,7 @@ class AuthRepositoryImpl implements AuthRepository {
           .select('''
             id,
             status,
+            checkout_date,
             checkins (
               status,
               rejection_reason
@@ -45,6 +46,14 @@ class AuthRepositoryImpl implements AuthRepository {
           .maybeSingle();
 
       if (bookingResponse != null) {
+        // Verificar que la reserva no ha expirado
+        final guestCheckoutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
+        if (DateTime.now().isAfter(guestCheckoutDate.add(const Duration(days: 1)))) {
+          debugPrint('⚠️ [getCurrentUser] Reserva expirada, limpiando sesión');
+          await _guestSession.clearSession();
+          return null;
+        }
+
         // Verificar estado del check-in
         // Supabase puede devolver un Map (relación uno-a-uno) o un List
         String? checkinStatus;
@@ -190,7 +199,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       // Buscar la reserva por código único
-      // Solo permite acceso si status es 'confirmed' o 'checked_in'
+      // Solo permite acceso si status es 'confirmed' o 'checked_in' Y no ha expirado
       debugPrint('📋 [loginWithBookingCode] Buscando reserva...');
       final bookingResponse = await _supabase
           .from(SupabaseTables.bookings)
@@ -216,6 +225,13 @@ class AuthRepositoryImpl implements AuthRepository {
       if (bookingResponse == null) {
         debugPrint('❌ [loginWithBookingCode] Reserva no encontrada o no válida');
         throw Exception('booking not found');
+      }
+
+      // Verificar que la reserva no ha expirado (checkout_date ya pasó)
+      final bookingCheckoutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
+      if (DateTime.now().isAfter(bookingCheckoutDate.add(const Duration(days: 1)))) {
+        debugPrint('❌ [loginWithBookingCode] Reserva expirada (checkout_date: $bookingCheckoutDate)');
+        throw Exception('booking expired');
       }
 
       final String guestName = '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim();
@@ -378,6 +394,12 @@ class AuthRepositoryImpl implements AuthRepository {
       // Verificar que el estado es válido
       final status = bookingResponse['status'] as String?;
       if (status != null && !['confirmed', 'checked_in'].contains(status)) {
+        throw Exception('code_expired');
+      }
+
+      // Verificar que la reserva no ha expirado (checkout_date ya pasó)
+      final bookingCheckoutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
+      if (DateTime.now().isAfter(bookingCheckoutDate.add(const Duration(days: 1)))) {
         throw Exception('code_expired');
       }
 

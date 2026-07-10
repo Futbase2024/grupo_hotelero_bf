@@ -2095,6 +2095,16 @@ class SEs extends S {
   String get admin_chat_online => 'En línea';
 
   @override
+  String get chat_delete_message => 'Eliminar mensaje';
+
+  @override
+  String get chat_delete_message_confirm_body =>
+      '¿Seguro que quieres eliminar este mensaje? Esta acción no se puede deshacer.';
+
+  @override
+  String get chat_delete_message_error => 'No se pudo eliminar el mensaje';
+
+  @override
   String get admin_chat_delete_conversation => 'Eliminar conversación';
 
   @override
