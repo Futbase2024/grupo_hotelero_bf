@@ -1,5 +1,7 @@
 {
   "@@locale": "it",
+  "guest_romantic_request_sent": "Abbiamo avvisato la struttura. Ti contatteranno per confermare i dettagli.",
+  "guest_romantic_request_error": "Non è stato possibile registrare la tua richiesta. Riprova.",
   "common_app_name": "BF Stay",
   "common_cancel": "Annulla",
   "common_exit": "Esci",

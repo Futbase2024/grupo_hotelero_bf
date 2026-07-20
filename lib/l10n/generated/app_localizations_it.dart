@@ -9,6 +9,14 @@ class SIt extends S {
   SIt([String locale = 'it']) : super(locale);
 
   @override
+  String get guest_romantic_request_sent =>
+      'Abbiamo avvisato la struttura. Ti contatteranno per confermare i dettagli.';
+
+  @override
+  String get guest_romantic_request_error =>
+      'Non è stato possibile registrare la tua richiesta. Riprova.';
+
+  @override
   String get common_app_name => 'BF Stay';
 
   @override

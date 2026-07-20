@@ -26,6 +26,8 @@ import '../../features/guest/checkout/data/repositories/checkout_repository_impl
 import '../../features/guest/checkout/domain/repositories/checkout_repository.dart';
 import '../../features/admin/domain/repositories/invoices_repository.dart';
 import '../../features/admin/data/repositories/invoices_repository_impl.dart';
+import '../../features/guest/extras/data/repositories/extra_request_repository_impl.dart';
+import '../../features/guest/extras/domain/repositories/extra_request_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -87,6 +89,11 @@ Future<void> configureDependencies() async {
   // Invoices repository
   getIt.registerLazySingleton<InvoicesRepository>(
     () => InvoicesRepositoryImpl(client: getIt<SupabaseClient>()),
+  );
+
+  // Extra requests repository (Pack Romántico y futuros extras)
+  getIt.registerLazySingleton<ExtraRequestRepository>(
+    () => ExtraRequestRepositoryImpl(),
   );
 
   // BLoCs/Cubits se crean con BlocProvider en la UI

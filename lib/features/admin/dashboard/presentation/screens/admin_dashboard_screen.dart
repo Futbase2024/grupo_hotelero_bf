@@ -16,6 +16,7 @@ import '../widgets/bookings_tab.dart';
 import '../widgets/checkins_tab.dart';
 import '../widgets/properties_tab.dart';
 import '../../../marketing/presentation/widgets/marketing_tab.dart';
+import '../../../extras/presentation/screens/extra_requests_screen.dart';
 
 // ignore: avoid_classes_with_only_static_members
 class _Debug {
@@ -131,6 +132,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
       ),
       actions: [
+        // Solicitudes de extras (Pack Romántico)
+        IconButton(
+          icon: const Icon(
+            Icons.card_giftcard_outlined,
+            color: AppColors.white,
+            size: 24,
+          ),
+          tooltip: 'Solicitudes de extras',
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ExtraRequestsScreen(),
+              ),
+            );
+          },
+        ),
         // Notification bell
         BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
           buildWhen: (prev, curr) =>

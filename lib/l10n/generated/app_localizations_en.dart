@@ -9,6 +9,14 @@ class SEn extends S {
   SEn([String locale = 'en']) : super(locale);
 
   @override
+  String get guest_romantic_request_sent =>
+      'We\'ve notified the property. They\'ll contact you to confirm the details.';
+
+  @override
+  String get guest_romantic_request_error =>
+      'We couldn\'t register your request. Please try again.';
+
+  @override
   String get common_app_name => 'BF Stay';
 
   @override

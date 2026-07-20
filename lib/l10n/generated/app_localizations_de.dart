@@ -9,6 +9,14 @@ class SDe extends S {
   SDe([String locale = 'de']) : super(locale);
 
   @override
+  String get guest_romantic_request_sent =>
+      'Wir haben die Unterkunft benachrichtigt. Sie werden dich kontaktieren, um die Details zu bestätigen.';
+
+  @override
+  String get guest_romantic_request_error =>
+      'Deine Anfrage konnte nicht registriert werden. Bitte versuche es erneut.';
+
+  @override
   String get common_app_name => 'BF Stay';
 
   @override

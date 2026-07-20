@@ -9,6 +9,14 @@ class SPt extends S {
   SPt([String locale = 'pt']) : super(locale);
 
   @override
+  String get guest_romantic_request_sent =>
+      'Avisámos o alojamento. Entrarão em contacto para confirmar os detalhes.';
+
+  @override
+  String get guest_romantic_request_error =>
+      'Não foi possível registar o teu pedido. Tenta novamente.';
+
+  @override
   String get common_app_name => 'BF Stay';
 
   @override

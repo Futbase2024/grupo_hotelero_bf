@@ -1,5 +1,7 @@
 {
   "@@locale": "de",
+  "guest_romantic_request_sent": "Wir haben die Unterkunft benachrichtigt. Sie werden dich kontaktieren, um die Details zu bestätigen.",
+  "guest_romantic_request_error": "Deine Anfrage konnte nicht registriert werden. Bitte versuche es erneut.",
   "common_app_name": "BF Stay",
   "common_cancel": "Abbrechen",
   "common_exit": "Beenden",

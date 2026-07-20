@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/services/notification_service.dart';
@@ -29,11 +31,32 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
 
   final CheckinRepository _repository;
 
+  /// Suscripción realtime al estado del check-in en Supabase.
+  /// Permite refrescar la vista del huésped al instante cuando el admin
+  /// valida o rechaza el check-in, sin necesidad de pull-to-refresh.
+  StreamSubscription<CheckinStatus>? _statusSubscription;
+
+  /// Se suscribe a los cambios de estado del check-in vía Realtime.
+  /// Ante cualquier cambio, despacha [CheckinStatusCheckRequested] para que
+  /// el BLoC recargue y reaccione (validado / rechazado).
+  void _subscribeToStatus(String bookingId) {
+    _statusSubscription?.cancel();
+    _statusSubscription =
+        _repository.watchCheckinStatus(bookingId).listen((_) {
+      if (!isClosed) {
+        add(CheckinStatusCheckRequested(bookingId));
+      }
+    });
+  }
+
   Future<void> _onStarted(
     CheckinStarted event,
     Emitter<CheckinState> emit,
   ) async {
     emit(const CheckinLoading());
+
+    // Escuchar cambios de estado en tiempo real (validación/rechazo del admin)
+    _subscribeToStatus(event.bookingId);
 
     try {
       // Cargar datos de la reserva
@@ -559,7 +582,15 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
 
     final currentState = state;
 
-    if (currentStatus == CheckinStatus.validated && currentState is CheckinAlreadyCompleted) {
+    // Reaccionar cuando el huésped está esperando la validación: ya sea tras
+    // enviar el check-in (CheckinSuccess) o al reabrir uno ya enviado
+    // (CheckinAlreadyCompleted). Antes solo se contemplaba el segundo caso, por
+    // lo que si el admin validaba justo tras el envío la vista no se refrescaba.
+    final isWaitingForValidation =
+        currentState is CheckinAlreadyCompleted || currentState is CheckinSuccess;
+    if (!isWaitingForValidation) return;
+
+    if (currentStatus == CheckinStatus.validated) {
       // Si cambió a validado, recargar y mostrar la vista actualizada
       final bookingData = await _repository.getBookingForCheckin(event.bookingId);
       final existingGuests = await _repository.getBookingGuests(event.bookingId);
@@ -570,9 +601,15 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
         checkinStatus: CheckinStatus.validated,
       ));
       debugPrint('✅ [CheckinBloc] Check-in validado!');
-    } else if (currentStatus == CheckinStatus.rejected && currentState is CheckinAlreadyCompleted) {
+    } else if (currentStatus == CheckinStatus.rejected) {
       // Si fue rechazado, mostrar error
       emit(const CheckinError('Tu check-in ha sido rechazado. Por favor, contacta con recepción.'));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _statusSubscription?.cancel();
+    return super.close();
   }
 }

@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/di/injection.dart';
+import 'package:bf_stay/core/services/notification_refresh_bus.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
@@ -66,8 +70,11 @@ class GuestHomeScreen extends StatelessWidget {
               GuestHomeBloc(repository: getIt<AdminPanelRepository>())
                 ..add(GuestHomeLoadBooking(user.bookingId ?? ''))
                 ..add(GuestHomeLoadNotifications(user.id)),
-          child: PopScope(
-            canPop: false,
+          child: _CheckinRealtimeRefresher(
+            bookingId: user.bookingId,
+            userId: user.id,
+            child: PopScope(
+              canPop: false,
             onPopInvokedWithResult: (didPop, result) async {
               if (didPop) return;
               await ExitConfirmationDialog.show(context);
@@ -187,6 +194,7 @@ class GuestHomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
             ),
           ),
         );
@@ -1298,4 +1306,110 @@ class _ServiceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Escucha en tiempo real los cambios de estado del check-in del huésped y
+/// refresca la home al instante, sin necesidad de cerrar/abrir la app.
+///
+/// Combina dos fuentes:
+///  1. Realtime de Supabase sobre `checkins` (filtrado por `booking_id`), para
+///     el caso en que el admin valida mientras la app está abierta.
+///  2. [NotificationRefreshBus], alimentado por el push FCM, para cubrir el caso
+///     background→abrir (al tocar la notificación).
+///
+/// Ante un cambio relevante dispara [AuthCheckRequested] (refresca
+/// `user.checkinStatus`, del que depende toda la pantalla), además de recargar
+/// la reserva y las notificaciones.
+class _CheckinRealtimeRefresher extends StatefulWidget {
+  const _CheckinRealtimeRefresher({
+    required this.bookingId,
+    required this.userId,
+    required this.child,
+  });
+
+  final String? bookingId;
+  final String userId;
+  final Widget child;
+
+  @override
+  State<_CheckinRealtimeRefresher> createState() =>
+      _CheckinRealtimeRefresherState();
+}
+
+class _CheckinRealtimeRefresherState extends State<_CheckinRealtimeRefresher> {
+  StreamSubscription<List<Map<String, dynamic>>>? _checkinSubscription;
+  StreamSubscription<String>? _fcmSubscription;
+
+  /// Último estado conocido del check-in. Se usa para ignorar la emisión
+  /// inicial del stream (estado actual al suscribir) y los cambios que no
+  /// alteran el estado.
+  String? _lastStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscribeToCheckin();
+    _subscribeToFcm();
+  }
+
+  void _subscribeToCheckin() {
+    final bookingId = widget.bookingId;
+    if (bookingId == null || bookingId.isEmpty) return;
+
+    _checkinSubscription = Supabase.instance.client
+        .from('checkins')
+        .stream(primaryKey: ['id'])
+        .eq('booking_id', bookingId)
+        .listen((rows) {
+          if (rows.isEmpty) return;
+          final status = rows.first['status'] as String?;
+          if (status == null) return;
+
+          // Ignorar la primera emisión (estado actual al suscribir).
+          if (_lastStatus == null) {
+            _lastStatus = status;
+            return;
+          }
+          if (status == _lastStatus) return;
+
+          _lastStatus = status;
+          debugPrint('🔔 [HomeRefresher] Cambio de estado check-in: $status');
+          _refresh();
+        }, onError: (Object error) {
+          debugPrint('❌ [HomeRefresher] Error en stream de check-in: $error');
+        });
+  }
+
+  void _subscribeToFcm() {
+    _fcmSubscription =
+        NotificationRefreshBus.instance.stream.listen((type) {
+      // Solo refrescar ante notificaciones relacionadas con el check-in, para
+      // no provocar recargas por otros tipos (p. ej. mensajes de chat).
+      if (type.startsWith('checkin')) {
+        debugPrint('🔔 [HomeRefresher] Push de check-in recibido: $type');
+        _refresh();
+      }
+    });
+  }
+
+  void _refresh() {
+    if (!mounted) return;
+    context.read<AuthBloc>().add(const AuthCheckRequested());
+
+    final bookingId = widget.bookingId;
+    if (bookingId != null && bookingId.isNotEmpty) {
+      context.read<GuestHomeBloc>().add(GuestHomeRefreshBooking(bookingId));
+    }
+    context.read<GuestHomeBloc>().add(GuestHomeLoadNotifications(widget.userId));
+  }
+
+  @override
+  void dispose() {
+    _checkinSubscription?.cancel();
+    _fcmSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

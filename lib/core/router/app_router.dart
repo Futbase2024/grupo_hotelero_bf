@@ -55,6 +55,7 @@ import '../../features/admin/chat/presentation/screens/conversations_screen.dart
 import '../../features/admin/chat/presentation/screens/admin_chat_screen.dart';
 import '../../features/admin/bookings/presentation/screens/booking_detail_screen.dart';
 import '../../features/admin/occupancy/presentation/screens/occupancy_stats_screen.dart';
+import '../../features/admin/extras/presentation/screens/extra_requests_screen.dart';
 import '../../features/admin/domain/repositories/admin_panel_repository.dart';
 import '../../features/admin/chat/domain/bloc/conversations_bloc.dart';
 import '../../features/guest/chat/domain/repositories/chat_repository.dart';
@@ -119,6 +120,7 @@ class AppRoutes {
   static const String adminChatConversation = '/admin/chat/:conversationId';
   static const String adminBookingDetail = '/admin/booking/:bookingId';
   static const String adminOccupancy = '/admin/occupancy';
+  static const String adminExtras = '/admin/extras';
 }
 
 /// Router principal de la aplicación con redirección basada en roles
@@ -517,6 +519,11 @@ class AppRouter {
           path: AppRoutes.adminOccupancy,
           name: 'admin-occupancy',
           builder: (context, state) => const OccupancyStatsScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.adminExtras,
+          name: 'admin-extras',
+          builder: (context, state) => const ExtraRequestsScreen(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

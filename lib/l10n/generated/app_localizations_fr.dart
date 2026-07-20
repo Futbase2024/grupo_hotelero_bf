@@ -9,6 +9,14 @@ class SFr extends S {
   SFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get guest_romantic_request_sent =>
+      'Nous avons prévenu l\'hébergement. Ils vous contacteront pour confirmer les détails.';
+
+  @override
+  String get guest_romantic_request_error =>
+      'Impossible d\'enregistrer votre demande. Veuillez réessayer.';
+
+  @override
   String get common_app_name => 'BF Stay';
 
   @override

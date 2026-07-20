@@ -1,5 +1,7 @@
 {
   "@@locale": "pt",
+  "guest_romantic_request_sent": "Avisámos o alojamento. Entrarão em contacto para confirmar os detalhes.",
+  "guest_romantic_request_error": "Não foi possível registar o teu pedido. Tenta novamente.",
   "common_app_name": "BF Stay",
   "common_cancel": "Cancelar",
   "common_exit": "Sair",

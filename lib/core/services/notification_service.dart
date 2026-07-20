@@ -412,6 +412,32 @@ class NotificationService {
     );
   }
 
+  /// Notifica al admin cuando un huésped solicita un extra (p. ej. Pack Romántico).
+  ///
+  /// Es un aviso de SOLICITUD (no una reserva/pago confirmado): el pago se hace
+  /// en una web externa. El admin debe hacer seguimiento manual.
+  Future<void> notifyAdminExtraRequested({
+    required String bookingId,
+    required String propertyId,
+    required String guestName,
+    required String extraName,
+    String? unitName,
+  }) async {
+    final location = (unitName != null && unitName.isNotEmpty)
+        ? ' en $unitName'
+        : '';
+    await notifyAdmins(
+      propertyId: propertyId,
+      type: 'extra_request',
+      title: '💝 Nueva solicitud: $extraName',
+      body: '$guestName ha solicitado "$extraName"$location. Pendiente de gestionar.',
+      bookingId: bookingId,
+      data: {
+        'action': 'review_extra_request',
+      },
+    );
+  }
+
   /// Envía email de notificación al admin cuando un huésped completa el check-in
   Future<bool> sendCheckinCompletedEmail({
     required String bookingId,

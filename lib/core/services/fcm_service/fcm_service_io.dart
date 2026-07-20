@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../notification_refresh_bus.dart';
 import 'fcm_service.dart';
 
 /// Handler para mensajes en background (debe ser top-level function)
@@ -159,6 +160,7 @@ class FcmServiceIo implements FcmService {
     _onMessageSubscription = FirebaseMessaging.onMessage.listen((message) {
       debugPrint('📦 FCM Foreground: ${message.messageId}');
       _showLocalNotification(message);
+      _emitRefreshSignal(message);
     });
 
     // Mensaje cuando la app se abre desde una notificación (background)
@@ -166,6 +168,7 @@ class FcmServiceIo implements FcmService {
         FirebaseMessaging.onMessageOpenedApp.listen((message) {
       debugPrint('📦 FCM Opened from background: ${message.messageId}');
       _handleMessageTap(message);
+      _emitRefreshSignal(message);
     });
 
     // Mensaje cuando la app se abre desde terminated state
@@ -173,8 +176,18 @@ class FcmServiceIo implements FcmService {
       if (message != null) {
         debugPrint('📦 FCM Opened from terminated: ${message.messageId}');
         _handleMessageTap(message);
+        _emitRefreshSignal(message);
       }
     });
+  }
+
+  /// Notifica a la UI (vía [NotificationRefreshBus]) que llegó un push, para que
+  /// pueda recargar sus datos al instante (p. ej. el estado del check-in).
+  void _emitRefreshSignal(RemoteMessage message) {
+    final type = message.data['type'] as String? ?? '';
+    if (type.isNotEmpty) {
+      NotificationRefreshBus.instance.emit(type);
+    }
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {

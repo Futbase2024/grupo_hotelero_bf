@@ -1,5 +1,7 @@
 {
   "@@locale": "en",
+  "guest_romantic_request_sent": "We've notified the property. They'll contact you to confirm the details.",
+  "guest_romantic_request_error": "We couldn't register your request. Please try again.",
   "common_app_name": "BF Stay",
   "common_cancel": "Cancel",
   "common_exit": "Exit",

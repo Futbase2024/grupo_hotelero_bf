@@ -105,6 +105,18 @@ abstract class S {
     Locale('pt'),
   ];
 
+  /// No description provided for @guest_romantic_request_sent.
+  ///
+  /// In es, this message translates to:
+  /// **'Hemos avisado al alojamiento. Te contactarán para confirmar los detalles.'**
+  String get guest_romantic_request_sent;
+
+  /// No description provided for @guest_romantic_request_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo registrar tu solicitud. Inténtalo de nuevo.'**
+  String get guest_romantic_request_error;
+
   /// No description provided for @common_app_name.
   ///
   /// In es, this message translates to:

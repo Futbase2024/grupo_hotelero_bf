@@ -800,13 +800,9 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           }
         }
 
-        // 3. Enviar notificación push al huésped
-        if (_checkinDetail != null) {
-          await NotificationService().notifyGuestCheckinStatus(
-            bookingId: _checkinDetail!.bookingId,
-            status: 'validated',
-          );
-        }
+        // 3. La notificación al huésped (in-app + push) la dispara el trigger
+        // de backend trg_checkin_status_notify al cambiar checkins.status a
+        // 'validated'. Así funciona valide el admin desde donde valide.
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -914,15 +910,9 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           }
         }
 
-        // 3. Enviar notificación push al huésped
-        if (_checkinDetail != null) {
-          debugPrint('📱 [RejectCheckin] Enviando push notification...');
-          await NotificationService().notifyGuestCheckinStatus(
-            bookingId: _checkinDetail!.bookingId,
-            status: 'rejected',
-            reason: reason,
-          );
-        }
+        // 3. La notificación al huésped (in-app + push) la dispara el trigger
+        // de backend trg_checkin_status_notify al cambiar checkins.status a
+        // 'rejected'.
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

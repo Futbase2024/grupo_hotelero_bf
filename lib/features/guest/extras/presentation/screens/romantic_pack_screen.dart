@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:bf_stay/core/di/injection.dart';
+import 'package:bf_stay/core/services/notification_service.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
+import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
+import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
+import 'package:bf_stay/features/guest/extras/domain/entities/extra_request_entity.dart';
+import 'package:bf_stay/features/guest/extras/domain/repositories/extra_request_repository.dart';
 import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla elegante y romántica para mostrar el Pack Romántico
@@ -336,6 +343,9 @@ class RomanticPackScreen extends StatelessWidget {
     );
   }
 
+  static const String _packUrl =
+      'https://www.boutiquejerez.es/producto/pack-romantico/';
+
   void _showPurchaseDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -348,7 +358,7 @@ class RomanticPackScreen extends StatelessWidget {
           children: [
             Icon(Icons.favorite, color: _romanticPink),
             const SizedBox(width: 8),
-            Text(S.of(context).guest_romantic_title),
+            Expanded(child: Text(S.of(context).guest_romantic_title)),
           ],
         ),
         content: Text(
@@ -360,12 +370,9 @@ class RomanticPackScreen extends StatelessWidget {
             child: Text(S.of(context).common_cancel),
           ),
           ElevatedButton(
-            onPressed: () async {
+            onPressed: () {
               Navigator.of(dialogContext).pop();
-              final uri = Uri.parse('https://www.boutiquejerez.es/producto/pack-romantico/');
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              }
+              _submitRequest(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _romanticPink,
@@ -376,6 +383,88 @@ class RomanticPackScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Registra la SOLICITUD del pack (no un pago), avisa al admin y muestra la
+  /// confirmación con el enlace para completar el pago en la web externa.
+  Future<void> _submitRequest(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final s = S.of(context);
+    final extraName = s.guest_romantic_basic_pack;
+
+    final authState = context.read<AuthBloc>().state;
+    final user = authState is AuthAuthenticated ? authState.user : null;
+    final bookingId = user?.bookingId;
+    final propertyId = user?.propertyId;
+
+    // Sin reserva asociada no podemos registrar la solicitud: abrir la web igual.
+    if (user == null || bookingId == null || bookingId.isEmpty) {
+      await _launchPackUrl();
+      return;
+    }
+
+    try {
+      // Enriquecer con el nombre de la unidad (best-effort).
+      String? unitName;
+      try {
+        final booking = await getIt<AdminPanelRepository>().getBooking(bookingId);
+        unitName = booking?.unitName;
+      } catch (_) {
+        // Ignorar: la unidad es informativa.
+      }
+
+      final request = ExtraRequestEntity(
+        id: '',
+        bookingId: bookingId,
+        propertyId: propertyId,
+        userId: user.id,
+        guestName: user.displayName,
+        unitName: unitName,
+        extraType: 'romantic_pack',
+        extraName: extraName,
+        price: 20,
+        createdAt: DateTime.now(),
+      );
+
+      await getIt<ExtraRequestRepository>().create(request);
+
+      // Avisar al admin (in-app + push). Best-effort: no bloquea el flujo.
+      if (propertyId != null && propertyId.isNotEmpty) {
+        await NotificationService().notifyAdminExtraRequested(
+          bookingId: bookingId,
+          propertyId: propertyId,
+          guestName: user.displayName,
+          extraName: extraName,
+          unitName: unitName,
+        );
+      }
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(s.guest_romantic_request_sent),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(s.guest_romantic_request_error),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+    }
+
+    // Abrir la web para completar el pago (pase lo que pase con el registro).
+    await _launchPackUrl();
+  }
+
+  Future<void> _launchPackUrl() async {
+    final uri = Uri.parse(_packUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Widget _buildStepsCard(BuildContext context) {
