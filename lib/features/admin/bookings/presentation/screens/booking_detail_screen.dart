@@ -186,11 +186,21 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     setState(() => _isSendingWhatsApp = true);
 
     try {
-      // 1. Generar PDF
+      // 1. Generar el documento PDF con el mismo diseno que el correo
+      //    (incluida la imagen de cabecera y los enlaces de descarga clicables).
       final pdfService = BookingEmailPdfService();
-      final pdfBytes = await pdfService.generateEmailPdf(_booking!);
+      Uint8List? heroBytes;
+      try {
+        heroBytes = await SupabaseConfig.client.storage
+            .from('email-assets')
+            .download('heroimagen.png');
+      } catch (e) {
+        debugPrint('⚠️ No se pudo cargar la imagen de cabecera: $e');
+      }
+      final pdfBytes =
+          await pdfService.generateEmailPdf(_booking!, heroImage: heroBytes);
 
-      // 2. Subir PDF a Supabase Storage
+      // 2. Subir el PDF a Supabase Storage y obtener su URL publica.
       final storagePath = 'booking-pdfs/${_booking!.bookingCode}.pdf';
       await SupabaseConfig.client.storage.from('email-assets').uploadBinary(
             storagePath,
@@ -200,27 +210,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               upsert: true,
             ),
           );
-
-      // 3. Obtener URL publica
       final pdfUrl = SupabaseConfig.client.storage
           .from('email-assets')
           .getPublicUrl(storagePath);
 
       if (!mounted) return;
 
-      // 4. Abrir WhatsApp directamente con el numero y enlace al PDF
+      // 3. Abrir WhatsApp con un mensaje que replica el correo de check-in.
       final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
       final phoneWithCode =
           cleanPhone.startsWith('34') ? cleanPhone : '34$cleanPhone';
 
-      final guestName = _booking!.guestFirstName ?? _booking!.guestFullName;
-      final message =
-          'Hola $guestName, aqui tienes tu reserva en ${_booking!.propertyName}.\n\n'
-          'Codigo de acceso: ${_booking!.bookingCode}\n'
-          'Check-in: ${DateFormat('dd/MM/yyyy').format(_booking!.checkInDate)}\n'
-          'Check-out: ${DateFormat('dd/MM/yyyy').format(_booking!.checkOutDate)}\n\n'
-          'Descarga tu PDF con toda la info:\n$pdfUrl';
-
+      final message = _buildWhatsAppMessage(pdfUrl);
       final encodedMessage = Uri.encodeComponent(message);
 
       // Intentar primero con el esquema nativo de WhatsApp (mas fiable)
@@ -256,6 +257,45 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } finally {
       if (mounted) setState(() => _isSendingWhatsApp = false);
     }
+  }
+
+  /// Construye el mensaje de WhatsApp replicando el correo de check-in.
+  ///
+  /// WhatsApp no admite HTML como el email, pero convierte las URLs en enlaces
+  /// clicables y soporta *negritas*. Se usan los mismos textos, datos y enlaces
+  /// de descarga (App Store / Google Play) que la plantilla del correo.
+  String _buildWhatsAppMessage(String pdfUrl) {
+    final booking = _booking!;
+    final guestName = booking.guestFirstName ?? booking.guestFullName;
+    final propertyFull = '${booking.propertyName} - ${booking.unitName}';
+    final checkIn = DateFormat('dd/MM/yyyy').format(booking.checkInDate);
+    final checkOut = DateFormat('dd/MM/yyyy').format(booking.checkOutDate);
+
+    const iosUrl = 'https://apps.apple.com/es/app/bf-stay/id6759832221';
+    const androidUrl =
+        'https://play.google.com/store/apps/details?id=com.bfstay.app';
+
+    return 'Hola *$guestName*,\n\n'
+        'Tu *reserva en $propertyFull* ha sido registrada correctamente.\n\n'
+        'Para preparar tu llegada, es necesario completar el *check-in digital*. '
+        'Puedes hacerlo fácilmente desde la aplicación *BF Stay*.\n\n'
+        'A continuación encontrarás los datos de tu estancia:\n'
+        '📅 *Entrada:* $checkIn\n'
+        '📅 *Salida:* $checkOut\n\n'
+        'Para acceder a la aplicación y validar tus datos de check-in, utiliza el siguiente código:\n\n'
+        '🔑 *TU CÓDIGO DE ACCESO*\n'
+        '*${booking.bookingCode}*\n\n'
+        'Introduce este código en BF Stay para acceder a tu reserva y completar el check-in digital.\n\n'
+        '📄 Consulta y guarda todos los detalles de tu reserva aquí:\n$pdfUrl\n\n'
+        'Descarga o abre *BF Stay* e introduce tu código de acceso para comenzar el check-in:\n\n'
+        '🍎 Descargar en App Store:\n$iosUrl\n\n'
+        '🤖 Descargar en Android:\n$androidUrl\n\n'
+        'Si necesitas asistencia puedes contactarnos:\n'
+        '📞 +34 656 61 80 65\n'
+        '📞 +34 674 27 70 16\n\n'
+        'Una vez validado tu check-in, podrás acceder a toda la información de tu estancia directamente desde la app.\n\n'
+        'Te deseamos una excelente estancia.\n\n'
+        '*Grupo Hotelero BF*';
   }
 
   void _showWhatsAppNotInstalledDialog() {

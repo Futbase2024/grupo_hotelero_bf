@@ -275,51 +275,62 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ServiceIcon(
-                icon: Icons.wifi_outlined,
-                label: S.of(context).guest_guide_wifi,
-                onTap: () => _showWifiInfo(context),
+              Expanded(
+                child: _ServiceIcon(
+                  icon: Icons.wifi_outlined,
+                  label: S.of(context).guest_guide_wifi,
+                  onTap: () => _showWifiInfo(context),
+                ),
               ),
               // Solo mostrar lavadero si NO es hotel (apartamentos tienen lavadero)
               if (!isHotel) ...[
-                _ServiceIcon(
-                  icon: Icons.local_laundry_service_outlined,
-                  label: S.of(context).guest_guide_laundry,
-                  onTap: () => _showServiceInfo(
-                    context: context,
-                    title: S.of(context).guest_guide_laundry,
+                Expanded(
+                  child: _ServiceIcon(
                     icon: Icons.local_laundry_service_outlined,
-                    description: S.of(context).guest_guide_laundry_desc,
+                    label: S.of(context).guest_guide_laundry,
+                    onTap: () => _showServiceInfo(
+                      context: context,
+                      title: S.of(context).guest_guide_laundry,
+                      icon: Icons.local_laundry_service_outlined,
+                      description: S.of(context).guest_guide_laundry_desc,
+                    ),
                   ),
                 ),
               ],
               // Solo mostrar Jacuzzi si the unit has it
               if (hasJacuzzi) ...[
-                _ServiceIcon(
-                  icon: Icons.hot_tub_outlined,
-                  label: S.of(context).guest_guide_jacuzzi,
-                  onTap: () => context.go('/guest/jacuzzi-rules'),
+                Expanded(
+                  child: _ServiceIcon(
+                    icon: Icons.hot_tub_outlined,
+                    label: S.of(context).guest_guide_jacuzzi,
+                    onTap: () => context.go('/guest/jacuzzi-rules'),
+                  ),
                 ),
               ],
-              _ServiceIcon(
-                icon: Icons.ac_unit_outlined,
-                label: S.of(context).guest_guide_ac,
-                onTap: () => _showServiceInfo(
-                  context: context,
-                  title: S.of(context).guest_guide_ac_title,
+              Expanded(
+                child: _ServiceIcon(
                   icon: Icons.ac_unit_outlined,
-                  description: S.of(context).guest_guide_ac_desc,
+                  label: S.of(context).guest_guide_ac,
+                  onTap: () => _showServiceInfo(
+                    context: context,
+                    title: S.of(context).guest_guide_ac_title,
+                    icon: Icons.ac_unit_outlined,
+                    description: S.of(context).guest_guide_ac_desc,
+                  ),
                 ),
               ),
-              _ServiceIcon(
-                icon: Icons.tv_outlined,
-                label: S.of(context).guest_guide_tv,
-                onTap: () => _showServiceInfo(
-                  context: context,
-                  title: S.of(context).guest_guide_tv_title,
+              Expanded(
+                child: _ServiceIcon(
                   icon: Icons.tv_outlined,
-                  description: S.of(context).guest_guide_tv_desc,
+                  label: S.of(context).guest_guide_tv,
+                  onTap: () => _showServiceInfo(
+                    context: context,
+                    title: S.of(context).guest_guide_tv_title,
+                    icon: Icons.tv_outlined,
+                    description: S.of(context).guest_guide_tv_desc,
+                  ),
                 ),
               ),
             ],
@@ -844,15 +855,63 @@ class _ServiceIcon extends StatelessWidget {
             child: Icon(icon, color: AppColors.gold, size: 24),
           ),
           const SizedBox(height: AppTheme.spacing8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.getTextSecondaryColor(context),
-            ),
-          ),
+          _ServiceLabel(label),
         ],
       ),
+    );
+  }
+}
+
+/// Etiqueta de servicio que escala el tamaño de fuente hasta que cada palabra
+/// completa quepa en su línea, evitando que una sola palabra se corte.
+class _ServiceLabel extends StatelessWidget {
+  const _ServiceLabel(this.label);
+
+  final String label;
+
+  static const double _maxFontSize = 12;
+  static const double _minFontSize = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    final baseStyle = DefaultTextStyle.of(context).style;
+    final words = label.split(RegExp(r'\s+'));
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Margen de seguridad para no rozar el borde de la columna.
+        final maxWidth = constraints.maxWidth - 2;
+
+        var fontSize = _maxFontSize;
+        while (fontSize > _minFontSize) {
+          final everyWordFits = words.every((word) {
+            final painter = TextPainter(
+              text: TextSpan(
+                text: word,
+                style: baseStyle.copyWith(fontSize: fontSize),
+              ),
+              textDirection: TextDirection.ltr,
+              textScaler: textScaler,
+              maxLines: 1,
+            )..layout();
+            return painter.width <= maxWidth;
+          });
+          if (everyWordFits) break;
+          fontSize -= 0.5;
+        }
+
+        return Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: baseStyle.copyWith(
+            fontSize: fontSize,
+            color: AppColors.getTextSecondaryColor(context),
+          ),
+        );
+      },
     );
   }
 }

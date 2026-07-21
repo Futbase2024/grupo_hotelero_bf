@@ -3,8 +3,10 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY')!;
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-// Email verificado en Brevo
-const VERIFIED_SENDER_EMAIL = 'ghotelerobf@gmail.com';
+// Remitente sobre dominio autenticado en Brevo (grupohotelerobf.com)
+const VERIFIED_SENDER_EMAIL = 'info@grupohotelerobf.com';
+// Buzón del gestor: recibe respuestas (Reply-To) y copia oculta (BCC) de cada envío
+const MANAGER_EMAIL = 'ghotelerobf@gmail.com';
 
 // Defaults para el template
 const DEFAULTS = {
@@ -91,6 +93,16 @@ Deno.serve(async (req: Request) => {
         {
           email: body.to_email,
           name: body.to_name || body.params?.nombre_huesped || 'Huésped',
+        },
+      ],
+      replyTo: {
+        name: 'BF Stay',
+        email: MANAGER_EMAIL,
+      },
+      bcc: [
+        {
+          email: MANAGER_EMAIL,
+          name: 'BF Stay',
         },
       ],
       templateId: templateId,
