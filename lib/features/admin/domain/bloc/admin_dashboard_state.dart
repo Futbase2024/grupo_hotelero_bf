@@ -10,6 +10,10 @@ enum DateFilter {
   thisMonth,
   lastMonth,
   customRange,
+
+  /// Sin límite de fechas: consulta el histórico completo en el servidor,
+  /// ignorando la ventana deslizante. Bajo demanda, no por defecto.
+  allHistory,
 }
 
 /// Orden de clasificación por fecha
@@ -36,6 +40,36 @@ extension DateFilterLabel on DateFilter {
         return 'Anterior';
       case DateFilter.customRange:
         return 'Rango';
+      case DateFilter.allHistory:
+        return 'Todo el histórico';
+    }
+  }
+
+  /// Fecha desde la que hay que consultar en el SERVIDOR para que el filtro
+  /// pueda resolverse después en cliente.
+  ///
+  /// `null` = sin límite (histórico completo). Para [DateFilter.all] devuelve
+  /// `null` y es quien llama (el BLoC) quien aplica su ventana deslizante.
+  DateTime? serverFromDate({DateTime? customStart}) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    switch (this) {
+      case DateFilter.all:
+      case DateFilter.allHistory:
+        return null;
+      case DateFilter.today:
+        return today;
+      case DateFilter.yesterday:
+        return today.subtract(const Duration(days: 1));
+      case DateFilter.thisWeek:
+        return today.subtract(Duration(days: now.weekday - 1));
+      case DateFilter.thisMonth:
+        return DateTime(now.year, now.month);
+      case DateFilter.lastMonth:
+        return DateTime(now.year, now.month - 1);
+      case DateFilter.customRange:
+        return customStart;
     }
   }
 }
@@ -71,6 +105,7 @@ class AdminDashboardState extends Equatable {
     this.isLoading = false,
     this.isLoadingBookings = false,
     this.isLoadingCheckins = false,
+    this.isRefreshingCheckins = false,
     this.isLoadingProperties = false,
     this.isLoadingUnits = false,
     this.error,
@@ -147,6 +182,10 @@ class AdminDashboardState extends Equatable {
   final bool isLoading;
   final bool isLoadingBookings;
   final bool isLoadingCheckins;
+
+  /// Refresco de check-ins en segundo plano: la lista actual sigue visible y
+  /// solo se muestra un indicador discreto en la cabecera.
+  final bool isRefreshingCheckins;
   final bool isLoadingProperties;
   final bool isLoadingUnits;
 
@@ -193,6 +232,7 @@ class AdminDashboardState extends Equatable {
     bool? isLoading,
     bool? isLoadingBookings,
     bool? isLoadingCheckins,
+    bool? isRefreshingCheckins,
     bool? isLoadingProperties,
     bool? isLoadingUnits,
     String? error,
@@ -254,6 +294,8 @@ class AdminDashboardState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       isLoadingBookings: isLoadingBookings ?? this.isLoadingBookings,
       isLoadingCheckins: isLoadingCheckins ?? this.isLoadingCheckins,
+      isRefreshingCheckins:
+          isRefreshingCheckins ?? this.isRefreshingCheckins,
       isLoadingProperties: isLoadingProperties ?? this.isLoadingProperties,
       isLoadingUnits: isLoadingUnits ?? this.isLoadingUnits,
       error: clearError ? null : (error ?? this.error),
@@ -361,6 +403,7 @@ class AdminDashboardState extends Equatable {
 
     switch (dateFilter) {
       case DateFilter.all:
+      case DateFilter.allHistory:
         return true;
 
       case DateFilter.today:
@@ -420,6 +463,7 @@ class AdminDashboardState extends Equatable {
         isLoading,
         isLoadingBookings,
         isLoadingCheckins,
+        isRefreshingCheckins,
         isLoadingProperties,
         isLoadingUnits,
         error,

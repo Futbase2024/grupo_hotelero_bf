@@ -218,7 +218,7 @@ class DashboardTab extends StatelessWidget {
                 color: AppColors.white,
               ),
             ),
-            if (state.checkins.isNotEmpty)
+            if (recentCheckins.isNotEmpty)
               TextButton(
                 onPressed: () {
                   context.read<AdminDashboardBloc>().add(
@@ -356,26 +356,9 @@ class _OccupancyStatCard extends StatelessWidget {
 
   final AdminDashboardState state;
 
-  int get _occupiedToday {
-    final bookings = state.bookings;
-    final today = DateTime.now();
-    final tomorrow = DateTime(today.year, today.month, today.day + 1);
-    final todayStart = DateTime(today.year, today.month, today.day);
-    return bookings
-        .where((b) =>
-            !b.isCancelled &&
-            b.checkInDate.isBefore(tomorrow) &&
-            b.checkOutDate.isAfter(todayStart))
-        .length;
-  }
-
-  int get _totalUnits => state.summary?.totalUnits ?? 0;
-
-  double get _occupancyRate {
-    final total = _totalUnits;
-    if (total == 0) return 0.0;
-    return (_occupiedToday / total) * 100;
-  }
+  // El cálculo lo hace el RPC `get_dashboard_summary`: antes había que
+  // descargar todas las reservas de los últimos 90 días solo para este KPI.
+  double get _occupancyRate => state.summary?.occupancyRate ?? 0.0;
 
   @override
   Widget build(BuildContext context) {

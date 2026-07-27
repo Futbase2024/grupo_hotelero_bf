@@ -41,8 +41,10 @@ class _SplashScreenState extends State<SplashScreen>
   // Imagen de splash seleccionada aleatoriamente
   late final String _selectedSplashImage;
 
-  // Tiempo mínimo que se muestra el splash (2 segundos)
-  static const Duration _minimumSplashDuration = Duration(milliseconds: 2000);
+  // Tiempo mínimo que se muestra el splash
+  // Suficiente para evitar el parpadeo si la inicialización es instantánea,
+  // sin penalizar el arranque
+  static const Duration _minimumSplashDuration = Duration(milliseconds: 600);
 
   @override
   void initState() {
@@ -55,6 +57,8 @@ class _SplashScreenState extends State<SplashScreen>
   void _setupAnimations() {
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
+      // Fade-out rápido: la salida no debe retrasar la primera pantalla
+      reverseDuration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
@@ -97,13 +101,8 @@ class _SplashScreenState extends State<SplashScreen>
         _isInitialized = true;
       });
 
-      // Pequeña pausa para mostrar "Listo"
-      await Future.delayed(const Duration(milliseconds: 500));
-
       // Fade out antes de navegar
-      if (mounted) {
-        await _animationController.reverse();
-      }
+      await _animationController.reverse();
     }
   }
 

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/services/notification_refresh_bus.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../../domain/bloc/bloc.dart';
@@ -41,10 +44,19 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+class _AdminDashboardScreenState extends State<AdminDashboardScreen>
+    with WidgetsBindingObserver {
   late final AdminDashboardBloc _bloc;
   late final InvoicesBloc _invoicesBloc;
   late final AuthBloc _authBloc;
+
+  StreamSubscription<String>? _refreshBusSubscription;
+
+  /// Tipos de push que afectan a la lista de check-ins del panel.
+  static const _checkinNotificationTypes = {
+    'checkin_submitted',
+    'checkin_status',
+  };
 
   @override
   void initState() {
@@ -61,14 +73,60 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     _Debug.log('initState - AuthBloc obtenido: ${_authBloc.state}');
     _bloc.add(const AdminDashboardLoadRequested());
     _Debug.log('initState - AdminDashboardLoadRequested enviado');
+
+    // El panel puede quedar horas en segundo plano: el WebSocket de realtime se
+    // cae y los datos se quedan congelados. Por eso se refresca al volver a
+    // primer plano y al recibir un push, sin esperar al realtime.
+    WidgetsBinding.instance.addObserver(this);
+    _refreshBusSubscription =
+        NotificationRefreshBus.instance.stream.listen(_onPushReceived);
   }
 
   @override
   void dispose() {
     _Debug.log('dispose - Cerrando AdminDashboardScreen');
+    WidgetsBinding.instance.removeObserver(this);
+    _refreshBusSubscription?.cancel();
     _bloc.close();
     _invoicesBloc.close();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _Debug.log('App en primer plano - refrescando datos');
+      _refreshCurrentData();
+    }
+  }
+
+  /// Refresca los datos al recibir un push FCM. Cualquier notificación actualiza
+  /// el contador de la campana; las de check-in recargan además la lista.
+  void _onPushReceived(String type) {
+    if (!mounted || _bloc.isClosed) return;
+    _Debug.log('Push recibido ($type) - refrescando datos');
+
+    if (_checkinNotificationTypes.contains(type)) {
+      _refreshCurrentData();
+    } else {
+      _bloc.add(const AdminDashboardNotificationsLoadRequested());
+    }
+  }
+
+  /// Recarga silenciosa (mantiene los datos en pantalla mientras llega la
+  /// respuesta). En el tab de resumen recarga también KPIs y notificaciones.
+  void _refreshCurrentData() {
+    if (_bloc.isClosed) return;
+
+    _bloc.add(const AdminDashboardNotificationsLoadRequested());
+
+    if (_bloc.state.currentTabIndex == 0) {
+      // En el resumen basta con los KPIs (RPC ligero); la lista de check-ins se
+      // recarga al entrar en su tab.
+      _bloc.add(const AdminDashboardSummaryRefreshRequested());
+    } else {
+      _bloc.add(const AdminDashboardCheckinsLoadRequested());
+    }
   }
 
   @override

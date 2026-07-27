@@ -20,6 +20,13 @@ class AdminDashboardRefreshRequested extends AdminDashboardEvent {
   const AdminDashboardRefreshRequested();
 }
 
+/// Recarga ligera del resumen (KPIs) sin volver a traer la lista de reservas.
+/// Se usa al volver de segundo plano o al recibir un push estando en el tab de
+/// resumen: refresca los contadores sin bloquear la pantalla.
+class AdminDashboardSummaryRefreshRequested extends AdminDashboardEvent {
+  const AdminDashboardSummaryRefreshRequested();
+}
+
 /// Cambiar tab activo
 class AdminDashboardTabChanged extends AdminDashboardEvent {
   const AdminDashboardTabChanged(this.tabIndex);

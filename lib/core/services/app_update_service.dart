@@ -46,8 +46,26 @@ class AppUpdateService {
   String? _currentVersion;
   String? _packageName;
 
+  /// Future de la inicialización en curso.
+  ///
+  /// Permite lanzar `initialize()` en segundo plano (sin bloquear el arranque)
+  /// y que `checkForUpdate()` espere a que termine antes de comparar versiones.
+  Future<void>? _initFuture;
+
   /// Inicializa el servicio de actualizaciones
+  ///
+  /// Es idempotente: llamadas sucesivas reutilizan la misma inicialización.
   Future<void> initialize({
+    String? iosAppStoreId,
+    String? androidPackageName,
+  }) {
+    return _initFuture ??= _doInitialize(
+      iosAppStoreId: iosAppStoreId,
+      androidPackageName: androidPackageName,
+    );
+  }
+
+  Future<void> _doInitialize({
     String? iosAppStoreId,
     String? androidPackageName,
   }) async {
@@ -134,6 +152,11 @@ class AppUpdateService {
   /// Verifica si hay una actualización disponible
   Future<UpdateStatus> checkForUpdate() async {
     debugPrint('🔍 [AppUpdateService] checkForUpdate llamado');
+
+    // Esperar a la inicialización si aún está en curso (se lanza en segundo
+    // plano durante el arranque para no bloquear la primera pantalla)
+    await _initFuture;
+
     debugPrint('🔍 [AppUpdateService] _versionInfo: $_versionInfo');
     debugPrint('🔍 [AppUpdateService] _currentVersion: $_currentVersion');
 

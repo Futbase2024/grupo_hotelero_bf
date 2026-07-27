@@ -118,36 +118,46 @@ class _BFStayAppState extends State<BFStayApp> {
       rethrow;
     }
 
-    // Initialize FCM Service
-    try {
-      await fcmService.initialize();
-      debugPrint('✅ FCM Service initialized');
-    } catch (e, s) {
-      debugPrint('❌ Error initializing FCM: $e');
-      crashlytics.recordError(e, s, reason: 'FCM initialization failed');
-      // No rethrow - FCM no es crítico para la app
-    }
-
-    // Initialize App Update Service
-    try {
-      await AppUpdateService.instance.initialize();
-      debugPrint('✅ App Update Service initialized');
-    } catch (e, s) {
-      debugPrint('❌ Error initializing App Update Service: $e');
-      crashlytics.recordError(
-        e,
-        s,
-        reason: 'App Update Service initialization failed',
-      );
-      // No rethrow - no es crítico
-    }
-
-    // Marcar como inicializado
+    // Marcar como inicializado: ya está todo lo imprescindible para pintar
     if (mounted) {
       setState(() {
         _isInitialized = true;
       });
     }
+
+    // ⚡ Servicios NO críticos para la primera pantalla: se inicializan en
+    // segundo plano para no bloquear el arranque.
+    _initializeBackgroundServices(crashlytics);
+  }
+
+  /// Inicializa los servicios que no hacen falta para pintar la primera
+  /// pantalla. No se espera su resultado.
+  void _initializeBackgroundServices(FirebaseCrashlytics crashlytics) {
+    // FCM: pide permisos al sistema y obtiene el token (puede tardar segundos
+    // en instalación limpia). Se muestra sobre la app ya pintada.
+    unawaited(
+      fcmService.initialize().then((_) {
+        debugPrint('✅ FCM Service initialized');
+      }).catchError((Object e, StackTrace s) {
+        debugPrint('❌ Error initializing FCM: $e');
+        crashlytics.recordError(e, s, reason: 'FCM initialization failed');
+      }),
+    );
+
+    // App Update: UpdateChecker espera internamente a esta inicialización
+    // antes de comparar versiones, así que el update forzado sigue funcionando.
+    unawaited(
+      AppUpdateService.instance.initialize().then((_) {
+        debugPrint('✅ App Update Service initialized');
+      }).catchError((Object e, StackTrace s) {
+        debugPrint('❌ Error initializing App Update Service: $e');
+        crashlytics.recordError(
+          e,
+          s,
+          reason: 'App Update Service initialization failed',
+        );
+      }),
+    );
   }
 
   @override

@@ -8,13 +8,25 @@ abstract class AdminPanelRepository {
     String? propertyId,
   });
 
-  /// Lista reservas con filtros opcionales
+  /// Lista reservas con filtros opcionales.
+  ///
+  /// [checkinStatusFilter] filtra en el servidor por el estado del check-in
+  /// asociado (`submitted`, `draft`, `validated`, `rejected`). Al usarlo, solo
+  /// se devuelven reservas CON check-in en ese estado (join interno), lo que
+  /// reduce drásticamente el volumen de la consulta del tab de check-ins.
+  ///
+  /// [lightweight] pide solo las columnas que necesitan los LISTADOS del panel
+  /// (reservas y check-ins). Con él NO vienen `guestEmail`, `guestPhone`,
+  /// `staffNotes`, `codeSentAt`, `codeFirstUsedAt` ni `createdAt`: quien los
+  /// use (facturas, ocupación, detalle) debe llamar sin este flag.
   Future<List<AdminBookingEntity>> listBookings({
     String? propertyId,
     String? statusFilter,
     DateTime? fromDate,
     DateTime? toDate,
     String? searchQuery,
+    String? checkinStatusFilter,
+    bool lightweight = false,
   });
 
   /// Obtiene una reserva por ID

@@ -7,6 +7,7 @@ class DashboardSummaryEntity extends Equatable {
     required this.upcomingCheckins,
     required this.unreadNotifications,
     required this.totalUnits,
+    this.occupiedToday = 0,
     this.recentCheckins,
   });
 
@@ -14,7 +15,16 @@ class DashboardSummaryEntity extends Equatable {
   final int upcomingCheckins;
   final int unreadNotifications;
   final int totalUnits;
+
+  /// Unidades ocupadas hoy (estancia en curso). Lo calcula el RPC para evitar
+  /// descargar todas las reservas solo para este KPI.
+  final int occupiedToday;
+
   final List<RecentCheckinEntity>? recentCheckins;
+
+  /// Porcentaje de ocupación de hoy sobre el total de unidades.
+  double get occupancyRate =>
+      totalUnits == 0 ? 0 : (occupiedToday / totalUnits) * 100;
 
   /// Convierte desde un mapa JSON
   factory DashboardSummaryEntity.fromJson(Map<String, dynamic> json) {
@@ -23,6 +33,7 @@ class DashboardSummaryEntity extends Equatable {
       upcomingCheckins: json['upcoming_checkins'] as int? ?? 0,
       unreadNotifications: json['unread_notifications'] as int? ?? 0,
       totalUnits: json['total_units'] as int? ?? 0,
+      occupiedToday: json['occupied_today'] as int? ?? 0,
       recentCheckins: (json['recent_checkins'] as List<dynamic>?)
           ?.map((e) => RecentCheckinEntity.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -35,6 +46,7 @@ class DashboardSummaryEntity extends Equatable {
         upcomingCheckins,
         unreadNotifications,
         totalUnits,
+        occupiedToday,
         recentCheckins,
       ];
 }

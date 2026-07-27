@@ -186,12 +186,9 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.publicHome,
           name: 'public-home',
-          builder: (context, state) => BlocProvider(
-            create: (context) => AlojamientosBloc(
-              propertiesRepository: getIt<PropertiesRepository>(),
-            )..add(const AlojamientosStarted()),
-            child: const PublicHomeScreen(),
-          ),
+          // PublicHomeScreen es estática: no consume AlojamientosBloc, por lo
+          // que no se cargan propiedades/unidades en el arranque
+          builder: (context, state) => const PublicHomeScreen(),
         ),
         GoRoute(
           path: AppRoutes.publicHomeLight,

@@ -112,9 +112,8 @@ class FcmServiceIo implements FcmService {
         await Future<void>.delayed(const Duration(seconds: 2));
         _fcmToken = await _messaging.getToken();
       }
-      if (_fcmToken != null) {
-        await _saveTokenToSupabase();
-      }
+      // El guardado en Supabase lo hace initialize() tras configurar los
+      // listeners, para no escribir el token dos veces
     } catch (e) {
       debugPrint('❌ Error obteniendo token FCM: $e');
     }

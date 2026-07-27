@@ -19,7 +19,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.bfstay.app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36  // Android 16 (SDK 36) - requerido por Google Play
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -35,7 +35,7 @@ android {
     defaultConfig {
         applicationId = "com.bfstay.app"
         minSdk = flutter.minSdkVersion
-        targetSdk = 35  // Android 15 (SDK 35) - Edge-to-edge obligatorio
+        targetSdk = 36  // Android 16 (SDK 36) - requerido por Google Play (31 ago 2026)
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 

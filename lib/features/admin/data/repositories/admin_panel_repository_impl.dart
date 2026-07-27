@@ -77,9 +77,19 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     DateTime? fromDate,
     DateTime? toDate,
     String? searchQuery,
+    String? checkinStatusFilter,
+    bool lightweight = false,
   }) async {
     try {
       debugPrint('📋 [listBookings] Iniciando consulta...');
+
+      // Cuando se filtra por estado de check-in, el embed pasa a ser un JOIN
+      // interno y el filtro se resuelve en el servidor: la consulta devuelve
+      // solo las reservas con check-in en ese estado (p. ej. 2 filas en lugar
+      // de las ~500 de la ventana deslizante).
+      final filterByCheckinStatus =
+          checkinStatusFilter != null && checkinStatusFilter != 'all';
+      final checkinsEmbed = filterByCheckinStatus ? 'checkins!inner' : 'checkins';
 
       // Columnas disponibles en la tabla bookings:
       // id, property_id, unit_id, booking_code, last_name, checkin_date, checkout_date,
@@ -88,9 +98,10 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       // keybox_code, num_adults, num_children, children_ages
       // Consulta base sin JOINs problemáticos
       // En web, los JOINs con relaciones null lanzan aserción
-      var query = _client
-          .from('bookings')
-          .select('''
+      //
+      // `booking_units(count)` sustituye a la consulta aparte que contaba las
+      // unidades de cada reserva: PostgREST devuelve `[{"count": n}]` por fila.
+      const listColumns = '''
             id,
             booking_code,
             unit_id,
@@ -98,24 +109,39 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
             checkin_date,
             checkout_date,
             status,
-            booking_status,
             last_name,
             guest_first_name,
+            num_guests,
+            primary_guest_user_id''';
+
+      const fullColumns = '''
+$listColumns,
+            booking_status,
             guest_email,
             guest_phone,
-            num_guests,
             num_adults,
             num_children,
             staff_notes,
             code_first_used_at,
             code_sent_at,
-            created_at,
-            primary_guest_user_id,
-            checkins (
+            created_at''';
+
+      var query = _client
+          .from('bookings')
+          .select('''
+            ${lightweight ? listColumns : fullColumns},
+            booking_units (
+              count
+            ),
+            $checkinsEmbed (
               id,
               status
             )
           ''');
+
+      if (filterByCheckinStatus) {
+        query = query.eq('checkins.status', checkinStatusFilter);
+      }
 
       // Aplicar filtros ANTES del order
       if (propertyId != null) {
@@ -143,18 +169,31 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
       debugPrint('📋 [listBookings] Respuesta recibida: ${response.length} registros');
 
       // Cargar nombres de units y properties por separado para evitar errores de JOIN en web
-      final bookingIds = <String>[];
       final unitIds = <String>{};
       final propertyIds = <String>{};
+      // Unidades por reserva, ya resueltas por el embed `booking_units(count)`.
+      final unitsCounts = <String, int>{};
       for (final row in response as List) {
-        bookingIds.add(row['id'] as String);
+        final bookingId = row['id'] as String;
         if (row['unit_id'] != null) unitIds.add(row['unit_id'] as String);
         if (row['property_id'] != null) propertyIds.add(row['property_id'] as String);
+
+        final countRaw = row['booking_units'];
+        if (countRaw is List && countRaw.isNotEmpty) {
+          final count = (countRaw.first as Map)['count'];
+          if (count is int && count > 0) unitsCounts[bookingId] = count;
+        }
       }
 
-      // Obtener nombres de units
+      // Las dos consultas auxiliares que quedan son independientes entre sí: se
+      // lanzan a la vez (antes eran 3 idas y vueltas encadenadas después de la
+      // de reservas). Cada una absorbe su propio error para que un fallo
+      // parcial no tumbe la lista.
       final unitNames = <String, String>{};
-      if (unitIds.isNotEmpty) {
+      final propertyNames = <String, String>{};
+
+      Future<void> loadUnitNames() async {
+        if (unitIds.isEmpty) return;
         try {
           final unitsResponse = await _client
               .from('units')
@@ -168,9 +207,8 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         }
       }
 
-      // Obtener nombres de properties
-      final propertyNames = <String, String>{};
-      if (propertyIds.isNotEmpty) {
+      Future<void> loadPropertyNames() async {
+        if (propertyIds.isEmpty) return;
         try {
           final propertiesResponse = await _client
               .from('properties')
@@ -184,22 +222,10 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
         }
       }
 
-      // Obtener conteo de unidades por reserva (soporte multi-unidad)
-      final unitsCounts = <String, int>{};
-      if (bookingIds.isNotEmpty) {
-        try {
-          final bookingUnitsResponse = await _client
-              .from('booking_units')
-              .select('booking_id')
-              .inFilter('booking_id', bookingIds);
-          for (final bu in bookingUnitsResponse) {
-            final bid = bu['booking_id'] as String;
-            unitsCounts[bid] = (unitsCounts[bid] ?? 0) + 1;
-          }
-        } catch (e) {
-          debugPrint('⚠️ [listBookings] Error cargando booking_units: $e');
-        }
-      }
+      await Future.wait([
+        loadUnitNames(),
+        loadPropertyNames(),
+      ]);
 
       // Mapear respuesta a entidades
       return response.map((row) {

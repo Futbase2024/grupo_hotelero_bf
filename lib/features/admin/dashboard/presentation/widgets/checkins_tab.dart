@@ -39,7 +39,8 @@ class _CheckinsTabState extends State<CheckinsTab> {
           prev.checkinsCustomDateStart != curr.checkinsCustomDateStart ||
           prev.checkinsCustomDateEnd != curr.checkinsCustomDateEnd ||
           prev.checkinsSortOrder != curr.checkinsSortOrder ||
-          prev.isLoadingCheckins != curr.isLoadingCheckins,
+          prev.isLoadingCheckins != curr.isLoadingCheckins ||
+          prev.isRefreshingCheckins != curr.isRefreshingCheckins,
       builder: (context, state) {
         return SizedBox.expand(
           child: Column(
@@ -89,6 +90,19 @@ class _CheckinsTabState extends State<CheckinsTab> {
               ),
             ),
           ),
+          // Indicador discreto de refresco en segundo plano: la lista actual
+          // permanece visible mientras llegan los datos nuevos.
+          if (state.isRefreshingCheckins) ...[
+            const SizedBox(width: 10),
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.gold,
+              ),
+            ),
+          ],
           const Spacer(),
           IconButton(
             onPressed: () {
@@ -678,14 +692,34 @@ class _CheckinsTabState extends State<CheckinsTab> {
     final checkins = state.filteredCheckins;
 
     if (checkins.isEmpty) {
-      return EmptyStateWidget(
-        icon: Icons.how_to_reg_outlined,
-        title: 'Sin check-ins',
-        subtitle: state.checkinsDateFilter != DateFilter.all ||
-                (state.checkinsSearchQuery != null &&
-                    state.checkinsSearchQuery!.isNotEmpty)
-            ? 'No hay resultados para los filtros aplicados'
-            : 'Los check-ins aparecerán cuando los huéspedes los envíen',
+      // El estado vacío también admite "tirar para refrescar": con el filtro
+      // por defecto ("Por revisar") es lo habitual y el admin necesita poder
+      // forzar la recarga sin salir del tab.
+      return RefreshIndicator(
+        color: AppColors.gold,
+        backgroundColor: AppColors.darkSurface,
+        onRefresh: () async {
+          context.read<AdminDashboardBloc>().add(
+                const AdminDashboardCheckinsLoadRequested(),
+              );
+        },
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: EmptyStateWidget(
+                icon: Icons.how_to_reg_outlined,
+                title: 'Sin check-ins',
+                subtitle: state.checkinsDateFilter != DateFilter.all ||
+                        (state.checkinsSearchQuery != null &&
+                            state.checkinsSearchQuery!.isNotEmpty)
+                    ? 'No hay resultados para los filtros aplicados'
+                    : 'Los check-ins aparecerán cuando los huéspedes los envíen',
+              ),
+            ),
+          ),
+        ),
       );
     }
 
