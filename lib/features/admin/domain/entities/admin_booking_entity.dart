@@ -36,6 +36,7 @@ class AdminBookingEntity extends Equatable {
     this.checkinStatus,
     this.signatureSvg,
     this.docsPending,
+    this.autoValidateCheckin = false,
     this.activatedAt,
     this.closedAt,
     this.checkoutRequestedAt,
@@ -98,6 +99,9 @@ class AdminBookingEntity extends Equatable {
   final String? checkinStatus; // not_started, in_progress, submitted, validated, rejected
   final String? signatureSvg; // SVG de la firma del titular
   final int? docsPending;
+
+  /// Si el check-in de esta reserva se valida automáticamente al enviarlo
+  final bool autoValidateCheckin;
 
   // Check-out
   final DateTime? activatedAt;
@@ -393,6 +397,7 @@ class AdminBookingEntity extends Equatable {
         checkinStatus: checkinStatus,
         signatureSvg: signatureSvg,
         docsPending: json['docs_pending'] as int?,
+        autoValidateCheckin: json['auto_validate_checkin'] as bool? ?? false,
         activatedAt: activatedAt,
         closedAt: closedAt,
         checkoutRequestedAt: checkoutRequestedAt,
@@ -492,6 +497,7 @@ class AdminBookingEntity extends Equatable {
       'checkin_status': checkinStatus,
       'signature_svg': signatureSvg,
       'docs_pending': docsPending,
+      'auto_validate_checkin': autoValidateCheckin,
       'activated_at': activatedAt?.toIso8601String(),
       'closed_at': closedAt?.toIso8601String(),
       'checkout_requested_at': checkoutRequestedAt?.toIso8601String(),
@@ -539,6 +545,7 @@ class AdminBookingEntity extends Equatable {
     String? checkinStatus,
     String? signatureSvg,
     int? docsPending,
+    bool? autoValidateCheckin,
     DateTime? activatedAt,
     DateTime? closedAt,
     DateTime? checkoutRequestedAt,
@@ -583,6 +590,7 @@ class AdminBookingEntity extends Equatable {
       checkinStatus: checkinStatus ?? this.checkinStatus,
       signatureSvg: signatureSvg ?? this.signatureSvg,
       docsPending: docsPending ?? this.docsPending,
+      autoValidateCheckin: autoValidateCheckin ?? this.autoValidateCheckin,
       activatedAt: activatedAt ?? this.activatedAt,
       closedAt: closedAt ?? this.closedAt,
       checkoutRequestedAt: checkoutRequestedAt ?? this.checkoutRequestedAt,
@@ -630,6 +638,7 @@ class AdminBookingEntity extends Equatable {
         checkinStatus,
         signatureSvg,
         docsPending,
+        autoValidateCheckin,
         activatedAt,
         closedAt,
         checkoutRequestedAt,

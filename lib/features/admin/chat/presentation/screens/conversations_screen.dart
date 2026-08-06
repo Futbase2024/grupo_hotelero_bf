@@ -8,6 +8,7 @@ import '../../../../../core/theme/app_theme.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../domain/bloc/conversations_bloc.dart';
 import '../widgets/conversation_tile.dart';
+import '../widgets/conversations_search_field.dart';
 
 // ignore: avoid_classes_with_only_static_members
 class _Debug {
@@ -123,10 +124,27 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     }
 
     if (state is ConversationsLoaded) {
-      if (state.hasConversations) {
-        return _buildConversationsList(context, state);
+      if (!state.hasConversations) {
+        return _buildEmptyState(context);
       }
-      return _buildEmptyState(context);
+
+      // El buscador se mantiene visible aunque el filtro no devuelva nada, o
+      // no habría forma de corregir la búsqueda.
+      return Column(
+        children: [
+          ConversationsSearchField(
+            initialValue: state.searchQuery,
+            onChanged: (query) => context
+                .read<ConversationsBloc>()
+                .add(ConversationsSearchChanged(query: query)),
+          ),
+          Expanded(
+            child: state.hasNoSearchResults
+                ? _buildNoResultsState(context, state.searchQuery)
+                : _buildConversationsList(context, state),
+          ),
+        ],
+      );
     }
 
     return const SizedBox.shrink();
@@ -139,15 +157,49 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
         context.read<ConversationsBloc>().add(const ConversationsRefreshRequested());
       },
       child: ListView.builder(
-        itemCount: state.sortedConversations.length,
+        itemCount: state.visibleConversations.length,
         itemBuilder: (context, index) {
-          final conversation = state.sortedConversations[index];
+          final conversation = state.visibleConversations[index];
           return ConversationTile(
             conversation: conversation,
             onTap: () => _openConversation(context, conversation.id),
             onDelete: () => _deleteConversation(context, conversation.id),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState(BuildContext context, String query) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.goldWithAlpha20,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_off,
+                size: 32,
+                color: AppColors.gold,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              S.of(context).admin_chat_search_no_results(query),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.gray500,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }

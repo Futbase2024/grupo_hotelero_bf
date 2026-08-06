@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/enums/enums.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Tile de reserva profesional para usar en listas.
 /// Diseño moderno con indicador de status, información clara y feedback táctil.
@@ -19,6 +20,10 @@ class BookingListTile extends StatelessWidget {
     this.onTap,
     this.onChatTap,
     this.canChat = false,
+    this.onReactivateTap,
+    this.isReactivating = false,
+    this.onDeleteTap,
+    this.isDeleting = false,
   });
 
   final String unitName;
@@ -37,6 +42,28 @@ class BookingListTile extends StatelessWidget {
 
   /// Indica si se puede chatear con el huésped (tiene primaryGuestUserId)
   final bool canChat;
+
+  /// Callback para reactivar una reserva cancelada.
+  /// Solo se muestra el botón si la reserva está cancelada y hay callback.
+  final VoidCallback? onReactivateTap;
+
+  /// Indica si la reactivación está en curso (muestra loader en el botón)
+  final bool isReactivating;
+
+  /// Callback para eliminar definitivamente una reserva cancelada.
+  /// Solo se muestra el botón si la reserva está cancelada y hay callback.
+  final VoidCallback? onDeleteTap;
+
+  /// Indica si la eliminación está en curso (muestra loader en el botón)
+  final bool isDeleting;
+
+  /// Indica si debe mostrarse el botón de reactivar
+  bool get _canReactivate =>
+      status.isCancelled && (onReactivateTap != null || isReactivating);
+
+  /// Indica si debe mostrarse el botón de eliminar
+  bool get _canDelete =>
+      status.isCancelled && (onDeleteTap != null || isDeleting);
 
   /// Indica si la reserva tiene múltiples unidades
   bool get hasMultipleUnits => totalUnits > 1;
@@ -377,6 +404,85 @@ class BookingListTile extends StatelessWidget {
                             ],
 
                             const Spacer(),
+
+                            // Botón de reactivar (solo reservas canceladas)
+                            if (_canReactivate) ...[
+                              GestureDetector(
+                                onTap: isReactivating ? null : onReactivateTap,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: AppColors.success.withValues(alpha: 0.4),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isReactivating)
+                                        const SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.success,
+                                          ),
+                                        )
+                                      else
+                                        const Icon(
+                                          Icons.restart_alt_rounded,
+                                          size: 14,
+                                          color: AppColors.success,
+                                        ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        S.of(context).admin_booking_reactivate_action,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.success,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+
+                            // Botón de eliminar (solo reservas canceladas)
+                            if (_canDelete) ...[
+                              GestureDetector(
+                                onTap: isDeleting ? null : onDeleteTap,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.error.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: isDeleting
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.error,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 16,
+                                          color: AppColors.error,
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
 
                             // Botón de chat (si se puede chatear)
                             if (canChat && onChatTap != null) ...[

@@ -447,6 +447,41 @@ $listColumns,
     );
   }
 
+  /// Activa/desactiva la auto-validación del check-in de una reserva
+  ///
+  /// La RPC valida en el acto el check-in si ya estaba enviado y pendiente
+  @override
+  Future<bool> setBookingAutoValidateCheckin({
+    required String bookingId,
+    required bool enabled,
+  }) async {
+    try {
+      debugPrint('⚙️ [setBookingAutoValidateCheckin] Reserva: $bookingId, activada: $enabled');
+
+      final response = await _client.rpc(
+        'set_booking_auto_validate_checkin',
+        params: {
+          'p_booking_id': bookingId,
+          'p_enabled': enabled,
+        },
+      );
+
+      final data = response as Map<String, dynamic>?;
+      if (data == null || data['success'] != true) {
+        final error = data?['error'] as String? ?? 'Error desconocido';
+        throw Exception(error);
+      }
+
+      final validatedNow = data['validated_now'] as bool? ?? false;
+      debugPrint('✅ [setBookingAutoValidateCheckin] Actualizado (validado ahora: $validatedNow)');
+      return validatedNow;
+    } catch (e, s) {
+      debugPrint('❌ [setBookingAutoValidateCheckin] Error: $e');
+      debugPrint('❌ [setBookingAutoValidateCheckin] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   @override
   Future<void> rejectCheckin({
     required String checkinId,
@@ -490,6 +525,46 @@ $listColumns,
     } catch (e, s) {
       debugPrint('❌ [cancelCheckin] Error: $e');
       debugPrint('❌ [cancelCheckin] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Borra los datos del check-in de una reserva sin borrar la reserva
+  @override
+  Future<List<String>> deleteCheckin({
+    required String bookingId,
+  }) async {
+    try {
+      debugPrint('🗑️ [deleteCheckin] Borrando check-in de la reserva: $bookingId');
+
+      final response = await _client.rpc(
+        'delete_checkin',
+        params: {'p_booking_id': bookingId},
+      ) as Map<String, dynamic>?;
+
+      if (response == null) {
+        throw Exception('No se recibió respuesta del servidor');
+      }
+
+      final success = response['success'] as bool? ?? false;
+
+      if (!success) {
+        final error = response['error'] as String? ?? 'Error desconocido';
+        throw Exception(error);
+      }
+
+      final storagePaths = (response['storage_paths'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [];
+
+      debugPrint(
+          '✅ [deleteCheckin] Check-in reseteado. ${storagePaths.length} archivos de storage pendientes');
+
+      return storagePaths;
+    } catch (e, s) {
+      debugPrint('❌ [deleteCheckin] Error: $e');
+      debugPrint('❌ [deleteCheckin] StackTrace: $s');
       rethrow;
     }
   }
@@ -688,6 +763,40 @@ $listColumns,
     } catch (e, s) {
       debugPrint('❌ [cancelBooking] Error: $e');
       debugPrint('❌ [cancelBooking] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  /// Reactiva una reserva cancelada (vuelve a estado confirmado)
+  @override
+  Future<void> reactivateBooking({
+    required String bookingId,
+  }) async {
+    try {
+      debugPrint('♻️ [reactivateBooking] Reactivando reserva: $bookingId');
+
+      final success = await _client.rpc(
+        'reactivate_booking',
+        params: {'p_booking_id': bookingId},
+      ) as bool?;
+
+      if (success != true) {
+        throw Exception('No se pudo reactivar la reserva');
+      }
+
+      debugPrint('✅ [reactivateBooking] Reserva reactivada correctamente');
+    } on PostgrestException catch (e, s) {
+      debugPrint('❌ [reactivateBooking] Error: ${e.message}');
+      debugPrint('❌ [reactivateBooking] StackTrace: $s');
+      // La RPC devuelve mensajes con prefijo (unit_conflict:, invalid_status:...)
+      // que no aportan nada al admin; se muestra solo la parte legible.
+      final message = e.message.contains(':')
+          ? e.message.split(':').sublist(1).join(':').trim()
+          : e.message;
+      throw Exception(message);
+    } catch (e, s) {
+      debugPrint('❌ [reactivateBooking] Error: $e');
+      debugPrint('❌ [reactivateBooking] StackTrace: $s');
       rethrow;
     }
   }
@@ -947,6 +1056,41 @@ $listColumns,
     } catch (e, s) {
       debugPrint('❌ [updateBookingGuestPhone] Error: $e');
       debugPrint('❌ [updateBookingGuestPhone] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<GuestContactUpdateResult> updateBookingGuestContact({
+    required String bookingId,
+    required String guestEmail,
+    String? guestPhone,
+  }) async {
+    try {
+      debugPrint('📇 [updateBookingGuestContact] Actualizando contacto de la reserva: $bookingId');
+
+      final response = await _client.rpc(
+        'admin_update_booking_guest_contact',
+        params: {
+          'p_booking_id': bookingId,
+          'p_guest_email': guestEmail,
+          'p_guest_phone': guestPhone,
+        },
+      );
+
+      final result = GuestContactUpdateResult.fromJson(
+        (response as Map).cast<String, dynamic>(),
+      );
+
+      debugPrint(
+        '✅ [updateBookingGuestContact] Contacto actualizado '
+        '(emailChanged: ${result.emailChanged}, accessReset: ${result.accessReset})',
+      );
+
+      return result;
+    } catch (e, s) {
+      debugPrint('❌ [updateBookingGuestContact] Error: $e');
+      debugPrint('❌ [updateBookingGuestContact] StackTrace: $s');
       rethrow;
     }
   }

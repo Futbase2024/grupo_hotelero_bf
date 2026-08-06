@@ -22,7 +22,7 @@ import 'app_localizations_pt.dart';
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
-/// import 'generated/app_localizations.dart';
+/// import 'l10n/app_localizations.dart';
 ///
 /// return MaterialApp(
 ///   localizationsDelegates: S.localizationsDelegates,
@@ -1842,6 +1842,90 @@ abstract class S {
   /// **'HUÉSPED'**
   String get admin_booking_guest_section;
 
+  /// No description provided for @admin_booking_guest_no_phone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin teléfono'**
+  String get admin_booking_guest_no_phone;
+
+  /// No description provided for @admin_booking_guest_edit_tooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar contacto del huésped'**
+  String get admin_booking_guest_edit_tooltip;
+
+  /// No description provided for @admin_booking_guest_edit_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar contacto'**
+  String get admin_booking_guest_edit_title;
+
+  /// No description provided for @admin_booking_guest_edit_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Corrige el email y el teléfono del huésped de esta reserva.'**
+  String get admin_booking_guest_edit_desc;
+
+  /// No description provided for @admin_booking_guest_edit_email_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Email'**
+  String get admin_booking_guest_edit_email_label;
+
+  /// No description provided for @admin_booking_guest_edit_phone_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono'**
+  String get admin_booking_guest_edit_phone_label;
+
+  /// No description provided for @admin_booking_guest_edit_email_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce el email del huésped'**
+  String get admin_booking_guest_edit_email_required;
+
+  /// No description provided for @admin_booking_guest_edit_email_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'El email no tiene un formato válido'**
+  String get admin_booking_guest_edit_email_invalid;
+
+  /// No description provided for @admin_booking_guest_edit_saved.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacto del huésped actualizado'**
+  String get admin_booking_guest_edit_saved;
+
+  /// No description provided for @admin_booking_guest_edit_access_reset_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso restablecido'**
+  String get admin_booking_guest_edit_access_reset_title;
+
+  /// No description provided for @admin_booking_guest_edit_access_reset_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'El huésped ya había abierto la reserva con el email anterior. Deberá entrar de nuevo con su código de reserva; su chat y sus notificaciones se conservarán.'**
+  String get admin_booking_guest_edit_access_reset_desc;
+
+  /// No description provided for @admin_booking_guest_edit_resend_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Reenviar el código de acceso?'**
+  String get admin_booking_guest_edit_resend_title;
+
+  /// No description provided for @admin_booking_guest_edit_resend_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Se enviará el código de la reserva a {email}.'**
+  String admin_booking_guest_edit_resend_desc(String email);
+
+  /// No description provided for @admin_booking_guest_edit_resend_confirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar'**
+  String get admin_booking_guest_edit_resend_confirm;
+
   /// No description provided for @admin_booking_no_name.
   ///
   /// In es, this message translates to:
@@ -2010,6 +2094,42 @@ abstract class S {
   /// **'documentos pendientes'**
   String get admin_booking_docs_pending;
 
+  /// No description provided for @admin_booking_auto_validate_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Auto-validar check-in'**
+  String get admin_booking_auto_validate_title;
+
+  /// No description provided for @admin_booking_auto_validate_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'El check-in del huésped se validará solo, sin revisión manual'**
+  String get admin_booking_auto_validate_subtitle;
+
+  /// No description provided for @admin_booking_auto_validate_enabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Auto-validación de check-in activada'**
+  String get admin_booking_auto_validate_enabled;
+
+  /// No description provided for @admin_booking_auto_validate_disabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Auto-validación de check-in desactivada'**
+  String get admin_booking_auto_validate_disabled;
+
+  /// No description provided for @admin_booking_auto_validate_applied_now.
+  ///
+  /// In es, this message translates to:
+  /// **'Auto-validación activada: el check-in pendiente ha quedado validado'**
+  String get admin_booking_auto_validate_applied_now;
+
+  /// No description provided for @admin_booking_auto_validate_error.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al cambiar la auto-validación: {error}'**
+  String admin_booking_auto_validate_error(String error);
+
   /// No description provided for @admin_booking_validate_button.
   ///
   /// In es, this message translates to:
@@ -2159,6 +2279,60 @@ abstract class S {
   /// In es, this message translates to:
   /// **'Marca la reserva como cancelada'**
   String get admin_booking_cancel_booking_subtitle;
+
+  /// No description provided for @admin_booking_reactivate_booking_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Reactivar reserva'**
+  String get admin_booking_reactivate_booking_title;
+
+  /// No description provided for @admin_booking_reactivate_booking_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Vuelve a poner la reserva como confirmada'**
+  String get admin_booking_reactivate_booking_subtitle;
+
+  /// No description provided for @admin_booking_reactivate_booking_confirm.
+  ///
+  /// In es, this message translates to:
+  /// **'La reserva volverá al estado confirmado y el huésped podrá acceder de nuevo. ¿Quieres reactivarla?'**
+  String get admin_booking_reactivate_booking_confirm;
+
+  /// No description provided for @admin_booking_reactivate_action.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar'**
+  String get admin_booking_reactivate_action;
+
+  /// No description provided for @admin_booking_yes_reactivate.
+  ///
+  /// In es, this message translates to:
+  /// **'Sí, reactivar'**
+  String get admin_booking_yes_reactivate;
+
+  /// No description provided for @admin_booking_reactivated_successfully.
+  ///
+  /// In es, this message translates to:
+  /// **'Reserva reactivada correctamente'**
+  String get admin_booking_reactivated_successfully;
+
+  /// No description provided for @admin_booking_cannot_reactivate_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Reserva no cancelada'**
+  String get admin_booking_cannot_reactivate_title;
+
+  /// No description provided for @admin_booking_cannot_reactivate_message.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo se pueden reactivar reservas canceladas.'**
+  String get admin_booking_cannot_reactivate_message;
+
+  /// No description provided for @admin_booking_error_reactivating.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al reactivar reserva: {error}'**
+  String admin_booking_error_reactivating(String error);
 
   /// No description provided for @admin_booking_delete_booking_title.
   ///
@@ -3767,6 +3941,42 @@ abstract class S {
   /// In es, this message translates to:
   /// **'Foto del documento'**
   String get guest_checkin_document_photo;
+
+  /// No description provided for @guest_checkin_document_type_dni.
+  ///
+  /// In es, this message translates to:
+  /// **'DNI'**
+  String get guest_checkin_document_type_dni;
+
+  /// No description provided for @guest_checkin_document_type_nie.
+  ///
+  /// In es, this message translates to:
+  /// **'NIE'**
+  String get guest_checkin_document_type_nie;
+
+  /// No description provided for @guest_checkin_document_type_passport.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasaporte'**
+  String get guest_checkin_document_type_passport;
+
+  /// No description provided for @guest_checkin_document_side_front.
+  ///
+  /// In es, this message translates to:
+  /// **'Anverso'**
+  String get guest_checkin_document_side_front;
+
+  /// No description provided for @guest_checkin_document_side_back.
+  ///
+  /// In es, this message translates to:
+  /// **'Reverso'**
+  String get guest_checkin_document_side_back;
+
+  /// No description provided for @guest_checkin_document_passport_page.
+  ///
+  /// In es, this message translates to:
+  /// **'Página de datos'**
+  String get guest_checkin_document_passport_page;
 
   /// No description provided for @guest_checkin_image_captured.
   ///
@@ -5818,6 +6028,156 @@ abstract class S {
     String checkIn,
     String checkOut,
   );
+
+  /// No description provided for @admin_checkin_more_actions.
+  ///
+  /// In es, this message translates to:
+  /// **'Más acciones'**
+  String get admin_checkin_more_actions;
+
+  /// No description provided for @admin_checkin_danger_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar datos'**
+  String get admin_checkin_danger_title;
+
+  /// No description provided for @admin_checkin_delete_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar check-in'**
+  String get admin_checkin_delete_title;
+
+  /// No description provided for @admin_checkin_delete_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elimina huéspedes, documentos y firma. La reserva se mantiene y el huésped puede repetir el check-in.'**
+  String get admin_checkin_delete_subtitle;
+
+  /// No description provided for @admin_checkin_delete_confirm_body.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminarán los huéspedes registrados, sus documentos y la firma. La reserva se mantiene y el huésped podrá volver a hacer el check-in con el mismo código. No se le enviará ningún aviso.'**
+  String get admin_checkin_delete_confirm_body;
+
+  /// No description provided for @admin_checkin_deleted_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Check-in eliminado. La reserva vuelve a estar pendiente de check-in.'**
+  String get admin_checkin_deleted_success;
+
+  /// No description provided for @admin_checkin_delete_booking_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar check-in y reserva'**
+  String get admin_checkin_delete_booking_title;
+
+  /// No description provided for @admin_checkin_delete_booking_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elimina la reserva completa y todos sus datos. No se puede deshacer.'**
+  String get admin_checkin_delete_booking_subtitle;
+
+  /// No description provided for @admin_checkin_delete_booking_confirm_body.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminará la reserva completa: check-in, huéspedes, documentos, facturas, pagos y conversaciones. Esta acción no se puede deshacer.'**
+  String get admin_checkin_delete_booking_confirm_body;
+
+  /// No description provided for @admin_checkin_delete_booking_code_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe {code} para confirmar'**
+  String admin_checkin_delete_booking_code_hint(String code);
+
+  /// No description provided for @admin_checkin_booking_deleted_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Reserva eliminada correctamente'**
+  String get admin_checkin_booking_deleted_success;
+
+  /// No description provided for @chat_attach_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Adjuntar'**
+  String get chat_attach_title;
+
+  /// No description provided for @chat_attach_camera.
+  ///
+  /// In es, this message translates to:
+  /// **'Cámara'**
+  String get chat_attach_camera;
+
+  /// No description provided for @chat_attach_gallery.
+  ///
+  /// In es, this message translates to:
+  /// **'Galería'**
+  String get chat_attach_gallery;
+
+  /// No description provided for @chat_attach_document.
+  ///
+  /// In es, this message translates to:
+  /// **'Documento'**
+  String get chat_attach_document;
+
+  /// No description provided for @chat_attachment_uploading.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviando archivo…'**
+  String get chat_attachment_uploading;
+
+  /// No description provided for @chat_attachment_too_large.
+  ///
+  /// In es, this message translates to:
+  /// **'El archivo supera el límite de 10 MB'**
+  String get chat_attachment_too_large;
+
+  /// No description provided for @chat_attachment_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar el archivo'**
+  String get chat_attachment_error;
+
+  /// No description provided for @chat_attachment_open_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir el archivo'**
+  String get chat_attachment_open_error;
+
+  /// No description provided for @chat_attachment_uploading_progress.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviando {current} de {total}…'**
+  String chat_attachment_uploading_progress(int current, int total);
+
+  /// No description provided for @chat_attachment_save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar en galería'**
+  String get chat_attachment_save;
+
+  /// No description provided for @chat_attachment_saved.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen guardada en la galería'**
+  String get chat_attachment_saved;
+
+  /// No description provided for @chat_attachment_save_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar la imagen'**
+  String get chat_attachment_save_error;
+
+  /// No description provided for @admin_chat_search_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar por nombre o código de reserva'**
+  String get admin_chat_search_hint;
+
+  /// No description provided for @admin_chat_search_no_results.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin resultados para «{query}»'**
+  String admin_chat_search_no_results(String query);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

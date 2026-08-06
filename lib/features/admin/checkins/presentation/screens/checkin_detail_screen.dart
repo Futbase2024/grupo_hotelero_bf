@@ -1,13 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/services/notification_service.dart';
+import 'package:bf_stay/features/admin/checkins/presentation/widgets/checkin_danger_actions_sheet.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_entities.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/admin/domain/services/email_service.dart';
+import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla de detalle de check-in para administración
@@ -133,11 +136,19 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
             ],
             // Cancelar disponible tanto si está pendiente como rechazado
             IconButton(
-              icon: const Icon(Icons.delete_forever, color: AppColors.error),
+              icon: const Icon(Icons.cancel_schedule_send_outlined,
+                  color: AppColors.error),
               tooltip: S.of(context).admin_checkin_cancel_booking,
               onPressed: _showCancelDialog,
             ),
           ],
+          // Borrar check-in / borrar reserva: disponible en cualquier estado
+          if (_checkinDetail != null)
+            IconButton(
+              icon: const Icon(Icons.more_vert, color: AppColors.white),
+              tooltip: S.of(context).admin_checkin_more_actions,
+              onPressed: _showDangerActions,
+            ),
         ],
       ),
       body: _buildBody(),
@@ -677,6 +688,9 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
   String _getDocumentTypeLabel(String type) {
     switch (type.toLowerCase()) {
       case 'dni':
+      // Valores heredados de cuando el tipo y la cara se guardaban juntos
+      case 'dni_front':
+      case 'dni_back':
         return S.of(context).admin_checkin_doc_type_dni;
       case 'nie':
         return S.of(context).admin_checkin_doc_type_nie;
@@ -1026,12 +1040,10 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
       try {
         // 1. Cancelar en la base de datos
-        await Supabase.instance.client.rpc(
-          'cancel_checkin',
-          params: {
-            'p_checkin_id': widget.checkinId,
-            'p_reason': reason,
-          },
+        await getIt<AdminPanelRepository>().cancelCheckin(
+          checkinId: widget.checkinId,
+          bookingId: _checkinDetail?.bookingId ?? '',
+          reason: reason,
         );
 
         // 2. Enviar email de cancelación al huésped
@@ -1086,6 +1098,40 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         }
       }
     }
+  }
+
+  /// Abre la hoja para borrar solo el check-in o la reserva completa
+  Future<void> _showDangerActions() async {
+    final detail = _checkinDetail;
+    if (detail == null) return;
+
+    final authState = context.read<AuthBloc>().state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+
+    final result = await CheckinDangerActionsSheet.show(
+      context: context,
+      repository: getIt<AdminPanelRepository>(),
+      bookingId: detail.bookingId,
+      bookingCode: detail.bookingCode,
+      isAdmin: isAdmin,
+    );
+
+    if (result == null || !mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result == CheckinDangerResult.checkinDeleted
+              ? S.of(context).admin_checkin_deleted_success
+              : S.of(context).admin_checkin_booking_deleted_success,
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.fixed,
+      ),
+    );
+
+    // Devolver true para que la lista de check-ins se refresque
+    Navigator.pop(context, true);
   }
 }
 

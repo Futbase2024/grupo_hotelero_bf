@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -7,14 +8,18 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/config/supabase_config.dart';
+import '../../../../../core/constants/checkin_policy.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
+import '../../../../../core/utils/guest_documents_cleaner.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../data/services/booking_email_pdf_service.dart';
 import '../../../domain/entities/admin_booking_entity.dart';
 import '../../../domain/entities/booking_unit_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../domain/services/email_service.dart';
+import '../widgets/edit_guest_contact_dialog.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   final String bookingId;
@@ -41,8 +46,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   bool _isSendingRoomReady = false;
   bool _isClosingBooking = false;
   bool _isCancellingBooking = false;
+  bool _isReactivatingBooking = false;
   bool _isDeletingBooking = false;
+  bool _isUpdatingGuestContact = false;
+  bool _isUpdatingAutoValidate = false;
   final _emailService = EmailService();
+
+  /// Eliminar una reserva es una acción exclusiva de admin (la RPC
+  /// `delete_booking` también lo exige).
+  bool get _isCurrentUserAdmin {
+    final authState = context.read<AuthBloc>().state;
+    return authState is AuthAuthenticated && authState.user.isAdmin;
+  }
 
   @override
   void initState() {
@@ -282,6 +297,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         'A continuación encontrarás los datos de tu estancia:\n'
         '📅 *Entrada:* $checkIn\n'
         '📅 *Salida:* $checkOut\n\n'
+        '━━━━━━━━━━━━━━━━━━━━\n'
+        '⏰ *${CheckinPolicy.maxCheckinNotice}*\n'
+        '━━━━━━━━━━━━━━━━━━━━\n\n'
         'Para acceder a la aplicación y validar tus datos de check-in, utiliza el siguiente código:\n\n'
         '🔑 *TU CÓDIGO DE ACCESO*\n'
         '*${booking.bookingCode}*\n\n'
@@ -456,6 +474,188 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
+  /// Corrige el email y el teléfono del huésped de la reserva
+  Future<void> _editGuestContact() async {
+    if (_booking == null) return;
+
+    final input = await EditGuestContactDialog.show(
+      context,
+      initialEmail: _booking!.guestEmail,
+      initialPhone: _booking!.guestPhone,
+    );
+    if (input == null) return;
+
+    setState(() => _isUpdatingGuestContact = true);
+    try {
+      final result = await widget.repository.updateBookingGuestContact(
+        bookingId: _booking!.id,
+        guestEmail: input.email,
+        guestPhone: input.phone,
+      );
+      await _loadBooking();
+
+      if (!mounted) return;
+      _showSnackBar(S.of(context).admin_booking_guest_edit_saved, isError: false);
+
+      // El huésped ya había abierto la reserva con el email anterior: se le
+      // avisa al admin de que deberá volver a entrar con su código.
+      if (result.accessReset) {
+        await _showAccessResetDialog();
+        if (!mounted) return;
+      }
+
+      // Si el email cambió, el código pudo no haber llegado nunca a su destino
+      if (result.emailChanged) {
+        final shouldResend = await _showResendCodeConfirmDialog(input.email);
+        if (shouldResend == true && mounted) {
+          await _resendCode();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(S.of(context).admin_booking_error(e.toString()), isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingGuestContact = false);
+      }
+    }
+  }
+
+  Future<void> _showAccessResetDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.all(24),
+        backgroundColor: AppColors.darkSurface,
+        content: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: AppColors.goldWithAlpha10,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.info_outline, size: 48, color: AppColors.gold),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                S.of(context).admin_booking_guest_edit_access_reset_title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                S.of(context).admin_booking_guest_edit_access_reset_desc,
+                style: const TextStyle(fontSize: 15, color: AppColors.gray300, height: 1.4),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: AppColors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: Text(S.of(context).common_understood),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showResendCodeConfirmDialog(String email) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.all(24),
+        backgroundColor: AppColors.darkSurface,
+        content: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: AppColors.goldWithAlpha10,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.mark_email_read_outlined, size: 48, color: AppColors.gold),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                S.of(context).admin_booking_guest_edit_resend_title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                S.of(context).admin_booking_guest_edit_resend_desc(email),
+                style: const TextStyle(fontSize: 15, color: AppColors.gray300, height: 1.4),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.gray300,
+                        side: const BorderSide(color: AppColors.darkBorder),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(S.of(context).common_later),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.gold,
+                        foregroundColor: AppColors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(S.of(context).admin_booking_guest_edit_resend_confirm),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _validateCheckin() async {
     if (_booking == null || _booking!.checkinId == null) return;
 
@@ -476,6 +676,45 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } finally {
       if (mounted) {
         setState(() => _isValidating = false);
+      }
+    }
+  }
+
+  /// Activa/desactiva la auto-validación del check-in de esta reserva
+  ///
+  /// Si se activa con un check-in ya enviado, la RPC lo valida en el acto y se
+  /// avisa al admin de que ha quedado validado.
+  Future<void> _toggleAutoValidateCheckin(bool enabled) async {
+    if (_booking == null) return;
+
+    setState(() => _isUpdatingAutoValidate = true);
+    try {
+      final validatedNow = await widget.repository.setBookingAutoValidateCheckin(
+        bookingId: _booking!.id,
+        enabled: enabled,
+      );
+
+      if (!mounted) return;
+
+      _showSnackBar(
+        validatedNow
+            ? S.of(context).admin_booking_auto_validate_applied_now
+            : enabled
+                ? S.of(context).admin_booking_auto_validate_enabled
+                : S.of(context).admin_booking_auto_validate_disabled,
+        isError: false,
+      );
+      await _loadBooking();
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(
+          S.of(context).admin_booking_auto_validate_error(e.toString()),
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingAutoValidate = false);
       }
     }
   }
@@ -728,6 +967,134 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return result ?? false;
   }
 
+  /// Reactiva la reserva cancelada (vuelve a estado confirmado)
+  Future<void> _reactivateBooking() async {
+    if (_booking == null) return;
+
+    // Solo tiene sentido reactivar reservas canceladas
+    if (!_booking!.isCancelled) {
+      _showInfoDialog(
+        title: S.of(context).admin_booking_cannot_reactivate_title,
+        message: S.of(context).admin_booking_cannot_reactivate_message,
+        icon: Icons.info_outline,
+        color: AppColors.info,
+      );
+      return;
+    }
+
+    final confirmed = await _showReactivateBookingDialog();
+    if (!confirmed) return; // Usuario canceló
+
+    setState(() => _isReactivatingBooking = true);
+    try {
+      await widget.repository.reactivateBooking(bookingId: _booking!.id);
+      if (mounted) {
+        _showSnackBar(S.of(context).admin_booking_reactivated_successfully, isError: false);
+        await _loadBooking();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(S.of(context).admin_booking_error_reactivating(e.toString()), isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isReactivatingBooking = false);
+      }
+    }
+  }
+
+  Future<bool> _showReactivateBookingDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierColor: AppColors.blackWithAlpha80,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.getCardColor(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.restart_alt_rounded,
+                  size: 48,
+                  color: AppColors.success,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Título
+              Text(
+                S.of(context).admin_booking_reactivate_booking_title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Descripción
+              Text(
+                S.of(context).admin_booking_reactivate_booking_confirm,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.getTextSecondaryColor(context),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.getTextPrimaryColor(context),
+                        side: BorderSide(color: AppColors.getBorderColor(context)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(S.of(context).common_cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        S.of(context).admin_booking_yes_reactivate,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result ?? false;
+  }
+
   /// Elimina completamente la reserva de la base de datos
   Future<void> _deleteBooking() async {
     if (_booking == null) return;
@@ -757,18 +1124,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       );
 
       // Eliminar archivos del storage
-      if (storagePaths.isNotEmpty) {
-        debugPrint('🗑️ [_deleteBooking] Eliminando ${storagePaths.length} archivos del storage...');
-        for (final path in storagePaths) {
-          try {
-            await SupabaseConfig.client.storage.from('guest-documents').remove([path]);
-            debugPrint('🗑️ [_deleteBooking] Archivo eliminado: $path');
-          } catch (e) {
-            debugPrint('⚠️ [_deleteBooking] Error eliminando archivo $path: $e');
-            // No lanzamos error, continuamos con los demás
-          }
-        }
-      }
+      await removeGuestDocuments(storagePaths, logTag: '_deleteBooking');
 
       if (mounted) {
         _showSnackBar(S.of(context).admin_booking_deleted_successfully, isError: false);
@@ -1765,14 +2121,33 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             children: [
               const Icon(Icons.person_outline, color: AppColors.gold, size: 22),
               const SizedBox(width: 8),
-              Text(
-                S.of(context).admin_booking_guest_section,
-                style: const TextStyle(
-                  color: AppColors.gold,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1,
+              Expanded(
+                child: Text(
+                  S.of(context).admin_booking_guest_section,
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                  ),
                 ),
+              ),
+              IconButton(
+                onPressed: _isUpdatingGuestContact ? null : _editGuestContact,
+                icon: _isUpdatingGuestContact
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.gold,
+                        ),
+                      )
+                    : const Icon(Icons.edit_outlined, size: 18),
+                color: AppColors.gold,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: S.of(context).admin_booking_guest_edit_tooltip,
               ),
             ],
           ),
@@ -1787,8 +2162,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           ),
           const SizedBox(height: 12),
           _buildInfoRow(Icons.email_outlined, _booking!.guestEmail),
-          if (_booking!.guestPhone != null && _booking!.guestPhone!.isNotEmpty)
-            _buildInfoRow(Icons.phone_outlined, _booking!.guestPhone!),
+          _buildInfoRow(
+            Icons.phone_outlined,
+            (_booking!.guestPhone?.isNotEmpty ?? false)
+                ? _booking!.guestPhone!
+                : S.of(context).admin_booking_guest_no_phone,
+          ),
         ],
       ),
     );
@@ -2572,6 +2951,10 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               ),
             ),
           ],
+          if (!_booking!.isReadOnly && !_booking!.isCancelled && !isValidated) ...[
+            const SizedBox(height: 16),
+            _buildAutoValidateRow(),
+          ],
           if (isSubmitted) ...[
             const SizedBox(height: 16),
             Row(
@@ -2595,6 +2978,72 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Interruptor de auto-validación del check-in dentro de la tarjeta de check-in
+  Widget _buildAutoValidateRow() {
+    final isEnabled = _booking!.autoValidateCheckin;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.darkBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isEnabled ? AppColors.gold : AppColors.darkBorder,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            size: 18,
+            color: isEnabled ? AppColors.gold : AppColors.gray500,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  S.of(context).admin_booking_auto_validate_title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  S.of(context).admin_booking_auto_validate_subtitle,
+                  style: const TextStyle(
+                    color: AppColors.gray400,
+                    fontSize: 12,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          if (_isUpdatingAutoValidate)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+            )
+          else
+            Switch(
+              value: isEnabled,
+              activeThumbColor: AppColors.black,
+              activeTrackColor: AppColors.gold,
+              inactiveThumbColor: AppColors.gray400,
+              inactiveTrackColor: AppColors.darkSurface,
+              onChanged: _toggleAutoValidateCheckin,
+            ),
         ],
       ),
     );
@@ -2924,23 +3373,37 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             color: AppColors.success,
           ),
           const SizedBox(height: 12),
-          _buildActionTile(
-            icon: Icons.cancel_outlined,
-            title: S.of(context).admin_booking_cancel_booking_title,
-            subtitle: S.of(context).admin_booking_cancel_booking_subtitle,
-            onTap: _isCancellingBooking ? null : _cancelBooking,
-            isLoading: _isCancellingBooking,
-            color: AppColors.error,
-          ),
-          const SizedBox(height: 12),
-          _buildActionTile(
-            icon: Icons.delete_forever,
-            title: S.of(context).admin_booking_delete_booking_title,
-            subtitle: S.of(context).admin_booking_delete_booking_subtitle,
-            onTap: _isDeletingBooking ? null : _deleteBooking,
-            isLoading: _isDeletingBooking,
-            color: AppColors.error,
-          ),
+          // Si la reserva está cancelada se ofrece reactivarla; si no, cancelarla
+          if (_booking!.isCancelled)
+            _buildActionTile(
+              icon: Icons.restart_alt_rounded,
+              title: S.of(context).admin_booking_reactivate_booking_title,
+              subtitle: S.of(context).admin_booking_reactivate_booking_subtitle,
+              onTap: _isReactivatingBooking ? null : _reactivateBooking,
+              isLoading: _isReactivatingBooking,
+              color: AppColors.success,
+            )
+          else
+            _buildActionTile(
+              icon: Icons.cancel_outlined,
+              title: S.of(context).admin_booking_cancel_booking_title,
+              subtitle: S.of(context).admin_booking_cancel_booking_subtitle,
+              onTap: _isCancellingBooking ? null : _cancelBooking,
+              isLoading: _isCancellingBooking,
+              color: AppColors.error,
+            ),
+          // Eliminar la reserva es una acción exclusiva de admin
+          if (_isCurrentUserAdmin) ...[
+            const SizedBox(height: 12),
+            _buildActionTile(
+              icon: Icons.delete_forever,
+              title: S.of(context).admin_booking_delete_booking_title,
+              subtitle: S.of(context).admin_booking_delete_booking_subtitle,
+              onTap: _isDeletingBooking ? null : _deleteBooking,
+              isLoading: _isDeletingBooking,
+              color: AppColors.error,
+            ),
+          ],
         ],
       ),
     );

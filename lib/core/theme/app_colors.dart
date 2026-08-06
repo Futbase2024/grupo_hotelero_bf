@@ -126,6 +126,9 @@ class AppColors {
 
   static const Color success = Color(0xFF22C55E);
   static const Color successLight = Color(0x3322C55E);
+
+  /// Verde de éxito con 10% de alpha (fondos de icono, chips)
+  static const Color successWithAlpha10 = Color(0x1A22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color warningLight = Color(0x33F59E0B);
   static const Color error = Color(0xFFEF4444);

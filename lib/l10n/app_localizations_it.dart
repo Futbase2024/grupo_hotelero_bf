@@ -10,11 +10,11 @@ class SIt extends S {
 
   @override
   String get guest_romantic_request_sent =>
-      'Hemos avisado al alojamiento. Te contactarán para confirmar los detalles.';
+      'Abbiamo avvisato la struttura. Ti contatteranno per confermare i dettagli.';
 
   @override
   String get guest_romantic_request_error =>
-      'No se pudo registrar tu solicitud. Inténtalo de nuevo.';
+      'Non è stato possibile registrare la tua richiesta. Riprova.';
 
   @override
   String get common_app_name => 'BF Stay';
@@ -1003,6 +1003,58 @@ class SIt extends S {
   String get admin_booking_guest_section => 'OSPITE';
 
   @override
+  String get admin_booking_guest_no_phone => 'Nessun telefono';
+
+  @override
+  String get admin_booking_guest_edit_tooltip =>
+      'Modifica i contatti dell\'ospite';
+
+  @override
+  String get admin_booking_guest_edit_title => 'Modifica contatti';
+
+  @override
+  String get admin_booking_guest_edit_desc =>
+      'Correggi l\'email e il telefono dell\'ospite di questa prenotazione.';
+
+  @override
+  String get admin_booking_guest_edit_email_label => 'Email';
+
+  @override
+  String get admin_booking_guest_edit_phone_label => 'Telefono';
+
+  @override
+  String get admin_booking_guest_edit_email_required =>
+      'Inserisci l\'email dell\'ospite';
+
+  @override
+  String get admin_booking_guest_edit_email_invalid =>
+      'Il formato dell\'email non è valido';
+
+  @override
+  String get admin_booking_guest_edit_saved =>
+      'Contatti dell\'ospite aggiornati';
+
+  @override
+  String get admin_booking_guest_edit_access_reset_title =>
+      'Accesso reimpostato';
+
+  @override
+  String get admin_booking_guest_edit_access_reset_desc =>
+      'L\'ospite aveva già aperto la prenotazione con l\'email precedente. Dovrà accedere di nuovo con il suo codice di prenotazione; la chat e le notifiche verranno conservate.';
+
+  @override
+  String get admin_booking_guest_edit_resend_title =>
+      'Inviare di nuovo il codice di accesso?';
+
+  @override
+  String admin_booking_guest_edit_resend_desc(String email) {
+    return 'Il codice della prenotazione verrà inviato a $email.';
+  }
+
+  @override
+  String get admin_booking_guest_edit_resend_confirm => 'Invia di nuovo';
+
+  @override
   String get admin_booking_no_name => 'Nessun nome';
 
   @override
@@ -1088,6 +1140,31 @@ class SIt extends S {
   String get admin_booking_docs_pending => 'documenti in attesa';
 
   @override
+  String get admin_booking_auto_validate_title =>
+      'Convalida automatica del check-in';
+
+  @override
+  String get admin_booking_auto_validate_subtitle =>
+      'Il check-in dell\'ospite verrà convalidato automaticamente, senza revisione manuale';
+
+  @override
+  String get admin_booking_auto_validate_enabled =>
+      'Convalida automatica del check-in attivata';
+
+  @override
+  String get admin_booking_auto_validate_disabled =>
+      'Convalida automatica del check-in disattivata';
+
+  @override
+  String get admin_booking_auto_validate_applied_now =>
+      'Convalida automatica attivata: il check-in in attesa è stato convalidato';
+
+  @override
+  String admin_booking_auto_validate_error(String error) {
+    return 'Errore nella modifica della convalida automatica: $error';
+  }
+
+  @override
   String get admin_booking_validate_button => 'Valida';
 
   @override
@@ -1165,6 +1242,40 @@ class SIt extends S {
   @override
   String get admin_booking_cancel_booking_subtitle =>
       'Segna la prenotazione come annullata';
+
+  @override
+  String get admin_booking_reactivate_booking_title => 'Riattiva prenotazione';
+
+  @override
+  String get admin_booking_reactivate_booking_subtitle =>
+      'Riporta la prenotazione allo stato confermato';
+
+  @override
+  String get admin_booking_reactivate_booking_confirm =>
+      'La prenotazione tornerà confermata e l\'ospite potrà accedervi di nuovo. Vuoi riattivarla?';
+
+  @override
+  String get admin_booking_reactivate_action => 'Attiva';
+
+  @override
+  String get admin_booking_yes_reactivate => 'Sì, riattiva';
+
+  @override
+  String get admin_booking_reactivated_successfully =>
+      'Prenotazione riattivata correttamente';
+
+  @override
+  String get admin_booking_cannot_reactivate_title =>
+      'Prenotazione non annullata';
+
+  @override
+  String get admin_booking_cannot_reactivate_message =>
+      'Si possono riattivare solo le prenotazioni annullate.';
+
+  @override
+  String admin_booking_error_reactivating(String error) {
+    return 'Errore nella riattivazione della prenotazione: $error';
+  }
 
   @override
   String get admin_booking_delete_booking_title => 'Elimina prenotazione';
@@ -2064,6 +2175,24 @@ class SIt extends S {
 
   @override
   String get guest_checkin_document_photo => 'Foto del documento';
+
+  @override
+  String get guest_checkin_document_type_dni => 'DNI';
+
+  @override
+  String get guest_checkin_document_type_nie => 'NIE';
+
+  @override
+  String get guest_checkin_document_type_passport => 'Passaporto';
+
+  @override
+  String get guest_checkin_document_side_front => 'Fronte';
+
+  @override
+  String get guest_checkin_document_side_back => 'Retro';
+
+  @override
+  String get guest_checkin_document_passport_page => 'Pagina dati';
 
   @override
   String get guest_checkin_image_captured => 'Immagine acquisita';
@@ -3228,5 +3357,96 @@ class SIt extends S {
     String checkOut,
   ) {
     return '🏠 *$propertyName*\n📋 Prenotazione: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut\n\nScarica l\'app BF Stay per gestire il tuo soggiorno.';
+  }
+
+  @override
+  String get admin_checkin_more_actions => 'Altre azioni';
+
+  @override
+  String get admin_checkin_danger_title => 'Eliminare dati';
+
+  @override
+  String get admin_checkin_delete_title => 'Elimina check-in';
+
+  @override
+  String get admin_checkin_delete_subtitle =>
+      'Elimina ospiti, documenti e firma. La prenotazione viene mantenuta e l\'ospite può rifare il check-in.';
+
+  @override
+  String get admin_checkin_delete_confirm_body =>
+      'Verranno eliminati gli ospiti registrati, i loro documenti e la firma. La prenotazione viene mantenuta e l\'ospite potrà rifare il check-in con lo stesso codice. Non gli verrà inviata alcuna notifica.';
+
+  @override
+  String get admin_checkin_deleted_success =>
+      'Check-in eliminato. La prenotazione è di nuovo in attesa di check-in.';
+
+  @override
+  String get admin_checkin_delete_booking_title =>
+      'Elimina check-in e prenotazione';
+
+  @override
+  String get admin_checkin_delete_booking_subtitle =>
+      'Elimina l\'intera prenotazione e tutti i suoi dati. Non è reversibile.';
+
+  @override
+  String get admin_checkin_delete_booking_confirm_body =>
+      'Verrà eliminata l\'intera prenotazione: check-in, ospiti, documenti, fatture, pagamenti e conversazioni. Questa azione non può essere annullata.';
+
+  @override
+  String admin_checkin_delete_booking_code_hint(String code) {
+    return 'Digita $code per confermare';
+  }
+
+  @override
+  String get admin_checkin_booking_deleted_success =>
+      'Prenotazione eliminata correttamente';
+
+  @override
+  String get chat_attach_title => 'Allega';
+
+  @override
+  String get chat_attach_camera => 'Fotocamera';
+
+  @override
+  String get chat_attach_gallery => 'Galleria';
+
+  @override
+  String get chat_attach_document => 'Documento';
+
+  @override
+  String get chat_attachment_uploading => 'Invio del file…';
+
+  @override
+  String get chat_attachment_too_large => 'Il file supera il limite di 10 MB';
+
+  @override
+  String get chat_attachment_error => 'Non è stato possibile inviare il file';
+
+  @override
+  String get chat_attachment_open_error =>
+      'Non è stato possibile aprire il file';
+
+  @override
+  String chat_attachment_uploading_progress(int current, int total) {
+    return 'Invio di $current su $total…';
+  }
+
+  @override
+  String get chat_attachment_save => 'Salva nella galleria';
+
+  @override
+  String get chat_attachment_saved => 'Immagine salvata nella galleria';
+
+  @override
+  String get chat_attachment_save_error =>
+      'Non è stato possibile salvare l\'immagine';
+
+  @override
+  String get admin_chat_search_hint =>
+      'Cerca per nome o codice di prenotazione';
+
+  @override
+  String admin_chat_search_no_results(String query) {
+    return 'Nessun risultato per «$query»';
   }
 }

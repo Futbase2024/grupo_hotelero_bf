@@ -10,11 +10,11 @@ class SEn extends S {
 
   @override
   String get guest_romantic_request_sent =>
-      'Hemos avisado al alojamiento. Te contactarán para confirmar los detalles.';
+      'We\'ve notified the property. They\'ll contact you to confirm the details.';
 
   @override
   String get guest_romantic_request_error =>
-      'No se pudo registrar tu solicitud. Inténtalo de nuevo.';
+      'We couldn\'t register your request. Please try again.';
 
   @override
   String get common_app_name => 'BF Stay';
@@ -994,6 +994,54 @@ class SEn extends S {
   String get admin_booking_guest_section => 'GUEST';
 
   @override
+  String get admin_booking_guest_no_phone => 'No phone number';
+
+  @override
+  String get admin_booking_guest_edit_tooltip => 'Edit guest contact details';
+
+  @override
+  String get admin_booking_guest_edit_title => 'Edit contact details';
+
+  @override
+  String get admin_booking_guest_edit_desc =>
+      'Correct the guest\'s email and phone number for this booking.';
+
+  @override
+  String get admin_booking_guest_edit_email_label => 'Email';
+
+  @override
+  String get admin_booking_guest_edit_phone_label => 'Phone';
+
+  @override
+  String get admin_booking_guest_edit_email_required =>
+      'Enter the guest\'s email';
+
+  @override
+  String get admin_booking_guest_edit_email_invalid =>
+      'The email format is not valid';
+
+  @override
+  String get admin_booking_guest_edit_saved => 'Guest contact details updated';
+
+  @override
+  String get admin_booking_guest_edit_access_reset_title => 'Access reset';
+
+  @override
+  String get admin_booking_guest_edit_access_reset_desc =>
+      'The guest had already opened the booking with the previous email. They will need to sign in again with their booking code; their chat and notifications will be kept.';
+
+  @override
+  String get admin_booking_guest_edit_resend_title => 'Resend the access code?';
+
+  @override
+  String admin_booking_guest_edit_resend_desc(String email) {
+    return 'The booking code will be sent to $email.';
+  }
+
+  @override
+  String get admin_booking_guest_edit_resend_confirm => 'Resend';
+
+  @override
   String get admin_booking_no_name => 'No name';
 
   @override
@@ -1078,6 +1126,30 @@ class SEn extends S {
   String get admin_booking_docs_pending => 'documents pending';
 
   @override
+  String get admin_booking_auto_validate_title => 'Auto-validate check-in';
+
+  @override
+  String get admin_booking_auto_validate_subtitle =>
+      'The guest\'s check-in will be validated automatically, without manual review';
+
+  @override
+  String get admin_booking_auto_validate_enabled =>
+      'Check-in auto-validation enabled';
+
+  @override
+  String get admin_booking_auto_validate_disabled =>
+      'Check-in auto-validation disabled';
+
+  @override
+  String get admin_booking_auto_validate_applied_now =>
+      'Auto-validation enabled: the pending check-in has been validated';
+
+  @override
+  String admin_booking_auto_validate_error(String error) {
+    return 'Error changing auto-validation: $error';
+  }
+
+  @override
   String get admin_booking_validate_button => 'Validate';
 
   @override
@@ -1155,6 +1227,39 @@ class SEn extends S {
   @override
   String get admin_booking_cancel_booking_subtitle =>
       'Mark the booking as cancelled';
+
+  @override
+  String get admin_booking_reactivate_booking_title => 'Reactivate booking';
+
+  @override
+  String get admin_booking_reactivate_booking_subtitle =>
+      'Set the booking back to confirmed';
+
+  @override
+  String get admin_booking_reactivate_booking_confirm =>
+      'The booking will go back to confirmed and the guest will be able to access it again. Do you want to reactivate it?';
+
+  @override
+  String get admin_booking_reactivate_action => 'Activate';
+
+  @override
+  String get admin_booking_yes_reactivate => 'Yes, reactivate';
+
+  @override
+  String get admin_booking_reactivated_successfully =>
+      'Booking reactivated successfully';
+
+  @override
+  String get admin_booking_cannot_reactivate_title => 'Booking not cancelled';
+
+  @override
+  String get admin_booking_cannot_reactivate_message =>
+      'Only cancelled bookings can be reactivated.';
+
+  @override
+  String admin_booking_error_reactivating(String error) {
+    return 'Error reactivating booking: $error';
+  }
 
   @override
   String get admin_booking_delete_booking_title => 'Delete booking';
@@ -2045,6 +2150,24 @@ class SEn extends S {
 
   @override
   String get guest_checkin_document_photo => 'Document photo';
+
+  @override
+  String get guest_checkin_document_type_dni => 'DNI';
+
+  @override
+  String get guest_checkin_document_type_nie => 'NIE';
+
+  @override
+  String get guest_checkin_document_type_passport => 'Passport';
+
+  @override
+  String get guest_checkin_document_side_front => 'Front';
+
+  @override
+  String get guest_checkin_document_side_back => 'Back';
+
+  @override
+  String get guest_checkin_document_passport_page => 'Data page';
 
   @override
   String get guest_checkin_image_captured => 'Image captured';
@@ -3192,5 +3315,93 @@ class SEn extends S {
     String checkOut,
   ) {
     return '🏠 *$propertyName*\n📋 Booking: *$bookingCode*\n📅 Check-in: $checkIn\n📅 Check-out: $checkOut\n\nDownload the BF Stay app to manage your stay.';
+  }
+
+  @override
+  String get admin_checkin_more_actions => 'More actions';
+
+  @override
+  String get admin_checkin_danger_title => 'Delete data';
+
+  @override
+  String get admin_checkin_delete_title => 'Delete check-in';
+
+  @override
+  String get admin_checkin_delete_subtitle =>
+      'Removes guests, documents and signature. The booking is kept and the guest can redo the check-in.';
+
+  @override
+  String get admin_checkin_delete_confirm_body =>
+      'The registered guests, their documents and the signature will be deleted. The booking is kept and the guest will be able to complete the check-in again with the same code. No notice will be sent to them.';
+
+  @override
+  String get admin_checkin_deleted_success =>
+      'Check-in deleted. The booking is pending check-in again.';
+
+  @override
+  String get admin_checkin_delete_booking_title =>
+      'Delete check-in and booking';
+
+  @override
+  String get admin_checkin_delete_booking_subtitle =>
+      'Removes the entire booking and all of its data. This cannot be undone.';
+
+  @override
+  String get admin_checkin_delete_booking_confirm_body =>
+      'The entire booking will be deleted: check-in, guests, documents, invoices, payments and conversations. This action cannot be undone.';
+
+  @override
+  String admin_checkin_delete_booking_code_hint(String code) {
+    return 'Type $code to confirm';
+  }
+
+  @override
+  String get admin_checkin_booking_deleted_success =>
+      'Booking deleted successfully';
+
+  @override
+  String get chat_attach_title => 'Attach';
+
+  @override
+  String get chat_attach_camera => 'Camera';
+
+  @override
+  String get chat_attach_gallery => 'Gallery';
+
+  @override
+  String get chat_attach_document => 'Document';
+
+  @override
+  String get chat_attachment_uploading => 'Sending file…';
+
+  @override
+  String get chat_attachment_too_large => 'The file exceeds the 10 MB limit';
+
+  @override
+  String get chat_attachment_error => 'The file could not be sent';
+
+  @override
+  String get chat_attachment_open_error => 'The file could not be opened';
+
+  @override
+  String chat_attachment_uploading_progress(int current, int total) {
+    return 'Sending $current of $total…';
+  }
+
+  @override
+  String get chat_attachment_save => 'Save to gallery';
+
+  @override
+  String get chat_attachment_saved => 'Image saved to the gallery';
+
+  @override
+  String get chat_attachment_save_error => 'The image could not be saved';
+
+  @override
+  String get admin_chat_search_hint => 'Search by name or booking code';
+
+  @override
+  String admin_chat_search_no_results(String query) {
+    return 'No results for “$query”';
   }
 }

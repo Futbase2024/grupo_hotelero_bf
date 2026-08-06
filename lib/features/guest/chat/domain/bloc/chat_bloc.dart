@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/services/chat_media_service.dart';
 import '../entities/conversation_entity.dart';
 import '../entities/message_change.dart';
 import '../entities/message_entity.dart';
@@ -53,6 +54,23 @@ class ChatSendMessage extends ChatEvent {
 
   @override
   List<Object?> get props => [content];
+}
+
+/// Evento para enviar uno o varios adjuntos ya seleccionados.
+///
+/// La selección de los archivos ocurre en la UI; el BLoC se encarga de subirlos
+/// al bucket, en orden, y de crear un mensaje por cada uno.
+class ChatSendAttachment extends ChatEvent {
+  const ChatSendAttachment({required this.drafts});
+
+  /// Atajo para el caso de un único archivo.
+  ChatSendAttachment.single(ChatAttachmentDraft draft) : drafts = [draft];
+
+  final List<ChatAttachmentDraft> drafts;
+
+  @override
+  List<Object?> get props =>
+      [for (final d in drafts) '${d.fileName}:${d.size}'];
 }
 
 /// Evento cuando llega un nuevo mensaje por realtime
@@ -165,6 +183,47 @@ class ChatSending extends ChatState {
   List<Object?> get props => [conversation, messages, currentUserId];
 }
 
+/// Estado mientras se sube un adjunto al bucket.
+///
+/// Mantiene los mensajes actuales para que la lista no parpadee durante la
+/// subida, que puede tardar varios segundos.
+class ChatUploadingAttachment extends ChatState {
+  const ChatUploadingAttachment({
+    required this.conversation,
+    required this.messages,
+    required this.currentUserId,
+    required this.fileName,
+    this.currentIndex = 1,
+    this.total = 1,
+  });
+
+  final ConversationEntity conversation;
+  final List<MessageEntity> messages;
+  final String currentUserId;
+
+  /// Archivo que se está subiendo ahora mismo.
+  final String fileName;
+
+  /// Posición del archivo actual dentro del lote (1-based).
+  final int currentIndex;
+
+  /// Número total de archivos del lote.
+  final int total;
+
+  /// Hay más de un archivo en curso.
+  bool get isBatch => total > 1;
+
+  @override
+  List<Object?> get props => [
+        conversation,
+        messages,
+        currentUserId,
+        fileName,
+        currentIndex,
+        total,
+      ];
+}
+
 /// Estado de error
 class ChatError extends ChatState {
   const ChatError({required this.message});
@@ -175,17 +234,47 @@ class ChatError extends ChatState {
   List<Object?> get props => [message];
 }
 
+/// Accesos comunes a los estados que ya tienen conversación activa
+/// ([ChatLoaded], [ChatSending] y [ChatUploadingAttachment]), para que las
+/// pantallas no tengan que encadenar comprobaciones de tipo.
+extension ChatStateX on ChatState {
+  /// Mensajes del estado actual, o `null` si aún no hay conversación.
+  List<MessageEntity>? get messagesOrNull => switch (this) {
+        final ChatLoaded s => s.messages,
+        final ChatSending s => s.messages,
+        final ChatUploadingAttachment s => s.messages,
+        _ => null,
+      };
+
+  /// Usuario actual, o `null` si aún no hay conversación.
+  String? get currentUserIdOrNull => switch (this) {
+        final ChatLoaded s => s.currentUserId,
+        final ChatSending s => s.currentUserId,
+        final ChatUploadingAttachment s => s.currentUserId,
+        _ => null,
+      };
+
+  /// La conversación está lista para escribir en ella.
+  bool get isConversationReady => messagesOrNull != null;
+
+  /// Hay un adjunto subiéndose ahora mismo.
+  bool get isUploadingAttachment => this is ChatUploadingAttachment;
+}
+
 // ============== BLOC ==============
 
 /// BLoC para gestionar el estado del chat
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ChatBloc({
     required ChatRepository chatRepository,
+    required ChatMediaService mediaService,
   })  : _chatRepository = chatRepository,
+        _mediaService = mediaService,
         super(const ChatInitial()) {
     on<ChatStarted>(_onStarted);
     on<ChatLoadMessages>(_onLoadMessages);
     on<ChatSendMessage>(_onSendMessage);
+    on<ChatSendAttachment>(_onSendAttachment);
     on<ChatMessageReceived>(_onMessageReceived);
     on<ChatDeleteMessage>(_onDeleteMessage);
     on<ChatMessageDeleted>(_onMessageDeleted);
@@ -194,6 +283,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   final ChatRepository _chatRepository;
+  final ChatMediaService _mediaService;
 
   StreamSubscription<MessageChange>? _messagesSubscription;
 
@@ -355,6 +445,94 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
+  /// Maneja el envío de adjuntos: sube cada archivo al bucket y crea su mensaje.
+  ///
+  /// Los archivos se procesan en orden para que el usuario los vea aparecer en
+  /// la conversación en el mismo orden en que los eligió. Si uno falla se
+  /// detiene el lote: los ya enviados se conservan y los restantes no se suben.
+  ///
+  /// Si la subida funciona pero la inserción falla, se borra el archivo recién
+  /// subido para no dejarlo huérfano en el bucket.
+  Future<void> _onSendAttachment(
+    ChatSendAttachment event,
+    Emitter<ChatState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+    if (event.drafts.isEmpty) return;
+
+    final conversation = currentState.conversation;
+    final userId = currentState.currentUserId;
+    final messages = [...currentState.messages];
+    final total = event.drafts.length;
+
+    for (var i = 0; i < total; i++) {
+      final draft = event.drafts[i];
+      String? uploadedPath;
+
+      emit(ChatUploadingAttachment(
+        conversation: conversation,
+        messages: messages,
+        currentUserId: userId,
+        fileName: draft.fileName,
+        currentIndex: i + 1,
+        total: total,
+      ));
+
+      try {
+        final upload = await _mediaService.upload(
+          conversationId: conversation.id,
+          draft: draft,
+        );
+        uploadedPath = upload.storagePath;
+
+        final message = upload.isImage
+            ? await _chatRepository.sendImageMessage(
+                conversationId: conversation.id,
+                senderUserId: userId,
+                imagePath: upload.storagePath,
+                mimeType: upload.mimeType,
+                fileSize: upload.size,
+              )
+            : await _chatRepository.sendFileMessage(
+                conversationId: conversation.id,
+                senderUserId: userId,
+                filePath: upload.storagePath,
+                fileName: upload.fileName,
+                fileSize: upload.size,
+                mimeType: upload.mimeType,
+              );
+
+        messages.add(message);
+        debugPrint('✅ [ChatBloc] Adjunto enviado: ${upload.storagePath}');
+      } catch (e) {
+        debugPrint('❌ [ChatBloc] Error enviando adjunto: $e');
+
+        // El archivo llegó al bucket pero el mensaje no: revertir la subida.
+        if (uploadedPath != null) {
+          await _mediaService.deleteAttachment(uploadedPath);
+        }
+
+        final error = e is ChatMediaException ? e.message : _getErrorMessage(e);
+
+        // Se conservan los adjuntos ya enviados; se descarta el resto del lote.
+        emit(ChatError(message: error));
+        emit(ChatLoaded(
+          conversation: conversation,
+          messages: messages,
+          currentUserId: userId,
+        ));
+        return;
+      }
+    }
+
+    emit(ChatLoaded(
+      conversation: conversation,
+      messages: messages,
+      currentUserId: userId,
+    ));
+  }
+
   /// Maneja mensaje recibido por realtime
   Future<void> _onMessageReceived(
     ChatMessageReceived event,
@@ -407,7 +585,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
 
     try {
-      await _chatRepository.deleteMessage(messageId: event.messageId);
+      await _chatRepository.deleteMessage(
+        messageId: event.messageId,
+        attachmentPath: deletedMessage.attachmentPath,
+      );
       debugPrint('✅ [ChatBloc] Mensaje eliminado');
     } catch (e) {
       debugPrint('❌ [ChatBloc] Error eliminando mensaje: $e');

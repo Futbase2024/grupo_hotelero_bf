@@ -7,12 +7,16 @@ import '../../../../../core/config/supabase_config.dart';
 import '../../domain/entities/conversation_entity.dart';
 import '../../domain/entities/message_change.dart';
 import '../../domain/entities/message_entity.dart';
+import '../services/chat_media_service.dart';
 
 /// DataSource para operaciones de chat con Supabase
 class ChatDatasource {
-  ChatDatasource();
+  ChatDatasource({ChatMediaService? mediaService})
+      : _mediaService =
+            mediaService ?? ChatMediaService(client: SupabaseConfig.client);
 
   final _client = SupabaseConfig.client;
+  final ChatMediaService _mediaService;
 
   void _log(String message) {
     debugPrint('🔵 [ChatDatasource] $message');
@@ -225,7 +229,8 @@ class ChatDatasource {
           .eq('conversation_id', conversationId),
       _client
           .from(SupabaseTables.messages)
-          .select('id, conversation_id, sender_user_id, msg_type, content, created_at, read_at')
+          .select(
+              'id, conversation_id, sender_user_id, msg_type, content, created_at, read_at, file_name, file_size, mime_type')
           .eq('conversation_id', conversationId)
           .order('created_at', ascending: false)
           .limit(1),
@@ -373,7 +378,10 @@ class ChatDatasource {
       msg_type,
       content,
       created_at,
-      read_at
+      read_at,
+      file_name,
+      file_size,
+      mime_type
     ''';
 
     if (before != null) {
@@ -465,11 +473,16 @@ class ChatDatasource {
     return MessageEntity.fromJson(response);
   }
 
-  /// Envía un mensaje con imagen
+  /// Envía un mensaje con imagen.
+  ///
+  /// [imagePath] es la ruta del objeto en el bucket `chat-media`, no una URL:
+  /// las URLs firmadas caducan y dejarían el mensaje roto.
   Future<MessageEntity> sendImageMessage({
     required String conversationId,
     required String senderUserId,
     required String imagePath,
+    String? mimeType,
+    int? fileSize,
   }) async {
     final response = await _client
         .from(SupabaseTables.messages)
@@ -478,6 +491,36 @@ class ChatDatasource {
           'sender_user_id': senderUserId,
           'msg_type': 'image',
           'content': imagePath,
+          if (mimeType != null) 'mime_type': mimeType,
+          if (fileSize != null) 'file_size': fileSize,
+        })
+        .select()
+        .single();
+
+    return MessageEntity.fromJson(response);
+  }
+
+  /// Envía un mensaje con un documento adjunto.
+  ///
+  /// [filePath] es la ruta del objeto en el bucket `chat-media`.
+  Future<MessageEntity> sendFileMessage({
+    required String conversationId,
+    required String senderUserId,
+    required String filePath,
+    required String fileName,
+    required int fileSize,
+    required String mimeType,
+  }) async {
+    final response = await _client
+        .from(SupabaseTables.messages)
+        .insert({
+          'conversation_id': conversationId,
+          'sender_user_id': senderUserId,
+          'msg_type': 'file',
+          'content': filePath,
+          'file_name': fileName,
+          'file_size': fileSize,
+          'mime_type': mimeType,
         })
         .select()
         .single();
@@ -672,7 +715,10 @@ class ChatDatasource {
               msg_type,
               content,
               created_at,
-              read_at
+              read_at,
+              file_name,
+              file_size,
+              mime_type
             ''')
             .inFilter('conversation_id', filteredConversationIds)
             .order('created_at', ascending: false)
@@ -753,6 +799,9 @@ class ChatDatasource {
             'content': lastMsgData['content'],
             'created_at': lastMsgData['created_at'],
             'read_at': lastMsgData['read_at'],
+            'file_name': lastMsgData['file_name'],
+            'file_size': lastMsgData['file_size'],
+            'mime_type': lastMsgData['mime_type'],
             'sender_name': senderInfo?['full_name'],
             'sender_role': senderInfo?['role'],
           });
@@ -866,6 +915,10 @@ class ChatDatasource {
     _log('deleteConversation - conversationId: $conversationId');
 
     try {
+      // 0. Eliminar los adjuntos del bucket antes que las filas, o quedarían
+      //    huérfanos sin forma de localizarlos.
+      await _mediaService.deleteConversationAttachments(conversationId);
+
       // 1. Eliminar mensajes de la conversación
       await _client
           .from(SupabaseTables.messages)
@@ -897,9 +950,19 @@ class ChatDatasource {
   /// La política RLS `messages_delete_own` garantiza que solo se puede borrar
   /// un mensaje si `sender_user_id = auth.uid()` (cada usuario solo los suyos).
   /// Las traducciones asociadas se eliminan en cascada.
-  Future<void> deleteMessage({required String messageId}) async {
+  ///
+  /// [attachmentPath] es la ruta del adjunto en `chat-media`, si el mensaje
+  /// tenía uno: se borra del bucket para no dejar archivos huérfanos.
+  Future<void> deleteMessage({
+    required String messageId,
+    String? attachmentPath,
+  }) async {
     _log('deleteMessage - messageId: $messageId');
     try {
+      if (attachmentPath != null) {
+        await _mediaService.deleteAttachment(attachmentPath);
+      }
+
       await _client
           .from(SupabaseTables.messages)
           .delete()

@@ -93,6 +93,50 @@ class GuestSessionService {
     }
   }
 
+  /// Vuelve a vincular la reserva con la sesión actual si quedó sin reclamar.
+  ///
+  /// Ocurre cuando el admin corrige el email del huésped: se libera
+  /// `primary_guest_user_id` para que pueda entrar con la cuenta asociada al
+  /// email nuevo. Sin este reclamo, las políticas RLS que dependen de ese campo
+  /// (check-in y extras) le negarían el acceso hasta su siguiente inicio de sesión.
+  Future<void> _ensureBookingClaimed(String bookingId, String? userId) async {
+    if (userId == null || userId.isEmpty) return;
+
+    try {
+      final booking = await _supabase
+          .from('bookings')
+          .select('primary_guest_user_id')
+          .eq('id', bookingId)
+          .maybeSingle();
+
+      if (booking == null) return;
+
+      final primaryGuestUserId = booking['primary_guest_user_id'] as String?;
+
+      // Ya está vinculada a esta sesión
+      if (primaryGuestUserId == userId) return;
+
+      // Reclamada por otra cuenta: no interferimos (la RPC lo rechazaría)
+      if (primaryGuestUserId != null) {
+        debugPrint('ℹ️ [GuestSessionService] Reserva reclamada por otra cuenta, no se reasigna');
+        return;
+      }
+
+      debugPrint('🔑 [GuestSessionService] Reserva sin reclamar, vinculando a $userId...');
+      await _supabase.rpc(
+        'assign_primary_guest_to_booking',
+        params: {
+          'p_booking_id': bookingId,
+          'p_user_id': userId,
+        },
+      );
+      debugPrint('✅ [GuestSessionService] Reserva vinculada correctamente');
+    } catch (e) {
+      debugPrint('🔴 [GuestSessionService] Error vinculando la reserva: $e');
+      // No relanzamos el error para no bloquear el arranque de la sesión
+    }
+  }
+
   /// Obtiene el ID de usuario de Supabase actual
   String? get currentSupabaseUserId => _supabase.auth.currentUser?.id;
 
@@ -130,6 +174,10 @@ class GuestSessionService {
     debugPrint('📦 [GuestSessionService] getSession - currentAuthUserId: "$currentAuthUserId"');
 
     if (bookingId == null) return null;
+
+    // Si el admin corrigió el email de la reserva, ésta queda sin reclamar:
+    // se vuelve a vincular con la sesión actual para no perder el acceso.
+    await _ensureBookingClaimed(bookingId, currentAuthUserId);
 
     // Consultar el estado del check-in y el motivo del rechazo en la base de datos
     final checkinData = await _getCheckinStatus(bookingId);

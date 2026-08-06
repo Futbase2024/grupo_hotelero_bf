@@ -968,13 +968,14 @@ void _showDocumentUploadSheet(BuildContext context, int guestIndex) {
   DocumentUploadSheet.show(
     context: context,
     guest: guest,
-    onConfirm: (type, number, imageBytes) {
+    onConfirm: (type, number, frontBytes, backBytes) {
       context.read<CheckinBloc>().add(
         CheckinGuestDocumentUpdated(
           guestIndex: guestIndex,
           documentType: type,
           documentNumber: number,
-          imageBytes: imageBytes,
+          frontBytes: frontBytes,
+          backBytes: backBytes,
         ),
       );
     },

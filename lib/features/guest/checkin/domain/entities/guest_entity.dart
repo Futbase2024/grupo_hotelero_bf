@@ -6,11 +6,14 @@ enum GuestType {
   child,
 }
 
-/// Tipo de documento de identidad
-/// Nota: DNI tiene dos lados (front y back), NIE se trata como DNI
+/// Tipo de documento de identidad del huésped.
+///
+/// Es el tipo REAL del documento, no la cara fotografiada: las caras
+/// (`dni_front`, `dni_back`, `passport`) son el `doc_kind` de `guest_documents`
+/// y se obtienen con [frontDocKind] / [backDocKind].
 enum DocumentType {
-  dniFront,
-  dniBack,
+  dni,
+  nie,
   passport,
   other,
 }
@@ -19,10 +22,10 @@ enum DocumentType {
 extension DocumentTypeExtension on DocumentType {
   String get dbValue {
     switch (this) {
-      case DocumentType.dniFront:
-        return 'dni_front';
-      case DocumentType.dniBack:
-        return 'dni_back';
+      case DocumentType.dni:
+        return 'dni';
+      case DocumentType.nie:
+        return 'nie';
       case DocumentType.passport:
         return 'passport';
       case DocumentType.other:
@@ -33,10 +36,10 @@ extension DocumentTypeExtension on DocumentType {
   /// Etiqueta para mostrar en la UI
   String get label {
     switch (this) {
-      case DocumentType.dniFront:
-        return 'DNI (anverso)';
-      case DocumentType.dniBack:
-        return 'DNI (reverso)';
+      case DocumentType.dni:
+        return 'DNI';
+      case DocumentType.nie:
+        return 'NIE';
       case DocumentType.passport:
         return 'Pasaporte';
       case DocumentType.other:
@@ -44,13 +47,45 @@ extension DocumentTypeExtension on DocumentType {
     }
   }
 
+  /// Si el documento necesita foto del reverso.
+  /// El pasaporte se acredita con una sola foto (página de datos).
+  bool get requiresBackSide {
+    switch (this) {
+      case DocumentType.dni:
+      case DocumentType.nie:
+      case DocumentType.other:
+        return true;
+      case DocumentType.passport:
+        return false;
+    }
+  }
+
+  /// `doc_kind` con el que se guarda la cara frontal en `guest_documents`
+  String get frontDocKind {
+    switch (this) {
+      case DocumentType.dni:
+      case DocumentType.nie:
+        return 'dni_front';
+      case DocumentType.passport:
+        return 'passport';
+      case DocumentType.other:
+        return 'other';
+    }
+  }
+
+  /// `doc_kind` con el que se guarda el reverso, o null si no lleva
+  String? get backDocKind => requiresBackSide ? 'dni_back' : null;
+
   static DocumentType fromDbValue(String value) {
     switch (value.toLowerCase()) {
-      case 'dni_front':
+      // 'dni_front' y 'dni_back' son valores heredados de cuando el tipo y la
+      // cara del documento se guardaban en el mismo campo.
       case 'dni':
-        return DocumentType.dniFront;
+      case 'dni_front':
       case 'dni_back':
-        return DocumentType.dniBack;
+        return DocumentType.dni;
+      case 'nie':
+        return DocumentType.nie;
       case 'passport':
         return DocumentType.passport;
       default:
@@ -74,7 +109,8 @@ class GuestEntity extends Equatable {
     this.birthDate,
     this.isPrimary = false,
     this.isReadOnly = false,
-    this.hasDocumentImage = false,
+    this.hasDocumentFront = false,
+    this.hasDocumentBack = false,
   });
 
   /// ID del huésped en la base de datos (null si aún no se ha guardado)
@@ -113,8 +149,22 @@ class GuestEntity extends Equatable {
   /// Si es de solo lectura (niños menores de 14 años)
   final bool isReadOnly;
 
-  /// Si tiene la foto del documento subida
-  final bool hasDocumentImage;
+  /// Si tiene subida la foto de la cara frontal del documento
+  /// (anverso del DNI/NIE o página de datos del pasaporte)
+  final bool hasDocumentFront;
+
+  /// Si tiene subida la foto del reverso del documento
+  final bool hasDocumentBack;
+
+  /// Si tiene alguna foto del documento subida
+  bool get hasDocumentImage => hasDocumentFront || hasDocumentBack;
+
+  /// Si están subidas todas las caras que exige su tipo de documento
+  bool get hasAllRequiredDocuments {
+    if (!hasDocumentFront) return false;
+    final requiresBack = documentType?.requiresBackSide ?? true;
+    return !requiresBack || hasDocumentBack;
+  }
 
   /// Niños menores de 14 años NO necesitan documento
   /// Los adultos y niños de 14+ años sí necesitan
@@ -156,7 +206,8 @@ class GuestEntity extends Equatable {
     DateTime? birthDate,
     bool? isPrimary,
     bool? isReadOnly,
-    bool? hasDocumentImage,
+    bool? hasDocumentFront,
+    bool? hasDocumentBack,
   }) {
     return GuestEntity(
       id: id ?? this.id,
@@ -171,7 +222,8 @@ class GuestEntity extends Equatable {
       birthDate: birthDate ?? this.birthDate,
       isPrimary: isPrimary ?? this.isPrimary,
       isReadOnly: isReadOnly ?? this.isReadOnly,
-      hasDocumentImage: hasDocumentImage ?? this.hasDocumentImage,
+      hasDocumentFront: hasDocumentFront ?? this.hasDocumentFront,
+      hasDocumentBack: hasDocumentBack ?? this.hasDocumentBack,
     );
   }
 
@@ -194,7 +246,8 @@ class GuestEntity extends Equatable {
           : null,
       isPrimary: json['is_primary'] as bool? ?? false,
       isReadOnly: json['is_read_only'] as bool? ?? false,
-      hasDocumentImage: json['has_document_image'] as bool? ?? false,
+      hasDocumentFront: json['has_document_front'] as bool? ?? false,
+      hasDocumentBack: json['has_document_back'] as bool? ?? false,
     );
   }
 
@@ -213,7 +266,8 @@ class GuestEntity extends Equatable {
       if (birthDate != null) 'birth_date': birthDate!.toIso8601String().split('T').first,
       'is_primary': isPrimary,
       'is_read_only': isReadOnly,
-      'has_document_image': hasDocumentImage,
+      'has_document_front': hasDocumentFront,
+      'has_document_back': hasDocumentBack,
     };
   }
 
@@ -231,6 +285,7 @@ class GuestEntity extends Equatable {
         birthDate,
         isPrimary,
         isReadOnly,
-        hasDocumentImage,
+        hasDocumentFront,
+        hasDocumentBack,
       ];
 }

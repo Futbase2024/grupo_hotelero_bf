@@ -151,6 +151,8 @@ class ConversationEntity extends Equatable {
   String get lastMessagePreview {
     if (lastMessage == null) return 'Sin mensajes';
     if (lastMessage!.isImage) return '📷 Imagen';
+    // El contenido de un adjunto es un storage path: mostrar el nombre real.
+    if (lastMessage!.isFile) return '📎 ${lastMessage!.displayFileName}';
     final text = lastMessage!.content;
     if (text.length <= 50) return text;
     return '${text.substring(0, 50)}...';

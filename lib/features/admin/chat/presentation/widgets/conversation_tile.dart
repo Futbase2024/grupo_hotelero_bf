@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../guest/chat/domain/entities/conversation_entity.dart';
+import 'conversation_preview_thumbnail.dart';
 
 /// Widget que muestra una conversación en la lista con swipe-to-delete y long-press menu
 class ConversationTile extends StatelessWidget {
@@ -103,6 +104,10 @@ class ConversationTile extends StatelessWidget {
                 // Último mensaje
                 Row(
                   children: [
+                    if (conversation.lastMessage?.isImage ?? false)
+                      ConversationPreviewThumbnail(
+                        storagePath: conversation.lastMessage!.content,
+                      ),
                     Expanded(
                       child: Text(
                         conversation.lastMessagePreview,

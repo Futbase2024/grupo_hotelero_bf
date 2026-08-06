@@ -312,25 +312,67 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
           debugPrint('✅ [CheckinBloc] Huésped guardado con ID: ${guest.id}');
         }
 
-        // Si hay imagen, subirla al storage
-        bool hasImage = false;
-        if (event.imageBytes != null && guest.id != null) {
-          debugPrint('📤 [CheckinBloc] Subiendo documento al storage...');
-          await _repository.uploadDocument(
-            bookingId: currentState.bookingData.bookingId,
-            guestId: guest.id!,
-            docKind: event.documentType.dbValue,
-            bytes: event.imageBytes!,
-            mimeType: 'image/jpeg',
-          );
-          hasImage = true;
-          debugPrint('✅ [CheckinBloc] Documento subido correctamente');
+        // Subir cada cara con su doc_kind correspondiente. Se suben de forma
+        // independiente: si falla una, la otra ya subida se conserva.
+        var hasFront = guest.hasDocumentFront;
+        var hasBack = guest.hasDocumentBack;
+
+        if (guest.id == null) {
+          debugPrint('⚠️ [CheckinBloc] No se puede subir documento: el huésped no tiene ID');
         } else {
-          debugPrint('⚠️ [CheckinBloc] No se puede subir documento: imageBytes=${event.imageBytes != null}, guestId=${guest.id}');
+          if (event.frontBytes != null) {
+            debugPrint('📤 [CheckinBloc] Subiendo anverso al storage...');
+            await _repository.uploadDocument(
+              bookingId: currentState.bookingData.bookingId,
+              guestId: guest.id!,
+              docKind: event.documentType.frontDocKind,
+              bytes: event.frontBytes!,
+              mimeType: 'image/jpeg',
+            );
+            hasFront = true;
+            debugPrint('✅ [CheckinBloc] Anverso subido correctamente');
+          }
+
+          final backDocKind = event.documentType.backDocKind;
+          if (event.backBytes != null && backDocKind != null) {
+            debugPrint('📤 [CheckinBloc] Subiendo reverso al storage...');
+            await _repository.uploadDocument(
+              bookingId: currentState.bookingData.bookingId,
+              guestId: guest.id!,
+              docKind: backDocKind,
+              bytes: event.backBytes!,
+              mimeType: 'image/jpeg',
+            );
+            hasBack = true;
+            debugPrint('✅ [CheckinBloc] Reverso subido correctamente');
+          }
+
+          // Si el huésped ha cambiado de tipo de documento, retirar las caras
+          // que ya no le corresponden (p. ej. el reverso del DNI al pasar a
+          // pasaporte) para que el admin no vea fotos de más.
+          //
+          // Sólo se limpia cuando acaba de subir la cara frontal del tipo
+          // nuevo: así nunca se le borra la única foto que tenía.
+          if (event.frontBytes != null) {
+            await _repository.deleteObsoleteDocuments(
+              bookingId: currentState.bookingData.bookingId,
+              guestId: guest.id!,
+              keepDocKinds: [
+                event.documentType.frontDocKind,
+                if (backDocKind != null) backDocKind,
+              ],
+            );
+
+            // Un pasaporte no tiene reverso: si lo había, se acaba de retirar
+            if (backDocKind == null) hasBack = false;
+          }
         }
 
-        // Actualizar el huésped con el flag de imagen
-        guest = guest.copyWith(hasDocumentImage: hasImage);
+        // Actualizar el huésped con el estado de cada cara
+        guest = guest.copyWith(
+          hasDocumentFront: hasFront,
+          hasDocumentBack: hasBack,
+        );
 
         // Actualizar la lista de huéspedes
         final newGuests = List<GuestEntity>.from(currentState.guests);
@@ -383,8 +425,13 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
             emit(CheckinError('Falta el documento de ${guest.fullName.isEmpty ? "huésped ${i + 1}" : guest.fullName}'));
             return;
           }
-          if (!guest.hasDocumentImage) {
-            emit(CheckinError('Falta la foto del documento de ${guest.fullName.isEmpty ? "huésped ${i + 1}" : guest.fullName}'));
+          final guestLabel = guest.fullName.isEmpty ? 'huésped ${i + 1}' : guest.fullName;
+          if (!guest.hasDocumentFront) {
+            emit(CheckinError('Falta la foto del documento de $guestLabel'));
+            return;
+          }
+          if ((guest.documentType?.requiresBackSide ?? true) && !guest.hasDocumentBack) {
+            emit(CheckinError('Falta la foto del reverso del documento de $guestLabel'));
             return;
           }
         }
@@ -428,15 +475,31 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
           signatureSvg: currentState.signatureSvg!,
         );
 
-        // Notificar al admin del nuevo check-in pendiente
+        // En las reservas con auto-validación el check-in ya sale validado del
+        // envío, así que al admin se le avisa sin pedirle una revisión.
+        final statusAfterSubmit = await _repository.getCheckinStatus(
+          currentState.bookingData.bookingId,
+        );
+        final autoValidated = statusAfterSubmit == CheckinStatus.validated;
+
+        // Notificar al admin del nuevo check-in
         if (currentState.bookingData.propertyId.isNotEmpty) {
-          debugPrint('📬 [CheckinBloc] Notificando al admin...');
-          await NotificationService().notifyAdminCheckinSubmitted(
-            bookingId: currentState.bookingData.bookingId,
-            propertyId: currentState.bookingData.propertyId,
-            guestName: currentState.bookingData.guestFullName,
-            unitName: currentState.bookingData.unitName,
-          );
+          debugPrint('📬 [CheckinBloc] Notificando al admin (auto-validado: $autoValidated)...');
+          if (autoValidated) {
+            await NotificationService().notifyAdminCheckinAutoValidated(
+              bookingId: currentState.bookingData.bookingId,
+              propertyId: currentState.bookingData.propertyId,
+              guestName: currentState.bookingData.guestFullName,
+              unitName: currentState.bookingData.unitName,
+            );
+          } else {
+            await NotificationService().notifyAdminCheckinSubmitted(
+              bookingId: currentState.bookingData.bookingId,
+              propertyId: currentState.bookingData.propertyId,
+              guestName: currentState.bookingData.guestFullName,
+              unitName: currentState.bookingData.unitName,
+            );
+          }
           debugPrint('✅ [CheckinBloc] Admin notificado');
 
           // Enviar email de notificación de check-in completado
@@ -521,22 +584,7 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
   /// Convierte string a DocumentType
   DocumentType? _parseDocumentType(String? value) {
     if (value == null) return null;
-    switch (value.toLowerCase()) {
-      case 'dni':
-      case 'dni_front':
-        return DocumentType.dniFront;
-      case 'dni_back':
-        return DocumentType.dniBack;
-      case 'nie':
-        // NIE se trata como DNI front
-        return DocumentType.dniFront;
-      case 'passport':
-        return DocumentType.passport;
-      case 'other':
-        return DocumentType.other;
-      default:
-        return null;
-    }
+    return DocumentTypeExtension.fromDbValue(value);
   }
 
   /// Maneja el evento de refresh (pull-to-refresh)

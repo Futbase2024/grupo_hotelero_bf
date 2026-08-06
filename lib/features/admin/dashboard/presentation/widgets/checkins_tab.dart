@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../../domain/bloc/bloc.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../shared/widgets/admin_widgets.dart';
 import '../../../checkins/presentation/screens/checkin_detail_screen.dart';
+import '../../../checkins/presentation/widgets/checkin_danger_actions_sheet.dart';
 
 /// Tab de check-ins del dashboard de administración
 class CheckinsTab extends StatefulWidget {
@@ -749,6 +752,7 @@ class _CheckinsTabState extends State<CheckinsTab> {
             onManualCheckin: canDoManual
                 ? () => _showManualCheckinDialog(context, checkin)
                 : null,
+            onMoreActions: () => _showDangerActions(context, checkin),
           );
         },
       ),
@@ -779,6 +783,38 @@ class _CheckinsTabState extends State<CheckinsTab> {
             const AdminDashboardCheckinsLoadRequested(),
           );
     }
+  }
+
+  /// Abre la hoja para borrar los datos del check-in o la reserva completa
+  Future<void> _showDangerActions(BuildContext context, dynamic checkin) async {
+    final authState = context.read<AuthBloc>().state;
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
+
+    final result = await CheckinDangerActionsSheet.show(
+      context: context,
+      repository: getIt<AdminPanelRepository>(),
+      bookingId: checkin.id as String,
+      bookingCode: checkin.bookingCode as String,
+      isAdmin: isAdmin,
+    );
+
+    if (result == null || !context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result == CheckinDangerResult.checkinDeleted
+              ? S.of(context).admin_checkin_deleted_success
+              : S.of(context).admin_checkin_booking_deleted_success,
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.fixed,
+      ),
+    );
+
+    context.read<AdminDashboardBloc>().add(
+          const AdminDashboardCheckinsLoadRequested(),
+        );
   }
 
   /// Muestra diálogo de confirmación para check-in manual
@@ -980,11 +1016,13 @@ class _CheckinListTile extends StatelessWidget {
     required this.checkin,
     this.onTap,
     this.onManualCheckin,
+    this.onMoreActions,
   });
 
   final dynamic checkin;
   final VoidCallback? onTap;
   final VoidCallback? onManualCheckin;
+  final VoidCallback? onMoreActions;
 
   Color _getStatusColor(String? status) {
     switch (status) {
@@ -1124,6 +1162,14 @@ class _CheckinListTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (onMoreActions != null)
+                        IconButton(
+                          icon: const Icon(Icons.more_vert,
+                              color: AppColors.darkBackground),
+                          tooltip: S.of(context).admin_checkin_more_actions,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: onMoreActions,
+                        ),
                     ],
                   ),
                 ),

@@ -47,11 +47,27 @@ abstract class ChatRepository {
     required String content,
   });
 
-  /// Envía un mensaje con imagen
+  /// Envía un mensaje con imagen.
+  ///
+  /// [imagePath] es la ruta del objeto en el bucket `chat-media`, no una URL.
   Future<MessageEntity> sendImageMessage({
     required String conversationId,
     required String senderUserId,
     required String imagePath,
+    String? mimeType,
+    int? fileSize,
+  });
+
+  /// Envía un mensaje con un documento adjunto.
+  ///
+  /// [filePath] es la ruta del objeto en el bucket `chat-media`.
+  Future<MessageEntity> sendFileMessage({
+    required String conversationId,
+    required String senderUserId,
+    required String filePath,
+    required String fileName,
+    required int fileSize,
+    required String mimeType,
   });
 
   /// Suscribe a cambios de mensajes en tiempo real (altas y borrados)
@@ -86,8 +102,11 @@ abstract class ChatRepository {
 
   /// Elimina de forma permanente un mensaje concreto.
   /// Cada usuario solo puede eliminar los mensajes que él mismo envió (RLS).
+  ///
+  /// [attachmentPath] borra además el archivo del bucket `chat-media`.
   Future<void> deleteMessage({
     required String messageId,
+    String? attachmentPath,
   });
 
   /// Dispose de recursos (cancelar suscripciones)

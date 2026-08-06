@@ -1,7 +1,6 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -16,7 +15,13 @@ const int _maxFileSizeBytes = 500 * 1024;
 /// Dimensiones máximas para compresión
 const int _maxDimension = 1200;
 
-/// Bottom sheet para subir documento de identidad
+/// Cara del documento que se está capturando
+enum _DocumentSide { front, back }
+
+/// Bottom sheet para subir documento de identidad.
+///
+/// Pide el tipo REAL del documento (DNI, NIE o pasaporte) y sus fotos: dos
+/// caras para DNI y NIE, una sola (página de datos) para el pasaporte.
 class DocumentUploadSheet extends StatefulWidget {
   const DocumentUploadSheet({
     super.key,
@@ -25,12 +30,22 @@ class DocumentUploadSheet extends StatefulWidget {
   });
 
   final GuestEntity guest;
-  final void Function(DocumentType type, String number, Uint8List? imageBytes) onConfirm;
+  final void Function(
+    DocumentType type,
+    String number,
+    Uint8List? frontBytes,
+    Uint8List? backBytes,
+  ) onConfirm;
 
   static Future<void> show({
     required BuildContext context,
     required GuestEntity guest,
-    required void Function(DocumentType type, String number, Uint8List? imageBytes) onConfirm,
+    required void Function(
+      DocumentType type,
+      String number,
+      Uint8List? frontBytes,
+      Uint8List? backBytes,
+    ) onConfirm,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -50,14 +65,22 @@ class DocumentUploadSheet extends StatefulWidget {
 class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
   late DocumentType _selectedType;
   late TextEditingController _documentController;
-  Uint8List? _imageBytes;
+  Uint8List? _frontBytes;
+  Uint8List? _backBytes;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
+
+  /// Tipos ofrecidos al huésped ('other' queda fuera del selector)
+  static const _selectableTypes = [
+    DocumentType.dni,
+    DocumentType.nie,
+    DocumentType.passport,
+  ];
 
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.guest.documentType ?? DocumentType.dniFront;
+    _selectedType = widget.guest.documentType ?? DocumentType.dni;
     _documentController = TextEditingController(text: widget.guest.documentNumber ?? '');
   }
 
@@ -67,114 +90,101 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     super.dispose();
   }
 
+  /// Si las fotos ya subidas siguen sirviendo para el tipo seleccionado.
+  ///
+  /// Al cambiar de DNI a pasaporte (o al revés) cambia el `doc_kind` con el
+  /// que se guardan, así que las anteriores dejan de valer y hay que repetirlas.
+  bool get _keepsUploadedPhotos =>
+      widget.guest.documentType?.frontDocKind == _selectedType.frontDocKind;
+
+  /// El anverso está resuelto si se acaba de capturar o ya estaba subido
+  bool get _hasFront =>
+      _frontBytes != null || (_keepsUploadedPhotos && widget.guest.hasDocumentFront);
+
+  /// Igual para el reverso, que sólo se pide en DNI y NIE
+  bool get _hasBack =>
+      _backBytes != null || (_keepsUploadedPhotos && widget.guest.hasDocumentBack);
+
+  bool get _hasAllPhotos =>
+      _hasFront && (!_selectedType.requiresBackSide || _hasBack);
+
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.only(
-        left: AppTheme.spacing24,
-        right: AppTheme.spacing24,
-        top: AppTheme.spacing24,
-        bottom: bottomPadding + AppTheme.spacing24,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.gray600,
-                  borderRadius: BorderRadius.circular(2),
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.only(
+          left: AppTheme.spacing24,
+          right: AppTheme.spacing24,
+          top: AppTheme.spacing24,
+          bottom: bottomPadding + AppTheme.spacing24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.gray600,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing24),
+              const SizedBox(height: AppTheme.spacing24),
 
-            // Title
-            Text(
-              S.of(context).guest_checkin_upload_document_title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.white,
+              // Title
+              Text(
+                S.of(context).guest_checkin_upload_document_title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              widget.guest.fullName,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                widget.guest.fullName,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing24),
+              const SizedBox(height: AppTheme.spacing24),
 
-            // Document type selector
-            _buildDocumentTypeSelector(),
-            const SizedBox(height: AppTheme.spacing20),
+              // Document type selector
+              _DocumentTypeSelector(
+                types: _selectableTypes,
+                selectedType: _selectedType,
+                onChanged: (type) => setState(() => _selectedType = type),
+              ),
+              const SizedBox(height: AppTheme.spacing20),
 
-            // Document number field
-            _buildDocumentNumberField(),
-            const SizedBox(height: AppTheme.spacing24),
+              // Document number field
+              _buildDocumentNumberField(),
+              const SizedBox(height: AppTheme.spacing24),
 
-            // Image capture area
-            _buildImageCaptureArea(),
-            const SizedBox(height: AppTheme.spacing24),
+              // Image capture area
+              _buildPhotosSection(),
+              const SizedBox(height: AppTheme.spacing24),
 
-            // Confirm button
-            _buildConfirmButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDocumentTypeSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          S.of(context).guest_checkin_document_type,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+              // Confirm button
+              _buildConfirmButton(),
+            ],
           ),
         ),
-        const SizedBox(height: AppTheme.spacing12),
-        Row(
-          children: DocumentType.values.where((t) => t != DocumentType.other).map((type) {
-            final isSelected = _selectedType == type;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  right: type != DocumentType.values.last ? AppTheme.spacing8 : 0,
-                ),
-                child: _TypeButton(
-                  label: _getDocumentTypeLabel(type),
-                  isSelected: isSelected,
-                  onTap: () => setState(() => _selectedType = type),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+      ),
     );
-  }
-
-  String _getDocumentTypeLabel(DocumentType type) {
-    return type.label;
   }
 
   Widget _buildDocumentNumberField() {
@@ -220,9 +230,10 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
 
   String _getDocumentHint() {
     switch (_selectedType) {
-      case DocumentType.dniFront:
-      case DocumentType.dniBack:
+      case DocumentType.dni:
         return '12345678A';
+      case DocumentType.nie:
+        return 'X1234567L';
       case DocumentType.passport:
         return 'ABC123456';
       case DocumentType.other:
@@ -230,7 +241,9 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     }
   }
 
-  Widget _buildImageCaptureArea() {
+  Widget _buildPhotosSection() {
+    final requiresBack = _selectedType.requiresBackSide;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -243,126 +256,45 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
           ),
         ),
         const SizedBox(height: AppTheme.spacing12),
-        GestureDetector(
-          onTap: _showImageSourceDialog,
-          child: Container(
-            height: 180,
-            decoration: BoxDecoration(
-              color: AppColors.darkBackground,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _imageBytes != null ? AppColors.success : AppColors.darkBorder,
-                width: _imageBytes != null ? 2 : 1,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _DocumentPhotoSlot(
+                  label: requiresBack
+                      ? S.of(context).guest_checkin_document_side_front
+                      : S.of(context).guest_checkin_document_passport_page,
+                  imageBytes: _frontBytes,
+                  alreadyUploaded: _keepsUploadedPhotos && widget.guest.hasDocumentFront,
+                  onTap: () => _showImageSourceDialog(_DocumentSide.front),
+                  onRemove: _frontBytes != null
+                      ? () => setState(() => _frontBytes = null)
+                      : null,
+                ),
               ),
-            ),
-            child: _imageBytes != null
-                ? _buildImagePreview()
-                : _buildUploadPlaceholder(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImagePreview() {
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: Image.memory(
-            _imageBytes!,
-            width: double.infinity,
-            height: double.infinity,
-            fit: BoxFit.cover,
-          ),
-        ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: GestureDetector(
-            onTap: () => setState(() => _imageBytes = null),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.blackWithAlpha80,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.close,
-                color: AppColors.white,
-                size: 18,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 8,
-          left: 8,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.success,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle, color: AppColors.white, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  S.of(context).guest_checkin_image_captured,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              if (requiresBack) ...[
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: _DocumentPhotoSlot(
+                    label: S.of(context).guest_checkin_document_side_back,
+                    imageBytes: _backBytes,
+                    alreadyUploaded: _keepsUploadedPhotos && widget.guest.hasDocumentBack,
+                    onTap: () => _showImageSourceDialog(_DocumentSide.back),
+                    onRemove: _backBytes != null
+                        ? () => setState(() => _backBytes = null)
+                        : null,
                   ),
                 ),
               ],
-            ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildUploadPlaceholder() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.goldWithAlpha10,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.camera_alt_outlined,
-            color: AppColors.gold,
-            size: 32,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing12),
-        Text(
-          S.of(context).guest_checkin_tap_to_capture,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.gold,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing4),
-        Text(
-          S.of(context).guest_checkin_camera_or_gallery,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showImageSourceDialog() {
+  void _showImageSourceDialog(_DocumentSide side) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.darkSurface,
@@ -370,6 +302,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (dialogContext) => SafeArea(
+        top: false,
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing24),
           child: Column(
@@ -392,7 +325,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                       label: S.of(context).guest_checkin_camera,
                       onTap: () {
                         Navigator.pop(dialogContext);
-                        _openCameraWithGuide();
+                        _openCameraWithGuide(side);
                       },
                     ),
                   ),
@@ -403,7 +336,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                       label: S.of(context).guest_checkin_gallery,
                       onTap: () {
                         Navigator.pop(dialogContext);
-                        _pickImage(ImageSource.gallery);
+                        _pickImage(ImageSource.gallery, side);
                       },
                     ),
                   ),
@@ -416,8 +349,20 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     );
   }
 
+  /// Guarda los bytes capturados en la cara correspondiente
+  void _setSideBytes(_DocumentSide side, Uint8List bytes) {
+    setState(() {
+      switch (side) {
+        case _DocumentSide.front:
+          _frontBytes = bytes;
+        case _DocumentSide.back:
+          _backBytes = bytes;
+      }
+    });
+  }
+
   /// Abre la cámara con guía de escaneo
-  Future<void> _openCameraWithGuide() async {
+  Future<void> _openCameraWithGuide(_DocumentSide side) async {
     try {
       setState(() => _isLoading = true);
 
@@ -433,7 +378,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
           debugPrint('📷 [DocumentUpload] Imagen comprimida: ${processedBytes.length} bytes');
         }
 
-        setState(() => _imageBytes = processedBytes);
+        _setSideBytes(side, processedBytes);
       }
     } catch (e) {
       if (mounted) {
@@ -449,7 +394,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     }
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImage(ImageSource source, _DocumentSide side) async {
     try {
       setState(() => _isLoading = true);
 
@@ -470,7 +415,7 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
           debugPrint('📷 [DocumentUpload] Imagen comprimida: ${bytes.length} bytes');
         }
 
-        setState(() => _imageBytes = bytes);
+        _setSideBytes(side, bytes);
       }
     } catch (e) {
       if (mounted) {
@@ -487,42 +432,32 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
   }
 
   /// Comprime una imagen si excede el tamaño máximo
+  ///
+  /// Re-codifica a JPEG bajando la calidad por pasos. Se usa JPEG (y no PNG)
+  /// porque para una foto de documento el PNG resultante suele pesar MÁS que
+  /// el original, que era justo lo que hacía fallar subidas en móviles con
+  /// cámaras de muchos megapíxeles.
   Future<Uint8List> _compressImage(Uint8List imageBytes) async {
     try {
-      // Decodificar imagen
-      final codec = await ui.instantiateImageCodec(imageBytes);
-      final frame = await codec.getNextFrame();
-      final image = frame.image;
+      var result = imageBytes;
 
-      // Calcular nuevas dimensiones manteniendo aspect ratio
-      var width = image.width.toDouble();
-      var height = image.height.toDouble();
+      for (final quality in const [80, 60, 40]) {
+        result = await FlutterImageCompress.compressWithList(
+          imageBytes,
+          minWidth: _maxDimension,
+          minHeight: _maxDimension,
+          quality: quality,
+          format: CompressFormat.jpeg,
+        );
 
-      // Reducir dimensiones hasta que el tamaño sea aceptable
-      while (imageBytes.length > _maxFileSizeBytes && width > 400 && height > 400) {
-        width *= 0.8;
-        height *= 0.8;
+        debugPrint('📷 [DocumentUpload] Calidad $quality → ${result.length} bytes');
 
-        // Redimensionar
-        final recorder = ui.PictureRecorder();
-        final canvas = Canvas(recorder);
-        final paint = Paint()..filterQuality = FilterQuality.high;
-        canvas.scale(width / image.width, height / image.height);
-        canvas.drawImage(image, Offset.zero, paint);
-
-        final picture = recorder.endRecording();
-        final resizedImage = await picture.toImage(width.toInt(), height.toInt());
-        final byteData = await resizedImage.toByteData(format: ui.ImageByteFormat.png);
-
-        if (byteData != null) {
-          imageBytes = byteData.buffer.asUint8List();
-        }
+        if (result.length <= _maxFileSizeBytes) break;
       }
 
-      image.dispose();
-      codec.dispose();
-
-      return imageBytes;
+      // Si aun así no baja del límite, se queda la versión más comprimida
+      // siempre que sea menor que la original.
+      return result.length < imageBytes.length ? result : imageBytes;
     } catch (e) {
       debugPrint('❌ [DocumentUpload] Error al comprimir: $e');
       return imageBytes; // Devolver original si falla
@@ -531,13 +466,12 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
 
   Widget _buildConfirmButton() {
     final hasDocumentNumber = _documentController.text.isNotEmpty;
-    final hasImage = _imageBytes != null;
-    final canConfirm = hasDocumentNumber && hasImage;
+    final canConfirm = hasDocumentNumber && _hasAllPhotos;
 
     String buttonText;
     if (_isLoading) {
       buttonText = '';
-    } else if (!hasImage) {
+    } else if (!_hasAllPhotos) {
       buttonText = S.of(context).guest_checkin_photo_required;
     } else if (!hasDocumentNumber) {
       buttonText = S.of(context).guest_checkin_document_number_required;
@@ -555,7 +489,8 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                 widget.onConfirm(
                   _selectedType,
                   _documentController.text.toUpperCase(),
-                  _imageBytes!,
+                  _frontBytes,
+                  _selectedType.requiresBackSide ? _backBytes : null,
                 );
                 Navigator.pop(context);
               },
@@ -584,6 +519,228 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                 ),
               ),
       ),
+    );
+  }
+}
+
+/// Selector del tipo de documento (DNI / NIE / Pasaporte)
+class _DocumentTypeSelector extends StatelessWidget {
+  const _DocumentTypeSelector({
+    required this.types,
+    required this.selectedType,
+    required this.onChanged,
+  });
+
+  final List<DocumentType> types;
+  final DocumentType selectedType;
+  final ValueChanged<DocumentType> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          S.of(context).guest_checkin_document_type,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+        Row(
+          children: types.map((type) {
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  right: type != types.last ? AppTheme.spacing8 : 0,
+                ),
+                child: _TypeButton(
+                  label: _labelFor(context, type),
+                  isSelected: selectedType == type,
+                  onTap: () => onChanged(type),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  String _labelFor(BuildContext context, DocumentType type) {
+    switch (type) {
+      case DocumentType.dni:
+        return S.of(context).guest_checkin_document_type_dni;
+      case DocumentType.nie:
+        return S.of(context).guest_checkin_document_type_nie;
+      case DocumentType.passport:
+        return S.of(context).guest_checkin_document_type_passport;
+      case DocumentType.other:
+        return S.of(context).guest_checkin_document;
+    }
+  }
+}
+
+/// Hueco de captura de una cara del documento
+class _DocumentPhotoSlot extends StatelessWidget {
+  const _DocumentPhotoSlot({
+    required this.label,
+    required this.imageBytes,
+    required this.alreadyUploaded,
+    required this.onTap,
+    this.onRemove,
+  });
+
+  /// Etiqueta de la cara ("Anverso", "Reverso", "Página de datos")
+  final String label;
+
+  /// Bytes recién capturados, si los hay
+  final Uint8List? imageBytes;
+
+  /// Si esta cara ya estaba subida de una sesión anterior
+  final bool alreadyUploaded;
+
+  final VoidCallback onTap;
+  final VoidCallback? onRemove;
+
+  bool get _isResolved => imageBytes != null || alreadyUploaded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 150,
+            decoration: BoxDecoration(
+              color: AppColors.darkBackground,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _isResolved ? AppColors.success : AppColors.darkBorder,
+                width: _isResolved ? 2 : 1,
+              ),
+            ),
+            child: imageBytes != null
+                ? _PhotoPreview(imageBytes: imageBytes!, onRemove: onRemove)
+                : _PhotoPlaceholder(alreadyUploaded: alreadyUploaded),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Row(
+          children: [
+            if (_isResolved) ...[
+              const Icon(Icons.check_circle, color: AppColors.success, size: 14),
+              const SizedBox(width: 4),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: _isResolved ? AppColors.success : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Vista previa de una foto recién capturada
+class _PhotoPreview extends StatelessWidget {
+  const _PhotoPreview({required this.imageBytes, this.onRemove});
+
+  final Uint8List imageBytes;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Image.memory(
+            imageBytes,
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+          ),
+        ),
+        if (onRemove != null)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: AppColors.blackWithAlpha80,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: AppColors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Placeholder de un hueco sin foto todavía
+class _PhotoPlaceholder extends StatelessWidget {
+  const _PhotoPlaceholder({required this.alreadyUploaded});
+
+  /// Si la cara ya estaba subida antes: se puede reemplazar tocando encima
+  final bool alreadyUploaded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: alreadyUploaded
+                ? AppColors.successWithAlpha10
+                : AppColors.goldWithAlpha10,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            alreadyUploaded ? Icons.check : Icons.camera_alt_outlined,
+            color: alreadyUploaded ? AppColors.success : AppColors.gold,
+            size: 28,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            alreadyUploaded
+                ? S.of(context).guest_checkin_image_captured
+                : S.of(context).guest_checkin_tap_to_capture,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: alreadyUploaded ? AppColors.success : AppColors.gold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

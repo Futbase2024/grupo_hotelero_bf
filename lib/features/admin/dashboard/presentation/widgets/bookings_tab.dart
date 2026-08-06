@@ -6,6 +6,9 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/router/app_router.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/utils/guest_documents_cleaner.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../../bookings/data/services/bookings_pdf_service.dart';
 import '../../../bookings/presentation/sheets/create_booking_bottom_sheet.dart';
 import '../../../domain/bloc/bloc.dart';
@@ -24,6 +27,19 @@ class BookingsTab extends StatefulWidget {
 
 class _BookingsTabState extends State<BookingsTab> {
   final _searchController = TextEditingController();
+
+  /// Id de la reserva que se está reactivando (muestra loader en su tarjeta)
+  String? _reactivatingBookingId;
+
+  /// Id de la reserva que se está eliminando (muestra loader en su tarjeta)
+  String? _deletingBookingId;
+
+  /// Eliminar una reserva es una acción exclusiva de admin (la RPC
+  /// `delete_booking` también lo exige).
+  bool get _isCurrentUserAdmin {
+    final authState = context.read<AuthBloc>().state;
+    return authState is AuthAuthenticated && authState.user.isAdmin;
+  }
 
   @override
   void dispose() {
@@ -748,6 +764,17 @@ class _BookingsTabState extends State<BookingsTab> {
                     booking.primaryGuestUserId!.isNotEmpty
                 ? () => _startConversationWithGuest(context, booking)
                 : null,
+            isReactivating: _reactivatingBookingId == booking.id,
+            onReactivateTap: _reactivatingBookingId != null ||
+                    _deletingBookingId != null
+                ? null
+                : () => _reactivateBooking(context, booking),
+            isDeleting: _deletingBookingId == booking.id,
+            onDeleteTap: !_isCurrentUserAdmin ||
+                    _reactivatingBookingId != null ||
+                    _deletingBookingId != null
+                ? null
+                : () => _deleteBooking(context, booking),
           );
         },
       ),
@@ -816,6 +843,110 @@ class _BookingsTabState extends State<BookingsTab> {
             backgroundColor: AppColors.error,
           ),
         );
+      }
+    }
+  }
+
+  /// Reactiva una reserva cancelada desde la propia lista
+  Future<void> _reactivateBooking(
+    BuildContext context,
+    AdminBookingEntity booking,
+  ) async {
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: S.of(context).admin_booking_reactivate_booking_title,
+      body: S.of(context).admin_booking_reactivate_booking_confirm,
+      confirmText: S.of(context).admin_booking_yes_reactivate,
+      cancelText: S.of(context).common_cancel,
+    );
+    if (!confirmed || !context.mounted) return;
+
+    setState(() => _reactivatingBookingId = booking.id);
+    try {
+      await getIt<AdminPanelRepository>().reactivateBooking(
+        bookingId: booking.id,
+      );
+
+      if (!context.mounted) return;
+
+      context.read<AdminDashboardBloc>().add(
+            const AdminDashboardBookingsLoadRequested(),
+          );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(S.of(context).admin_booking_reactivated_successfully),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              S.of(context).admin_booking_error_reactivating(e.toString()),
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _reactivatingBookingId = null);
+      }
+    }
+  }
+
+  /// Elimina definitivamente una reserva cancelada desde la propia lista
+  Future<void> _deleteBooking(
+    BuildContext context,
+    AdminBookingEntity booking,
+  ) async {
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: S.of(context).admin_booking_delete_booking,
+      body: S.of(context).admin_booking_delete_confirm,
+      confirmText: S.of(context).common_delete,
+      cancelText: S.of(context).common_cancel,
+      isDestructive: true,
+    );
+    if (!confirmed || !context.mounted) return;
+
+    setState(() => _deletingBookingId = booking.id);
+    try {
+      final storagePaths = await getIt<AdminPanelRepository>().deleteBooking(
+        bookingId: booking.id,
+      );
+
+      // Los documentos del huésped se borran desde el cliente
+      await removeGuestDocuments(storagePaths, logTag: '_deleteBooking');
+
+      if (!context.mounted) return;
+
+      context.read<AdminDashboardBloc>().add(
+            const AdminDashboardBookingsLoadRequested(),
+          );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(S.of(context).admin_booking_deleted_successfully),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              S.of(context).admin_booking_error_deleting(e.toString()),
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _deletingBookingId = null);
       }
     }
   }

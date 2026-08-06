@@ -70,6 +70,19 @@ class ConversationsSelected extends ConversationsEvent {
   List<Object?> get props => [conversation];
 }
 
+/// Evento al escribir en el buscador de la lista.
+///
+/// El filtrado es local: las conversaciones ya están en memoria y se mantienen
+/// al día por realtime, así que no hace falta ir al servidor.
+class ConversationsSearchChanged extends ConversationsEvent {
+  const ConversationsSearchChanged({required this.query});
+
+  final String query;
+
+  @override
+  List<Object?> get props => [query];
+}
+
 /// Evento para eliminar una conversación (solo admin/staff)
 class ConversationsDeleteRequested extends ConversationsEvent {
   const ConversationsDeleteRequested({required this.conversationId});
@@ -112,21 +125,52 @@ class ConversationsLoading extends ConversationsState {
 
 /// Estado con conversaciones cargadas
 class ConversationsLoaded extends ConversationsState {
-  ConversationsLoaded({
+  factory ConversationsLoaded({
+    required List<ConversationEntity> conversations,
+    required String propertyId,
+    String? userId,
+    bool isRefreshing = false,
+    ConversationEntity? selectedConversation,
+    String searchQuery = '',
+  }) {
+    final sorted = _sort(conversations);
+    return ConversationsLoaded._(
+      conversations: conversations,
+      sortedConversations: sorted,
+      visibleConversations: _filter(sorted, searchQuery),
+      propertyId: propertyId,
+      userId: userId,
+      isRefreshing: isRefreshing,
+      selectedConversation: selectedConversation,
+      searchQuery: searchQuery,
+    );
+  }
+
+  const ConversationsLoaded._({
     required this.conversations,
+    required this.sortedConversations,
+    required this.visibleConversations,
     required this.propertyId,
-    this.userId,
-    this.isRefreshing = false,
-    this.selectedConversation,
-  }) : sortedConversations = _sort(conversations);
+    required this.userId,
+    required this.isRefreshing,
+    required this.selectedConversation,
+    required this.searchQuery,
+  });
 
   final List<ConversationEntity> conversations;
   /// Conversaciones ya ordenadas por último mensaje — calculadas una sola vez al crear el estado
   final List<ConversationEntity> sortedConversations;
+
+  /// Conversaciones que se pintan: las ordenadas, filtradas por [searchQuery].
+  final List<ConversationEntity> visibleConversations;
+
   final String propertyId;
   final String? userId;
   final bool isRefreshing;
   final ConversationEntity? selectedConversation;
+
+  /// Texto del buscador. Vacío = sin filtro.
+  final String searchQuery;
 
   static List<ConversationEntity> _sort(List<ConversationEntity> list) {
     final sorted = List<ConversationEntity>.from(list);
@@ -141,7 +185,54 @@ class ConversationsLoaded extends ConversationsState {
     return sorted;
   }
 
+  static List<ConversationEntity> _filter(
+    List<ConversationEntity> list,
+    String query,
+  ) {
+    final needle = _normalize(query);
+    if (needle.isEmpty) return list;
+    return list.where((c) => _haystackOf(c).contains(needle)).toList();
+  }
+
+  /// Texto sobre el que se busca: nombre del huésped y código de reserva.
+  ///
+  /// El código se indexa también sin guiones para que «9KGF9NYN» encuentre
+  /// «#BF-9KGF-9NYN». El contenido del último mensaje solo entra si es texto:
+  /// en imágenes y documentos guarda un storage path, y buscar por UUID no
+  /// tiene ningún sentido para quien usa la pantalla.
+  static String _haystackOf(ConversationEntity c) {
+    final code = c.bookingCode ?? '';
+    final lastMessage = c.lastMessage;
+
+    return _normalize([
+      c.guestName ?? '',
+      c.guestParticipant?.displayName ?? '',
+      code,
+      code.replaceAll('-', ''),
+      if (lastMessage != null && lastMessage.isText) lastMessage.content,
+    ].join(' '));
+  }
+
+  static const String _accented = 'áàäâãéèëêíìïîóòöôõúùüûñç';
+  static const String _plain = 'aaaaaeeeeiiiiooooouuuunc';
+
+  /// Minúsculas y sin acentos, para que «jesus» encuentre «Jesús».
+  static String _normalize(String value) {
+    final buffer = StringBuffer();
+    for (final rune in value.toLowerCase().runes) {
+      final char = String.fromCharCode(rune);
+      final index = _accented.indexOf(char);
+      buffer.write(index == -1 ? char : _plain[index]);
+    }
+    return buffer.toString().trim();
+  }
+
   bool get hasConversations => conversations.isNotEmpty;
+
+  /// Hay búsqueda activa pero ninguna conversación la cumple.
+  bool get hasNoSearchResults =>
+      searchQuery.trim().isNotEmpty && visibleConversations.isEmpty;
+
   int get totalConversations => conversations.length;
   int get totalUnread => conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
   List<ConversationEntity> get unreadConversations => conversations.where((c) => c.hasUnread).toList();
@@ -153,6 +244,7 @@ class ConversationsLoaded extends ConversationsState {
         userId,
         isRefreshing,
         selectedConversation,
+        searchQuery,
       ];
 }
 
@@ -178,6 +270,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     on<ConversationsLoadForUser>(_onLoadForUser);
     on<ConversationsRefreshRequested>(_onRefreshRequested);
     on<ConversationsSelected>(_onSelected);
+    on<ConversationsSearchChanged>(_onSearchChanged);
     on<ConversationsDeleteRequested>(_onDeleteRequested);
     on<_ConversationsUpdated>(_onConversationsUpdated);
   }
@@ -185,6 +278,12 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
   final ChatRepository _chatRepository;
 
   StreamSubscription<List<ConversationEntity>>? _conversationsSubscription;
+
+  /// Búsqueda activa, para no perderla al recargar o al llegar realtime.
+  String get _searchQuery {
+    final current = state;
+    return current is ConversationsLoaded ? current.searchQuery : '';
+  }
 
   /// Maneja el evento de inicio
   Future<void> _onStarted(
@@ -221,6 +320,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
         userId: currentState.userId,
         isRefreshing: true,
         selectedConversation: currentState.selectedConversation,
+        searchQuery: currentState.searchQuery,
       ));
 
       // Si hay propertyId válido, refrescar por propiedad
@@ -245,6 +345,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
           userId: currentState.userId,
           isRefreshing: false,
           selectedConversation: currentState.selectedConversation,
+          searchQuery: currentState.searchQuery,
         ));
       }
     }
@@ -262,8 +363,28 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
         propertyId: currentState.propertyId,
         userId: currentState.userId,
         selectedConversation: event.conversation,
+        searchQuery: currentState.searchQuery,
       ));
     }
+  }
+
+  /// Maneja el cambio del texto de búsqueda (filtrado local).
+  void _onSearchChanged(
+    ConversationsSearchChanged event,
+    Emitter<ConversationsState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! ConversationsLoaded) return;
+    if (currentState.searchQuery == event.query) return;
+
+    emit(ConversationsLoaded(
+      conversations: currentState.conversations,
+      propertyId: currentState.propertyId,
+      userId: currentState.userId,
+      isRefreshing: currentState.isRefreshing,
+      selectedConversation: currentState.selectedConversation,
+      searchQuery: event.query,
+    ));
   }
 
   /// Maneja actualizaciones del realtime
@@ -279,6 +400,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
         propertyId: currentState.propertyId,
         userId: currentState.userId,
         selectedConversation: currentState.selectedConversation,
+        searchQuery: currentState.searchQuery,
       ));
     }
   }
@@ -305,6 +427,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
         conversations: conversations,
         propertyId: propertyId,
         userId: userId,
+        searchQuery: _searchQuery,
       ));
     } catch (e) {
       _Debug.error('Error en _loadConversationsByProperty', e);
@@ -333,6 +456,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
         conversations: conversations,
         propertyId: propertyId ?? '',
         userId: userId,
+        searchQuery: _searchQuery,
       ));
     } catch (e) {
       _Debug.error('Error en _loadConversationsForUser', e);
@@ -409,6 +533,7 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
         selectedConversation: currentState.selectedConversation?.id == event.conversationId
             ? null
             : currentState.selectedConversation,
+        searchQuery: currentState.searchQuery,
       ));
     } catch (e) {
       _Debug.error('Error en _onDeleteRequested', e);

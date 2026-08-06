@@ -1,19 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../data/services/chat_media_service.dart';
+import 'attachment_source_sheet.dart';
 
 /// Widget de campo de entrada para el chat
 class ChatInput extends StatefulWidget {
   const ChatInput({
     super.key,
     required this.onSend,
+    this.onSendAttachment,
     this.enabled = true,
+    this.isUploading = false,
   });
 
   final void Function(String message) onSend;
+
+  /// Se invoca con los archivos ya elegidos (uno o varios). Si es `null`, no se
+  /// ofrece adjuntar.
+  final void Function(List<ChatAttachmentDraft> drafts)? onSendAttachment;
+
   final bool enabled;
+
+  /// Hay un adjunto subiéndose: se bloquea el botón para evitar duplicados.
+  final bool isUploading;
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -22,6 +36,9 @@ class ChatInput extends StatefulWidget {
 class _ChatInputState extends State<ChatInput> {
   final _controller = TextEditingController();
   bool _hasText = false;
+
+  bool get _canAttach =>
+      widget.onSendAttachment != null && widget.enabled && !widget.isUploading;
 
   @override
   void initState() {
@@ -51,6 +68,60 @@ class _ChatInputState extends State<ChatInput> {
     _controller.clear();
   }
 
+  /// Abre el selector de origen y, si el usuario elige algo, entrega los
+  /// archivos ya leídos en memoria a la pantalla.
+  ///
+  /// La galería y el selector de documentos permiten varios archivos; la cámara,
+  /// por su naturaleza, solo uno.
+  Future<void> _pickAttachment() async {
+    final source = await AttachmentSourceSheet.show(context);
+    if (source == null || !mounted) return;
+
+    final mediaService = getIt<ChatMediaService>();
+
+    try {
+      final drafts = switch (source) {
+        AttachmentSource.camera => await _captureFromCamera(mediaService),
+        AttachmentSource.gallery => await mediaService.pickImages(),
+        AttachmentSource.document => await mediaService.pickDocuments(),
+      };
+
+      if (drafts.isEmpty || !mounted) return;
+
+      // Basta con que uno supere el límite para descartar el lote: subir a
+      // medias dejaría al usuario sin saber qué llegó y qué no.
+      if (drafts.any((d) => d.size > ChatMediaService.maxFileSizeBytes)) {
+        _showError(S.of(context).chat_attachment_too_large);
+        return;
+      }
+
+      widget.onSendAttachment?.call(drafts);
+    } on ChatMediaException catch (e) {
+      if (mounted) _showError(e.message);
+    } catch (_) {
+      if (mounted) _showError(S.of(context).chat_attachment_error);
+    }
+  }
+
+  /// La cámara devuelve una sola foto; se normaliza a lista para tratar todos
+  /// los orígenes por igual.
+  Future<List<ChatAttachmentDraft>> _captureFromCamera(
+    ChatMediaService mediaService,
+  ) async {
+    final draft = await mediaService.pickImage(source: ImageSource.camera);
+    return draft == null ? const [] : [draft];
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -61,6 +132,17 @@ class _ChatInputState extends State<ChatInput> {
       child: SafeArea(
         child: Row(
           children: [
+            if (widget.onSendAttachment != null) ...[
+              IconButton(
+                onPressed: _canAttach ? _pickAttachment : null,
+                tooltip: S.of(context).chat_attach_title,
+                icon: Icon(
+                  Icons.attach_file,
+                  color: _canAttach ? AppColors.gold : AppColors.gray600,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing4),
+            ],
             Expanded(
               child: TextField(
                 controller: _controller,

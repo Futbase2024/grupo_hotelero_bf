@@ -1,13 +1,23 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Permiso de cámara para capturar documentos (DNI/pasaporte) durante check-in -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- WRITE_EXTERNAL_STORAGE solo para Android 9 y anteriores (API 28-) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
-    <!-- NOTA: No declaramos READ_MEDIA_IMAGES ni READ_EXTERNAL_STORAGE porque
-         usamos el Photo Picker de Android para selección de imágenes desde galería.
-         El Photo Picker NO requiere permisos de runtime en Android 13+ (API 33+). -->
+    <!-- camera_android_camerax declara RECORD_AUDIO para su modo de grabación de vídeo.
+         Solo tomamos fotos (takePicture con enableAudio: false), así que lo eliminamos
+         del manifest fusionado para no pedir un permiso peligroso que no usamos. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
+
+    <!-- NOTA: No declaramos READ_MEDIA_IMAGES porque usamos el Photo Picker de Android
+         para selección de imágenes desde galería. El Photo Picker NO requiere permisos
+         de runtime en Android 13+ (API 33+).
+         READ_EXTERNAL_STORAGE lo inyecta AGP implícitamente (sin maxSdkVersion) al
+         declarar WRITE_EXTERNAL_STORAGE, así que lo acotamos a API 32-. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" tools:node="replace" />
 
     <!-- Permisos para notificaciones FCM -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

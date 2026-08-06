@@ -4,7 +4,8 @@ import 'package:equatable/equatable.dart';
 /// Tipo de mensaje
 enum MessageType {
   text,
-  image;
+  image,
+  file;
 
   static MessageType fromString(String value) {
     return MessageType.values.firstWhere(
@@ -28,14 +29,30 @@ class MessageEntity extends Equatable {
     this.senderRole,
     // Campo de lectura
     this.readAt,
+    // Metadatos de adjunto
+    this.fileName,
+    this.fileSize,
+    this.mimeType,
   });
 
   final String id;
   final String conversationId;
   final String senderUserId;
   final MessageType msgType;
+
+  /// Texto del mensaje, o storage path del adjunto cuando el mensaje es
+  /// una imagen o un documento.
   final String content;
   final DateTime createdAt;
+
+  /// Nombre original del archivo (solo mensajes de tipo documento).
+  final String? fileName;
+
+  /// Tamaño del adjunto en bytes.
+  final int? fileSize;
+
+  /// MIME type del adjunto.
+  final String? mimeType;
 
   // Campos de relaciones (populados desde joins)
   final String? senderName;
@@ -53,6 +70,31 @@ class MessageEntity extends Equatable {
 
   /// Indica si el mensaje es una imagen
   bool get isImage => msgType == MessageType.image;
+
+  /// Indica si el mensaje es un documento adjunto
+  bool get isFile => msgType == MessageType.file;
+
+  /// Indica si el mensaje lleva un archivo en el bucket `chat-media`
+  bool get hasAttachment => isImage || isFile;
+
+  /// Ruta del adjunto en Storage (o URL absoluta en mensajes antiguos)
+  String? get attachmentPath => hasAttachment ? content : null;
+
+  /// Nombre a mostrar para un documento adjunto
+  String get displayFileName {
+    final name = fileName;
+    if (name != null && name.trim().isNotEmpty) return name;
+    return 'Documento';
+  }
+
+  /// Tamaño del adjunto en formato legible (vacío si se desconoce)
+  String get fileSizeFormatted {
+    final size = fileSize;
+    if (size == null || size <= 0) return '';
+    if (size < 1024) return '$size B';
+    if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(0)} KB';
+    return '${(size / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
 
   /// Indica si el mensaje fue enviado por el usuario actual
   bool isFromMe(String currentUserId) => senderUserId == currentUserId;
@@ -114,6 +156,10 @@ class MessageEntity extends Equatable {
       readAt: json['read_at'] != null
           ? parseUtcTimestamp(json['read_at'] as String)
           : null,
+      // Metadatos de adjunto
+      fileName: json['file_name'] as String?,
+      fileSize: (json['file_size'] as num?)?.toInt(),
+      mimeType: json['mime_type'] as String?,
     );
   }
 
@@ -132,6 +178,9 @@ class MessageEntity extends Equatable {
     String? senderName,
     String? senderRole,
     DateTime? readAt,
+    String? fileName,
+    int? fileSize,
+    String? mimeType,
   }) {
     return MessageEntity(
       id: id ?? this.id,
@@ -143,6 +192,9 @@ class MessageEntity extends Equatable {
       senderName: senderName ?? this.senderName,
       senderRole: senderRole ?? this.senderRole,
       readAt: readAt ?? this.readAt,
+      fileName: fileName ?? this.fileName,
+      fileSize: fileSize ?? this.fileSize,
+      mimeType: mimeType ?? this.mimeType,
     );
   }
 
@@ -156,6 +208,9 @@ class MessageEntity extends Equatable {
       'content': content,
       'created_at': createdAt.toIso8601String(),
       'read_at': readAt?.toIso8601String(),
+      'file_name': fileName,
+      'file_size': fileSize,
+      'mime_type': mimeType,
     };
   }
 
@@ -166,6 +221,9 @@ class MessageEntity extends Equatable {
       'sender_user_id': senderUserId,
       'msg_type': msgType.name,
       'content': content,
+      if (fileName != null) 'file_name': fileName,
+      if (fileSize != null) 'file_size': fileSize,
+      if (mimeType != null) 'mime_type': mimeType,
     };
   }
 
@@ -180,6 +238,9 @@ class MessageEntity extends Equatable {
         senderName,
         senderRole,
         readAt,
+        fileName,
+        fileSize,
+        mimeType,
       ];
 }
 

@@ -91,11 +91,34 @@ class ChatRepositoryImpl implements ChatRepository {
     required String conversationId,
     required String senderUserId,
     required String imagePath,
+    String? mimeType,
+    int? fileSize,
   }) async {
     return await _datasource.sendImageMessage(
       conversationId: conversationId,
       senderUserId: senderUserId,
       imagePath: imagePath,
+      mimeType: mimeType,
+      fileSize: fileSize,
+    );
+  }
+
+  @override
+  Future<MessageEntity> sendFileMessage({
+    required String conversationId,
+    required String senderUserId,
+    required String filePath,
+    required String fileName,
+    required int fileSize,
+    required String mimeType,
+  }) async {
+    return await _datasource.sendFileMessage(
+      conversationId: conversationId,
+      senderUserId: senderUserId,
+      filePath: filePath,
+      fileName: fileName,
+      fileSize: fileSize,
+      mimeType: mimeType,
     );
   }
 
@@ -149,9 +172,11 @@ class ChatRepositoryImpl implements ChatRepository {
   @override
   Future<void> deleteMessage({
     required String messageId,
+    String? attachmentPath,
   }) async {
     return await _datasource.deleteMessage(
       messageId: messageId,
+      attachmentPath: attachmentPath,
     );
   }
 

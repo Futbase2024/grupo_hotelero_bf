@@ -31,7 +31,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Necesitamos acceso a la cámara para capturar tu documento de identidad</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Necesitamos acceso a la galería para seleccionar tu documento de identidad</string>
+	<string>Necesitamos acceso a la galería para seleccionar tu documento de identidad o adjuntar fotos al chat</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Necesitamos permiso para guardar en tu galería las imágenes que recibas en el chat</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

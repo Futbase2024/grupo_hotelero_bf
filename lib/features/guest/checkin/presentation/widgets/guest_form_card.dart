@@ -227,7 +227,9 @@ class GuestFormCard extends StatelessWidget {
 
   Widget _buildDocumentSection(BuildContext context) {
     final hasDocument = guest.documentNumber != null && guest.documentNumber!.isNotEmpty;
-    final hasImage = guest.hasDocumentImage;
+    // Sólo se da por completo cuando están todas las caras que exige el tipo:
+    // con un DNI al que le falte el reverso hay que seguir pidiendo la foto.
+    final hasImage = guest.hasAllRequiredDocuments;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

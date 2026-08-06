@@ -324,17 +324,23 @@ class CheckinRepositoryImpl implements CheckinRepository {
           ''')
           .eq('booking_id', bookingId);
 
-      // Verificar qué huéspedes tienen documentos subidos
+      // Verificar qué caras del documento tiene subidas cada huésped
       final documentsResponse = await _client
           .from('guest_documents')
-          .select('guest_id')
+          .select('guest_id, doc_kind')
           .eq('booking_id', bookingId);
 
-      final guestsWithDocuments = <String>{};
+      final frontByGuest = <String>{};
+      final backByGuest = <String>{};
       for (final doc in documentsResponse as List) {
         final guestId = doc['guest_id'] as String?;
-        if (guestId != null) {
-          guestsWithDocuments.add(guestId);
+        if (guestId == null) continue;
+        // 'dni_back' es la única cara trasera; el resto ('dni_front',
+        // 'passport', 'other') cuentan como cara frontal del documento.
+        if (doc['doc_kind'] == 'dni_back') {
+          backByGuest.add(guestId);
+        } else {
+          frontByGuest.add(guestId);
         }
       }
 
@@ -344,11 +350,12 @@ class CheckinRepositoryImpl implements CheckinRepository {
         return GuestEntity.fromJson({
           ...guestData,
           'is_primary': row['is_primary'] as bool? ?? false,
-          'has_document_image': guestId != null && guestsWithDocuments.contains(guestId),
+          'has_document_front': guestId != null && frontByGuest.contains(guestId),
+          'has_document_back': guestId != null && backByGuest.contains(guestId),
         });
       }).toList();
 
-      debugPrint('📋 [getBookingGuests] ${guests.length} huéspedes obtenidos, ${guestsWithDocuments.length} con documentos');
+      debugPrint('📋 [getBookingGuests] ${guests.length} huéspedes obtenidos, ${frontByGuest.length} con anverso, ${backByGuest.length} con reverso');
       return guests;
     } catch (e, s) {
       debugPrint('❌ [getBookingGuests] Error: $e');
@@ -476,13 +483,6 @@ class CheckinRepositoryImpl implements CheckinRepository {
         throw Exception('No hay usuario autenticado para subir documentos');
       }
 
-      // Eliminar documentos previos del mismo tipo para evitar duplicados
-      await deleteGuestDocuments(
-        bookingId: bookingId,
-        guestId: guestId,
-        docKind: docKind,
-      );
-
       // Generar nombre de archivo único
       // Estructura: guests/{booking_id}/{guest_id}/{doc_kind}/{fileName}
       // Esto coincide con las políticas RLS del bucket guest-documents
@@ -497,15 +497,36 @@ class CheckinRepositoryImpl implements CheckinRepository {
           .from(_documentsBucket)
           .uploadBinary(storagePath, Uint8List.fromList(bytes));
 
-      // Guardar metadatos en la base de datos
-      await _client.from('guest_documents').insert({
-        'booking_id': bookingId,
-        'guest_id': guestId,
-        'doc_kind': docKind,
-        'storage_path': storagePath,
-        'mime_type': mimeType,
-        'uploaded_by': _userId,
-      });
+      // Guardar metadatos en la base de datos. Si el insert falla, se revierte
+      // la subida para no dejar el archivo huérfano en el bucket.
+      try {
+        await _client.from('guest_documents').insert({
+          'booking_id': bookingId,
+          'guest_id': guestId,
+          'doc_kind': docKind,
+          'storage_path': storagePath,
+          'mime_type': mimeType,
+          'uploaded_by': _userId,
+        });
+      } catch (e) {
+        debugPrint('⚠️ [uploadDocument] Insert falló, revirtiendo subida: $e');
+        try {
+          await _client.storage.from(_documentsBucket).remove([storagePath]);
+        } catch (removeError) {
+          debugPrint('⚠️ [uploadDocument] No se pudo revertir $storagePath: $removeError');
+        }
+        rethrow;
+      }
+
+      // Eliminar documentos previos del mismo tipo para evitar duplicados.
+      // Se hace DESPUÉS de subir el nuevo: si algo falla antes de este punto,
+      // el huésped conserva el documento anterior en lugar de quedarse sin nada.
+      await deleteGuestDocuments(
+        bookingId: bookingId,
+        guestId: guestId,
+        docKind: docKind,
+        exceptStoragePath: storagePath,
+      );
 
       debugPrint('📤 [uploadDocument] Documento subido: $storagePath');
       return storagePath;
@@ -527,6 +548,7 @@ class CheckinRepositoryImpl implements CheckinRepository {
     required String bookingId,
     required String guestId,
     required String docKind,
+    String? exceptStoragePath,
   }) async {
     try {
       debugPrint('🗑️ [deleteGuestDocuments] Buscando documentos previos: $docKind para huésped $guestId');
@@ -539,37 +561,94 @@ class CheckinRepositoryImpl implements CheckinRepository {
           .eq('guest_id', guestId)
           .eq('doc_kind', docKind);
 
-      if (existing.isEmpty) {
+      // Excluir el documento recién subido, si se indica
+      final previous = (existing as List)
+          .where((doc) => doc['storage_path'] != exceptStoragePath)
+          .toList();
+
+      if (previous.isEmpty) {
         debugPrint('🗑️ [deleteGuestDocuments] No hay documentos previos');
         return;
       }
 
-      debugPrint('🗑️ [deleteGuestDocuments] Encontrados ${existing.length} documentos previos');
+      debugPrint('🗑️ [deleteGuestDocuments] Encontrados ${previous.length} documentos previos');
 
-      // Eliminar archivos del storage
-      final storagePaths = (existing as List)
-          .map((doc) => doc['storage_path'] as String)
-          .toList();
-
-      for (final path in storagePaths) {
-        try {
-          await _client.storage.from(_documentsBucket).remove([path]);
-          debugPrint('🗑️ [deleteGuestDocuments] Archivo eliminado del storage: $path');
-        } catch (e) {
-          debugPrint('⚠️ [deleteGuestDocuments] Error eliminando archivo del storage: $e');
-        }
-      }
-
-      // Eliminar filas de la base de datos
-      final docIds = (existing as List).map((doc) => doc['id'] as String).toList();
-      await _client.from('guest_documents').delete().inFilter('id', docIds);
-
-      debugPrint('🗑️ [deleteGuestDocuments] ${docIds.length} registros eliminados de BD');
+      await _removeDocuments(previous, logTag: 'deleteGuestDocuments');
     } catch (e) {
       debugPrint('⚠️ [deleteGuestDocuments] Error: $e');
       // No relanzar — la subida del nuevo documento debe poder continuar
       // Si falla la limpieza, el nuevo documento se sube igualmente
     }
+  }
+
+  @override
+  Future<void> deleteObsoleteDocuments({
+    required String bookingId,
+    required String guestId,
+    required List<String> keepDocKinds,
+  }) async {
+    try {
+      final existing = await _client
+          .from('guest_documents')
+          .select('id, storage_path, doc_kind')
+          .eq('booking_id', bookingId)
+          .eq('guest_id', guestId);
+
+      // Caras que ya no encajan con el tipo de documento actual: por ejemplo
+      // el anverso y el reverso de un DNI cuando el huésped pasa a pasaporte.
+      final obsolete = (existing as List)
+          .where((doc) => !keepDocKinds.contains(doc['doc_kind']))
+          .toList();
+
+      if (obsolete.isEmpty) {
+        debugPrint('🗑️ [deleteObsoleteDocuments] No hay documentos obsoletos');
+        return;
+      }
+
+      debugPrint('🗑️ [deleteObsoleteDocuments] Encontrados ${obsolete.length} documentos obsoletos');
+
+      await _removeDocuments(obsolete, logTag: 'deleteObsoleteDocuments');
+    } catch (e) {
+      debugPrint('⚠️ [deleteObsoleteDocuments] Error: $e');
+      // No relanzar — dejar documentos de más no debe impedir el check-in
+    }
+  }
+
+  /// Borra las filas indicadas de `guest_documents` y sus archivos del bucket.
+  ///
+  /// Primero la fila y después el archivo: si RLS impide borrar la fila, el
+  /// archivo se conserva y no queda un registro apuntando a un archivo
+  /// inexistente (documento roto en el panel de admin).
+  Future<void> _removeDocuments(
+    List<dynamic> documents, {
+    required String logTag,
+  }) async {
+    final docIds = documents.map((doc) => doc['id'] as String).toList();
+    final deleted = await _client
+        .from('guest_documents')
+        .delete()
+        .inFilter('id', docIds)
+        .select('id, storage_path');
+
+    if (deleted.length != docIds.length) {
+      debugPrint(
+        '⚠️ [$logTag] Se esperaban ${docIds.length} filas borradas '
+        'y se borraron ${deleted.length} — revisa las políticas RLS de guest_documents',
+      );
+    }
+
+    // Eliminar del storage solo los archivos cuya fila sí se ha borrado
+    for (final doc in deleted) {
+      final path = doc['storage_path'] as String;
+      try {
+        await _client.storage.from(_documentsBucket).remove([path]);
+        debugPrint('🗑️ [$logTag] Archivo eliminado del storage: $path');
+      } catch (e) {
+        debugPrint('⚠️ [$logTag] Error eliminando archivo del storage: $e');
+      }
+    }
+
+    debugPrint('🗑️ [$logTag] ${deleted.length} registros eliminados de BD');
   }
 
   @override

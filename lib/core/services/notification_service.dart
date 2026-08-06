@@ -412,6 +412,28 @@ class NotificationService {
     );
   }
 
+  /// Notifica al admin de un check-in que se ha validado automáticamente
+  ///
+  /// Se usa en las reservas con auto-validación activada: el admin se entera del
+  /// check-in, pero sin pedirle una revisión que ya no hace falta.
+  Future<void> notifyAdminCheckinAutoValidated({
+    required String bookingId,
+    required String propertyId,
+    required String guestName,
+    required String unitName,
+  }) async {
+    await notifyAdmins(
+      propertyId: propertyId,
+      type: 'checkin_submitted',
+      title: '✅ Check-in validado automáticamente',
+      body: '$guestName ha enviado su check-in para $unitName y se ha validado solo.',
+      bookingId: bookingId,
+      data: {
+        'action': 'review_checkin',
+      },
+    );
+  }
+
   /// Notifica al admin cuando un huésped solicita un extra (p. ej. Pack Romántico).
   ///
   /// Es un aviso de SOLICITUD (no una reserva/pago confirmado): el pago se hace

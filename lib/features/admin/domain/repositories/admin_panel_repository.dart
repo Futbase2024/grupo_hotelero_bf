@@ -63,6 +63,18 @@ abstract class AdminPanelRepository {
     required String bookingId,
   });
 
+  /// Activa o desactiva la auto-validación del check-in de una reserva
+  ///
+  /// Con la auto-validación activa, el check-in que envíe el huésped queda
+  /// validado sin intervención del admin. Si al activarla ya hay un check-in
+  /// enviado pendiente, se valida en ese momento.
+  ///
+  /// Retorna `true` si se validó un check-in pendiente al activar la opción
+  Future<bool> setBookingAutoValidateCheckin({
+    required String bookingId,
+    required bool enabled,
+  });
+
   /// Rechaza un check-in con motivo
   Future<void> rejectCheckin({
     required String checkinId,
@@ -76,6 +88,18 @@ abstract class AdminPanelRepository {
     required String checkinId,
     required String bookingId,
     String? reason,
+  });
+
+  /// Borra los datos del check-in de una reserva sin borrar la reserva
+  ///
+  /// Elimina los huéspedes registrados, sus documentos y la firma, y devuelve el
+  /// check-in a estado `draft` ("sin empezar"). La fila de `checkins` se
+  /// conserva porque el listado del panel la necesita. El huésped puede rehacer
+  /// el check-in con el mismo código y no recibe ningún aviso.
+  ///
+  /// Retorna la lista de paths de storage que deben eliminarse desde el cliente
+  Future<List<String>> deleteCheckin({
+    required String bookingId,
   });
 
   /// Valida un check-in manualmente sin datos del huésped
@@ -120,8 +144,15 @@ abstract class AdminPanelRepository {
     String? reason,
   });
 
+  /// Reactiva una reserva cancelada (vuelve a estado confirmado)
+  /// Falla si las unidades de la reserva ya están ocupadas en esas fechas
+  Future<void> reactivateBooking({
+    required String bookingId,
+  });
+
   /// Elimina completamente una reserva y todos sus datos relacionados
   /// Solo funciona si la reserva NO está en estado checked_out, closed o in_house
+  /// Requiere rol admin
   /// Retorna la lista de paths de storage que deben eliminarse desde el cliente
   Future<List<String>> deleteBooking({
     required String bookingId,
@@ -169,6 +200,17 @@ abstract class AdminPanelRepository {
   Future<void> updateBookingGuestPhone({
     required String bookingId,
     required String guestPhone,
+  });
+
+  /// Corrige el email y el teléfono de contacto del huésped de una reserva.
+  ///
+  /// Si el email cambia y la reserva ya había sido abierta por el huésped, se
+  /// libera el vínculo con su cuenta anterior para que pueda volver a entrar con
+  /// la dirección corregida (su historial se migra al reclamar la reserva).
+  Future<GuestContactUpdateResult> updateBookingGuestContact({
+    required String bookingId,
+    required String guestEmail,
+    String? guestPhone,
   });
 
   /// Marca que el early check-in está disponible para una reserva
@@ -250,6 +292,28 @@ class CreateBookingResult {
       emailSent: json['email_sent'] as bool? ?? false,
       emailError: (json['email_result'] ?? json['email_error']) as String?,
       simulated: json['simulated'] as bool? ?? false,
+    );
+  }
+}
+
+/// Resultado de corregir el contacto del huésped
+class GuestContactUpdateResult {
+  const GuestContactUpdateResult({
+    required this.emailChanged,
+    required this.accessReset,
+  });
+
+  /// El email guardado es distinto al que tenía la reserva
+  final bool emailChanged;
+
+  /// Se liberó el vínculo con la cuenta anterior del huésped, que deberá volver
+  /// a entrar con su código para recuperar el acceso
+  final bool accessReset;
+
+  factory GuestContactUpdateResult.fromJson(Map<String, dynamic> json) {
+    return GuestContactUpdateResult(
+      emailChanged: json['email_changed'] as bool? ?? false,
+      accessReset: json['access_reset'] as bool? ?? false,
     );
   }
 }

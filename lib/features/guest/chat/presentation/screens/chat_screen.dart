@@ -8,8 +8,10 @@ import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../admin/shared/widgets/confirmation_dialog.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
+import '../../data/services/chat_media_service.dart';
 import '../../domain/bloc/chat_bloc.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../widgets/attachment_uploading_bubble.dart';
 import '../widgets/chat_input.dart';
 import '../widgets/message_bubble.dart';
 
@@ -28,7 +30,10 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _chatBloc = ChatBloc(chatRepository: getIt<ChatRepository>());
+    _chatBloc = ChatBloc(
+      chatRepository: getIt<ChatRepository>(),
+      mediaService: getIt<ChatMediaService>(),
+    );
     // Inicializar con el estado actual de auth (sin esperar un rebuild)
     final authState = context.read<AuthBloc>().state;
     _tryInitChat(authState);
@@ -68,6 +73,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _onSendMessage(String message) {
     _chatBloc.add(ChatSendMessage(content: message));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  void _onSendAttachment(List<ChatAttachmentDraft> drafts) {
+    _chatBloc.add(ChatSendAttachment(drafts: drafts));
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -116,7 +126,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   ChatInput(
                     onSend: _onSendMessage,
-                    enabled: state is ChatLoaded || state is ChatSending,
+                    onSendAttachment: _onSendAttachment,
+                    enabled: state.isConversationReady,
+                    isUploading: state.isUploadingAttachment,
                   ),
                 ],
               );
@@ -226,23 +238,29 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
 
-    if (state is ChatLoaded || state is ChatSending) {
-      final messages = state is ChatLoaded
-          ? state.messages
-          : (state as ChatSending).messages;
-      final currentUserId = state is ChatLoaded
-          ? state.currentUserId
-          : (state as ChatSending).currentUserId;
+    final messages = state.messagesOrNull;
+    final currentUserId = state.currentUserIdOrNull;
 
-      if (messages.isEmpty) {
+    if (messages != null && currentUserId != null) {
+      final uploading = state is ChatUploadingAttachment ? state : null;
+
+      if (messages.isEmpty && uploading == null) {
         return _buildEmptyState(context);
       }
 
       return ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(AppTheme.spacing16),
-        itemCount: messages.length,
+        itemCount: messages.length + (uploading != null ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index == messages.length) {
+            return AttachmentUploadingBubble(
+              fileName: uploading!.fileName,
+              currentIndex: uploading.currentIndex,
+              total: uploading.total,
+            );
+          }
+
           final message = messages[index];
           final isFromMe = message.isFromMe(currentUserId);
 

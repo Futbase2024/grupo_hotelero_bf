@@ -35,6 +35,15 @@ abstract class CheckinRepository {
     required String bookingId,
     required String guestId,
     required String docKind,
+    String? exceptStoragePath,
+  });
+
+  /// Elimina los documentos del huésped cuyo `doc_kind` no esté en
+  /// [keepDocKinds], p. ej. las caras del DNI cuando pasa a pasaporte
+  Future<void> deleteObsoleteDocuments({
+    required String bookingId,
+    required String guestId,
+    required List<String> keepDocKinds,
   });
 
   /// Obtiene la URL firmada para ver un documento

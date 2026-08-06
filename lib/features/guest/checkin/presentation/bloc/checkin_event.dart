@@ -89,22 +89,28 @@ class CheckinDocumentUploaded extends CheckinEvent {
   List<Object?> get props => [guestIndex, docKind, bytes, mimeType];
 }
 
-/// Actualizar documento del huésped (tipo, número e imagen)
+/// Actualizar documento del huésped (tipo, número y fotos de las caras)
 class CheckinGuestDocumentUpdated extends CheckinEvent {
   const CheckinGuestDocumentUpdated({
     required this.guestIndex,
     required this.documentType,
     required this.documentNumber,
-    this.imageBytes,
+    this.frontBytes,
+    this.backBytes,
   });
 
   final int guestIndex;
   final DocumentType documentType;
   final String documentNumber;
-  final List<int>? imageBytes;
+
+  /// Anverso del DNI/NIE o página de datos del pasaporte
+  final List<int>? frontBytes;
+
+  /// Reverso del DNI/NIE (null en pasaporte)
+  final List<int>? backBytes;
 
   @override
-  List<Object?> get props => [guestIndex, documentType, documentNumber, imageBytes];
+  List<Object?> get props => [guestIndex, documentType, documentNumber, frontBytes, backBytes];
 }
 
 /// Guardar la firma del titular

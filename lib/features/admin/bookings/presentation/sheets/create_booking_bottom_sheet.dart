@@ -73,6 +73,9 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
   bool isLoadingUnits = false;
   String? unitsError;
 
+  /// Si el check-in de la reserva se validará automáticamente al enviarlo
+  bool autoValidateCheckin = false;
+
   /// Lista de IDs de unidades seleccionadas (soporte multi-unidad, 1-9 habitaciones)
   List<String> selectedUnitIds = [];
   DateTime? checkInDate;
@@ -644,7 +647,61 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
           maxLines: 3,
           decoration: buildInputDecoration('Notas internas (opcional)', Icons.note_outlined),
         ),
+        const SizedBox(height: 12),
+        buildAutoValidateTile(),
       ],
+    );
+  }
+
+  /// Interruptor para que el check-in de esta reserva se valide solo al enviarlo
+  Widget buildAutoValidateTile() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: autoValidateCheckin ? AppColors.gold : AppColors.darkBorder,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            size: 20,
+            color: autoValidateCheckin ? AppColors.gold : AppColors.gray500,
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Auto-validar check-in',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'El check-in del huésped se validará solo, sin revisión manual',
+                  style: TextStyle(color: AppColors.gray500, fontSize: 12, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: autoValidateCheckin,
+            activeThumbColor: AppColors.black,
+            activeTrackColor: AppColors.gold,
+            inactiveThumbColor: AppColors.gray400,
+            inactiveTrackColor: AppColors.darkBackground,
+            onChanged: (value) => setState(() => autoValidateCheckin = value),
+          ),
+        ],
+      ),
     );
   }
 
@@ -797,6 +854,21 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       );
 
       Debug.log('submitForm - Reserva creada: ${bookingResult.bookingCode}');
+
+      // Auto-validación del check-in: se aplica sobre la reserva ya creada
+      if (autoValidateCheckin) {
+        try {
+          await widget.repository.setBookingAutoValidateCheckin(
+            bookingId: bookingResult.bookingId,
+            enabled: true,
+          );
+          Debug.log('submitForm - Auto-validación de check-in activada');
+        } catch (e) {
+          // No bloquear el alta: la reserva ya existe y el flag se puede
+          // activar después desde el detalle de la reserva
+          Debug.error('submitForm - Error activando auto-validación (no crítico)', e);
+        }
+      }
 
       // Enviar email al huésped con el código de acceso
       bool emailSent = false;
@@ -1062,6 +1134,7 @@ class CreateBookingBottomSheetState extends State<CreateBookingBottomSheet> {
       numAdults = 2;
       numChildren = 0;
       childrenAges = [];
+      autoValidateCheckin = false;
       units = [];
       unitsError = null;
     });

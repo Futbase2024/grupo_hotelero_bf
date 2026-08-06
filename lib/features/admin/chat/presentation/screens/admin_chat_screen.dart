@@ -8,8 +8,10 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
+import '../../../../guest/chat/data/services/chat_media_service.dart';
 import '../../../../guest/chat/domain/bloc/chat_bloc.dart';
 import '../../../../guest/chat/domain/repositories/chat_repository.dart';
+import '../../../../guest/chat/presentation/widgets/attachment_uploading_bubble.dart';
 import '../../../../guest/chat/presentation/widgets/chat_input.dart';
 import '../../../../guest/chat/presentation/widgets/message_bubble.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
@@ -34,7 +36,10 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
   @override
   void initState() {
     super.initState();
-    _chatBloc = ChatBloc(chatRepository: getIt<ChatRepository>());
+    _chatBloc = ChatBloc(
+      chatRepository: getIt<ChatRepository>(),
+      mediaService: getIt<ChatMediaService>(),
+    );
     final authState = context.read<AuthBloc>().state;
     _tryInitChat(authState);
   }
@@ -73,6 +78,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
 
   void _onSendMessage(String message) {
     _chatBloc.add(ChatSendMessage(content: message));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  void _onSendAttachment(List<ChatAttachmentDraft> drafts) {
+    _chatBloc.add(ChatSendAttachment(drafts: drafts));
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -120,7 +130,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                   ),
                   ChatInput(
                     onSend: _onSendMessage,
-                    enabled: state is ChatLoaded || state is ChatSending,
+                    onSendAttachment: _onSendAttachment,
+                    enabled: state.isConversationReady,
+                    isUploading: state.isUploadingAttachment,
                   ),
                 ],
               );
@@ -323,23 +335,29 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
       );
     }
 
-    if (state is ChatLoaded || state is ChatSending) {
-      final messages = state is ChatLoaded
-          ? state.messages
-          : (state as ChatSending).messages;
-      final currentUserId = state is ChatLoaded
-          ? state.currentUserId
-          : (state as ChatSending).currentUserId;
+    final messages = state.messagesOrNull;
+    final currentUserId = state.currentUserIdOrNull;
 
-      if (messages.isEmpty) {
+    if (messages != null && currentUserId != null) {
+      final uploading = state is ChatUploadingAttachment ? state : null;
+
+      if (messages.isEmpty && uploading == null) {
         return _buildEmptyState(context);
       }
 
       return ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(AppTheme.spacing16),
-        itemCount: messages.length,
+        itemCount: messages.length + (uploading != null ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index == messages.length) {
+            return AttachmentUploadingBubble(
+              fileName: uploading!.fileName,
+              currentIndex: uploading.currentIndex,
+              total: uploading.total,
+            );
+          }
+
           final message = messages[index];
           final isFromMe = message.isFromMe(currentUserId);
 
