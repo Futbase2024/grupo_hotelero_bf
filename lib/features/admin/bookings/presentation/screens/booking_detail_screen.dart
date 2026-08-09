@@ -232,9 +232,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       if (!mounted) return;
 
       // 3. Abrir WhatsApp con un mensaje que replica el correo de check-in.
-      final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
-      final phoneWithCode =
-          cleanPhone.startsWith('34') ? cleanPhone : '34$cleanPhone';
+      final phoneWithCode = _normalizePhoneForWhatsApp(phone);
 
       final message = _buildWhatsAppMessage(pdfUrl);
       final encodedMessage = Uri.encodeComponent(message);
@@ -272,6 +270,29 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } finally {
       if (mounted) setState(() => _isSendingWhatsApp = false);
     }
+  }
+
+  /// Normaliza un telefono al formato que exige WhatsApp: prefijo de pais
+  /// seguido del numero, sin '+', espacios ni separadores.
+  ///
+  /// Respeta el prefijo internacional cuando el huesped ya lo ha indicado
+  /// (`+33 6 31 73 57 38` o `0033...`) y solo asume Espana (34) para numeros
+  /// nacionales de 9 digitos escritos sin prefijo.
+  String _normalizePhoneForWhatsApp(String phone) {
+    final trimmed = phone.trim();
+    final digits = trimmed.replaceAll(RegExp(r'\D'), '');
+
+    // Prefijo internacional explicito: +33 6 31 73 57 38 -> 33631735738
+    if (trimmed.startsWith('+')) return digits;
+
+    // Formato con salida internacional: 0034... / 0033... -> se quita el 00
+    if (digits.startsWith('00')) return digits.substring(2);
+
+    // Numero nacional espanol sin prefijo: 656618065 -> 34656618065
+    if (digits.length == 9) return '34$digits';
+
+    // Cualquier otro caso ya incluye su prefijo de pais
+    return digits;
   }
 
   /// Construye el mensaje de WhatsApp replicando el correo de check-in.
@@ -774,7 +795,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     if (_booking == null) return;
 
     final reason = await _showRejectCheckoutDialog();
-    if (reason == null) return;
+    if (reason == null || !mounted) return;
 
     setState(() => _isValidatingCheckout = true);
     try {
