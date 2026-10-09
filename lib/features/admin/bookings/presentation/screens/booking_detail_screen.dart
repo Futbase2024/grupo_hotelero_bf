@@ -3017,54 +3017,81 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           color: isEnabled ? AppColors.gold : AppColors.darkBorder,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.auto_awesome,
-            size: 18,
-            color: isEnabled ? AppColors.gold : AppColors.gray500,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  S.of(context).admin_booking_auto_validate_title,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                size: 18,
+                color: isEnabled ? AppColors.gold : AppColors.gray500,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      S.of(context).admin_booking_auto_validate_title,
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      S.of(context).admin_booking_auto_validate_subtitle,
+                      style: const TextStyle(
+                        color: AppColors.gray400,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  S.of(context).admin_booking_auto_validate_subtitle,
+              ),
+              const SizedBox(width: 8),
+              if (_isUpdatingAutoValidate)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                )
+              else
+                Switch(
+                  value: isEnabled,
+                  activeThumbColor: AppColors.black,
+                  activeTrackColor: AppColors.gold,
+                  inactiveThumbColor: AppColors.gray400,
+                  inactiveTrackColor: AppColors.darkSurface,
+                  onChanged: _toggleAutoValidateCheckin,
+                ),
+            ],
+          ),
+          // Recordatorio de la regla nocturna: aplica esté el interruptor
+          // encendido o apagado, así que se muestra siempre.
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.nightlight_round, size: 14, color: AppColors.gray500),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  S.of(context).admin_booking_auto_validate_night_note(
+                        CheckinPolicy.autoValidateAfterHour,
+                      ),
                   style: const TextStyle(
-                    color: AppColors.gray400,
-                    fontSize: 12,
+                    color: AppColors.gray500,
+                    fontSize: 11,
                     height: 1.3,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          if (_isUpdatingAutoValidate)
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
-            )
-          else
-            Switch(
-              value: isEnabled,
-              activeThumbColor: AppColors.black,
-              activeTrackColor: AppColors.gold,
-              inactiveThumbColor: AppColors.gray400,
-              inactiveTrackColor: AppColors.darkSurface,
-              onChanged: _toggleAutoValidateCheckin,
-            ),
         ],
       ),
     );

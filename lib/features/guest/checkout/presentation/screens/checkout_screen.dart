@@ -233,7 +233,9 @@ class _SuccessView extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go('/guest'),
+                // La reserva ya está cerrada y el huésped no puede volver a
+                // verla: se cierra la sesión y el router lleva al inicio.
+                onPressed: () => context.read<AuthBloc>().add(const AuthLogoutRequested()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.gold,
                   foregroundColor: AppColors.black,

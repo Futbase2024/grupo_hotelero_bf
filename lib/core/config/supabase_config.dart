@@ -71,6 +71,11 @@ class SupabaseTables {
   static const String conversationParticipants = 'conversation_participants';
   static const String messages = 'messages';
 
+  /// Vista con el último mensaje de cada conversación (1 fila por
+  /// `conversation_id`). Evita descargar el histórico completo de mensajes
+  /// solo para pintar la previsualización de la lista de conversaciones.
+  static const String conversationLastMessages = 'conversation_last_messages';
+
   // Payments
   static const String payments = 'payments';
 

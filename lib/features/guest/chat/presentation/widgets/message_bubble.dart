@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../core/utils/image_decode_size.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../data/repositories/translation_repository.dart';
 import '../../data/services/chat_media_service.dart';
@@ -323,6 +324,10 @@ class _MessageBubbleState extends State<MessageBubble> {
           fit: BoxFit.cover,
           width: 200,
           height: 150,
+          // La imagen a resolución completa se decodifica solo en el visor a pantalla
+          // completa (_openImageViewer); en la burbuja basta con 200x150.
+          memCacheWidth: ImageDecodeSize.forLogical(context, 200),
+          memCacheHeight: ImageDecodeSize.forLogical(context, 150),
           errorWidget: (context, url, error) =>
               const _AttachmentThumbnailError(),
           placeholder: (context, url) => const _AttachmentThumbnailLoading(),

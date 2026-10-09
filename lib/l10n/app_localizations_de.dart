@@ -518,6 +518,14 @@ class SDe extends S {
       'Dieser Buchungscode ist abgelaufen. Kontaktieren Sie die Rezeption, um einen neuen zu erhalten.';
 
   @override
+  String get auth_booking_error_stay_finished =>
+      'Ihr Aufenthalt ist bereits beendet. Vielen Dank, dass Sie bei uns gewohnt haben!';
+
+  @override
+  String get auth_booking_error_booking_cancelled =>
+      'Diese Buchung wurde storniert. Wenn Sie glauben, dass es sich um einen Fehler handelt, wenden Sie sich bitte an die Rezeption.';
+
+  @override
   String get auth_booking_error_email_mismatch =>
       'Die E-Mail-Adresse stimmt nicht mit der Buchung überein. Bitte stellen Sie sicher, dass es dieselbe E-Mail-Adresse ist, die Sie bei der Buchung verwendet haben.';
 
@@ -1155,7 +1163,12 @@ class SDe extends S {
 
   @override
   String get admin_booking_auto_validate_subtitle =>
-      'Der Check-in des Gastes wird automatisch validiert, ohne manuelle Prüfung';
+      'Der Check-in des Gastes wird zu jeder Uhrzeit automatisch validiert, ohne manuelle Prüfung';
+
+  @override
+  String admin_booking_auto_validate_night_note(String time) {
+    return 'Ab $time Uhr am Anreisetag wird der Check-in immer automatisch validiert, auch wenn dieser Schalter aus ist.';
+  }
 
   @override
   String get admin_booking_auto_validate_enabled =>
@@ -1915,6 +1928,27 @@ class SDe extends S {
   @override
   String get guest_romantic_note =>
       'Die Dekoration wird während Ihrer Abwesenheit vorbereitet, damit sie eine vollständige Überraschung ist.';
+
+  @override
+  String get guest_romantic_deadline_info =>
+      'Muss mindestens 24 Std. vor Ihrer Anreise angefragt werden. Nur eine Anfrage pro Buchung.';
+
+  @override
+  String get guest_romantic_already_requested => 'Bereits angefragt';
+
+  @override
+  String get guest_romantic_already_requested_desc =>
+      'Sie haben das Romantik-Paket für diese Buchung bereits angefragt. Wenn Sie etwas ändern möchten, schreiben Sie uns im Chat.';
+
+  @override
+  String get guest_romantic_deadline_passed => 'Frist abgelaufen';
+
+  @override
+  String get guest_romantic_deadline_passed_desc =>
+      'Das Romantik-Paket muss mindestens 24 Stunden vor Ihrer Anreise angefragt werden.';
+
+  @override
+  String get guest_romantic_blocked_title => 'Anfrage nicht möglich';
 
   @override
   String get guest_jacuzzi_title => 'Jacuzzi';

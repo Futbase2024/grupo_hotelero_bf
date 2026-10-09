@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/di/injection.dart';
 import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/utils/image_decode_size.dart';
 import '../../domain/entities/place_entity.dart';
 import '../../domain/repositories/places_repository.dart';
 
@@ -320,6 +321,9 @@ class _SliverImageGalleryState extends State<_SliverImageGallery> {
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
+                    // Cabecera a ancho de pantalla. La galería a pantalla completa que se
+                    // abre al tocar (_openGallery) sí carga la resolución original.
+                    memCacheWidth: ImageDecodeSize.screenWidth(context),
                     placeholder: (context, url) {
                       debugPrint('$_logTag Cargando placeholder para: $url');
                       return Container(

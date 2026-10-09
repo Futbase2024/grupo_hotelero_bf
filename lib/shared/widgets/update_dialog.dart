@@ -7,16 +7,6 @@ import '../../core/router/app_router.dart';
 import '../../core/services/app_update_service.dart';
 import '../../core/theme/app_colors.dart';
 
-// Log de carga del archivo para debug
-void _logWebSkip() {
-  if (kIsWeb) {
-    debugPrint('🌐 [UpdateDialog] WEB DETECTADO - Saltando toda la lógica de actualizaciones');
-  }
-}
-
-// Ejecutar log al cargar el archivo
-final _ = () { _logWebSkip(); }();
-
 /// Diálogo de actualización que se muestra cuando hay una nueva versión disponible
 /// Soporta actualización opcional o forzada
 class UpdateDialog extends StatelessWidget {

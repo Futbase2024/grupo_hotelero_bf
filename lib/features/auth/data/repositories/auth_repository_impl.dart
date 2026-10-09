@@ -140,6 +140,14 @@ class AuthRepositoryImpl implements AuthRepository {
           // 'submitted' = pendiente de validación por admin
           checkInCompleted = checkinStatus == 'validated';
         }
+
+        // Un huésped sin reserva activa no cuenta como sesión válida: es una
+        // sesión anónima que quedó de un login fallido o a medias. Devolverlo
+        // dejaría la home sin reserva y el check-in deshabilitado.
+        if (bookingId == null) {
+          debugPrint('⚠️ [getCurrentUser] Huésped sin reserva activa, se trata como no autenticado');
+          return null;
+        }
       }
 
       return UserEntity(
@@ -188,7 +196,103 @@ class AuthRepositoryImpl implements AuthRepository {
     // Esperar un momento para que los datos estén disponibles
     await Future.delayed(const Duration(milliseconds: 500));
 
-    return (await getCurrentUser())!;
+    final user = await getCurrentUser();
+    if (user == null) {
+      throw Exception('user not found');
+    }
+    return user;
+  }
+
+  /// Garantiza que hay sesión antes de reclamar una reserva.
+  ///
+  /// `claim_booking_by_code` vincula la reserva a `auth.uid()`, así que sin
+  /// sesión devuelve `no_session`.
+  Future<void> _ensureAnonymousSession() async {
+    if (_supabase.auth.currentUser != null) return;
+    await _supabase.auth.signInAnonymously();
+  }
+
+  /// [getCurrentUser] sin propagar errores: al final de un login ya válido, un
+  /// fallo al leer el estado del check-in no debe tumbar el login.
+  Future<UserEntity?> _getCurrentUserOrNull() async {
+    try {
+      return await getCurrentUser();
+    } catch (e) {
+      debugPrint('⚠️ [AuthRepository] No se pudo obtener el usuario completo: $e');
+      return null;
+    }
+  }
+
+  /// Cierra la sesión anónima que deja un login con código fallido.
+  ///
+  /// Si se mantuviera, `getCurrentUser()` la encontraría y el huésped acabaría
+  /// en la home sin reserva en lugar de ver el error del login. No toca la
+  /// sesión si ya hay una sesión de huésped guardada.
+  Future<void> _discardAnonymousSession() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null || !user.isAnonymous) return;
+    if (await _guestSession.hasSession()) return;
+
+    try {
+      await _supabase.auth.signOut();
+      debugPrint('🧹 [AuthRepository] Sesión anónima de login fallido cerrada');
+    } catch (e) {
+      debugPrint('⚠️ [AuthRepository] Error cerrando sesión anónima: $e');
+    }
+  }
+
+  /// Reclama una reserva por su código a través del RPC `claim_booking_by_code`.
+  ///
+  /// El RPC valida código, estado, caducidad y (si se pasa) email en el
+  /// servidor, y vincula la reserva al usuario autenticado. Sustituye a la
+  /// consulta directa a `bookings`, que obligaba a mantener una política RLS
+  /// que dejaba toda la tabla legible por cualquier usuario.
+  ///
+  /// Traduce los errores del servidor a las mismas excepciones que ya manejaba
+  /// la capa superior.
+  Future<Map<String, dynamic>> _claimBooking({
+    required String code,
+    String? email,
+  }) async {
+    try {
+      final response = await _supabase.rpc(
+        'claim_booking_by_code',
+        params: {
+          'p_code': code.toUpperCase().trim(),
+          if (email != null) 'p_email': email.toLowerCase().trim(),
+        },
+      );
+
+      if (response == null) {
+        throw Exception('code_not_found');
+      }
+
+      return Map<String, dynamic>.from(response as Map);
+    } on PostgrestException catch (e) {
+      // El RPC lanza el motivo como mensaje de la excepción de Postgres.
+      final message = e.message;
+      if (message.contains('booking_not_found')) {
+        throw Exception('code_not_found');
+      }
+      if (message.contains('email_mismatch')) {
+        throw Exception('email_mismatch');
+      }
+      // El RPC indica el motivo tras `code_expired:`. Se comprueba antes que
+      // `code_expired`, que queda para servidores sin el motivo.
+      if (message.contains('booking_cancelled')) {
+        throw Exception('booking_cancelled');
+      }
+      if (message.contains('stay_finished')) {
+        throw Exception('stay_finished');
+      }
+      if (message.contains('code_expired')) {
+        throw Exception('code_expired');
+      }
+      if (message.contains('no_session')) {
+        throw Exception('no_session');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -198,41 +302,21 @@ class AuthRepositoryImpl implements AuthRepository {
     debugPrint('🔑 [loginWithBookingCode] Iniciando login con código: $bookingCode');
 
     try {
-      // Buscar la reserva por código único
-      // Solo permite acceso si status es 'confirmed' o 'checked_in' Y no ha expirado
+      // La reserva se resuelve con `claim_booking_by_code`, que valida código,
+      // estado y caducidad EN EL SERVIDOR y vincula la reserva al usuario
+      // actual. Antes se consultaba `bookings` directamente, lo que obligaba a
+      // tener una política RLS que dejaba toda la tabla legible por cualquiera.
+      //
+      // Requiere sesión: primero se crea una anónima, y si la reserva tiene
+      // email se cambia a la cuenta del huésped y se revincula.
       debugPrint('📋 [loginWithBookingCode] Buscando reserva...');
-      final bookingResponse = await _supabase
-          .from(SupabaseTables.bookings)
-          .select('''
-            id,
-            property_id,
-            unit_id,
-            booking_code,
-            guest_first_name,
-            last_name,
-            guest_email,
-            num_guests,
-            checkin_date,
-            checkout_date,
-            status
-          ''')
-          .eq('booking_code', bookingCode.toUpperCase().trim())
-          .inFilter('status', ['confirmed', 'checked_in'])
-          .maybeSingle();
+      await _ensureAnonymousSession();
+
+      final bookingResponse = await _claimBooking(
+        code: bookingCode,
+      );
 
       debugPrint('📋 [loginWithBookingCode] Respuesta: $bookingResponse');
-
-      if (bookingResponse == null) {
-        debugPrint('❌ [loginWithBookingCode] Reserva no encontrada o no válida');
-        throw Exception('booking not found');
-      }
-
-      // Verificar que la reserva no ha expirado (checkout_date ya pasó)
-      final bookingCheckoutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
-      if (DateTime.now().isAfter(bookingCheckoutDate.add(const Duration(days: 1)))) {
-        debugPrint('❌ [loginWithBookingCode] Reserva expirada (checkout_date: $bookingCheckoutDate)');
-        throw Exception('booking expired');
-      }
 
       final String guestName = '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim();
       final String guestEmail = (bookingResponse['guest_email'] as String?)?.toLowerCase().trim() ?? '';
@@ -275,31 +359,18 @@ class AuthRepositoryImpl implements AuthRepository {
         }
       }
 
-      // Si no hay email o falló login/registro, usar sesión anónima
-      if (supabaseUserId == null) {
-        debugPrint('🔐 [loginWithBookingCode] Creando sesión anónima...');
-        try {
-          final anonSession = await _supabase.auth.signInAnonymously();
-          supabaseUserId = anonSession.user?.id;
-          debugPrint('✅ [loginWithBookingCode] Sesión anónima creada: $supabaseUserId');
-        } catch (e) {
-          debugPrint('⚠️ [loginWithBookingCode] Error creando sesión anónima: $e');
-        }
-      }
+      // Si no hay email o falló login/registro, seguimos con la sesión anónima
+      // que ya se creó antes de reclamar la reserva.
+      supabaseUserId ??= _supabase.auth.currentUser?.id;
 
-      // Asignar primary_guest_user_id a la reserva usando función RPC con SECURITY DEFINER
+      // Si el login con email cambió el usuario, hay que revincular la reserva:
+      // la reclamó el usuario anónimo inicial, no este.
       if (supabaseUserId != null) {
         try {
-          await _supabase.rpc(
-            'assign_primary_guest_to_booking',
-            params: {
-              'p_booking_id': bookingId,
-              'p_user_id': supabaseUserId,
-            },
-          );
-          debugPrint('✅ [loginWithBookingCode] primary_guest_user_id asignado via RPC');
+          await _claimBooking(code: bookingCode);
+          debugPrint('✅ [loginWithBookingCode] Reserva vinculada a $supabaseUserId');
         } catch (e) {
-          debugPrint('⚠️ [loginWithBookingCode] Error asignando via RPC: $e');
+          debugPrint('⚠️ [loginWithBookingCode] Error revinculando la reserva: $e');
         }
       }
 
@@ -315,18 +386,23 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       debugPrint('✅ [loginWithBookingCode] Sesión local guardada correctamente');
 
-      return UserEntity(
-        id: supabaseUserId ?? bookingId, // Usar ID de Supabase si está disponible
-        email: guestEmail,
-        role: UserRole.guest,
-        name: guestName,
-        bookingId: bookingId,
-        propertyId: propertyId,
-      );
+      // Devolver el usuario completo (con el estado del check-in), el mismo
+      // que dará cualquier verificación posterior. Así la home se pinta bien
+      // a la primera y no cambia al llegar el refresco de sesión.
+      return await _getCurrentUserOrNull() ??
+          UserEntity(
+            id: supabaseUserId ?? bookingId, // Usar ID de Supabase si está disponible
+            email: guestEmail,
+            role: UserRole.guest,
+            name: guestName,
+            bookingId: bookingId,
+            propertyId: propertyId,
+          );
     } on PostgrestException catch (e, stackTrace) {
       debugPrint('❌ [loginWithBookingCode] PostgrestException: ${e.message}');
       debugPrint('❌ [loginWithBookingCode] Code: ${e.code}');
       debugPrint('❌ [loginWithBookingCode] Details: ${e.details}');
+      await _discardAnonymousSession();
       await CrashlyticsService.recordError(
         e,
         stackTrace,
@@ -337,6 +413,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e, stackTrace) {
       debugPrint('❌ [loginWithBookingCode] Error: $e');
       debugPrint('❌ [loginWithBookingCode] StackTrace: $stackTrace');
+      await _discardAnonymousSession();
       await CrashlyticsService.recordError(
         e,
         stackTrace,
@@ -357,61 +434,22 @@ class AuthRepositoryImpl implements AuthRepository {
     final normalizedEmail = email.toLowerCase().trim();
 
     try {
-      // Buscar la reserva por código único
-      final bookingResponse = await _supabase
-          .from(SupabaseTables.bookings)
-          .select('''
-            id,
-            property_id,
-            unit_id,
-            booking_code,
-            guest_first_name,
-            last_name,
-            guest_email,
-            num_guests,
-            checkin_date,
-            checkout_date,
-            status,
-            code_expires_at
-          ''')
-          .eq('booking_code', normalizedCode)
-          .maybeSingle();
-
-      // Código no encontrado
-      if (bookingResponse == null) {
-        throw Exception('code_not_found');
-      }
-
-      // Verificar si el código ha expirado
-      final codeExpiresAt = bookingResponse['code_expires_at'];
-      if (codeExpiresAt != null) {
-        final expiresAt = DateTime.parse(codeExpiresAt as String);
-        if (DateTime.now().isAfter(expiresAt)) {
-          throw Exception('code_expired');
-        }
-      }
-
-      // Verificar que el estado es válido
-      final status = bookingResponse['status'] as String?;
-      if (status != null && !['confirmed', 'checked_in'].contains(status)) {
-        throw Exception('code_expired');
-      }
-
-      // Verificar que la reserva no ha expirado (checkout_date ya pasó)
-      final bookingCheckoutDate = DateTime.parse(bookingResponse['checkout_date'] as String);
-      if (DateTime.now().isAfter(bookingCheckoutDate.add(const Duration(days: 1)))) {
-        throw Exception('code_expired');
-      }
-
-      // Verificar que el email coincide con el de la reserva
-      final bookingEmail = (bookingResponse['guest_email'] as String?)?.toLowerCase().trim();
-      if (bookingEmail != null && bookingEmail != normalizedEmail) {
-        throw Exception('email_mismatch');
-      }
-
-      // Crear sesión anónima para el huésped
+      // La sesión debe existir antes de reclamar la reserva: el RPC vincula la
+      // reserva a `auth.uid()`.
       final anonSession = await _supabase.auth.signInAnonymously();
       final userId = anonSession.user!.id;
+
+      // Validación completa en el servidor (código, estado, checkout y email).
+      // Lanza `booking_not_found`, `code_expired` o `email_mismatch`, que es lo
+      // que la capa superior ya esperaba.
+      //
+      // Antes esto se hacía leyendo `bookings` directamente, lo que exigía una
+      // política RLS que dejaba la tabla legible por cualquiera. La consulta
+      // pedía además una columna `code_expires_at` que no existe en el esquema.
+      final bookingResponse = await _claimBooking(
+        code: normalizedCode,
+        email: normalizedEmail,
+      );
 
       // Asignar rol de guest al usuario
       await _supabase.from(SupabaseTables.userRoles).upsert({
@@ -420,32 +458,19 @@ class AuthRepositoryImpl implements AuthRepository {
         'property_id': bookingResponse['property_id'],
       });
 
-      // Actualizar la reserva con el user_id del huésped y marcar primer uso
-      final updateData = <String, dynamic>{
-        'primary_guest_user_id': userId,
-        'guest_email': normalizedEmail,
-      };
-
-      // Marcar código como usado si es la primera vez
-      if (bookingResponse['code_first_used_at'] == null) {
-        updateData['code_first_used_at'] = DateTime.now().toIso8601String();
-      }
-
-      await _supabase
-          .from(SupabaseTables.bookings)
-          .update(updateData)
-          .eq('id', bookingResponse['id']);
-
-      return UserEntity(
-        id: userId,
-        email: normalizedEmail,
-        role: UserRole.guest,
-        name: '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim(),
-        bookingId: bookingResponse['id'] as String,
-        propertyId: bookingResponse['property_id'] as String?,
-      );
+      // Usuario completo (con el estado del check-in); ver loginWithBookingCode
+      return await _getCurrentUserOrNull() ??
+          UserEntity(
+            id: userId,
+            email: normalizedEmail,
+            role: UserRole.guest,
+            name: '${bookingResponse['guest_first_name'] ?? ''} ${bookingResponse['last_name'] ?? ''}'.trim(),
+            bookingId: bookingResponse['id'] as String,
+            propertyId: bookingResponse['property_id'] as String?,
+          );
     } on PostgrestException catch (e, stackTrace) {
       debugPrint('❌ [loginWithBookingCodeAndEmail] PostgrestException: ${e.message}');
+      await _discardAnonymousSession();
       await CrashlyticsService.recordError(
         e,
         stackTrace,
@@ -455,6 +480,7 @@ class AuthRepositoryImpl implements AuthRepository {
       rethrow;
     } catch (e, stackTrace) {
       debugPrint('❌ [loginWithBookingCodeAndEmail] Error: $e');
+      await _discardAnonymousSession();
       await CrashlyticsService.recordError(
         e,
         stackTrace,
@@ -474,14 +500,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Stream<UserEntity?> get authStateChanges {
-    return _supabase.auth.onAuthStateChange.asyncMap((event) async {
-      if (event.event == AuthChangeEvent.signedOut) {
-        return null;
-      }
-
-      return getCurrentUser();
-    });
+  Stream<void> get sessionChanges {
+    // Solo los eventos en los que cambia el usuario. `initialSession` ya lo
+    // cubre la verificación de arranque y `tokenRefreshed` no cambia el
+    // usuario. No se consulta nada aquí: quien escuche decide si verificar.
+    return _supabase.auth.onAuthStateChange
+        .where(
+          (event) =>
+              event.event == AuthChangeEvent.signedIn ||
+              event.event == AuthChangeEvent.userUpdated,
+        )
+        .map((_) {});
   }
 
   @override

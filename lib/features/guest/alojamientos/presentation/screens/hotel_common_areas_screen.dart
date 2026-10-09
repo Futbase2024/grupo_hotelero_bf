@@ -6,6 +6,7 @@ import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_theme.dart';
 import '../../../../../../core/di/injection.dart';
+import '../../../../../../core/utils/image_decode_size.dart';
 import '../../domain/repositories/properties_repository.dart';
 
 /// Pantalla que muestra la galería de zonas comunes del hotel
@@ -318,6 +319,9 @@ class _PhotoCard extends StatelessWidget {
                   : CachedNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
+                      // Tarjeta de zona común: como mucho ocupa el ancho de la pantalla.
+                      // El visor a pantalla completa carga la resolución original.
+                      memCacheWidth: ImageDecodeSize.screenWidth(context),
                       progressIndicatorBuilder: (context, url, downloadProgress) {
                         return Container(
                           color: isDark ? AppColors.gray800 : AppColors.gray200,

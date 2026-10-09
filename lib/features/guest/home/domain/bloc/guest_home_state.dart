@@ -40,14 +40,15 @@ class GuestHomeLoaded extends GuestHomeState {
   GuestHomeLoaded copyWith({
     AdminBookingEntity? booking,
     bool? isRefreshing,
-    List<GuestNotificationEntity> notifications = const [],
-    int unreadNotificationsCount = 0,
+    List<GuestNotificationEntity>? notifications,
+    int? unreadNotificationsCount,
   }) {
     return GuestHomeLoaded(
       booking: booking ?? this.booking,
       isRefreshing: isRefreshing ?? this.isRefreshing,
-      notifications: notifications,
-      unreadNotificationsCount: unreadNotificationsCount,
+      notifications: notifications ?? this.notifications,
+      unreadNotificationsCount:
+          unreadNotificationsCount ?? this.unreadNotificationsCount,
     );
   }
 }

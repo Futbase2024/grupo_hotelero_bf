@@ -28,8 +28,8 @@ abstract class AuthRepository {
   /// Cierra la sesión del usuario actual
   Future<void> logout();
 
-  /// Stream de cambios en el estado de autenticación
-  Stream<UserEntity?> get authStateChanges;
+  /// Emite cada vez que se inicia sesión o cambia el usuario de la sesión
+  Stream<void> get sessionChanges;
 
   /// Envía un email de recuperación de contraseña
   Future<void> sendPasswordResetEmail(String email);

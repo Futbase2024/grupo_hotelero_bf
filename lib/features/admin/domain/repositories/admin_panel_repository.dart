@@ -19,6 +19,13 @@ abstract class AdminPanelRepository {
   /// (reservas y check-ins). Con él NO vienen `guestEmail`, `guestPhone`,
   /// `staffNotes`, `codeSentAt`, `codeFirstUsedAt` ni `createdAt`: quien los
   /// use (facturas, ocupación, detalle) debe llamar sin este flag.
+  /// [bookingIds] limita la consulta a esas reservas concretas. Lo usa el
+  /// refresco por Realtime para traer solo las filas que han cambiado en vez
+  /// de recargar la lista completa.
+  ///
+  /// [limit] corta en las N reservas más recientes. Sin él se descargan TODAS
+  /// las que cumplan el filtro, paginando internamente. Se usa para pintar una
+  /// primera pantalla rápida mientras se completa la carga de fondo.
   Future<List<AdminBookingEntity>> listBookings({
     String? propertyId,
     String? statusFilter,
@@ -26,6 +33,8 @@ abstract class AdminPanelRepository {
     DateTime? toDate,
     String? searchQuery,
     String? checkinStatusFilter,
+    List<String>? bookingIds,
+    int? limit,
     bool lightweight = false,
   });
 
@@ -242,8 +251,12 @@ abstract class AdminPanelRepository {
     String? propertyId,
   });
 
-  /// Stream de cambios en checkins en tiempo real
-  Stream<void> watchCheckins({
+  /// Stream de cambios en checkins en tiempo real.
+  ///
+  /// Emite los `booking_id` de los check-ins que han cambiado (alta, cambio de
+  /// estado o salida del filtro), no una señal ciega: así el dashboard puede
+  /// refrescar solo esas reservas en lugar de recargar la lista entera.
+  Stream<Set<String>> watchCheckins({
     String? propertyId,
   });
 

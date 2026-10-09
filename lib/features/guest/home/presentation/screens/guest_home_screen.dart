@@ -11,6 +11,7 @@ import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/services/notification_refresh_bus.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
+import 'package:bf_stay/core/utils/image_decode_size.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
@@ -66,6 +67,9 @@ class GuestHomeScreen extends StatelessWidget {
         final isCheckinSubmitted = checkinStatus == 'submitted';
 
         return BlocProvider(
+          // El refresco de sesión ya no reconstruye la pantalla: si cambia la
+          // reserva o el usuario, la clave fuerza a recrear el bloc y recargar.
+          key: ValueKey('${user.id}_${user.bookingId}'),
           create: (context) =>
               GuestHomeBloc(repository: getIt<AdminPanelRepository>())
                 ..add(GuestHomeLoadBooking(user.bookingId ?? ''))
@@ -87,13 +91,15 @@ class GuestHomeScreen extends StatelessWidget {
                     builder: (innerContext) {
                       return RefreshIndicator(
                         onRefresh: () async {
+                          // Refrescar datos de la reserva y estado del usuario.
+                          // La sesión se verifica siempre, aunque no haya
+                          // reserva: es lo que permite recuperarla si se perdió.
                           final bookingId = user.bookingId;
-                          if (bookingId == null || bookingId.isEmpty) return;
-
-                          // Refrescar datos de la reserva y estado del usuario
-                          innerContext.read<GuestHomeBloc>().add(
-                            GuestHomeRefreshBooking(bookingId),
-                          );
+                          if (bookingId != null && bookingId.isNotEmpty) {
+                            innerContext.read<GuestHomeBloc>().add(
+                              GuestHomeRefreshBooking(bookingId),
+                            );
+                          }
                           innerContext.read<AuthBloc>().add(
                             const AuthCheckRequested(),
                           );
@@ -1025,6 +1031,10 @@ class _StayInfoCard extends StatelessWidget {
                         width: 44,
                         height: 44,
                         fit: BoxFit.cover,
+                        // Miniatura de 44 px: los assets de alojamiento son fotos de varios
+                        // miles de píxeles de ancho.
+                        cacheWidth: ImageDecodeSize.forLogical(context, 44),
+                        cacheHeight: ImageDecodeSize.forLogical(context, 44),
                         errorBuilder: (context, error, stackTrace) => Container(
                           width: 44,
                           height: 44,

@@ -115,26 +115,23 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     try {
       debugPrint('✅ [CheckoutRepository] Completando checkout para reserva: $bookingId');
 
-      // 1. Actualizar el check-in con el estado de checkout
-      await _supabase
-          .from('checkins')
-          .update({
-            'checkout_status': 'completed',
-            'checkout_at': DateTime.now().toIso8601String(),
-            'checkout_feedback': feedback,
-            'checkout_rating': rating,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('booking_id', bookingId);
+      // El RPC registra el check-out en `checkins` y cierra la reserva entera
+      // (status, booking_status, checkout_status y closed_at) en el servidor.
+      // Antes se hacía un UPDATE directo que solo cambiaba `status`, y la
+      // reserva quedaba a medio cerrar.
+      final closed = await _supabase.rpc(
+        'complete_guest_checkout',
+        params: {
+          'p_booking_id': bookingId,
+          'p_feedback': feedback,
+          'p_rating': rating,
+        },
+      ) as bool?;
 
-      // 2. Actualizar el estado de la reserva a 'checked_out'
-      await _supabase
-          .from('bookings')
-          .update({
-            'status': 'checked_out',
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', bookingId);
+      if (closed != true) {
+        // La reserva ya estaba cerrada o cancelada: no hay nada más que hacer.
+        debugPrint('ℹ️ [CheckoutRepository] La reserva ya estaba cerrada');
+      }
 
       debugPrint('✅ [CheckoutRepository] Checkout completado correctamente');
     } catch (e) {

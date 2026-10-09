@@ -1029,6 +1029,18 @@ abstract class S {
   /// **'Este código de reserva ha expirado. Contacta con recepción para obtener uno nuevo.'**
   String get auth_booking_error_code_expired;
 
+  /// No description provided for @auth_booking_error_stay_finished.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu estancia ya ha finalizado. ¡Gracias por alojarte con nosotros!'**
+  String get auth_booking_error_stay_finished;
+
+  /// No description provided for @auth_booking_error_booking_cancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta reserva está cancelada. Si crees que es un error, contacta con recepción.'**
+  String get auth_booking_error_booking_cancelled;
+
   /// No description provided for @auth_booking_error_email_mismatch.
   ///
   /// In es, this message translates to:
@@ -2103,8 +2115,14 @@ abstract class S {
   /// No description provided for @admin_booking_auto_validate_subtitle.
   ///
   /// In es, this message translates to:
-  /// **'El check-in del huésped se validará solo, sin revisión manual'**
+  /// **'El check-in del huésped se validará solo a cualquier hora, sin revisión manual'**
   String get admin_booking_auto_validate_subtitle;
+
+  /// No description provided for @admin_booking_auto_validate_night_note.
+  ///
+  /// In es, this message translates to:
+  /// **'A partir de las {time} h del día de entrada el check-in se autovalida siempre, aunque este interruptor esté apagado.'**
+  String admin_booking_auto_validate_night_note(String time);
 
   /// No description provided for @admin_booking_auto_validate_enabled.
   ///
@@ -3473,6 +3491,42 @@ abstract class S {
   /// In es, this message translates to:
   /// **'La decoración se prepara durante tu ausencia para que sea una sorpresa completa.'**
   String get guest_romantic_note;
+
+  /// No description provided for @guest_romantic_deadline_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe solicitarse al menos 24 h antes de tu entrada. Solo una solicitud por reserva.'**
+  String get guest_romantic_deadline_info;
+
+  /// No description provided for @guest_romantic_already_requested.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya solicitado'**
+  String get guest_romantic_already_requested;
+
+  /// No description provided for @guest_romantic_already_requested_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya has solicitado el Pack Romántico para esta reserva. Si necesitas cambiar algo, escríbenos por el chat.'**
+  String get guest_romantic_already_requested_desc;
+
+  /// No description provided for @guest_romantic_deadline_passed.
+  ///
+  /// In es, this message translates to:
+  /// **'Fuera de plazo'**
+  String get guest_romantic_deadline_passed;
+
+  /// No description provided for @guest_romantic_deadline_passed_desc.
+  ///
+  /// In es, this message translates to:
+  /// **'El Pack Romántico debe solicitarse al menos 24 horas antes de tu entrada.'**
+  String get guest_romantic_deadline_passed_desc;
+
+  /// No description provided for @guest_romantic_blocked_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud no disponible'**
+  String get guest_romantic_blocked_title;
 
   /// No description provided for @guest_jacuzzi_title.
   ///

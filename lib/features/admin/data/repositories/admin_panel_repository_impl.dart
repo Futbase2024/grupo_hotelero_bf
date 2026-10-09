@@ -13,6 +13,21 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
   SupabaseClient get _client => SupabaseConfig.client;
   String get _accessToken => SupabaseConfig.currentSession?.accessToken ?? '';
 
+  /// Nombres de unidades y propiedades cacheados en memoria.
+  ///
+  /// Son catálogos diminutos (14 y 7 filas) y prácticamente estáticos, pero
+  /// `listBookings` los consultaba en cada carga: al entrar al tab, al tirar
+  /// para refrescar y en cada recarga disparada por Realtime. Se piden solo los
+  /// ids que aún no estén cacheados.
+  static final Map<String, String> _unitNamesCache = {};
+  static final Map<String, String> _propertyNamesCache = {};
+
+  /// Vacía los catálogos cacheados (tras renombrar una unidad o propiedad).
+  static void clearCatalogCache() {
+    _unitNamesCache.clear();
+    _propertyNamesCache.clear();
+  }
+
   Future<Map<String, dynamic>> _callAdminPanel({
     required String action,
     Map<String, dynamic>? params,
@@ -78,6 +93,8 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
     DateTime? toDate,
     String? searchQuery,
     String? checkinStatusFilter,
+    List<String>? bookingIds,
+    int? limit,
     bool lightweight = false,
   }) async {
     try {
@@ -126,9 +143,7 @@ $listColumns,
             code_sent_at,
             created_at''';
 
-      var query = _client
-          .from('bookings')
-          .select('''
+      final selectColumns = '''
             ${lightweight ? listColumns : fullColumns},
             booking_units (
               count
@@ -137,34 +152,72 @@ $listColumns,
               id,
               status
             )
-          ''');
+          ''';
 
-      if (filterByCheckinStatus) {
-        query = query.eq('checkins.status', checkinStatusFilter);
+      // Una página de resultados con todos los filtros aplicados.
+      //
+      // PostgREST limita cada respuesta a `db-max-rows` (1000 en Supabase), así
+      // que la consulta se pagina con `range`. Sin esto, en cuanto el filtro
+      // encajaba con más de 1000 reservas se perdían las sobrantes: por eso los
+      // check-ins recién validados dejaban de aparecer en "Validados" (ya había
+      // más de 1000 y el corte se quedaba en los más antiguos).
+      //
+      // El orden es descendente por `checkin_date` (con `id` como desempate
+      // para que la paginación sea determinista): las páginas van de lo más
+      // reciente a lo más antiguo. El orden final de la lista se recalcula en
+      // el estado del BLoC según la preferencia del usuario.
+      Future<List<Map<String, dynamic>>> fetchPage(int from, int to) {
+        var query = _client.from('bookings').select(selectColumns);
+
+        if (filterByCheckinStatus) {
+          query = query.eq('checkins.status', checkinStatusFilter);
+        }
+
+        // Aplicar filtros ANTES del order
+        if (bookingIds != null) {
+          query = query.inFilter('id', bookingIds);
+        }
+        if (propertyId != null) {
+          query = query.eq('property_id', propertyId);
+        }
+        if (statusFilter != null && statusFilter != 'all') {
+          query = query.eq('status', statusFilter);
+        }
+        if (fromDate != null) {
+          query = query.gte('checkin_date', fromDate.toIso8601String().split('T').first);
+        }
+        if (toDate != null) {
+          query = query.lte('checkout_date', toDate.toIso8601String().split('T').first);
+        }
+        if (searchQuery != null && searchQuery.isNotEmpty) {
+          // Buscar por código de reserva o apellido
+          query = query.or('booking_code.ilike.%$searchQuery%,last_name.ilike.%$searchQuery%');
+        }
+
+        // Aplicar orden DESPUÉS de los filtros
+        return query
+            .order('checkin_date', ascending: false)
+            .order('id', ascending: false)
+            .range(from, to);
       }
 
-      // Aplicar filtros ANTES del order
-      if (propertyId != null) {
-        query = query.eq('property_id', propertyId);
-      }
-      if (statusFilter != null && statusFilter != 'all') {
-        query = query.eq('status', statusFilter);
-      }
-      if (fromDate != null) {
-        query = query.gte('checkin_date', fromDate.toIso8601String().split('T').first);
-      }
-      if (toDate != null) {
-        query = query.lte('checkout_date', toDate.toIso8601String().split('T').first);
-      }
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        // Buscar por código de reserva o apellido
-        query = query.or('booking_code.ilike.%$searchQuery%,last_name.ilike.%$searchQuery%');
-      }
+      // Se piden páginas hasta agotar los resultados: sin tope artificial, el
+      // filtro aplicado decide cuántas reservas se traen. Con los filtros por
+      // defecto (ventana deslizante o estado de check-in) suele bastar una o
+      // dos páginas. Con `limit` se corta antes, para pintar rápido.
+      const maxPageSize = 1000;
+      final pageSize = limit == null ? maxPageSize : limit.clamp(1, maxPageSize);
 
-      // Aplicar orden DESPUÉS de los filtros
-      // Ordenar por fecha de check-in más próxima a la fecha actual (ascendente)
-      // Las reservas con checkin_date más cercano a hoy aparecen primero
-      final response = await query.order('checkin_date', ascending: true);
+      final response = <Map<String, dynamic>>[];
+      while (true) {
+        final page = await fetchPage(
+          response.length,
+          response.length + pageSize - 1,
+        );
+        response.addAll(page);
+        if (page.length < pageSize) break;
+        if (limit != null && response.length >= limit) break;
+      }
 
       debugPrint('📋 [listBookings] Respuesta recibida: ${response.length} registros');
 
@@ -173,7 +226,7 @@ $listColumns,
       final propertyIds = <String>{};
       // Unidades por reserva, ya resueltas por el embed `booking_units(count)`.
       final unitsCounts = <String, int>{};
-      for (final row in response as List) {
+      for (final row in response) {
         final bookingId = row['id'] as String;
         if (row['unit_id'] != null) unitIds.add(row['unit_id'] as String);
         if (row['property_id'] != null) propertyIds.add(row['property_id'] as String);
@@ -189,36 +242,51 @@ $listColumns,
       // lanzan a la vez (antes eran 3 idas y vueltas encadenadas después de la
       // de reservas). Cada una absorbe su propio error para que un fallo
       // parcial no tumbe la lista.
+      // Nombres de unidades y propiedades: son un puñado de filas que casi
+      // nunca cambian (14 unidades y 7 propiedades), así que se cachean en
+      // memoria. Antes se consultaban en CADA carga de la lista, incluida cada
+      // recarga por Realtime.
       final unitNames = <String, String>{};
       final propertyNames = <String, String>{};
 
       Future<void> loadUnitNames() async {
-        if (unitIds.isEmpty) return;
-        try {
-          final unitsResponse = await _client
-              .from('units')
-              .select('id, name')
-              .inFilter('id', unitIds.toList());
-          for (final u in unitsResponse) {
-            unitNames[u['id'] as String] = u['name'] as String? ?? '';
+        final missing = unitIds.difference(_unitNamesCache.keys.toSet());
+        if (missing.isNotEmpty) {
+          try {
+            final unitsResponse = await _client
+                .from('units')
+                .select('id, name')
+                .inFilter('id', missing.toList());
+            for (final u in unitsResponse) {
+              _unitNamesCache[u['id'] as String] = u['name'] as String? ?? '';
+            }
+          } catch (e) {
+            debugPrint('⚠️ [listBookings] Error cargando units: $e');
           }
-        } catch (e) {
-          debugPrint('⚠️ [listBookings] Error cargando units: $e');
+        }
+        for (final id in unitIds) {
+          unitNames[id] = _unitNamesCache[id] ?? '';
         }
       }
 
       Future<void> loadPropertyNames() async {
-        if (propertyIds.isEmpty) return;
-        try {
-          final propertiesResponse = await _client
-              .from('properties')
-              .select('id, name')
-              .inFilter('id', propertyIds.toList());
-          for (final p in propertiesResponse) {
-            propertyNames[p['id'] as String] = p['name'] as String? ?? '';
+        final missing = propertyIds.difference(_propertyNamesCache.keys.toSet());
+        if (missing.isNotEmpty) {
+          try {
+            final propertiesResponse = await _client
+                .from('properties')
+                .select('id, name')
+                .inFilter('id', missing.toList());
+            for (final p in propertiesResponse) {
+              _propertyNamesCache[p['id'] as String] =
+                  p['name'] as String? ?? '';
+            }
+          } catch (e) {
+            debugPrint('⚠️ [listBookings] Error cargando properties: $e');
           }
-        } catch (e) {
-          debugPrint('⚠️ [listBookings] Error cargando properties: $e');
+        }
+        for (final id in propertyIds) {
+          propertyNames[id] = _propertyNamesCache[id] ?? '';
         }
       }
 
@@ -1246,23 +1314,61 @@ $listColumns,
   // ✅ OPTIMIZADO: Filtrar por estado 'submitted' para reducir tráfico de Realtime
   // Solo escucha cambios en checkins que son relevantes para el dashboard
   @override
-  Stream<void> watchCheckins({
+  Stream<Set<String>> watchCheckins({
     String? propertyId,
   }) {
     // Solo escuchar cambios en checkins con status: submitted o draft
     // Reduce drásticamente el tráfico comparado con escuchar TODOS los cambios
-    var stream = _client
+    final stream = _client
         .from('checkins')
         .stream(primaryKey: ['id'])
         .inFilter('status', ['submitted', 'draft']);
 
-    // Filtrar por propertyId usando where después del map
+    // El stream reemite el snapshot completo del filtro en cada cambio, así que
+    // se compara con el anterior para saber QUÉ ha cambiado:
+    //   · check-in nuevo o con estado distinto → su reserva se ha modificado
+    //   · check-in que desaparece del snapshot → ha salido del filtro (lo
+    //     típico: acaba de validarse), y su reserva también hay que refrescarla
+    //
+    // Emitir los `booking_id` afectados permite al dashboard actualizar solo
+    // esas filas en vez de volver a descargar la lista entera.
+    final previousStatuses = <String, String>{};
+    final previousBookingIds = <String, String>{};
+
     return stream
         .where((rows) {
           if (propertyId == null) return true;
           return rows.any((row) => row['property_id'] == propertyId);
         })
-        .map((_) {});
+        .map((rows) {
+          final changedBookingIds = <String>{};
+          final currentIds = <String>{};
+
+          for (final row in rows) {
+            final checkinId = row['id'] as String;
+            final bookingId = row['booking_id'] as String?;
+            final status = row['status'] as String? ?? '';
+            currentIds.add(checkinId);
+
+            if (previousStatuses[checkinId] != status) {
+              if (bookingId != null) changedBookingIds.add(bookingId);
+            }
+
+            previousStatuses[checkinId] = status;
+            if (bookingId != null) previousBookingIds[checkinId] = bookingId;
+          }
+
+          // Check-ins que ya no cumplen el filtro
+          final goneIds =
+              previousStatuses.keys.toSet().difference(currentIds);
+          for (final checkinId in goneIds) {
+            final bookingId = previousBookingIds.remove(checkinId);
+            previousStatuses.remove(checkinId);
+            if (bookingId != null) changedBookingIds.add(bookingId);
+          }
+
+          return changedBookingIds;
+        });
   }
 
   // ==================== MÉTODOS DE DOCUMENTOS ====================

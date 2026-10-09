@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_decode_size.dart';
 import '../../../../core/theme/responsive.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/auth_bloc.dart';
@@ -570,6 +571,12 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
         technicalMessage.contains('code_not_found')) {
       return S.of(context).auth_booking_error_code_not_found;
     }
+    if (technicalMessage.contains('booking_cancelled')) {
+      return S.of(context).auth_booking_error_booking_cancelled;
+    }
+    if (technicalMessage.contains('stay_finished')) {
+      return S.of(context).auth_booking_error_stay_finished;
+    }
     if (technicalMessage.contains('code_expired')) {
       return S.of(context).auth_booking_error_code_expired;
     }
@@ -650,6 +657,8 @@ class _BookingAccessScreenState extends State<BookingAccessScreen> {
         child: Image.asset(
           'assets/icons/logo.png',
           fit: BoxFit.contain,
+          // PNG de 1024x1024 pintado a `logoSize` (80-120 px).
+          cacheWidth: ImageDecodeSize.forLogical(context, logoSize),
         ),
       ),
     );

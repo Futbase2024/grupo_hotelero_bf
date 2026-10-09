@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/utils/image_decode_size.dart';
 import '../../domain/entities/collection_entity.dart';
 
 /// Tarjeta que muestra una colección curada de lugares
@@ -91,6 +92,12 @@ class CollectionCard extends StatelessWidget {
                         ? CachedNetworkImage(
                             imageUrl: collection.imageUrl!,
                             fit: BoxFit.cover,
+                            // La franja de imagen mide 100 px de alto; acotando la altura de
+                            // decodificación el ancho se reduce en la misma proporción.
+                            memCacheHeight: ImageDecodeSize.forLogical(
+                              context,
+                              100,
+                            ),
                             placeholder: (context, url) => Container(
                               color: _accentColor.withValues(alpha: 0.1),
                             ),

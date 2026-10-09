@@ -515,6 +515,14 @@ class SFr extends S {
       'Ce code de réservation a expiré. Contactez la réception pour en obtenir un nouveau.';
 
   @override
+  String get auth_booking_error_stay_finished =>
+      'Votre séjour est déjà terminé. Merci d\'avoir séjourné chez nous !';
+
+  @override
+  String get auth_booking_error_booking_cancelled =>
+      'Cette réservation a été annulée. Si vous pensez qu\'il s\'agit d\'une erreur, contactez la réception.';
+
+  @override
   String get auth_booking_error_email_mismatch =>
       'L\'email ne correspond pas à la réservation. Assurez-vous que c\'est le même email que vous avez utilisé lors de la réservation.';
 
@@ -1149,7 +1157,12 @@ class SFr extends S {
 
   @override
   String get admin_booking_auto_validate_subtitle =>
-      'Le check-in du client sera validé automatiquement, sans vérification manuelle';
+      'Le check-in du client sera validé automatiquement à toute heure, sans vérification manuelle';
+
+  @override
+  String admin_booking_auto_validate_night_note(String time) {
+    return 'À partir de $time le jour d\'arrivée, l\'enregistrement est toujours validé automatiquement, même si cet interrupteur est désactivé.';
+  }
 
   @override
   String get admin_booking_auto_validate_enabled =>
@@ -1907,6 +1920,27 @@ class SFr extends S {
   @override
   String get guest_romantic_note =>
       'La décoration est préparée en votre absence pour que ce soit une vraie surprise.';
+
+  @override
+  String get guest_romantic_deadline_info =>
+      'À demander au moins 24 h avant votre arrivée. Une seule demande par réservation.';
+
+  @override
+  String get guest_romantic_already_requested => 'Déjà demandé';
+
+  @override
+  String get guest_romantic_already_requested_desc =>
+      'Vous avez déjà demandé le Pack Romantique pour cette réservation. Si vous souhaitez modifier quelque chose, écrivez-nous dans le chat.';
+
+  @override
+  String get guest_romantic_deadline_passed => 'Hors délai';
+
+  @override
+  String get guest_romantic_deadline_passed_desc =>
+      'Le Pack Romantique doit être demandé au moins 24 heures avant votre arrivée.';
+
+  @override
+  String get guest_romantic_blocked_title => 'Demande indisponible';
 
   @override
   String get guest_jacuzzi_title => 'Jacuzzi';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
@@ -199,6 +200,12 @@ class AppTheme {
       scrolledUnderElevation: 0,
       backgroundColor: AppColors.background,
       foregroundColor: AppColors.textPrimary,
+      // Fondo claro bajo la barra de estado → iconos oscuros.
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
       centerTitle: true,
       titleTextStyle: _baseTextStyle.copyWith(
         fontSize: 18,
@@ -452,6 +459,12 @@ class AppTheme {
       scrolledUnderElevation: 0,
       backgroundColor: AppColors.darkBackground,
       foregroundColor: AppColors.darkTextPrimary,
+      // Fondo oscuro bajo la barra de estado → iconos claros.
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
       centerTitle: true,
       titleTextStyle: _baseTextStyle.copyWith(
         fontSize: 18,

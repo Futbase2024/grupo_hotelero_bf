@@ -6,19 +6,108 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/services/notification_service.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
+import 'package:bf_stay/core/utils/image_decode_size.dart';
+import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/guest/extras/domain/entities/extra_request_entity.dart';
+import 'package:bf_stay/features/guest/extras/domain/extras_policy.dart';
 import 'package:bf_stay/features/guest/extras/domain/repositories/extra_request_repository.dart';
 import 'package:bf_stay/l10n/app_localizations.dart';
 
+/// Disponibilidad del Pack Romántico para la reserva del huésped.
+enum _PackAvailability {
+  /// Todavía se está comprobando el estado en el servidor.
+  loading,
+
+  /// Se puede solicitar.
+  available,
+
+  /// El huésped ya lo solicitó para esta reserva (solo se permite una vez).
+  alreadyRequested,
+
+  /// Se ha superado el plazo (24 h antes de la entrada).
+  deadlinePassed,
+}
+
 /// Pantalla elegante y romántica para mostrar el Pack Romántico
-class RomanticPackScreen extends StatelessWidget {
+class RomanticPackScreen extends StatefulWidget {
   const RomanticPackScreen({super.key});
 
+  @override
+  State<RomanticPackScreen> createState() => _RomanticPackScreenState();
+}
+
+class _RomanticPackScreenState extends State<RomanticPackScreen> {
   // Colores románticos locales
   static const Color _romanticPink = Color(0xFFFF69B4);
   static const Color _romanticRed = Color(0xFFE91E63);
+
+  static const String _packUrl =
+      'https://www.boutiquejerez.es/producto/pack-romantico/';
+
+  /// Reserva del huésped (para la fecha de entrada y el nombre de la unidad).
+  AdminBookingEntity? _booking;
+
+  _PackAvailability _availability = _PackAvailability.loading;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvailability();
+  }
+
+  String? get _bookingId {
+    final authState = context.read<AuthBloc>().state;
+    final user = authState is AuthAuthenticated ? authState.user : null;
+    final bookingId = user?.bookingId;
+    return (bookingId == null || bookingId.isEmpty) ? null : bookingId;
+  }
+
+  /// Comprueba si el huésped puede solicitar el pack: una sola vez por reserva
+  /// y siempre con al menos 24 h de antelación respecto a la entrada.
+  Future<void> _loadAvailability() async {
+    final bookingId = _bookingId;
+
+    // Sin reserva asociada no podemos aplicar las reglas: se deja pasar y el
+    // servidor decide (la app solo abre la web externa).
+    if (bookingId == null) {
+      if (!mounted) return;
+      setState(() => _availability = _PackAvailability.available);
+      return;
+    }
+
+    AdminBookingEntity? booking;
+    ExtraRequestEntity? existing;
+    try {
+      booking = await getIt<AdminPanelRepository>().getBooking(bookingId);
+      existing = await getIt<ExtraRequestRepository>().getActiveByBookingAndType(
+        bookingId: bookingId,
+        extraType: ExtrasPolicy.romanticPackType,
+      );
+    } catch (e) {
+      debugPrint('⚠️ [RomanticPack] No se pudo comprobar disponibilidad: $e');
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _booking = booking;
+      _availability = _resolveAvailability(booking, existing);
+    });
+  }
+
+  _PackAvailability _resolveAvailability(
+    AdminBookingEntity? booking,
+    ExtraRequestEntity? existing,
+  ) {
+    if (existing != null) return _PackAvailability.alreadyRequested;
+    if (booking != null &&
+        !ExtrasPolicy.isWithinRomanticPackWindow(booking.checkInDate)) {
+      return _PackAvailability.deadlinePassed;
+    }
+    return _PackAvailability.available;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +234,8 @@ class RomanticPackScreen extends StatelessWidget {
           width: double.infinity,
           height: 200,
           fit: BoxFit.cover,
+          // El asset original mide 1536x1024; aquí se pinta a 200 px de alto.
+          cacheHeight: ImageDecodeSize.forLogical(context, 200),
         ),
       ),
     );
@@ -251,6 +342,11 @@ class RomanticPackScreen extends StatelessWidget {
 
   Widget _buildPricingSection(BuildContext context) {
     final isDark = AppColors.isDarkMode(context);
+    final s = S.of(context);
+    final isBlocked = _availability == _PackAvailability.alreadyRequested ||
+        _availability == _PackAvailability.deadlinePassed;
+    final isBusy =
+        _availability == _PackAvailability.loading || _submitting;
 
     return Container(
       width: double.infinity,
@@ -286,7 +382,7 @@ class RomanticPackScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                S.of(context).guest_romantic_basic_pack,
+                s.guest_romantic_basic_pack,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -297,7 +393,7 @@ class RomanticPackScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            S.of(context).guest_romantic_price,
+            s.guest_romantic_price,
             style: TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.bold,
@@ -309,42 +405,85 @@ class RomanticPackScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _showPurchaseDialog(context),
+              onPressed:
+                  (isBlocked || isBusy) ? null : () => _showPurchaseDialog(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _romanticPink,
                 foregroundColor: AppColors.white,
+                disabledBackgroundColor: AppColors.getChipBackgroundColor(context),
+                disabledForegroundColor: AppColors.getTextTertiaryColor(context),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 0,
               ),
-              child: Text(
-                S.of(context).guest_romantic_book_now,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: isBusy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      _buttonLabel(s),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            S.of(context).guest_romantic_customize,
+            _helperText(s),
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.getTextSecondaryColor(context),
-              fontStyle: FontStyle.italic,
+              color: isBlocked
+                  ? AppColors.getTextPrimaryColor(context)
+                  : AppColors.getTextSecondaryColor(context),
+              fontStyle: isBlocked ? FontStyle.normal : FontStyle.italic,
             ),
             textAlign: TextAlign.center,
           ),
+          if (!isBlocked) ...[
+            const SizedBox(height: 8),
+            Text(
+              s.guest_romantic_deadline_info,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.getTextTertiaryColor(context),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  static const String _packUrl =
-      'https://www.boutiquejerez.es/producto/pack-romantico/';
+  String _buttonLabel(S s) {
+    switch (_availability) {
+      case _PackAvailability.alreadyRequested:
+        return s.guest_romantic_already_requested;
+      case _PackAvailability.deadlinePassed:
+        return s.guest_romantic_deadline_passed;
+      case _PackAvailability.loading:
+      case _PackAvailability.available:
+        return s.guest_romantic_book_now;
+    }
+  }
+
+  String _helperText(S s) {
+    switch (_availability) {
+      case _PackAvailability.alreadyRequested:
+        return s.guest_romantic_already_requested_desc;
+      case _PackAvailability.deadlinePassed:
+        return s.guest_romantic_deadline_passed_desc;
+      case _PackAvailability.loading:
+      case _PackAvailability.available:
+        return s.guest_romantic_customize;
+    }
+  }
 
   void _showPurchaseDialog(BuildContext context) {
     showDialog(
@@ -387,6 +526,9 @@ class RomanticPackScreen extends StatelessWidget {
 
   /// Registra la SOLICITUD del pack (no un pago), avisa al admin y muestra la
   /// confirmación con el enlace para completar el pago en la web externa.
+  ///
+  /// Solo se permite una solicitud por reserva y siempre con 24 h de antelación
+  /// respecto a la entrada; si la regla se incumple no se abre la web de pago.
   Future<void> _submitRequest(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final s = S.of(context);
@@ -403,15 +545,32 @@ class RomanticPackScreen extends StatelessWidget {
       return;
     }
 
+    setState(() => _submitting = true);
+
     try {
-      // Enriquecer con el nombre de la unidad (best-effort).
-      String? unitName;
-      try {
-        final booking = await getIt<AdminPanelRepository>().getBooking(bookingId);
-        unitName = booking?.unitName;
-      } catch (_) {
-        // Ignorar: la unidad es informativa.
+      // Revalidar contra el servidor por si el estado cambió desde que se abrió
+      // la pantalla (otra sesión, reserva modificada, plazo agotado...).
+      final booking =
+          _booking ?? await getIt<AdminPanelRepository>().getBooking(bookingId);
+      final existing =
+          await getIt<ExtraRequestRepository>().getActiveByBookingAndType(
+        bookingId: bookingId,
+        extraType: ExtrasPolicy.romanticPackType,
+      );
+      final availability = _resolveAvailability(booking, existing);
+
+      if (availability != _PackAvailability.available) {
+        if (!mounted) return;
+        setState(() {
+          _booking = booking;
+          _availability = availability;
+          _submitting = false;
+        });
+        await _showBlockedDialog(availability);
+        return;
       }
+
+      final unitName = booking?.unitName;
 
       final request = ExtraRequestEntity(
         id: '',
@@ -420,7 +579,7 @@ class RomanticPackScreen extends StatelessWidget {
         userId: user.id,
         guestName: user.displayName,
         unitName: unitName,
-        extraType: 'romantic_pack',
+        extraType: ExtrasPolicy.romanticPackType,
         extraName: extraName,
         price: 20,
         createdAt: DateTime.now(),
@@ -439,6 +598,14 @@ class RomanticPackScreen extends StatelessWidget {
         );
       }
 
+      if (mounted) {
+        setState(() {
+          _booking = booking;
+          _availability = _PackAvailability.alreadyRequested;
+          _submitting = false;
+        });
+      }
+
       messenger.showSnackBar(
         SnackBar(
           content: Text(s.guest_romantic_request_sent),
@@ -446,7 +613,26 @@ class RomanticPackScreen extends StatelessWidget {
           behavior: SnackBarBehavior.fixed,
         ),
       );
+    } on ExtraAlreadyRequestedException {
+      if (mounted) {
+        setState(() {
+          _availability = _PackAvailability.alreadyRequested;
+          _submitting = false;
+        });
+      }
+      await _showBlockedDialog(_PackAvailability.alreadyRequested);
+      return;
+    } on ExtraRequestWindowClosedException {
+      if (mounted) {
+        setState(() {
+          _availability = _PackAvailability.deadlinePassed;
+          _submitting = false;
+        });
+      }
+      await _showBlockedDialog(_PackAvailability.deadlinePassed);
+      return;
     } catch (e) {
+      if (mounted) setState(() => _submitting = false);
       messenger.showSnackBar(
         SnackBar(
           content: Text(s.guest_romantic_request_error),
@@ -456,8 +642,47 @@ class RomanticPackScreen extends StatelessWidget {
       );
     }
 
-    // Abrir la web para completar el pago (pase lo que pase con el registro).
+    // Abrir la web para completar el pago.
     await _launchPackUrl();
+  }
+
+  /// Diálogo informativo cuando la solicitud no está permitida.
+  Future<void> _showBlockedDialog(_PackAvailability availability) async {
+    if (!mounted) return;
+    final s = S.of(context);
+    final isDark = AppColors.isDarkMode(context);
+    final message = availability == _PackAvailability.alreadyRequested
+        ? s.guest_romantic_already_requested_desc
+        : s.guest_romantic_deadline_passed_desc;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: AppColors.gold),
+            const SizedBox(width: 8),
+            Expanded(child: Text(s.guest_romantic_blocked_title)),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _romanticPink,
+              foregroundColor: AppColors.white,
+            ),
+            child: Text(s.common_understood),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _launchPackUrl() async {

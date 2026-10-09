@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/utils/image_decode_size.dart';
 import '../../domain/entities/place_entity.dart';
 
 /// Tarjeta que muestra un lugar turístico
@@ -100,25 +101,33 @@ class _ImageSection extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 16 / 10,
       child: place.hasImage
-          ? CachedNetworkImage(
-              imageUrl: place.imageUrl!,
-              fit: BoxFit.cover,
-              placeholder: (context, url) {
-                return Container(
-                  color: AppColors.gray100,
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.gold,
+          ? LayoutBuilder(
+              builder: (context, constraints) => CachedNetworkImage(
+                imageUrl: place.imageUrl!,
+                fit: BoxFit.cover,
+                // La tarjeta vive en un grid responsivo, así que el ancho de
+                // decodificación se toma del que le asigna el layout.
+                memCacheWidth: ImageDecodeSize.forLogical(
+                  context,
+                  constraints.maxWidth,
+                ),
+                placeholder: (context, url) {
+                  return Container(
+                    color: AppColors.gray100,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.gold,
+                      ),
                     ),
-                  ),
-                );
-              },
-              errorWidget: (context, url, error) {
-                return _PlaceholderImage(
-                  category: place.categories.firstOrNull,
-                );
-              },
+                  );
+                },
+                errorWidget: (context, url, error) {
+                  return _PlaceholderImage(
+                    category: place.categories.firstOrNull,
+                  );
+                },
+              ),
             )
           : _PlaceholderImage(category: place.categories.firstOrNull),
     );

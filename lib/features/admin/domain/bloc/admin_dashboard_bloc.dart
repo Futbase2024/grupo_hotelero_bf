@@ -116,7 +116,13 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
   /// El estado del check-in se filtra en el SERVIDOR (join interno sobre
   /// `checkins`): con el filtro por defecto ("Por revisar") la consulta baja de
   /// ~500 reservas a las pocas que están realmente pendientes.
-  Future<List<AdminBookingEntity>> _fetchCheckinsSource() {
+  /// Tamaño de la primera tanda de check-ins que se pinta.
+  ///
+  /// Ver [_onCheckinsLoadRequested]: se muestra este primer bloque en cuanto
+  /// llega y la carga completa continúa por detrás.
+  static const int _checkinsFirstPageSize = 100;
+
+  Future<List<AdminBookingEntity>> _fetchCheckinsSource({int? limit}) {
     final statusFilter = state.checkinsStatusFilter;
     final checkinStatusFilter =
         (statusFilter == null || statusFilter == 'all') ? null : statusFilter;
@@ -126,6 +132,7 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
       return _repository.listBookings(
         searchQuery: search,
         checkinStatusFilter: checkinStatusFilter,
+        limit: limit,
         lightweight: true,
       );
     }
@@ -136,6 +143,7 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
         fromDate: state.checkinsCustomDateStart,
         toDate: state.checkinsCustomDateEnd,
         checkinStatusFilter: checkinStatusFilter,
+        limit: limit,
         lightweight: true,
       );
     }
@@ -148,6 +156,7 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
           ? (checkinStatusFilter == null ? _windowStart : null)
           : presetFrom,
       checkinStatusFilter: checkinStatusFilter,
+      limit: limit,
       lightweight: true,
     );
   }
@@ -178,13 +187,18 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     // los check-ins ya vienen en `AdminDashboardLoadRequested`, así que sin esto
     // se lanzaba una segunda consulta completa a los 3 s de arrancar.
     _checkinsSubscription = _repository.watchCheckins().skip(1).listen(
-      (_) {
+      (bookingIds) {
         if (isClosed) return;
+        // Se acumulan los ids que llegan durante la ventana del debounce: si
+        // entran tres check-ins seguidos, se refrescan las tres reservas en una
+        // sola consulta.
+        _pendingChangedBookingIds.addAll(bookingIds);
         _checkinsDebounce?.cancel();
         _checkinsDebounce = Timer(const Duration(seconds: 1), () {
-          if (!isClosed) {
-            add(const AdminDashboardCheckinsChanged());
-          }
+          if (isClosed) return;
+          final ids = Set<String>.from(_pendingChangedBookingIds);
+          _pendingChangedBookingIds.clear();
+          add(AdminDashboardCheckinsChanged(bookingIds: ids));
         });
       },
       onError: (error) {
@@ -192,6 +206,9 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
       },
     );
   }
+
+  /// Reservas cambiadas pendientes de refrescar (ver [_subscribeToCheckins]).
+  final Set<String> _pendingChangedBookingIds = {};
 
   @override
   Future<void> close() {
@@ -208,9 +225,45 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardCheckinsChanged event,
     Emitter<AdminDashboardState> emit,
   ) async {
-    // La reentrada la controla `_onCheckinsLoadRequested` (encola la petición
-    // si hay otra en vuelo), así que aquí nunca se descarta la señal.
-    add(const AdminDashboardCheckinsLoadRequested());
+    // Sin ids concretos (o sin lista previa que actualizar) no queda más
+    // remedio que recargar entero. La reentrada la controla
+    // `_onCheckinsLoadRequested`, que encola la petición si hay otra en vuelo.
+    if (event.bookingIds.isEmpty || state.checkins.isEmpty) {
+      add(const AdminDashboardCheckinsLoadRequested());
+      return;
+    }
+
+    // Refresco incremental: se piden SOLO las reservas que han cambiado y se
+    // sustituyen en la lista que ya está en memoria. Antes, cada check-in que
+    // entraba obligaba a volver a descargar las ~1000 filas del tab.
+    try {
+      final updated = await _repository.listBookings(
+        bookingIds: event.bookingIds.toList(),
+        lightweight: true,
+      );
+
+      final byId = {for (final booking in updated) booking.id: booking};
+      final merged = <AdminBookingEntity>[];
+
+      for (final booking in state.checkins) {
+        final fresh = byId.remove(booking.id);
+        if (fresh == null) {
+          merged.add(booking);
+        } else if (fresh.hasCheckin) {
+          merged.add(fresh);
+        }
+        // Si ya no tiene check-in, se cae de la lista.
+      }
+
+      // Reservas que han estrenado check-in y aún no estaban en la lista.
+      merged.addAll(byId.values.where((booking) => booking.hasCheckin));
+
+      emit(state.copyWith(checkins: merged));
+    } catch (e) {
+      debugPrint('Error refrescando check-ins cambiados: $e');
+      // Ante la duda, recarga completa: es preferible a dejar la lista obsoleta
+      add(const AdminDashboardCheckinsLoadRequested());
+    }
   }
 
   Future<void> _onNotificationReceived(
@@ -424,6 +477,23 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     ));
 
     try {
+      // Primera pantalla cuanto antes: en la carga inicial se pide un bloque
+      // pequeño (las más recientes) y se pinta, en vez de esperar a que baje el
+      // histórico completo. La carga entera continúa justo después, así que los
+      // filtros y la búsqueda siguen operando sobre todos los datos.
+      if (isFirstLoad) {
+        final firstPage = await _fetchCheckinsSource(
+          limit: _checkinsFirstPageSize,
+        );
+        if (!isClosed) {
+          emit(state.copyWith(
+            checkins: firstPage.where((b) => b.hasCheckin).toList(),
+            isLoadingCheckins: false,
+            isRefreshingCheckins: true,
+          ));
+        }
+      }
+
       // Cargar reservas según los filtros de check-ins y quedarnos con las que
       // tienen check-in. Solo actualiza `checkins`; no pisa `bookings` (el tab
       // de reservas tiene sus propios filtros).

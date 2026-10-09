@@ -139,16 +139,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
 
-    // Escuchar cambios de autenticación
-    _authStateSubscription = _authRepository.authStateChanges.listen((user) {
-      if (user != null) {
-        add(AuthCheckRequested());
+    // Escuchar cambios de autenticación. Durante un login se ignoran: el propio
+    // login cambia de usuario de Supabase (anónimo → email) y su resultado es
+    // el que manda.
+    _authStateSubscription = _authRepository.sessionChanges.listen((_) {
+      if (!_loginInProgress) {
+        add(const AuthCheckRequested());
       }
     });
   }
 
   final AuthRepository _authRepository;
-  StreamSubscription<UserEntity?>? _authStateSubscription;
+  StreamSubscription<void>? _authStateSubscription;
+
+  /// Si hay un login en curso.
+  ///
+  /// Mientras es `true` no se verifica la sesión: un [AuthCheckRequested]
+  /// lanzado a mitad del login lee la sesión antes de que se guarde la reserva
+  /// y, si termina después, pisa el resultado del login con un huésped sin
+  /// `bookingId` (home sin reserva y check-in deshabilitado).
+  bool _loginInProgress = false;
 
   @override
   Future<void> close() {
@@ -161,7 +171,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthCheckRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    if (_loginInProgress) {
+      debugPrint('ℹ️ [AuthBloc] Login en curso, se omite la verificación de sesión');
+      return;
+    }
+
+    // Con sesión ya iniciada es un refresco: se hace en silencio, sin pasar
+    // por AuthLoading. Ese estado vacía las pantallas (spinner a pantalla
+    // completa) y obliga a reconstruirlas, lo que se veía como un doble
+    // pantallazo tras el login. Si el usuario no cambia, el bloc descarta el
+    // estado repetido y no se redibuja nada.
+    final isRefresh = state is AuthAuthenticated;
+    if (!isRefresh) {
+      emit(const AuthLoading());
+    }
 
     try {
       final user = await _authRepository.getCurrentUser();
@@ -172,6 +195,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthUnauthenticated());
       }
     } catch (e) {
+      // Un fallo puntual (p. ej. de red) al refrescar no debe echar al usuario
+      if (isRefresh) {
+        debugPrint('⚠️ [AuthBloc] Error refrescando la sesión, se mantiene el estado: $e');
+        return;
+      }
       emit(AuthError(message: e.toString()));
     }
   }
@@ -182,6 +210,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
+    _loginInProgress = true;
 
     try {
       final user = await _authRepository.loginWithEmail(
@@ -192,6 +221,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(message: _getErrorMessage(e)));
+    } finally {
+      _loginInProgress = false;
     }
   }
 
@@ -201,6 +232,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
+    _loginInProgress = true;
 
     try {
       final user = await _authRepository.loginWithBookingCode(
@@ -211,7 +243,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       debugPrint('❌ [_onLoginWithBookingRequested] Error: $e');
       debugPrint('❌ [_onLoginWithBookingRequested] Error type: ${e.runtimeType}');
-      emit(AuthError(message: _getErrorMessage(e)));
+      // Se emite el error técnico (code_expired, code_not_found…): la pantalla
+      // de acceso lo traduce con l10n. Si se tradujera aquí, esa pantalla no
+      // reconocería el motivo y mostraría siempre el mensaje genérico.
+      emit(AuthError(message: e.toString()));
+    } finally {
+      _loginInProgress = false;
     }
   }
 
@@ -221,6 +258,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
+    _loginInProgress = true;
 
     try {
       final user = await _authRepository.loginWithBookingCodeAndEmail(
@@ -231,6 +269,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(message: _getErrorMessage(e)));
+    } finally {
+      _loginInProgress = false;
     }
   }
 
@@ -284,6 +324,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // Errores específicos del login con código + email
     if (errorString.contains('code_not_found')) {
       return 'Código no encontrado. Revisa que esté bien escrito.';
+    }
+
+    if (errorString.contains('booking_cancelled')) {
+      return 'Esta reserva está cancelada. Si crees que es un error, contacta con recepción.';
+    }
+
+    if (errorString.contains('stay_finished')) {
+      return 'Tu estancia ya ha finalizado. ¡Gracias por alojarte con nosotros!';
     }
 
     if (errorString.contains('code_expired')) {

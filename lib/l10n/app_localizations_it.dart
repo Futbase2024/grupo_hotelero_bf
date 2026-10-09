@@ -514,6 +514,14 @@ class SIt extends S {
       'Questo codice prenotazione è scaduto. Contatta la reception per ottenerne uno nuovo.';
 
   @override
+  String get auth_booking_error_stay_finished =>
+      'Il tuo soggiorno è già terminato. Grazie per aver soggiornato da noi!';
+
+  @override
+  String get auth_booking_error_booking_cancelled =>
+      'Questa prenotazione è stata annullata. Se pensi che si tratti di un errore, contatta la reception.';
+
+  @override
   String get auth_booking_error_email_mismatch =>
       'L\'email non corrisponde alla prenotazione. Assicurati di usare la stessa email con cui hai prenotato.';
 
@@ -1145,7 +1153,12 @@ class SIt extends S {
 
   @override
   String get admin_booking_auto_validate_subtitle =>
-      'Il check-in dell\'ospite verrà convalidato automaticamente, senza revisione manuale';
+      'Il check-in dell\'ospite verrà convalidato automaticamente a qualsiasi ora, senza revisione manuale';
+
+  @override
+  String admin_booking_auto_validate_night_note(String time) {
+    return 'Dalle $time del giorno di arrivo il check-in viene sempre convalidato automaticamente, anche con questo interruttore spento.';
+  }
 
   @override
   String get admin_booking_auto_validate_enabled =>
@@ -1902,6 +1915,27 @@ class SIt extends S {
   @override
   String get guest_romantic_note =>
       'La decorazione viene preparata durante la tua assenza così sarà una sorpresa completa.';
+
+  @override
+  String get guest_romantic_deadline_info =>
+      'Va richiesto almeno 24 h prima del tuo arrivo. Una sola richiesta per prenotazione.';
+
+  @override
+  String get guest_romantic_already_requested => 'Già richiesto';
+
+  @override
+  String get guest_romantic_already_requested_desc =>
+      'Hai già richiesto il Pacchetto Romantico per questa prenotazione. Se devi modificare qualcosa, scrivici in chat.';
+
+  @override
+  String get guest_romantic_deadline_passed => 'Fuori tempo massimo';
+
+  @override
+  String get guest_romantic_deadline_passed_desc =>
+      'Il Pacchetto Romantico deve essere richiesto almeno 24 ore prima del tuo arrivo.';
+
+  @override
+  String get guest_romantic_blocked_title => 'Richiesta non disponibile';
 
   @override
   String get guest_jacuzzi_title => 'Jacuzzi';

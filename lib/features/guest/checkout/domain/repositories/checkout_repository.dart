@@ -7,7 +7,7 @@ abstract class CheckoutRepository {
   Future<bool> isCheckoutCompleted(String bookingId);
 
   /// Realiza el check-out de la reserva
-  /// Actualiza el estado del check-in a 'checked_out'
+  /// Registra la valoración en el check-in y cierra la reserva en el servidor
   Future<void> completeCheckout({
     required String bookingId,
     String? feedback,

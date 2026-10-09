@@ -21,6 +21,7 @@ import 'core/theme/cubit/theme_cubit.dart';
 import 'core/locale/cubit/locale_cubit.dart';
 import 'features/auth/domain/bloc/auth_bloc.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/presentation/widgets/guest_session_watcher.dart';
 import 'features/guest/alojamientos/domain/bloc/alojamientos_bloc.dart';
 import 'features/guest/alojamientos/domain/repositories/properties_repository.dart';
 import 'firebase_options.dart';
@@ -33,16 +34,12 @@ void main() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Configurar Edge-to-Edge para Android 15 (SDK 35)
+      // Edge-to-edge: el contenido se dibuja bajo las barras de sistema.
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-      // Configurar estilo de barras de sistema para Android 15
-      SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(
-          statusBarIconBrightness: Brightness.light,
-          systemNavigationBarIconBrightness: Brightness.light,
-        ),
-      );
+      // Estilo inicial de las barras durante el splash, que siempre es oscuro.
+      // A partir de ahí lo gobierna el AnnotatedRegion de BFStayApp, que sigue al tema activo.
+      SystemChrome.setSystemUIOverlayStyle(_overlayStyleFor(Brightness.dark));
 
       // Configurar URL strategy para web (hash URLs)
       configureUrlStrategy();
@@ -66,6 +63,24 @@ void main() async {
     (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     },
+  );
+}
+
+/// Estilo de las barras de sistema derivado del brillo del fondo sobre el que se dibujan.
+///
+/// En edge-to-edge las barras son transparentes, así que lo único que hay que decidir es el
+/// contraste de sus iconos: fondo oscuro → iconos claros, y al revés. No se fijan
+/// `statusBarColor` ni `systemNavigationBarColor` a propósito: son no-op desde Android 15 y
+/// Play los reporta como APIs obsoletas para edge-to-edge.
+SystemUiOverlayStyle _overlayStyleFor(Brightness backgroundBrightness) {
+  final isDark = backgroundBrightness == Brightness.dark;
+  return SystemUiOverlayStyle(
+    // statusBarBrightness describe el fondo (solo iOS); las otras dos, los iconos (Android).
+    statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+    statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    systemNavigationBarIconBrightness: isDark
+        ? Brightness.light
+        : Brightness.dark,
   );
 }
 
@@ -170,7 +185,10 @@ class _BFStayAppState extends State<BFStayApp> {
         theme: AppTheme.darkTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,
-        home: SplashScreen(onInitComplete: _initializeApp),
+        home: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: _overlayStyleFor(Brightness.dark),
+          child: SplashScreen(onInitComplete: _initializeApp),
+        ),
       );
     }
 
@@ -208,7 +226,15 @@ class _BFStayAppState extends State<BFStayApp> {
             supportedLocales: S.supportedLocales,
             routerConfig: router,
             builder: (context, child) {
-              return UpdateChecker(checkOnStart: true, child: child!);
+              // El brillo se lee del Theme ya resuelto por MaterialApp, así que respeta
+              // ThemeMode.system además de la elección explícita del usuario.
+              return AnnotatedRegion<SystemUiOverlayStyle>(
+                value: _overlayStyleFor(Theme.of(context).brightness),
+                child: UpdateChecker(
+                  checkOnStart: true,
+                  child: GuestSessionWatcher(child: child!),
+                ),
+              );
             },
           );
         },

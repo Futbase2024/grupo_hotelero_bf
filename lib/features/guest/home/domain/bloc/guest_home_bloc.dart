@@ -24,6 +24,15 @@ class GuestHomeBloc extends Bloc<GuestHomeEvent, GuestHomeState> {
 
   final AdminPanelRepository _repository;
 
+  /// Notificaciones que llegaron antes que la reserva.
+  ///
+  /// `GuestHomeLoadBooking` y `GuestHomeLoadNotifications` se disparan a la vez
+  /// desde la pantalla y corren en paralelo. La consulta de notificaciones suele
+  /// ganar la carrera porque la de la reserva además resuelve `booking_units`.
+  /// Se guardan aquí hasta que haya una reserva real con la que emitir `Loaded`.
+  List<GuestNotificationEntity> _pendingNotifications = const [];
+  int _pendingUnreadCount = 0;
+
   SupabaseClient get _client => Supabase.instance.client;
 
   Future<void> _onLoadBooking(
@@ -50,7 +59,11 @@ class GuestHomeBloc extends Bloc<GuestHomeEvent, GuestHomeState> {
       }
 
       debugPrint('🏠 [GuestHomeBloc] Booking cargado: ${booking.bookingCode}, unitName: ${booking.unitName}');
-      emit(GuestHomeLoaded(booking: booking));
+      emit(GuestHomeLoaded(
+        booking: booking,
+        notifications: _pendingNotifications,
+        unreadNotificationsCount: _pendingUnreadCount,
+      ));
     } catch (e, stackTrace) {
       debugPrint('❌ [GuestHomeBloc] Error cargando booking: $e');
       debugPrint('❌ [GuestHomeBloc] StackTrace: $stackTrace');
@@ -92,8 +105,8 @@ class GuestHomeBloc extends Bloc<GuestHomeEvent, GuestHomeState> {
 
       emit(GuestHomeLoaded(
         booking: booking,
-        notifications: currentNotifications ?? [],
-        unreadNotificationsCount: currentUnreadCount ?? 0,
+        notifications: currentNotifications ?? _pendingNotifications,
+        unreadNotificationsCount: currentUnreadCount ?? _pendingUnreadCount,
       ));
     } catch (e) {
       // Si hay error, volver al estado anterior sin isRefreshing
@@ -147,19 +160,23 @@ class GuestHomeBloc extends Bloc<GuestHomeEvent, GuestHomeState> {
 
       debugPrint('🔔 [GuestHomeBloc] ${notifications.length} notificaciones cargadas, $unreadCount no leídas');
 
-      // Actualizar el estado manteniendo los datos de booking si existen
       final currentState = state;
-      AdminBookingEntity? currentBooking;
-      if (currentState is GuestHomeLoaded) {
-        currentBooking = (currentState).booking;
+
+      // Si la reserva todavía no ha cargado, NO emitir un booking placeholder:
+      // `AdminBookingEntity.empty()` tiene fechas de hoy/mañana y 1 huésped, y la
+      // pantalla llegaba a pintar ese "1 noche · 1 huésped" antes de recibir los
+      // datos reales. Se guardan y las aplica `_onLoadBooking` al terminar.
+      if (currentState is! GuestHomeLoaded) {
+        debugPrint(
+          '🔔 [GuestHomeBloc] Reserva aún sin cargar: '
+          '${notifications.length} notificaciones quedan pendientes',
+        );
+        _pendingNotifications = notifications;
+        _pendingUnreadCount = unreadCount;
+        return;
       }
 
-      debugPrint('🔔 [GuestHomeBloc] currentBooking is null: ${currentBooking == null}');
-
-      // Siempre emitir el estado con las notificaciones
-      // Si no hay booking, usar un booking vacío para poder mostrar las notificaciones
-      emit(GuestHomeLoaded(
-        booking: currentBooking ?? AdminBookingEntity.empty(),
+      emit(currentState.copyWith(
         notifications: notifications,
         unreadNotificationsCount: unreadCount,
       ));

@@ -39,11 +39,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // Incluir x86_64 para emuladores (solo para desarrollo/testing)
-        // NOTA: Eliminar esto para producción para reducir tamaño del APK
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
-        }
+        // El filtro de ABIs se aplica solo en release (ver buildTypes) para que los builds
+        // de debug sigan funcionando en emuladores x86_64.
     }
 
     signingConfigs {
@@ -55,14 +52,35 @@ android {
         }
     }
 
+    packaging {
+        jniLibs {
+            // androidx.datastore incluye esta .so precompilada con NDK r20 y Play la marca
+            // como riesgo en dispositivos de 16 KB. Solo la usa DataStore multiproceso,
+            // que la app no utiliza (R8 elimina todo el código que la carga).
+            excludes += "**/libdatastore_shared_counter.so"
+        }
+    }
+
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            // R8: ofuscación + eliminación de código muerto y de recursos no referenciados.
+            // R8 full mode es el predeterminado desde AGP 8.x.
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Solo ABIs de dispositivos reales; x86_64 es únicamente para emuladores.
+            // clear() es necesario: el plugin de Flutter ya añade armeabi-v7a, arm64-v8a y
+            // x86_64 a cada buildType, y con += solo se sumaban. Sin él, las .so x86_64 de
+            // CameraX entraban en el AAB sin libflutter.so y Play ofrecía la app a
+            // dispositivos x86_64 en los que no arrancaría.
+            ndk {
+                abiFilters.clear()
+                abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+            }
         }
     }
 }

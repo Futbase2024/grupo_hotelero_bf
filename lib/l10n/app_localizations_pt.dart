@@ -516,6 +516,14 @@ class SPt extends S {
       'Este código de reserva expirou. Contacte a receção para obter um novo.';
 
   @override
+  String get auth_booking_error_stay_finished =>
+      'A sua estadia já terminou. Obrigado por ter ficado connosco!';
+
+  @override
+  String get auth_booking_error_booking_cancelled =>
+      'Esta reserva foi cancelada. Se acha que se trata de um erro, contacte a receção.';
+
+  @override
   String get auth_booking_error_email_mismatch =>
       'O email não coincide com o da reserva. Verifique que é o mesmo email que usou ao reservar.';
 
@@ -1144,7 +1152,12 @@ class SPt extends S {
 
   @override
   String get admin_booking_auto_validate_subtitle =>
-      'O check-in do hóspede será validado automaticamente, sem revisão manual';
+      'O check-in do hóspede será validado automaticamente a qualquer hora, sem revisão manual';
+
+  @override
+  String admin_booking_auto_validate_night_note(String time) {
+    return 'A partir das $time do dia de entrada, o check-in é sempre validado automaticamente, mesmo com este interruptor desligado.';
+  }
 
   @override
   String get admin_booking_auto_validate_enabled =>
@@ -1903,6 +1916,27 @@ class SPt extends S {
   @override
   String get guest_romantic_note =>
       'A decoração é preparada durante a sua ausência para que seja uma surpresa completa.';
+
+  @override
+  String get guest_romantic_deadline_info =>
+      'Deve ser solicitado pelo menos 24 h antes da sua entrada. Apenas um pedido por reserva.';
+
+  @override
+  String get guest_romantic_already_requested => 'Já solicitado';
+
+  @override
+  String get guest_romantic_already_requested_desc =>
+      'Já solicitou o Pack Romântico para esta reserva. Se precisar de alterar algo, escreva-nos no chat.';
+
+  @override
+  String get guest_romantic_deadline_passed => 'Fora de prazo';
+
+  @override
+  String get guest_romantic_deadline_passed_desc =>
+      'O Pack Romântico deve ser solicitado pelo menos 24 horas antes da sua entrada.';
+
+  @override
+  String get guest_romantic_blocked_title => 'Pedido indisponível';
 
   @override
   String get guest_jacuzzi_title => 'Jacuzzi';

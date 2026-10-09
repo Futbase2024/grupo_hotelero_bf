@@ -7,7 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
+import 'package:bf_stay/core/utils/keys_availability.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
+import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/l10n/app_localizations.dart';
@@ -23,6 +25,34 @@ class StayGuideScreen extends StatefulWidget {
 class _StayGuideScreenState extends State<StayGuideScreen> {
   Map<String, dynamic>? _bookingData;
   bool _isLoading = true;
+
+  /// Hora del servidor, para que cambiar el reloj del móvil no adelante la
+  /// disponibilidad de la contraseña del WiFi
+  DateTime? _serverTime;
+
+  /// Momento en que el huésped puede ver los códigos (y la contraseña WiFi)
+  DateTime get _keysAvailableTime => KeysAvailability.availableAt(
+        checkInDate: _bookingData?['checkIn'] as DateTime? ?? DateTime.now(),
+        earlyCheckinAvailableAt: _bookingData?['earlyCheckinAvailableAt'] as DateTime?,
+      );
+
+  /// Si el huésped ya puede ver los códigos (usa la hora del servidor)
+  bool get _areKeysAvailable {
+    final checkInDate = _bookingData?['checkIn'] as DateTime?;
+    if (checkInDate == null) return false;
+
+    return KeysAvailability.isAvailable(
+      checkInDate: checkInDate,
+      earlyCheckinAvailableAt: _bookingData?['earlyCheckinAvailableAt'] as DateTime?,
+      now: _serverTime ?? DateTime.now(),
+    );
+  }
+
+  String _formatDate(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+  String _formatTime(DateTime date) =>
+      '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
 
   @override
   void initState() {
@@ -44,11 +74,18 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
 
     try {
       final repository = getIt<AdminPanelRepository>();
-      final booking = await repository.getBooking(bookingId);
+      final results = await Future.wait([
+        repository.getBooking(bookingId),
+        repository.getServerTime(),
+      ]);
+      final booking = results[0] as AdminBookingEntity?;
+      final serverTime = results[1] as DateTime;
 
       if (mounted) {
         setState(() {
+          _serverTime = serverTime;
           _bookingData = {
+            'earlyCheckinAvailableAt': booking?.earlyCheckinAvailableAt,
             'unitName': booking?.unitName ?? '',
             'propertyName': booking?.propertyName ?? '',
             'checkIn': booking?.checkInDate,
@@ -430,6 +467,7 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
   void _showWifiInfo(BuildContext context) {
     final wifiNetwork = _bookingData?['wifiNetwork'] as String? ?? S.of(context).guest_guide_not_available;
     final wifiPassword = _bookingData?['wifiPassword'] as String? ?? S.of(context).guest_guide_not_available;
+    final keysAvailable = _areKeysAvailable;
 
     showModalBottomSheet(
       context: context,
@@ -502,13 +540,24 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
               ),
               const SizedBox(height: AppTheme.spacing12),
 
-              // Password card
-              _wifiCredentialCard(
-                icon: Icons.lock_outline,
-                label: S.of(context).guest_access_wifi_password,
-                value: wifiPassword,
-                onCopy: () => _copyToClipboard(sheetContext, wifiPassword, S.of(context).guest_access_wifi_password),
-              ),
+              // Password card: igual que los códigos de acceso, solo desde las
+              // 14:00 del día de llegada (o el early check-in del admin)
+              if (keysAvailable)
+                _wifiCredentialCard(
+                  icon: Icons.lock_outline,
+                  label: S.of(context).guest_access_wifi_password,
+                  value: wifiPassword,
+                  onCopy: () => _copyToClipboard(sheetContext, wifiPassword, S.of(context).guest_access_wifi_password),
+                )
+              else
+                _wifiCredentialCard(
+                  icon: Icons.lock_clock_outlined,
+                  label: S.of(context).guest_access_wifi_password,
+                  value: S.of(context).guest_access_code_available_at(
+                    _formatDate(_keysAvailableTime),
+                    _formatTime(_keysAvailableTime),
+                  ),
+                ),
               const SizedBox(height: AppTheme.spacing24),
 
               // Close button
@@ -552,11 +601,14 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
   }
 
   /// Widget para tarjetas de credenciales WiFi con botón de copiar
+  ///
+  /// Sin [onCopy] no se muestra el botón (p. ej. si el valor aún no está
+  /// disponible y lo que se enseña es un aviso).
   Widget _wifiCredentialCard({
     required IconData icon,
     required String label,
     required String value,
-    required VoidCallback onCopy,
+    VoidCallback? onCopy,
   }) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -600,21 +652,22 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
             ),
           ),
           // Copy button
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onCopy,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.gold,
-                  borderRadius: BorderRadius.circular(8),
+          if (onCopy != null)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onCopy,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.gold,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.copy, color: AppColors.black, size: 20),
                 ),
-                child: const Icon(Icons.copy, color: AppColors.black, size: 20),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -633,17 +633,44 @@ class ChatDatasource {
         .cast<List<ConversationEntity>>();
   }
 
+  /// Tamaño de página de PostgREST: Supabase corta cada respuesta en 1000
+  /// filas (`db-max-rows`).
+  static const int _pageSize = 1000;
+
+  /// Descarga todas las páginas de una consulta.
+  ///
+  /// Sin esto, cualquier consulta que crezca con el histórico (participantes,
+  /// mensajes, reservas...) se trunca en silencio al llegar a las 1000 filas y
+  /// la app muestra datos incompletos sin dar ningún error.
+  ///
+  /// `buildPage` debe aplicar un `order` estable para que la paginación no
+  /// duplique ni se salte filas entre páginas.
+  Future<List<dynamic>> _fetchAllPages(
+    Future<List<dynamic>> Function(int from, int to) buildPage,
+  ) async {
+    final all = <dynamic>[];
+    while (true) {
+      final page = await buildPage(all.length, all.length + _pageSize - 1);
+      all.addAll(page);
+      if (page.length < _pageSize) break;
+    }
+    return all;
+  }
+
   /// Carga info de bookings en batch de forma tolerante a fallos: si la query
   /// falla, devuelve lista vacía y el flujo continúa sin esa información
   /// (mismo comportamiento que el try/catch original, pero paralelizable).
   Future<List<dynamic>> _fetchBookingsInfoBatch(List<String> bookingIds) async {
     if (bookingIds.isEmpty) return const [];
     try {
-      final response = await _client
-          .from(SupabaseTables.bookings)
-          .select('id, booking_code, guest_first_name, last_name')
-          .inFilter('id', bookingIds);
-      return response as List<dynamic>;
+      return await _fetchAllPages(
+        (from, to) => _client
+            .from(SupabaseTables.bookings)
+            .select('id, booking_code, guest_first_name, last_name')
+            .inFilter('id', bookingIds)
+            .order('id', ascending: true)
+            .range(from, to),
+      );
     } catch (e) {
       _logError('Error obteniendo info de bookings', e);
       return const [];
@@ -695,34 +722,47 @@ class ChatDatasource {
       // (antes eran round-trips secuenciales que sumaban latencia).
       final batchResults = await Future.wait<List<dynamic>>([
         // 2. Participantes de todas las conversaciones
-        _client
-            .from(SupabaseTables.conversationParticipants)
-            .select('''
-              conversation_id,
-              user_id,
-              role,
-              created_at
-            ''')
-            .inFilter('conversation_id', filteredConversationIds)
-            .then((r) => r as List<dynamic>),
-        // 6. Mensajes de todas las conversaciones (nos quedamos con el último)
-        _client
-            .from(SupabaseTables.messages)
-            .select('''
-              id,
-              conversation_id,
-              sender_user_id,
-              msg_type,
-              content,
-              created_at,
-              read_at,
-              file_name,
-              file_size,
-              mime_type
-            ''')
-            .inFilter('conversation_id', filteredConversationIds)
-            .order('created_at', ascending: false)
-            .then((r) => r as List<dynamic>),
+        _fetchAllPages(
+          (from, to) => _client
+              .from(SupabaseTables.conversationParticipants)
+              .select('''
+                conversation_id,
+                user_id,
+                role,
+                created_at
+              ''')
+              .inFilter('conversation_id', filteredConversationIds)
+              .order('conversation_id', ascending: true)
+              .order('user_id', ascending: true)
+              .range(from, to),
+        ),
+        // 6. Último mensaje de cada conversación.
+        //
+        // Se lee de la vista `conversation_last_messages`, que ya devuelve una
+        // sola fila por conversación. Antes se pedían TODOS los mensajes de
+        // todas las conversaciones para quedarse con el último de cada una en
+        // el cliente: al pasar de 1000 mensajes, PostgREST truncaba la
+        // respuesta y las conversaciones más inactivas se quedaban sin
+        // previsualización.
+        _fetchAllPages(
+          (from, to) => _client
+              .from(SupabaseTables.conversationLastMessages)
+              .select('''
+                id,
+                conversation_id,
+                sender_user_id,
+                msg_type,
+                content,
+                created_at,
+                read_at,
+                file_name,
+                file_size,
+                mime_type
+              ''')
+              .inFilter('conversation_id', filteredConversationIds)
+              .order('conversation_id', ascending: true)
+              .range(from, to),
+        ),
         // 7. Info de bookings (tolerante a fallos)
         _fetchBookingsInfoBatch(bookingIds),
       ]);
@@ -745,15 +785,12 @@ class ChatDatasource {
         participantsByConversation.putIfAbsent(convId, () => []).add(p);
       }
 
-      // Filtrar para mantener solo el último mensaje de cada conversación
+      // Indexar el último mensaje por conversación: la vista ya devuelve una
+      // única fila por `conversation_id`, así que no hay que deduplicar.
       final lastMessagesByConversation = <String, Map<String, dynamic>>{};
-      final seenConversationIds = <String>{};
       for (final msg in lastMessagesResponse) {
-        final convId = msg['conversation_id'] as String;
-        if (!seenConversationIds.contains(convId)) {
-          seenConversationIds.add(convId);
-          lastMessagesByConversation[convId] = msg;
-        }
+        lastMessagesByConversation[msg['conversation_id'] as String] =
+            msg as Map<String, dynamic>;
       }
 
       // Indexar info de bookings por id

@@ -173,7 +173,14 @@ class AdminDashboardNotificationReceived extends AdminDashboardEvent {
 
 /// Cambio detectado en checkins (realtime)
 class AdminDashboardCheckinsChanged extends AdminDashboardEvent {
-  const AdminDashboardCheckinsChanged();
+  const AdminDashboardCheckinsChanged({this.bookingIds = const {}});
+
+  /// Reservas cuyos check-ins han cambiado. Si viene vacío se recarga la lista
+  /// completa; si trae ids, solo se refrescan esas filas.
+  final Set<String> bookingIds;
+
+  @override
+  List<Object?> get props => [bookingIds];
 }
 
 /// Cambiar búsqueda de check-ins

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_decode_size.dart';
 import '../../../../core/theme/responsive.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/auth_bloc.dart';
@@ -224,6 +225,8 @@ class _LoginScreenState extends State<LoginScreen> {
           width: logoSize * 0.6,
           height: logoSize * 0.6,
           fit: BoxFit.contain,
+          // PNG de 1024x1024 pintado a menos de 100 px.
+          cacheWidth: ImageDecodeSize.forLogical(context, logoSize * 0.6),
           errorBuilder: (context, error, stackTrace) => Text(
             'BF',
             style: TextStyle(

@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../core/utils/image_decode_size.dart';
 import '../../../../../core/theme/responsive.dart';
 import '../../../../../core/theme/widgets/theme_toggle.dart';
 import '../../../../../core/locale/cubit/locale_cubit.dart';
@@ -448,6 +449,8 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                 child: Image.asset(
                   'assets/icons/logo.png',
                   fit: BoxFit.contain,
+                  // El logo es un PNG de 1024x1024 y aquí mide 24 px de alto.
+                  cacheHeight: ImageDecodeSize.forLogical(context, 24),
                 ),
               ),
               const SizedBox(width: AppTheme.spacing8),
@@ -545,7 +548,11 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
           border: Border.all(color: AppColors.gold, width: 0),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Image.asset('assets/icons/logo.png', fit: BoxFit.cover),
+        child: Image.asset(
+          'assets/icons/logo.png',
+          fit: BoxFit.cover,
+          cacheWidth: ImageDecodeSize.forLogical(context, logoSize),
+        ),
       ),
     );
   }
@@ -785,6 +792,10 @@ class _PublicHomeScreenState extends State<PublicHomeScreen> {
                         ? Image.asset(
                             service.imageAsset!,
                             fit: BoxFit.cover,
+                            // Punto caliente: varias tarjetas visibles a la vez con assets de
+                            // hasta 2560 px de ancho (parking.png, quever.png...). Basta con
+                            // decodificar al ancho de pantalla.
+                            cacheWidth: ImageDecodeSize.screenWidth(context),
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
                                   decoration: BoxDecoration(

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/image_decode_size.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/bloc/auth_bloc.dart';
@@ -228,6 +229,8 @@ class _LoginBottomSheetState extends State<LoginBottomSheet>
             child: Image.asset(
               'assets/icons/logo.png',
               fit: BoxFit.contain,
+              // PNG de 1024x1024 pintado en una caja de 80x26.
+              cacheWidth: ImageDecodeSize.forLogical(context, 80),
             ),
           ),
         ),

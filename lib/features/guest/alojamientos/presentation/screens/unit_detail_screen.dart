@@ -8,6 +8,7 @@ import 'package:bf_stay/l10n/app_localizations.dart';
 import '../../../../../../core/router/app_router.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_theme.dart';
+import '../../../../../../core/utils/image_decode_size.dart';
 import '../../domain/bloc/alojamientos_bloc.dart';
 import '../../domain/entities/unit_entity.dart';
 import '../../domain/entities/unit_photo_entity.dart';
@@ -333,6 +334,9 @@ class _PhotoGallery extends StatelessWidget {
             return CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.cover,
+              // El carrusel ocupa el ancho de la pantalla: nunca hace falta decodificar
+              // la foto original completa.
+              memCacheWidth: ImageDecodeSize.screenWidth(context),
               placeholder: (context, url) => Container(
                 color: AppColors.gray200,
                 child: const Center(

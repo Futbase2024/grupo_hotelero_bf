@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Recursos que `shrinkResources` no puede detectar como usados porque se referencian
+  por nombre en tiempo de ejecución, no desde XML ni desde R.java:
+
+  - @mipmap/ic_launcher: lo pasa flutter_local_notifications como string
+    ("@mipmap/ic_launcher") en AndroidInitializationSettings.
+  - @drawable/launch_background, splash, background: los usa el LaunchTheme del splash.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@mipmap/ic_launcher,@drawable/launch_background,@drawable/splash,@drawable/background" />
