@@ -4,3 +4,4 @@ library;
 export 'booking_status.dart';
 export 'checkin_status.dart';
 export 'checkout_status.dart';
+export 'deposit_status.dart';

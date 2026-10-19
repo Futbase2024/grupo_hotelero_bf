@@ -129,7 +129,8 @@ class AdminPanelRepositoryImpl implements AdminPanelRepository {
             last_name,
             guest_first_name,
             num_guests,
-            primary_guest_user_id''';
+            primary_guest_user_id,
+            deposit_status''';
 
       const fullColumns = '''
 $listColumns,
@@ -501,18 +502,24 @@ $listColumns,
     return ResendCodeResult.fromJson(response);
   }
 
+  /// Usa la RPC `validate_checkin` (igual que el detalle del check-in) en vez
+  /// de la acción homónima de `admin-panel`: esa escribía el estado a mano, sin
+  /// actualizar la reserva ni el audit_log, y sin respetar la fianza pendiente.
   @override
   Future<void> validateCheckin({
     required String checkinId,
     required String bookingId,
   }) async {
-    await _callAdminPanel(
-      action: 'validate_checkin',
-      params: {
-        'checkin_id': checkinId,
-        'booking_id': bookingId,
-      },
-    );
+    try {
+      await _client.rpc(
+        'validate_checkin',
+        params: {'p_checkin_id': checkinId},
+      );
+    } catch (e, s) {
+      debugPrint('❌ [validateCheckin] Error: $e');
+      debugPrint('❌ [validateCheckin] StackTrace: $s');
+      rethrow;
+    }
   }
 
   /// Activa/desactiva la auto-validación del check-in de una reserva
@@ -667,6 +674,135 @@ $listColumns,
     } catch (e, s) {
       debugPrint('❌ [manualCheckinValidate] Error: $e');
       debugPrint('❌ [manualCheckinValidate] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  // ==================== FIANZA OPCIONAL ====================
+
+  /// Llama a una RPC de fianza: todas devuelven `{success, error?, ...}`
+  Future<Map<String, dynamic>> _callDepositRpc(
+    String function,
+    Map<String, dynamic> params,
+  ) async {
+    try {
+      debugPrint('💶 [$function] Params: $params');
+      final response = await _client.rpc(function, params: params);
+
+      final data = response as Map<String, dynamic>?;
+      if (data == null || data['success'] != true) {
+        throw Exception(data?['error'] as String? ?? 'Error desconocido');
+      }
+
+      debugPrint('✅ [$function] OK: $data');
+      return data;
+    } catch (e, s) {
+      debugPrint('❌ [$function] Error: $e');
+      debugPrint('❌ [$function] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<BookingDepositEntity> getBookingDeposit(String bookingId) async {
+    try {
+      final data = await _client
+          .from('bookings')
+          .select('''
+            id,
+            booking_code,
+            property_id,
+            guest_first_name,
+            last_name,
+            guest_email,
+            guest_phone,
+            primary_guest_user_id,
+            deposit_status,
+            deposit_amount_cents,
+            deposit_payment_link,
+            deposit_sent_via,
+            deposit_requested_at,
+            deposit_paid_at,
+            deposit_reference,
+            deposit_returned_at,
+            deposit_returned_cents,
+            deposit_retained_cents,
+            deposit_retained_reason,
+            properties ( name, default_deposit_cents ),
+            checkins ( status )
+          ''')
+          .eq('id', bookingId)
+          .single();
+
+      return BookingDepositEntity.fromJson(data);
+    } catch (e, s) {
+      debugPrint('❌ [getBookingDeposit] Error: $e');
+      debugPrint('❌ [getBookingDeposit] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> requestBookingDeposit({
+    required String bookingId,
+    required int amountCents,
+    required String paymentLink,
+    required List<String> sentVia,
+  }) async {
+    final data = await _callDepositRpc('request_booking_deposit', {
+      'p_booking_id': bookingId,
+      'p_amount_cents': amountCents,
+      'p_payment_link': paymentLink,
+      'p_sent_via': sentVia,
+    });
+    return data['resend'] as bool? ?? false;
+  }
+
+  @override
+  Future<void> waiveBookingDeposit(String bookingId) async {
+    await _callDepositRpc('waive_booking_deposit', {
+      'p_booking_id': bookingId,
+    });
+  }
+
+  @override
+  Future<bool> confirmDepositAndValidate({
+    required String bookingId,
+    String? reference,
+  }) async {
+    final data = await _callDepositRpc('confirm_deposit_and_validate', {
+      'p_booking_id': bookingId,
+      'p_reference': reference,
+    });
+    return data['validated_now'] as bool? ?? false;
+  }
+
+  @override
+  Future<void> registerDepositReturn({
+    required String bookingId,
+    required int returnedCents,
+    String? retainedReason,
+  }) async {
+    await _callDepositRpc('register_deposit_return', {
+      'p_booking_id': bookingId,
+      'p_returned_cents': returnedCents,
+      'p_retained_reason': retainedReason,
+    });
+  }
+
+  @override
+  Future<void> updatePropertyDefaultDeposit({
+    required String propertyId,
+    required int amountCents,
+  }) async {
+    try {
+      await _client
+          .from('properties')
+          .update({'default_deposit_cents': amountCents})
+          .eq('id', propertyId);
+    } catch (e, s) {
+      debugPrint('❌ [updatePropertyDefaultDeposit] Error: $e');
+      debugPrint('❌ [updatePropertyDefaultDeposit] StackTrace: $s');
       rethrow;
     }
   }

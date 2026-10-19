@@ -3478,4 +3478,239 @@ class SEs extends S {
   String admin_chat_search_no_results(String query) {
     return 'Sin resultados para «$query»';
   }
+
+  @override
+  String get admin_deposit_section => 'FIANZA';
+
+  @override
+  String get admin_deposit_status_none => 'Sin fianza';
+
+  @override
+  String get admin_deposit_status_pending => 'Pendiente de pago';
+
+  @override
+  String get admin_deposit_status_paid => 'Pagada';
+
+  @override
+  String get admin_deposit_status_returned => 'Devuelta';
+
+  @override
+  String get admin_deposit_none_hint =>
+      'Esta reserva se valida sin fianza. Si quieres bloquear el acceso hasta que el huésped pague, pide una fianza.';
+
+  @override
+  String get admin_deposit_blocking_hint =>
+      'El huésped no verá los códigos de acceso hasta que marques la fianza como pagada.';
+
+  @override
+  String get admin_deposit_request_button => 'Pedir fianza';
+
+  @override
+  String get admin_deposit_resend_button => 'Reenviar enlace';
+
+  @override
+  String get admin_deposit_waive_button => 'Eximir';
+
+  @override
+  String get admin_deposit_confirm_button => 'Marcar pagada y validar';
+
+  @override
+  String get admin_deposit_mark_paid_button => 'Marcar como pagada';
+
+  @override
+  String get admin_deposit_return_button => 'Registrar devolución';
+
+  @override
+  String get admin_deposit_open_link => 'Abrir enlace';
+
+  @override
+  String admin_deposit_requested_info(String date, String channels) {
+    return 'Enviada el $date por $channels';
+  }
+
+  @override
+  String admin_deposit_requested_info_no_channel(String date) {
+    return 'Pedida el $date';
+  }
+
+  @override
+  String admin_deposit_paid_info(String date) {
+    return 'Pagada el $date';
+  }
+
+  @override
+  String admin_deposit_reference_info(String reference) {
+    return 'Ref. $reference';
+  }
+
+  @override
+  String admin_deposit_returned_info(
+    String date,
+    String returned,
+    String retained,
+  ) {
+    return 'Devuelto el $date: $returned · Retenido: $retained';
+  }
+
+  @override
+  String admin_deposit_retained_reason_info(String reason) {
+    return 'Motivo: $reason';
+  }
+
+  @override
+  String get admin_deposit_channel_chat => 'Chat de la app';
+
+  @override
+  String get admin_deposit_channel_whatsapp => 'WhatsApp';
+
+  @override
+  String get admin_deposit_channel_email => 'Email';
+
+  @override
+  String get admin_deposit_channel_none => 'Solo chat';
+
+  @override
+  String get admin_deposit_request_title => 'Pedir fianza';
+
+  @override
+  String get admin_deposit_amount_label => 'Importe (€)';
+
+  @override
+  String get admin_deposit_link_label => 'Enlace de pago';
+
+  @override
+  String get admin_deposit_link_hint => 'Pega el enlace de tu pasarela';
+
+  @override
+  String get admin_deposit_send_via => 'Enviar por';
+
+  @override
+  String get admin_deposit_also_send_via => 'Además, enviar por';
+
+  @override
+  String admin_deposit_save_default(String property) {
+    return 'Guardar como importe sugerido para $property';
+  }
+
+  @override
+  String get admin_deposit_send_button => 'Enviar enlace';
+
+  @override
+  String get admin_deposit_amount_invalid => 'Introduce un importe válido';
+
+  @override
+  String get admin_deposit_link_invalid =>
+      'El enlace debe empezar por https://';
+
+  @override
+  String get admin_deposit_no_phone => 'Sin teléfono';
+
+  @override
+  String get admin_deposit_no_email => 'Sin email';
+
+  @override
+  String get admin_deposit_no_app_user =>
+      'El huésped aún no ha entrado en la app';
+
+  @override
+  String get admin_deposit_no_channel => 'Elige al menos un canal de envío';
+
+  @override
+  String admin_deposit_guest_message(String name, String amount, String link) {
+    return 'Hola $name, para completar tu check-in necesitamos que abones la fianza de $amount en este enlace de pago seguro:\n$link\n\nEn cuanto la recibamos validaremos tu check-in y tendrás acceso a toda la información de tu estancia. ¡Gracias!';
+  }
+
+  @override
+  String get admin_deposit_confirm_title => 'Confirmar pago de la fianza';
+
+  @override
+  String admin_deposit_confirm_message_validate(String amount) {
+    return '¿Has comprobado en tu pasarela que se han recibido $amount? Al confirmar, el check-in quedará validado y el huésped tendrá acceso.';
+  }
+
+  @override
+  String admin_deposit_confirm_message_paid_only(String amount) {
+    return '¿Has comprobado en tu pasarela que se han recibido $amount? El huésped aún no ha enviado el check-in: cuando lo envíe se validará con normalidad.';
+  }
+
+  @override
+  String get admin_deposit_reference_label =>
+      'Referencia de la operación (opcional)';
+
+  @override
+  String get admin_deposit_confirm_action => 'Confirmar pago';
+
+  @override
+  String get admin_deposit_waive_title => 'Eximir fianza';
+
+  @override
+  String get admin_deposit_waive_message =>
+      'La reserva volverá a la validación normal y el huésped no tendrá que pagar la fianza. ¿Continuar?';
+
+  @override
+  String get admin_deposit_return_title => 'Registrar devolución';
+
+  @override
+  String admin_deposit_return_total(String amount) {
+    return 'Fianza cobrada: $amount';
+  }
+
+  @override
+  String get admin_deposit_returned_label => 'Importe devuelto (€)';
+
+  @override
+  String admin_deposit_retained_preview(String amount) {
+    return 'Se retienen $amount';
+  }
+
+  @override
+  String get admin_deposit_reason_label => 'Motivo de la retención';
+
+  @override
+  String get admin_deposit_reason_required => 'Indica el motivo';
+
+  @override
+  String get admin_deposit_returned_exceeds =>
+      'No puede superar la fianza cobrada';
+
+  @override
+  String get admin_deposit_save => 'Guardar';
+
+  @override
+  String get admin_deposit_done_title => 'Hecho';
+
+  @override
+  String get admin_deposit_requested_success =>
+      'Fianza pedida. El huésped no tendrá acceso hasta que la marques como pagada.';
+
+  @override
+  String get admin_deposit_confirmed_validated =>
+      'Fianza pagada y check-in validado. El huésped ya tiene acceso.';
+
+  @override
+  String get admin_deposit_confirmed_only =>
+      'Fianza marcada como pagada. Cuando el huésped envíe el check-in se validará con normalidad.';
+
+  @override
+  String get admin_deposit_waived_success =>
+      'Fianza eximida. La reserva vuelve a la validación normal.';
+
+  @override
+  String get admin_deposit_returned_success => 'Devolución registrada.';
+
+  @override
+  String get admin_deposit_error_title => 'No se pudo completar';
+
+  @override
+  String admin_deposit_send_failed(String channel) {
+    return 'La fianza se ha registrado, pero no se pudo enviar por $channel. Hemos copiado el mensaje con el enlace: pégalo donde quieras para enviárselo al huésped.';
+  }
+
+  @override
+  String get admin_deposit_validate_blocked =>
+      'Esta reserva tiene una fianza pendiente. Usa «Marcar pagada y validar» cuando compruebes el pago, o exímela.';
+
+  @override
+  String get guest_home_deposit_pending =>
+      'Pendiente de recibir el pago de la fianza. Revisa el enlace que te hemos enviado.';
 }

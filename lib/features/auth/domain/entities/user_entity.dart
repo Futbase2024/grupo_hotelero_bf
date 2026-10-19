@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/enums/deposit_status.dart';
+
 /// Roles de usuario en el sistema
 enum UserRole {
   guest,
@@ -40,6 +42,7 @@ class UserEntity extends Equatable {
     this.checkinStatus,
     this.checkinRejectionReason,
     this.checkinCancellationReason,
+    this.depositStatus = DepositStatus.none,
   });
 
   final String id;
@@ -57,6 +60,8 @@ class UserEntity extends Equatable {
   final String? checkinRejectionReason;
   /// Motivo de la cancelación del check-in (si aplica, NO permite corrección)
   final String? checkinCancellationReason;
+  /// Fianza opcional de la reserva: con `pending` el check-in sigue sin validar
+  final DepositStatus depositStatus;
 
   /// Nombre para mostrar (nombre completo, email o vacío)
   String get displayName {
@@ -108,6 +113,7 @@ class UserEntity extends Equatable {
     String? checkinStatus,
     String? checkinRejectionReason,
     String? checkinCancellationReason,
+    DepositStatus? depositStatus,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -122,6 +128,7 @@ class UserEntity extends Equatable {
       checkinStatus: checkinStatus ?? this.checkinStatus,
       checkinRejectionReason: checkinRejectionReason ?? this.checkinRejectionReason,
       checkinCancellationReason: checkinCancellationReason ?? this.checkinCancellationReason,
+      depositStatus: depositStatus ?? this.depositStatus,
     );
   }
 
@@ -139,5 +146,6 @@ class UserEntity extends Equatable {
         checkinStatus,
         checkinRejectionReason,
         checkinCancellationReason,
+        depositStatus,
       ];
 }

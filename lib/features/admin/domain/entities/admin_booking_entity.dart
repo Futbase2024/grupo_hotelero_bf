@@ -37,6 +37,7 @@ class AdminBookingEntity extends Equatable {
     this.signatureSvg,
     this.docsPending,
     this.autoValidateCheckin = false,
+    this.depositStatus = DepositStatus.none,
     this.activatedAt,
     this.closedAt,
     this.checkoutRequestedAt,
@@ -103,6 +104,9 @@ class AdminBookingEntity extends Equatable {
   /// Si el check-in de esta reserva se valida automáticamente al enviarlo
   final bool autoValidateCheckin;
 
+  /// Fianza opcional: mientras esté pendiente el check-in no se puede validar
+  final DepositStatus depositStatus;
+
   // Check-out
   final DateTime? activatedAt;
   final DateTime? closedAt;
@@ -160,6 +164,12 @@ class AdminBookingEntity extends Equatable {
 
   /// Si el check-in está pendiente de revisión
   bool get isCheckinPending => checkinStatus == 'submitted';
+
+  /// Si la reserva espera el pago de la fianza para poder validarse
+  bool get isAwaitingDeposit =>
+      depositStatus.isPending &&
+      checkinStatus != 'validated' &&
+      checkinStatus != 'cancelled';
 
   /// Si hay documentos pendientes
   bool get hasDocsPending => (docsPending ?? 0) > 0;
@@ -398,6 +408,7 @@ class AdminBookingEntity extends Equatable {
         signatureSvg: signatureSvg,
         docsPending: json['docs_pending'] as int?,
         autoValidateCheckin: json['auto_validate_checkin'] as bool? ?? false,
+        depositStatus: DepositStatus.fromString(json['deposit_status'] as String?),
         activatedAt: activatedAt,
         closedAt: closedAt,
         checkoutRequestedAt: checkoutRequestedAt,
@@ -498,6 +509,7 @@ class AdminBookingEntity extends Equatable {
       'signature_svg': signatureSvg,
       'docs_pending': docsPending,
       'auto_validate_checkin': autoValidateCheckin,
+      'deposit_status': depositStatus.toDbString(),
       'activated_at': activatedAt?.toIso8601String(),
       'closed_at': closedAt?.toIso8601String(),
       'checkout_requested_at': checkoutRequestedAt?.toIso8601String(),
@@ -546,6 +558,7 @@ class AdminBookingEntity extends Equatable {
     String? signatureSvg,
     int? docsPending,
     bool? autoValidateCheckin,
+    DepositStatus? depositStatus,
     DateTime? activatedAt,
     DateTime? closedAt,
     DateTime? checkoutRequestedAt,
@@ -591,6 +604,7 @@ class AdminBookingEntity extends Equatable {
       signatureSvg: signatureSvg ?? this.signatureSvg,
       docsPending: docsPending ?? this.docsPending,
       autoValidateCheckin: autoValidateCheckin ?? this.autoValidateCheckin,
+      depositStatus: depositStatus ?? this.depositStatus,
       activatedAt: activatedAt ?? this.activatedAt,
       closedAt: closedAt ?? this.closedAt,
       checkoutRequestedAt: checkoutRequestedAt ?? this.checkoutRequestedAt,
@@ -639,6 +653,7 @@ class AdminBookingEntity extends Equatable {
         signatureSvg,
         docsPending,
         autoValidateCheckin,
+        depositStatus,
         activatedAt,
         closedAt,
         checkoutRequestedAt,

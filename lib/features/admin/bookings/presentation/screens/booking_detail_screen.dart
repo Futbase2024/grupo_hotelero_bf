@@ -12,6 +12,7 @@ import '../../../../../core/constants/checkin_policy.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../../../core/utils/guest_documents_cleaner.dart';
+import '../../../../../core/utils/whatsapp_phone.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../auth/domain/bloc/auth_bloc.dart';
 import '../../data/services/booking_email_pdf_service.dart';
@@ -19,6 +20,8 @@ import '../../../domain/entities/admin_booking_entity.dart';
 import '../../../domain/entities/booking_unit_entity.dart';
 import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../domain/services/email_service.dart';
+import '../../../domain/entities/booking_deposit_entity.dart';
+import '../widgets/deposit/booking_deposit_card.dart';
 import '../widgets/edit_guest_contact_dialog.dart';
 
 class BookingDetailScreen extends StatefulWidget {
@@ -37,6 +40,9 @@ class BookingDetailScreen extends StatefulWidget {
 
 class _BookingDetailScreenState extends State<BookingDetailScreen> {
   AdminBookingEntity? _booking;
+
+  /// Fianza opcional de la reserva (`null` si no se pudo cargar)
+  BookingDepositEntity? _deposit;
   bool _isLoading = true;
   String? _error;
   bool _isResending = false;
@@ -96,8 +102,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       debugPrint('   - status: ${booking.status}');
       debugPrint('   - keyboxCode: ${booking.keyboxCode}');
 
+      final deposit = await _loadDeposit();
+
       setState(() {
         _booking = booking;
+        _deposit = deposit;
         _isLoading = false;
       });
     } catch (e, stackTrace) {
@@ -232,7 +241,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       if (!mounted) return;
 
       // 3. Abrir WhatsApp con un mensaje que replica el correo de check-in.
-      final phoneWithCode = _normalizePhoneForWhatsApp(phone);
+      final phoneWithCode = normalizePhoneForWhatsApp(phone);
 
       final message = _buildWhatsAppMessage(pdfUrl);
       final encodedMessage = Uri.encodeComponent(message);
@@ -270,29 +279,6 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } finally {
       if (mounted) setState(() => _isSendingWhatsApp = false);
     }
-  }
-
-  /// Normaliza un telefono al formato que exige WhatsApp: prefijo de pais
-  /// seguido del numero, sin '+', espacios ni separadores.
-  ///
-  /// Respeta el prefijo internacional cuando el huesped ya lo ha indicado
-  /// (`+33 6 31 73 57 38` o `0033...`) y solo asume Espana (34) para numeros
-  /// nacionales de 9 digitos escritos sin prefijo.
-  String _normalizePhoneForWhatsApp(String phone) {
-    final trimmed = phone.trim();
-    final digits = trimmed.replaceAll(RegExp(r'\D'), '');
-
-    // Prefijo internacional explicito: +33 6 31 73 57 38 -> 33631735738
-    if (trimmed.startsWith('+')) return digits;
-
-    // Formato con salida internacional: 0034... / 0033... -> se quita el 00
-    if (digits.startsWith('00')) return digits.substring(2);
-
-    // Numero nacional espanol sin prefijo: 656618065 -> 34656618065
-    if (digits.length == 9) return '34$digits';
-
-    // Cualquier otro caso ya incluye su prefijo de pais
-    return digits;
   }
 
   /// Construye el mensaje de WhatsApp replicando el correo de check-in.
@@ -675,6 +661,37 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         ),
       ),
     );
+  }
+
+  /// Carga la fianza sin bloquear la pantalla si falla
+  Future<BookingDepositEntity?> _loadDeposit() async {
+    try {
+      return await widget.repository.getBookingDeposit(widget.bookingId);
+    } catch (e) {
+      debugPrint('⚠️ [_loadDeposit] No se pudo cargar la fianza: $e');
+      return null;
+    }
+  }
+
+  /// Email de check-in validado tras confirmar el pago de la fianza
+  Future<void> _sendCheckinConfirmationEmail() async {
+    final booking = _booking;
+    if (booking == null || booking.guestEmail.trim().isEmpty) return;
+
+    final sent = await _emailService.sendCheckinConfirmationEmail(
+      toEmail: booking.guestEmail,
+      guestName: booking.guestFullName,
+      propertyName: booking.propertyName,
+      unitName: booking.allUnitNames,
+      checkinDate: booking.checkInDate,
+      checkoutDate: booking.checkOutDate,
+      bookingCode: booking.bookingCode,
+      wifiNetwork: booking.wifiNetwork,
+      wifiPassword: booking.wifiPassword,
+      bookingId: booking.id,
+      unitId: booking.unitId,
+    );
+    debugPrint('📧 [BookingDetail] Email de check-in validado enviado: $sent');
   }
 
   Future<void> _validateCheckin() async {
@@ -1957,6 +1974,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(height: 16),
           _buildCheckinCard(),
           const SizedBox(height: 16),
+          if (_deposit != null) ...[
+            BookingDepositCard(
+              deposit: _deposit!,
+              repository: widget.repository,
+              onChanged: _loadBooking,
+              onValidated: _sendCheckinConfirmationEmail,
+            ),
+            const SizedBox(height: 16),
+          ],
           _buildCheckoutCard(),
           const SizedBox(height: 16),
           if (_booking!.signatureSvg != null && _booking!.signatureSvg!.isNotEmpty) ...[
@@ -2870,6 +2896,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final isValidated = checkinStatus == 'validated';
     final isRejected = checkinStatus == 'rejected';
 
+    // Con fianza pendiente, validar se hace desde la tarjeta de la fianza
+    final isDepositPending = _deposit?.status.isPending ?? false;
+
     Color statusColor;
     String statusText;
     IconData statusIcon;
@@ -2980,15 +3009,17 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: _buildCodeButton(
-                    S.of(context).admin_booking_validate_button,
-                    Icons.check_circle_outline,
-                    _isValidating ? () {} : _validateCheckin,
-                    isPrimary: true,
+                if (!isDepositPending) ...[
+                  Expanded(
+                    child: _buildCodeButton(
+                      S.of(context).admin_booking_validate_button,
+                      Icons.check_circle_outline,
+                      _isValidating ? () {} : _validateCheckin,
+                      isPrimary: true,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
+                ],
                 Expanded(
                   child: _buildCodeButton(
                     S.of(context).admin_booking_reject_button,

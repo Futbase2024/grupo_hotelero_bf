@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/supabase_config.dart';
+import '../../../../core/enums/deposit_status.dart';
 import '../../../../core/services/crashlytics_service.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -36,6 +37,7 @@ class AuthRepositoryImpl implements AuthRepository {
             id,
             status,
             checkout_date,
+            deposit_status,
             checkins (
               status,
               rejection_reason
@@ -78,6 +80,9 @@ class AuthRepositoryImpl implements AuthRepository {
           checkInCompleted: checkInCompleted,
           checkinStatus: checkinStatus,
           checkinRejectionReason: checkinRejectionReason,
+          depositStatus: DepositStatus.fromString(
+            bookingResponse['deposit_status'] as String?,
+          ),
         );
       } else {
         // La reserva ya no es válida, limpiar sesión
@@ -109,12 +114,14 @@ class AuthRepositoryImpl implements AuthRepository {
       String? bookingId;
       bool checkInCompleted = false;
       String? checkinStatus;
+      var depositStatus = DepositStatus.none;
 
       if (role == UserRole.guest) {
         final bookingResponse = await _supabase
             .from(SupabaseTables.bookings)
             .select('''
               id,
+              deposit_status,
               checkins (
                 status
               )
@@ -126,6 +133,9 @@ class AuthRepositoryImpl implements AuthRepository {
             .maybeSingle();
 
         bookingId = bookingResponse?['id'] as String?;
+        depositStatus = DepositStatus.fromString(
+          bookingResponse?['deposit_status'] as String?,
+        );
 
         // Verificar estado del check-in
         if (bookingResponse != null) {
@@ -161,6 +171,7 @@ class AuthRepositoryImpl implements AuthRepository {
         propertyId: propertyId,
         checkInCompleted: checkInCompleted,
         checkinStatus: checkinStatus,
+        depositStatus: depositStatus,
       );
     } catch (e, stackTrace) {
       // Si hay error, reportar pero retornar entity básico

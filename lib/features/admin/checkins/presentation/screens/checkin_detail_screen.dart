@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/services/notification_service.dart';
+import 'package:bf_stay/features/admin/bookings/presentation/widgets/deposit/booking_deposit_card.dart';
 import 'package:bf_stay/features/admin/checkins/presentation/widgets/checkin_danger_actions_sheet.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_entities.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
@@ -31,6 +32,9 @@ class CheckinDetailScreen extends StatefulWidget {
 
 class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
   CheckinDetailEntity? _checkinDetail;
+
+  /// Fianza opcional de la reserva (`null` si no se pudo cargar)
+  BookingDepositEntity? _deposit;
   bool _isLoading = true;
   String? _error;
   final Map<String, String> _documentUrls = {};
@@ -77,10 +81,18 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         }
       }
 
+      BookingDepositEntity? deposit;
+      try {
+        deposit = await repository.getBookingDeposit(detail.bookingId);
+      } catch (e) {
+        debugPrint('⚠️ [CheckinDetail] No se pudo cargar la fianza: $e');
+      }
+
       if (mounted) {
         debugPrint('✅ [CheckinDetail] Actualizando estado - _isLoading = false');
         setState(() {
           _checkinDetail = detail;
+          _deposit = deposit;
           _isLoading = false;
         });
       }
@@ -123,11 +135,13 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           if (_checkinDetail != null && !_checkinDetail!.isValidated && !_checkinDetail!.isCancelled) ...[
             // Solo mostrar Validar y Rechazar si está pendiente (submitted)
             if (_checkinDetail!.isPending) ...[
-              IconButton(
-                icon: const Icon(Icons.check_circle_outline, color: AppColors.success),
-                tooltip: S.of(context).admin_checkin_validate,
-                onPressed: _validateCheckin,
-              ),
+              // Con fianza pendiente se valida desde la tarjeta de la fianza
+              if (!(_deposit?.status.isPending ?? false))
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline, color: AppColors.success),
+                  tooltip: S.of(context).admin_checkin_validate,
+                  onPressed: _validateCheckin,
+                ),
               IconButton(
                 icon: const Icon(Icons.cancel_outlined, color: AppColors.warning),
                 tooltip: S.of(context).admin_checkin_reject,
@@ -228,6 +242,15 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
           children: [
             _buildStatusCard(),
             const SizedBox(height: 16),
+            if (_deposit != null) ...[
+              BookingDepositCard(
+                deposit: _deposit!,
+                repository: getIt<AdminPanelRepository>(),
+                onChanged: _loadCheckinDetail,
+                onValidated: _sendCheckinConfirmationEmail,
+              ),
+              const SizedBox(height: 16),
+            ],
             _buildBookingInfo(),
             const SizedBox(height: 16),
             _buildGuestsSection(),
@@ -756,6 +779,35 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
     );
   }
 
+  /// Email de check-in validado al huésped principal (validación normal o
+  /// tras confirmar el pago de la fianza)
+  Future<void> _sendCheckinConfirmationEmail() async {
+    if (_checkinDetail != null) {
+      final primaryGuest = _checkinDetail!.primaryGuest;
+      if (primaryGuest?.email != null && primaryGuest!.email!.isNotEmpty) {
+        debugPrint('📧 [ValidateCheckin] Enviando email a: ${primaryGuest.email}');
+        final emailSent = await EmailService().sendCheckinConfirmationEmail(
+          toEmail: primaryGuest.email!,
+          guestName: primaryGuest.fullName,
+          propertyName: _checkinDetail!.propertyName,
+          unitName: _checkinDetail!.allUnitNames,
+          checkinDate: _checkinDetail!.checkinDate,
+          checkoutDate: _checkinDetail!.checkoutDate,
+          bookingCode: _checkinDetail!.bookingCode,
+          accessInstructions: _checkinDetail!.accessInstructions,
+          wifiNetwork: _checkinDetail!.wifiNetwork,
+          wifiPassword: _checkinDetail!.wifiPassword,
+          fullAddress: _checkinDetail!.fullAddress,
+          bookingId: _checkinDetail!.bookingId,
+          unitId: _checkinDetail!.unitId,
+        );
+        debugPrint('📧 [ValidateCheckin] Email enviado: $emailSent');
+      } else {
+        debugPrint('⚠️ [ValidateCheckin] No hay email del huésped para enviar confirmación');
+      }
+    }
+  }
+
   Future<void> _validateCheckin() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -789,30 +841,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         );
 
         // 2. Enviar email de confirmación al huésped
-        if (_checkinDetail != null) {
-          final primaryGuest = _checkinDetail!.primaryGuest;
-          if (primaryGuest?.email != null && primaryGuest!.email!.isNotEmpty) {
-            debugPrint('📧 [ValidateCheckin] Enviando email a: ${primaryGuest.email}');
-            final emailSent = await EmailService().sendCheckinConfirmationEmail(
-              toEmail: primaryGuest.email!,
-              guestName: primaryGuest.fullName,
-              propertyName: _checkinDetail!.propertyName,
-              unitName: _checkinDetail!.allUnitNames,
-              checkinDate: _checkinDetail!.checkinDate,
-              checkoutDate: _checkinDetail!.checkoutDate,
-              bookingCode: _checkinDetail!.bookingCode,
-              accessInstructions: _checkinDetail!.accessInstructions,
-              wifiNetwork: _checkinDetail!.wifiNetwork,
-              wifiPassword: _checkinDetail!.wifiPassword,
-              fullAddress: _checkinDetail!.fullAddress,
-              bookingId: _checkinDetail!.bookingId,
-              unitId: _checkinDetail!.unitId,
-            );
-            debugPrint('📧 [ValidateCheckin] Email enviado: $emailSent');
-          } else {
-            debugPrint('⚠️ [ValidateCheckin] No hay email del huésped para enviar confirmación');
-          }
-        }
+        await _sendCheckinConfirmationEmail();
 
         // 3. La notificación al huésped (in-app + push) la dispara el trigger
         // de backend trg_checkin_status_notify al cambiar checkins.status a

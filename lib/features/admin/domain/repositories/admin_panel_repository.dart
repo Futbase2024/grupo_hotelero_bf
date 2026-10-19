@@ -117,6 +117,49 @@ abstract class AdminPanelRepository {
   /// Retorna el ID del check-in creado/actualizado
   Future<String> manualCheckinValidate(String bookingId);
 
+  // ==================== FIANZA OPCIONAL ====================
+
+  /// Obtiene la fianza de una reserva (con importe sugerido del alojamiento)
+  Future<BookingDepositEntity> getBookingDeposit(String bookingId);
+
+  /// Pide (o reenvía) la fianza. Mientras esté pendiente el check-in no se
+  /// puede validar por ninguna vía.
+  ///
+  /// [sentVia] admite `chat`, `whatsapp` y `email`.
+  /// Retorna `true` si era un reenvío
+  Future<bool> requestBookingDeposit({
+    required String bookingId,
+    required int amountCents,
+    required String paymentLink,
+    required List<String> sentVia,
+  });
+
+  /// Quita la fianza pendiente: la reserva vuelve a la validación normal
+  Future<void> waiveBookingDeposit(String bookingId);
+
+  /// Marca la fianza como pagada y, si el check-in ya está enviado, lo valida
+  ///
+  /// Retorna `true` si el check-in quedó validado en ese momento
+  Future<bool> confirmDepositAndValidate({
+    required String bookingId,
+    String? reference,
+  });
+
+  /// Registra la devolución de la fianza (total o parcial)
+  ///
+  /// Si se retiene parte del importe, [retainedReason] es obligatorio
+  Future<void> registerDepositReturn({
+    required String bookingId,
+    required int returnedCents,
+    String? retainedReason,
+  });
+
+  /// Guarda el importe de fianza sugerido de un alojamiento
+  Future<void> updatePropertyDefaultDeposit({
+    required String propertyId,
+    required int amountCents,
+  });
+
   /// Obtiene el detalle completo de un check-in
   /// Incluye huéspedes, documentos y firma
   Future<CheckinDetailEntity> getCheckinDetail(String checkinId);

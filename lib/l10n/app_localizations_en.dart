@@ -3441,4 +3441,238 @@ class SEn extends S {
   String admin_chat_search_no_results(String query) {
     return 'No results for “$query”';
   }
+
+  @override
+  String get admin_deposit_section => 'DEPOSIT';
+
+  @override
+  String get admin_deposit_status_none => 'No deposit';
+
+  @override
+  String get admin_deposit_status_pending => 'Awaiting payment';
+
+  @override
+  String get admin_deposit_status_paid => 'Paid';
+
+  @override
+  String get admin_deposit_status_returned => 'Returned';
+
+  @override
+  String get admin_deposit_none_hint =>
+      'This booking is validated without a deposit. To block access until the guest pays, request a deposit.';
+
+  @override
+  String get admin_deposit_blocking_hint =>
+      'The guest will not see the access codes until you mark the deposit as paid.';
+
+  @override
+  String get admin_deposit_request_button => 'Request deposit';
+
+  @override
+  String get admin_deposit_resend_button => 'Resend link';
+
+  @override
+  String get admin_deposit_waive_button => 'Waive';
+
+  @override
+  String get admin_deposit_confirm_button => 'Mark paid and validate';
+
+  @override
+  String get admin_deposit_mark_paid_button => 'Mark as paid';
+
+  @override
+  String get admin_deposit_return_button => 'Register return';
+
+  @override
+  String get admin_deposit_open_link => 'Open link';
+
+  @override
+  String admin_deposit_requested_info(String date, String channels) {
+    return 'Sent on $date via $channels';
+  }
+
+  @override
+  String admin_deposit_requested_info_no_channel(String date) {
+    return 'Requested on $date';
+  }
+
+  @override
+  String admin_deposit_paid_info(String date) {
+    return 'Paid on $date';
+  }
+
+  @override
+  String admin_deposit_reference_info(String reference) {
+    return 'Ref. $reference';
+  }
+
+  @override
+  String admin_deposit_returned_info(
+    String date,
+    String returned,
+    String retained,
+  ) {
+    return 'Returned on $date: $returned · Retained: $retained';
+  }
+
+  @override
+  String admin_deposit_retained_reason_info(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get admin_deposit_channel_chat => 'App chat';
+
+  @override
+  String get admin_deposit_channel_whatsapp => 'WhatsApp';
+
+  @override
+  String get admin_deposit_channel_email => 'Email';
+
+  @override
+  String get admin_deposit_channel_none => 'Chat only';
+
+  @override
+  String get admin_deposit_request_title => 'Request deposit';
+
+  @override
+  String get admin_deposit_amount_label => 'Amount (€)';
+
+  @override
+  String get admin_deposit_link_label => 'Payment link';
+
+  @override
+  String get admin_deposit_link_hint => 'Paste your payment gateway link';
+
+  @override
+  String get admin_deposit_send_via => 'Send via';
+
+  @override
+  String get admin_deposit_also_send_via => 'Also send via';
+
+  @override
+  String admin_deposit_save_default(String property) {
+    return 'Save as suggested amount for $property';
+  }
+
+  @override
+  String get admin_deposit_send_button => 'Send link';
+
+  @override
+  String get admin_deposit_amount_invalid => 'Enter a valid amount';
+
+  @override
+  String get admin_deposit_link_invalid => 'The link must start with https://';
+
+  @override
+  String get admin_deposit_no_phone => 'No phone';
+
+  @override
+  String get admin_deposit_no_email => 'No email';
+
+  @override
+  String get admin_deposit_no_app_user =>
+      'The guest has not opened the app yet';
+
+  @override
+  String get admin_deposit_no_channel => 'Choose at least one channel';
+
+  @override
+  String admin_deposit_guest_message(String name, String amount, String link) {
+    return 'Hi $name, to complete your check-in please pay the $amount deposit using this secure payment link:\n$link\n\nAs soon as we receive it we will validate your check-in and you will have access to all the information about your stay. Thank you!';
+  }
+
+  @override
+  String get admin_deposit_confirm_title => 'Confirm deposit payment';
+
+  @override
+  String admin_deposit_confirm_message_validate(String amount) {
+    return 'Have you checked in your payment gateway that $amount has been received? Confirming will validate the check-in and give the guest access.';
+  }
+
+  @override
+  String admin_deposit_confirm_message_paid_only(String amount) {
+    return 'Have you checked in your payment gateway that $amount has been received? The guest has not submitted the check-in yet: it will be validated normally once submitted.';
+  }
+
+  @override
+  String get admin_deposit_reference_label =>
+      'Transaction reference (optional)';
+
+  @override
+  String get admin_deposit_confirm_action => 'Confirm payment';
+
+  @override
+  String get admin_deposit_waive_title => 'Waive deposit';
+
+  @override
+  String get admin_deposit_waive_message =>
+      'The booking will go back to normal validation and the guest will not have to pay the deposit. Continue?';
+
+  @override
+  String get admin_deposit_return_title => 'Register return';
+
+  @override
+  String admin_deposit_return_total(String amount) {
+    return 'Deposit collected: $amount';
+  }
+
+  @override
+  String get admin_deposit_returned_label => 'Amount returned (€)';
+
+  @override
+  String admin_deposit_retained_preview(String amount) {
+    return '$amount will be retained';
+  }
+
+  @override
+  String get admin_deposit_reason_label => 'Reason for retention';
+
+  @override
+  String get admin_deposit_reason_required => 'Enter the reason';
+
+  @override
+  String get admin_deposit_returned_exceeds =>
+      'Cannot exceed the deposit collected';
+
+  @override
+  String get admin_deposit_save => 'Save';
+
+  @override
+  String get admin_deposit_done_title => 'Done';
+
+  @override
+  String get admin_deposit_requested_success =>
+      'Deposit requested. The guest will not have access until you mark it as paid.';
+
+  @override
+  String get admin_deposit_confirmed_validated =>
+      'Deposit paid and check-in validated. The guest now has access.';
+
+  @override
+  String get admin_deposit_confirmed_only =>
+      'Deposit marked as paid. The check-in will be validated normally once the guest submits it.';
+
+  @override
+  String get admin_deposit_waived_success =>
+      'Deposit waived. The booking is back to normal validation.';
+
+  @override
+  String get admin_deposit_returned_success => 'Return registered.';
+
+  @override
+  String get admin_deposit_error_title => 'Could not complete';
+
+  @override
+  String admin_deposit_send_failed(String channel) {
+    return 'The deposit was registered, but it could not be sent via $channel. We copied the message with the link: paste it wherever you like to send it to the guest.';
+  }
+
+  @override
+  String get admin_deposit_validate_blocked =>
+      'This booking has a pending deposit. Use \"Mark paid and validate\" once you have checked the payment, or waive it.';
+
+  @override
+  String get guest_home_deposit_pending =>
+      'Waiting for the deposit payment. Please check the link we sent you.';
 }

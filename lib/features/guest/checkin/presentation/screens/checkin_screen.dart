@@ -173,6 +173,12 @@ class _CheckinCompletedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    // Con fianza pendiente se explica por qué no avanza la validación
+    final isDepositPending = context.select<AuthBloc, bool>((bloc) {
+      final authState = bloc.state;
+      return authState is AuthAuthenticated &&
+          authState.user.depositStatus.isPending;
+    });
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
@@ -227,12 +233,16 @@ class _CheckinCompletedView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    s.guest_checkin_waiting_validation,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.gray500,
-                      fontStyle: FontStyle.italic,
+                  Flexible(
+                    child: Text(
+                      isDepositPending
+                          ? s.guest_home_deposit_pending
+                          : s.guest_checkin_waiting_validation,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.gray500,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
                 ],

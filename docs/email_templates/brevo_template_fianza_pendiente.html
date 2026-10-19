@@ -1,0 +1,160 @@
+<!--
+  Plantilla Brevo: Template ID 8 - "Fianza pendiente"
+  La enviará la Edge Function `send-deposit-email` cuando el admin pida la
+  fianza de una reserva y elija "Email".
+
+  Este archivo es una COPIA DE REFERENCIA versionada. La plantilla real vive en
+  el panel de Brevo: al modificar aquí, hay que pegar el HTML también en Brevo.
+
+  Asunto recomendado en Brevo:
+    Fianza pendiente de tu reserva {{ params.codigo_reserva }}
+
+  Parámetros (todos los rellena la Edge Function desde la base de datos):
+    nombre_huesped, nombre_propiedad, codigo_reserva, fecha_entrada,
+    fecha_salida, importe_fianza ("150,00 €"), link_pago,
+    hero_image_url, telefono_1, telefono_2
+
+  Importante: este correo NO debe incluir códigos ni instrucciones de acceso:
+  el huésped no los tiene hasta que el admin confirma el pago.
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fianza pendiente de tu reserva</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#f3f3f3; font-family: Arial, Helvetica, sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f3f3; padding:30px 0;">
+<tr>
+<td align="center">
+
+<table width="640" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden;">
+
+<!-- HERO IMAGE -->
+<tr>
+<td align="center">
+<img src="{{ params.hero_image_url }}"
+     width="640"
+     alt="BF Stay"
+     style="display:block; width:100%; max-width:640px; height:auto; border:0;">
+</td>
+</tr>
+
+<!-- CONTENT -->
+<tr>
+<td style="padding:40px 35px; color:#333333; font-size:15px; line-height:1.6;">
+
+<p style="font-size:20px; margin-top:0;">
+Hola <strong>{{ params.nombre_huesped }}</strong>,
+</p>
+
+<p>
+Para completar tu check-in en <strong>{{ params.nombre_propiedad }}</strong> necesitamos
+que abones la <strong>fianza</strong> de tu estancia a través de nuestro enlace de pago seguro.
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:25px 0; font-size:14px;">
+<tr>
+<td style="padding:6px 0;"><strong>Reserva:</strong></td>
+<td style="padding:6px 0;">{{ params.codigo_reserva }}</td>
+</tr>
+<tr>
+<td style="padding:6px 0;"><strong>Entrada:</strong></td>
+<td style="padding:6px 0;">{{ params.fecha_entrada }}</td>
+</tr>
+<tr>
+<td style="padding:6px 0;"><strong>Salida:</strong></td>
+<td style="padding:6px 0;">{{ params.fecha_salida }}</td>
+</tr>
+</table>
+
+<!-- IMPORTE + BOTON DE PAGO -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:35px 0;">
+<tr>
+<td align="center" style="background-color:#000000; padding:30px; border-radius:6px;">
+
+<p style="color:#ffffff; margin:0; font-size:14px; letter-spacing:1px;">
+FIANZA A ABONAR
+</p>
+
+<p style="color:#d4af37; margin:15px 0 0 0; font-size:34px; font-weight:bold; letter-spacing:1px;">
+{{ params.importe_fianza }}
+</p>
+
+<!-- Botón "a prueba de balas": tabla + enlace, funciona en Outlook -->
+<table cellpadding="0" cellspacing="0" role="presentation" style="margin:24px auto 0 auto;">
+<tr>
+<td align="center" bgcolor="#d4af37" style="background-color:#d4af37; border-radius:6px;">
+<a href="{{ params.link_pago }}"
+   target="_blank"
+   style="display:inline-block; padding:14px 36px; color:#000000; text-decoration:none; font-size:16px; font-weight:bold; letter-spacing:0.5px;">
+Pagar fianza
+</a>
+</td>
+</tr>
+</table>
+
+<p style="color:#aaaaaa; margin:16px 0 0 0; font-size:12px;">
+El pago se realiza en la pasarela segura de nuestro banco.
+</p>
+
+</td>
+</tr>
+</table>
+
+<!-- AVISO: SIN ACCESO HASTA EL PAGO (barra dorada compatible con Outlook) -->
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+       style="margin:28px 0; border-collapse:collapse; border-radius:6px; overflow:hidden;">
+<tr>
+  <td width="6" bgcolor="#d4af37" style="background-color:#d4af37; width:6px; font-size:0; line-height:0;">&nbsp;</td>
+  <td bgcolor="#fdf6e3" style="background-color:#fdf6e3; padding:18px 22px;">
+
+    <p style="margin:0; font-size:15px; line-height:1.5; color:#8a6d1f; font-weight:bold;">
+      <span style="font-size:18px;">&#128274;</span>&nbsp;
+      En cuanto recibamos la fianza validaremos tu check-in y tendrás acceso en la app
+      a toda la información de tu estancia: códigos de acceso, wifi e instrucciones.
+    </p>
+
+  </td>
+</tr>
+</table>
+
+<p style="font-size:13px; color:#777777;">
+Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+<a href="{{ params.link_pago }}" style="color:#8a6d1f; word-break:break-all;">{{ params.link_pago }}</a>
+</p>
+
+<p style="font-size:13px; color:#777777; text-align:center; margin-top:30px;">
+Si tienes cualquier duda puedes contactarnos:<br>
+
+📞 <strong>{{ params.telefono_1 }}</strong><br>
+📞 <strong>{{ params.telefono_2 }}</strong>
+</p>
+
+<p style="margin-top:30px;">
+Te esperamos.<br><br>
+<strong>Grupo Hotelero BF</strong>
+</p>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td style="background-color:#000000; padding:20px; text-align:center; color:#aaaaaa; font-size:12px;">
+© {{ params.nombre_propiedad }} – Grupo Hotelero BF<br>
+Este es un correo automático, por favor no respondas a este mensaje.
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>

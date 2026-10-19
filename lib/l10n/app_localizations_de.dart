@@ -3498,4 +3498,240 @@ class SDe extends S {
   String admin_chat_search_no_results(String query) {
     return 'Keine Ergebnisse für „$query“';
   }
+
+  @override
+  String get admin_deposit_section => 'KAUTION';
+
+  @override
+  String get admin_deposit_status_none => 'Keine Kaution';
+
+  @override
+  String get admin_deposit_status_pending => 'Zahlung ausstehend';
+
+  @override
+  String get admin_deposit_status_paid => 'Bezahlt';
+
+  @override
+  String get admin_deposit_status_returned => 'Zurückgezahlt';
+
+  @override
+  String get admin_deposit_none_hint =>
+      'Diese Buchung wird ohne Kaution validiert. Um den Zugang bis zur Zahlung zu sperren, fordere eine Kaution an.';
+
+  @override
+  String get admin_deposit_blocking_hint =>
+      'Der Gast sieht die Zugangscodes erst, wenn du die Kaution als bezahlt markierst.';
+
+  @override
+  String get admin_deposit_request_button => 'Kaution anfordern';
+
+  @override
+  String get admin_deposit_resend_button => 'Link erneut senden';
+
+  @override
+  String get admin_deposit_waive_button => 'Erlassen';
+
+  @override
+  String get admin_deposit_confirm_button =>
+      'Als bezahlt markieren und validieren';
+
+  @override
+  String get admin_deposit_mark_paid_button => 'Als bezahlt markieren';
+
+  @override
+  String get admin_deposit_return_button => 'Rückzahlung erfassen';
+
+  @override
+  String get admin_deposit_open_link => 'Link öffnen';
+
+  @override
+  String admin_deposit_requested_info(String date, String channels) {
+    return 'Gesendet am $date über $channels';
+  }
+
+  @override
+  String admin_deposit_requested_info_no_channel(String date) {
+    return 'Angefordert am $date';
+  }
+
+  @override
+  String admin_deposit_paid_info(String date) {
+    return 'Bezahlt am $date';
+  }
+
+  @override
+  String admin_deposit_reference_info(String reference) {
+    return 'Ref. $reference';
+  }
+
+  @override
+  String admin_deposit_returned_info(
+    String date,
+    String returned,
+    String retained,
+  ) {
+    return 'Zurückgezahlt am $date: $returned · Einbehalten: $retained';
+  }
+
+  @override
+  String admin_deposit_retained_reason_info(String reason) {
+    return 'Grund: $reason';
+  }
+
+  @override
+  String get admin_deposit_channel_chat => 'App-Chat';
+
+  @override
+  String get admin_deposit_channel_whatsapp => 'WhatsApp';
+
+  @override
+  String get admin_deposit_channel_email => 'E-Mail';
+
+  @override
+  String get admin_deposit_channel_none => 'Nur Chat';
+
+  @override
+  String get admin_deposit_request_title => 'Kaution anfordern';
+
+  @override
+  String get admin_deposit_amount_label => 'Betrag (€)';
+
+  @override
+  String get admin_deposit_link_label => 'Zahlungslink';
+
+  @override
+  String get admin_deposit_link_hint =>
+      'Füge den Link deines Zahlungsanbieters ein';
+
+  @override
+  String get admin_deposit_send_via => 'Senden über';
+
+  @override
+  String get admin_deposit_also_send_via => 'Zusätzlich senden über';
+
+  @override
+  String admin_deposit_save_default(String property) {
+    return 'Als vorgeschlagenen Betrag für $property speichern';
+  }
+
+  @override
+  String get admin_deposit_send_button => 'Link senden';
+
+  @override
+  String get admin_deposit_amount_invalid => 'Gib einen gültigen Betrag ein';
+
+  @override
+  String get admin_deposit_link_invalid =>
+      'Der Link muss mit https:// beginnen';
+
+  @override
+  String get admin_deposit_no_phone => 'Kein Telefon';
+
+  @override
+  String get admin_deposit_no_email => 'Keine E-Mail';
+
+  @override
+  String get admin_deposit_no_app_user =>
+      'Der Gast hat die App noch nicht geöffnet';
+
+  @override
+  String get admin_deposit_no_channel => 'Wähle mindestens einen Kanal';
+
+  @override
+  String admin_deposit_guest_message(String name, String amount, String link) {
+    return 'Hallo $name, um deinen Check-in abzuschließen, zahle bitte die Kaution von $amount über diesen sicheren Zahlungslink:\n$link\n\nSobald wir sie erhalten, validieren wir deinen Check-in und du hast Zugriff auf alle Informationen zu deinem Aufenthalt. Danke!';
+  }
+
+  @override
+  String get admin_deposit_confirm_title => 'Kautionszahlung bestätigen';
+
+  @override
+  String admin_deposit_confirm_message_validate(String amount) {
+    return 'Hast du in deinem Zahlungsanbieter geprüft, dass $amount eingegangen sind? Mit der Bestätigung wird der Check-in validiert und der Gast erhält Zugang.';
+  }
+
+  @override
+  String admin_deposit_confirm_message_paid_only(String amount) {
+    return 'Hast du in deinem Zahlungsanbieter geprüft, dass $amount eingegangen sind? Der Gast hat den Check-in noch nicht gesendet: er wird danach normal validiert.';
+  }
+
+  @override
+  String get admin_deposit_reference_label => 'Transaktionsreferenz (optional)';
+
+  @override
+  String get admin_deposit_confirm_action => 'Zahlung bestätigen';
+
+  @override
+  String get admin_deposit_waive_title => 'Kaution erlassen';
+
+  @override
+  String get admin_deposit_waive_message =>
+      'Die Buchung kehrt zur normalen Validierung zurück und der Gast muss keine Kaution zahlen. Fortfahren?';
+
+  @override
+  String get admin_deposit_return_title => 'Rückzahlung erfassen';
+
+  @override
+  String admin_deposit_return_total(String amount) {
+    return 'Erhaltene Kaution: $amount';
+  }
+
+  @override
+  String get admin_deposit_returned_label => 'Zurückgezahlter Betrag (€)';
+
+  @override
+  String admin_deposit_retained_preview(String amount) {
+    return '$amount werden einbehalten';
+  }
+
+  @override
+  String get admin_deposit_reason_label => 'Grund für den Einbehalt';
+
+  @override
+  String get admin_deposit_reason_required => 'Gib den Grund an';
+
+  @override
+  String get admin_deposit_returned_exceeds =>
+      'Darf die erhaltene Kaution nicht übersteigen';
+
+  @override
+  String get admin_deposit_save => 'Speichern';
+
+  @override
+  String get admin_deposit_done_title => 'Erledigt';
+
+  @override
+  String get admin_deposit_requested_success =>
+      'Kaution angefordert. Der Gast hat erst Zugang, wenn du sie als bezahlt markierst.';
+
+  @override
+  String get admin_deposit_confirmed_validated =>
+      'Kaution bezahlt und Check-in validiert. Der Gast hat jetzt Zugang.';
+
+  @override
+  String get admin_deposit_confirmed_only =>
+      'Kaution als bezahlt markiert. Der Check-in wird nach dem Senden normal validiert.';
+
+  @override
+  String get admin_deposit_waived_success =>
+      'Kaution erlassen. Die Buchung kehrt zur normalen Validierung zurück.';
+
+  @override
+  String get admin_deposit_returned_success => 'Rückzahlung erfasst.';
+
+  @override
+  String get admin_deposit_error_title => 'Konnte nicht abgeschlossen werden';
+
+  @override
+  String admin_deposit_send_failed(String channel) {
+    return 'Die Kaution wurde erfasst, konnte aber nicht über $channel gesendet werden. Wir haben die Nachricht mit dem Link kopiert: Füge sie ein, wo du möchtest, um sie dem Gast zu senden.';
+  }
+
+  @override
+  String get admin_deposit_validate_blocked =>
+      'Diese Buchung hat eine ausstehende Kaution. Nutze „Als bezahlt markieren und validieren\", sobald du die Zahlung geprüft hast, oder erlasse sie.';
+
+  @override
+  String get guest_home_deposit_pending =>
+      'Wir warten auf die Zahlung der Kaution. Bitte prüfe den Link, den wir dir gesendet haben.';
 }

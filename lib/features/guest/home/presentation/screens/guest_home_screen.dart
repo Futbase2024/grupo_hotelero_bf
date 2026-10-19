@@ -145,6 +145,8 @@ class GuestHomeScreen extends StatelessWidget {
                                   checkinStatus,
                                   checkinRejectionReason,
                                   user.checkinCancellationReason,
+                                  isDepositPending:
+                                      user.depositStatus.isPending,
                                 ),
                                 const SizedBox(height: AppTheme.spacing16),
                               ],
@@ -213,8 +215,9 @@ class GuestHomeScreen extends StatelessWidget {
     BuildContext context,
     String? checkinStatus,
     String? rejectionReason,
-    String? cancellationReason,
-  ) {
+    String? cancellationReason, {
+    bool isDepositPending = false,
+  }) {
     final isDark = AppColors.isDarkMode(context);
     final s = S.of(context);
 
@@ -308,7 +311,11 @@ class GuestHomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    s.guest_home_checkin_sent_waiting,
+                    // Con fianza pendiente se le recuerda por qué no avanza,
+                    // sin mostrar el enlace ni ningún dato de acceso
+                    isDepositPending
+                        ? s.guest_home_deposit_pending
+                        : s.guest_home_checkin_sent_waiting,
                     style: TextStyle(
                       color: AppColors.getTextSecondaryColor(context),
                       fontSize: 12,

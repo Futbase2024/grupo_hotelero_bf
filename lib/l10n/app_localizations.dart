@@ -6238,6 +6238,394 @@ abstract class S {
   /// In es, this message translates to:
   /// **'Sin resultados para «{query}»'**
   String admin_chat_search_no_results(String query);
+
+  /// No description provided for @admin_deposit_section.
+  ///
+  /// In es, this message translates to:
+  /// **'FIANZA'**
+  String get admin_deposit_section;
+
+  /// No description provided for @admin_deposit_status_none.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin fianza'**
+  String get admin_deposit_status_none;
+
+  /// No description provided for @admin_deposit_status_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente de pago'**
+  String get admin_deposit_status_pending;
+
+  /// No description provided for @admin_deposit_status_paid.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagada'**
+  String get admin_deposit_status_paid;
+
+  /// No description provided for @admin_deposit_status_returned.
+  ///
+  /// In es, this message translates to:
+  /// **'Devuelta'**
+  String get admin_deposit_status_returned;
+
+  /// No description provided for @admin_deposit_none_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta reserva se valida sin fianza. Si quieres bloquear el acceso hasta que el huésped pague, pide una fianza.'**
+  String get admin_deposit_none_hint;
+
+  /// No description provided for @admin_deposit_blocking_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'El huésped no verá los códigos de acceso hasta que marques la fianza como pagada.'**
+  String get admin_deposit_blocking_hint;
+
+  /// No description provided for @admin_deposit_request_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Pedir fianza'**
+  String get admin_deposit_request_button;
+
+  /// No description provided for @admin_deposit_resend_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar enlace'**
+  String get admin_deposit_resend_button;
+
+  /// No description provided for @admin_deposit_waive_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Eximir'**
+  String get admin_deposit_waive_button;
+
+  /// No description provided for @admin_deposit_confirm_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar pagada y validar'**
+  String get admin_deposit_confirm_button;
+
+  /// No description provided for @admin_deposit_mark_paid_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar como pagada'**
+  String get admin_deposit_mark_paid_button;
+
+  /// No description provided for @admin_deposit_return_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar devolución'**
+  String get admin_deposit_return_button;
+
+  /// No description provided for @admin_deposit_open_link.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir enlace'**
+  String get admin_deposit_open_link;
+
+  /// No description provided for @admin_deposit_requested_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviada el {date} por {channels}'**
+  String admin_deposit_requested_info(String date, String channels);
+
+  /// No description provided for @admin_deposit_requested_info_no_channel.
+  ///
+  /// In es, this message translates to:
+  /// **'Pedida el {date}'**
+  String admin_deposit_requested_info_no_channel(String date);
+
+  /// No description provided for @admin_deposit_paid_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagada el {date}'**
+  String admin_deposit_paid_info(String date);
+
+  /// No description provided for @admin_deposit_reference_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Ref. {reference}'**
+  String admin_deposit_reference_info(String reference);
+
+  /// No description provided for @admin_deposit_returned_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Devuelto el {date}: {returned} · Retenido: {retained}'**
+  String admin_deposit_returned_info(
+    String date,
+    String returned,
+    String retained,
+  );
+
+  /// No description provided for @admin_deposit_retained_reason_info.
+  ///
+  /// In es, this message translates to:
+  /// **'Motivo: {reason}'**
+  String admin_deposit_retained_reason_info(String reason);
+
+  /// No description provided for @admin_deposit_channel_chat.
+  ///
+  /// In es, this message translates to:
+  /// **'Chat de la app'**
+  String get admin_deposit_channel_chat;
+
+  /// No description provided for @admin_deposit_channel_whatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'WhatsApp'**
+  String get admin_deposit_channel_whatsapp;
+
+  /// No description provided for @admin_deposit_channel_email.
+  ///
+  /// In es, this message translates to:
+  /// **'Email'**
+  String get admin_deposit_channel_email;
+
+  /// No description provided for @admin_deposit_channel_none.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo chat'**
+  String get admin_deposit_channel_none;
+
+  /// No description provided for @admin_deposit_request_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Pedir fianza'**
+  String get admin_deposit_request_title;
+
+  /// No description provided for @admin_deposit_amount_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe (€)'**
+  String get admin_deposit_amount_label;
+
+  /// No description provided for @admin_deposit_link_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace de pago'**
+  String get admin_deposit_link_label;
+
+  /// No description provided for @admin_deposit_link_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Pega el enlace de tu pasarela'**
+  String get admin_deposit_link_hint;
+
+  /// No description provided for @admin_deposit_send_via.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar por'**
+  String get admin_deposit_send_via;
+
+  /// No description provided for @admin_deposit_also_send_via.
+  ///
+  /// In es, this message translates to:
+  /// **'Además, enviar por'**
+  String get admin_deposit_also_send_via;
+
+  /// No description provided for @admin_deposit_save_default.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar como importe sugerido para {property}'**
+  String admin_deposit_save_default(String property);
+
+  /// No description provided for @admin_deposit_send_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar enlace'**
+  String get admin_deposit_send_button;
+
+  /// No description provided for @admin_deposit_amount_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un importe válido'**
+  String get admin_deposit_amount_invalid;
+
+  /// No description provided for @admin_deposit_link_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace debe empezar por https://'**
+  String get admin_deposit_link_invalid;
+
+  /// No description provided for @admin_deposit_no_phone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin teléfono'**
+  String get admin_deposit_no_phone;
+
+  /// No description provided for @admin_deposit_no_email.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin email'**
+  String get admin_deposit_no_email;
+
+  /// No description provided for @admin_deposit_no_app_user.
+  ///
+  /// In es, this message translates to:
+  /// **'El huésped aún no ha entrado en la app'**
+  String get admin_deposit_no_app_user;
+
+  /// No description provided for @admin_deposit_no_channel.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige al menos un canal de envío'**
+  String get admin_deposit_no_channel;
+
+  /// No description provided for @admin_deposit_guest_message.
+  ///
+  /// In es, this message translates to:
+  /// **'Hola {name}, para completar tu check-in necesitamos que abones la fianza de {amount} en este enlace de pago seguro:\n{link}\n\nEn cuanto la recibamos validaremos tu check-in y tendrás acceso a toda la información de tu estancia. ¡Gracias!'**
+  String admin_deposit_guest_message(String name, String amount, String link);
+
+  /// No description provided for @admin_deposit_confirm_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar pago de la fianza'**
+  String get admin_deposit_confirm_title;
+
+  /// No description provided for @admin_deposit_confirm_message_validate.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Has comprobado en tu pasarela que se han recibido {amount}? Al confirmar, el check-in quedará validado y el huésped tendrá acceso.'**
+  String admin_deposit_confirm_message_validate(String amount);
+
+  /// No description provided for @admin_deposit_confirm_message_paid_only.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Has comprobado en tu pasarela que se han recibido {amount}? El huésped aún no ha enviado el check-in: cuando lo envíe se validará con normalidad.'**
+  String admin_deposit_confirm_message_paid_only(String amount);
+
+  /// No description provided for @admin_deposit_reference_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Referencia de la operación (opcional)'**
+  String get admin_deposit_reference_label;
+
+  /// No description provided for @admin_deposit_confirm_action.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar pago'**
+  String get admin_deposit_confirm_action;
+
+  /// No description provided for @admin_deposit_waive_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Eximir fianza'**
+  String get admin_deposit_waive_title;
+
+  /// No description provided for @admin_deposit_waive_message.
+  ///
+  /// In es, this message translates to:
+  /// **'La reserva volverá a la validación normal y el huésped no tendrá que pagar la fianza. ¿Continuar?'**
+  String get admin_deposit_waive_message;
+
+  /// No description provided for @admin_deposit_return_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar devolución'**
+  String get admin_deposit_return_title;
+
+  /// No description provided for @admin_deposit_return_total.
+  ///
+  /// In es, this message translates to:
+  /// **'Fianza cobrada: {amount}'**
+  String admin_deposit_return_total(String amount);
+
+  /// No description provided for @admin_deposit_returned_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe devuelto (€)'**
+  String get admin_deposit_returned_label;
+
+  /// No description provided for @admin_deposit_retained_preview.
+  ///
+  /// In es, this message translates to:
+  /// **'Se retienen {amount}'**
+  String admin_deposit_retained_preview(String amount);
+
+  /// No description provided for @admin_deposit_reason_label.
+  ///
+  /// In es, this message translates to:
+  /// **'Motivo de la retención'**
+  String get admin_deposit_reason_label;
+
+  /// No description provided for @admin_deposit_reason_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Indica el motivo'**
+  String get admin_deposit_reason_required;
+
+  /// No description provided for @admin_deposit_returned_exceeds.
+  ///
+  /// In es, this message translates to:
+  /// **'No puede superar la fianza cobrada'**
+  String get admin_deposit_returned_exceeds;
+
+  /// No description provided for @admin_deposit_save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get admin_deposit_save;
+
+  /// No description provided for @admin_deposit_done_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Hecho'**
+  String get admin_deposit_done_title;
+
+  /// No description provided for @admin_deposit_requested_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Fianza pedida. El huésped no tendrá acceso hasta que la marques como pagada.'**
+  String get admin_deposit_requested_success;
+
+  /// No description provided for @admin_deposit_confirmed_validated.
+  ///
+  /// In es, this message translates to:
+  /// **'Fianza pagada y check-in validado. El huésped ya tiene acceso.'**
+  String get admin_deposit_confirmed_validated;
+
+  /// No description provided for @admin_deposit_confirmed_only.
+  ///
+  /// In es, this message translates to:
+  /// **'Fianza marcada como pagada. Cuando el huésped envíe el check-in se validará con normalidad.'**
+  String get admin_deposit_confirmed_only;
+
+  /// No description provided for @admin_deposit_waived_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Fianza eximida. La reserva vuelve a la validación normal.'**
+  String get admin_deposit_waived_success;
+
+  /// No description provided for @admin_deposit_returned_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Devolución registrada.'**
+  String get admin_deposit_returned_success;
+
+  /// No description provided for @admin_deposit_error_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar'**
+  String get admin_deposit_error_title;
+
+  /// No description provided for @admin_deposit_send_failed.
+  ///
+  /// In es, this message translates to:
+  /// **'La fianza se ha registrado, pero no se pudo enviar por {channel}. Hemos copiado el mensaje con el enlace: pégalo donde quieras para enviárselo al huésped.'**
+  String admin_deposit_send_failed(String channel);
+
+  /// No description provided for @admin_deposit_validate_blocked.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta reserva tiene una fianza pendiente. Usa «Marcar pagada y validar» cuando compruebes el pago, o exímela.'**
+  String get admin_deposit_validate_blocked;
+
+  /// No description provided for @guest_home_deposit_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente de recibir el pago de la fianza. Revisa el enlace que te hemos enviado.'**
+  String get guest_home_deposit_pending;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {
