@@ -476,6 +476,7 @@
   "admin_checkin_cancel_reason_hint": "Describe the reason for cancellation...",
   "admin_checkin_cancelled_success": "Booking cancelled successfully",
   "admin_invoice_generate_pdf": "Generate PDF",
+  "admin_invoice_print": "Print",
   "admin_invoice_share": "Share",
   "admin_invoice_download": "Download",
   "admin_invoice_share_title": "Share Invoice",

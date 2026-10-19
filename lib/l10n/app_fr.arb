@@ -476,6 +476,7 @@
   "admin_checkin_cancel_reason_hint": "Décrivez le motif de l'annulation...",
   "admin_checkin_cancelled_success": "Réservation annulée avec succès",
   "admin_invoice_generate_pdf": "Générer le PDF",
+  "admin_invoice_print": "Imprimer",
   "admin_invoice_share": "Partager",
   "admin_invoice_download": "Télécharger",
   "admin_invoice_share_title": "Partager la facture",

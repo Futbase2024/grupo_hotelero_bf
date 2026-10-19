@@ -303,7 +303,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   String _buildWhatsAppMessage(String pdfUrl) {
     final booking = _booking!;
     final guestName = booking.guestFirstName ?? booking.guestFullName;
-    final propertyFull = '${booking.propertyName} - ${booking.unitName}';
+    final propertyFull = '${booking.propertyName} - ${booking.allUnitNames}';
     final checkIn = DateFormat('dd/MM/yyyy').format(booking.checkInDate);
     final checkOut = DateFormat('dd/MM/yyyy').format(booking.checkOutDate);
 

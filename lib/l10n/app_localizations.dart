@@ -4428,6 +4428,12 @@ abstract class S {
   /// **'Generar PDF'**
   String get admin_invoice_generate_pdf;
 
+  /// No description provided for @admin_invoice_print.
+  ///
+  /// In es, this message translates to:
+  /// **'Imprimir'**
+  String get admin_invoice_print;
+
   /// No description provided for @admin_invoice_share.
   ///
   /// In es, this message translates to:

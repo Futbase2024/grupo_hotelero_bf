@@ -9,6 +9,13 @@ import '../../../shared/widgets/empty_state_widget.dart';
 import 'create_invoice_bottom_sheet.dart';
 import 'edit_invoice_bottom_sheet.dart';
 import '../screens/invoice_detail_screen.dart';
+import '../../../../../core/di/injection.dart';
+import '../../../domain/repositories/invoices_repository.dart';
+import '../bloc/invoice_period_presets.dart';
+import '../bloc/invoices_period_bloc.dart';
+import '../bloc/invoices_period_event.dart';
+import '../screens/invoices_period_screen.dart';
+import 'period/period_selector_sheet.dart';
 
 /// Tab de facturas del dashboard de administración
 class InvoicesTab extends StatefulWidget {
@@ -185,17 +192,84 @@ class _InvoicesTabState extends State<InvoicesTab> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
         children: [
-          const Text(
-            'Facturas',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w500,
-              color: AppColors.white,
+          const Expanded(
+            child: Text(
+              'Facturas',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+                color: AppColors.white,
+              ),
+            ),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => _openPeriod(context),
+            icon: const Icon(Icons.date_range_outlined, size: 18),
+            label: const Text('Por periodo'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.gold,
+              side: const BorderSide(color: AppColors.goldWithAlpha50),
+              // El tema global usa ancho infinito; dentro de un Row rompe el layout.
+              minimumSize: const Size(0, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Abre la hoja "Facturas por periodo" (por defecto, el trimestre actual)
+  /// y, si el usuario lo pide, la pantalla de listado con el mismo BLoC.
+  Future<void> _openPeriod(BuildContext context) async {
+    final invoicesBloc = context.read<InvoicesBloc>();
+    if (invoicesBloc.state.properties.isEmpty) {
+      invoicesBloc.add(const InvoicesLoadPropertiesRequested());
+    }
+
+    final now = DateTime.now();
+    final quarter = InvoicePeriodPreset.values[
+        InvoicePeriodPreset.q1.index + (now.month - 1) ~/ 3];
+    final (start, end) = quarter.range(now);
+
+    final periodBloc = InvoicesPeriodBloc(
+      repository: getIt<InvoicesRepository>(),
+      start: start,
+      end: end,
+    )..add(const InvoicesPeriodLoadRequested());
+
+    try {
+      final openList = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: invoicesBloc),
+            BlocProvider.value(value: periodBloc),
+          ],
+          child: const PeriodSelectorSheet(),
+        ),
+      );
+
+      if (openList == true && context.mounted) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MultiBlocProvider(
+              providers: [
+                BlocProvider.value(value: invoicesBloc),
+                BlocProvider.value(value: periodBloc),
+              ],
+              child: const InvoicesPeriodScreen(),
+            ),
+          ),
+        );
+      }
+    } finally {
+      await periodBloc.close();
+    }
   }
 
   Widget _buildSearchBar(BuildContext context, InvoicesState state) {

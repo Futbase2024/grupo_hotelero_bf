@@ -2446,6 +2446,9 @@ class SIt extends S {
   String get admin_invoice_generate_pdf => 'Genera PDF';
 
   @override
+  String get admin_invoice_print => 'Stampa';
+
+  @override
   String get admin_invoice_share => 'Condividi';
 
   @override

@@ -476,6 +476,7 @@
   "admin_checkin_cancel_reason_hint": "Beschreiben Sie den Stornogrund...",
   "admin_checkin_cancelled_success": "Buchung erfolgreich storniert",
   "admin_invoice_generate_pdf": "PDF erstellen",
+  "admin_invoice_print": "Drucken",
   "admin_invoice_share": "Teilen",
   "admin_invoice_download": "Herunterladen",
   "admin_invoice_share_title": "Rechnung teilen",

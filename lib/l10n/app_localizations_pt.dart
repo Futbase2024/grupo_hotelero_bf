@@ -2439,6 +2439,9 @@ class SPt extends S {
   String get admin_invoice_generate_pdf => 'Gerar PDF';
 
   @override
+  String get admin_invoice_print => 'Imprimir';
+
+  @override
   String get admin_invoice_share => 'Compartilhar';
 
   @override

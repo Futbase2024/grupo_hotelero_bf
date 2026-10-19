@@ -24,6 +24,7 @@ class InvoicePdfService {
   static const _colorTextSoft = PdfColor(0.4, 0.4, 0.4);
   static const _colorRowDivider = PdfColor(0.94, 0.94, 0.94);
   static const _colorGoldBg = PdfColor(0.95, 0.93, 0.90);
+  static const _colorDanger = PdfColor(0.937, 0.267, 0.267);
 
   // Fuentes cargadas para soporte Unicode - inicializadas con helvetica como fallback
   pw.Font _regularFont = pw.Font.helvetica();
@@ -122,13 +123,7 @@ class InvoicePdfService {
       );
 
       debugPrint('📄 [PDF] Construyendo contenido...');
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(12 * PdfPageFormat.mm),
-          build: (context) => _buildPageContent(invoice),
-        ),
-      );
+      _addInvoicePage(pdf, invoice);
 
       debugPrint('📄 [PDF] Guardando PDF en bytes...');
       final bytes = await pdf.save();
@@ -139,6 +134,309 @@ class InvoicePdfService {
       debugPrint('❌ [PDF] StackTrace: $stackTrace');
       rethrow;
     }
+  }
+
+  /// Genera un único PDF con todas las facturas de un periodo:
+  /// portada de resumen opcional + 1 factura por página.
+  Future<Uint8List> generateInvoicesBatchPdf(
+    List<InvoiceEntity> invoices, {
+    required DateTime start,
+    required DateTime end,
+    bool includeSummary = true,
+    String? propertyName,
+  }) async {
+    if (invoices.isEmpty) {
+      throw ArgumentError('No hay facturas en el periodo seleccionado');
+    }
+    debugPrint('📄 [PDF] Generando lote de ${invoices.length} facturas');
+
+    // Fuentes y logo se cargan una sola vez para todo el lote
+    await _loadFonts();
+    await _loadLogo();
+
+    final pdf = pw.Document(
+      title: 'Facturas ${_formatDate(start)} - ${_formatDate(end)}',
+      author: 'Grupo Hotelero BF',
+      creator: 'BF Stay',
+    );
+
+    if (includeSummary) {
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(12 * PdfPageFormat.mm),
+          build: (context) => _buildBatchSummaryPage(
+            invoices,
+            start: start,
+            end: end,
+            propertyName: propertyName,
+          ),
+        ),
+      );
+    }
+
+    for (final invoice in invoices) {
+      _addInvoicePage(pdf, invoice);
+    }
+
+    final bytes = await pdf.save();
+    debugPrint('✅ [PDF] Lote generado - ${bytes.length} bytes');
+    return bytes;
+  }
+
+  /// Genera el PDF del listado de facturas de un periodo (tabla, no facturas)
+  Future<Uint8List> generateInvoicesListPdf(
+    List<InvoiceEntity> invoices, {
+    required DateTime start,
+    required DateTime end,
+    String? propertyName,
+  }) async {
+    await _loadFonts();
+    await _loadLogo();
+
+    final pdf = pw.Document(
+      title: 'Listado de facturas ${_formatDate(start)} - ${_formatDate(end)}',
+      author: 'Grupo Hotelero BF',
+      creator: 'BF Stay',
+    );
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(12 * PdfPageFormat.mm),
+        maxPages: 500,
+        header: (context) => context.pageNumber == 1
+            ? pw.SizedBox()
+            : pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 8),
+                child: pw.Text(
+                  'Listado de facturas · ${_formatDate(start)} – ${_formatDate(end)}',
+                  style: _regularStyle(fontSize: 7, color: _colorTextSoft),
+                ),
+              ),
+        footer: (context) => pw.Align(
+          alignment: pw.Alignment.centerRight,
+          child: pw.Text(
+            'Página ${context.pageNumber} de ${context.pagesCount}',
+            style: _regularStyle(fontSize: 7, color: _colorTextSoft),
+          ),
+        ),
+        build: (context) => [
+          _buildTopAccent(),
+          pw.SizedBox(height: 10),
+          _buildPeriodTitle(
+            'LISTADO DE FACTURAS',
+            start: start,
+            end: end,
+            propertyName: propertyName,
+          ),
+          pw.SizedBox(height: 12),
+          _buildPeriodTotals(invoices),
+          pw.SizedBox(height: 12),
+          _buildPeriodTable(invoices),
+          pw.SizedBox(height: 12),
+          _buildFooter(),
+        ],
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  /// Añade una página A4 con la factura (y marca de agua si no es válida)
+  void _addInvoicePage(pw.Document pdf, InvoiceEntity invoice) {
+    final watermark = switch (invoice.status) {
+      InvoiceStatus.draft => 'BORRADOR',
+      InvoiceStatus.cancelled => 'ANULADA',
+      _ => null,
+    };
+
+    pdf.addPage(
+      pw.Page(
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(12 * PdfPageFormat.mm),
+          buildForeground: watermark == null
+              ? null
+              : (context) => pw.FullPage(
+                    ignoreMargins: true,
+                    child: pw.Padding(
+                      padding: const pw.EdgeInsets.all(40 * PdfPageFormat.mm),
+                      child: pw.Opacity(
+                        opacity: 0.12,
+                        child: pw.Watermark.text(
+                          watermark,
+                          style: _boldStyle(
+                            fontSize: 80,
+                            color: invoice.status == InvoiceStatus.cancelled
+                                ? _colorDanger
+                                : _colorTextSoft,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+        ),
+        build: (context) => _buildPageContent(invoice),
+      ),
+    );
+  }
+
+  pw.Widget _buildBatchSummaryPage(
+    List<InvoiceEntity> invoices, {
+    required DateTime start,
+    required DateTime end,
+    String? propertyName,
+  }) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _buildTopAccent(),
+        pw.SizedBox(height: 10),
+        _buildPeriodTitle(
+          'RESUMEN DE FACTURAS',
+          start: start,
+          end: end,
+          propertyName: propertyName,
+        ),
+        pw.SizedBox(height: 12),
+        _buildPeriodTotals(invoices),
+        pw.SizedBox(height: 12),
+        // En la portada caben ~35 filas; el resto se ve en las páginas siguientes
+        _buildPeriodTable(invoices.take(35).toList()),
+        if (invoices.length > 35)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 6),
+            child: pw.Text(
+              '… y ${invoices.length - 35} facturas más en las páginas siguientes',
+              style: _regularStyle(fontSize: 7, color: _colorTextSoft),
+            ),
+          ),
+        pw.Spacer(),
+        _buildFooter(),
+      ],
+    );
+  }
+
+  pw.Widget _buildPeriodTitle(
+    String title, {
+    required DateTime start,
+    required DateTime end,
+    String? propertyName,
+  }) {
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (_logoImage != null) ...[
+          pw.Image(_logoImage!, height: 36),
+          pw.SizedBox(width: 12),
+        ],
+        pw.Expanded(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                title,
+                style: _boldStyle(fontSize: 14, color: _colorGold, letterSpacing: 1.2),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Text(
+                'Periodo: ${_formatDate(start)} – ${_formatDate(end)}',
+                style: _regularStyle(fontSize: 9),
+              ),
+              if (propertyName != null)
+                pw.Text(
+                  'Alojamiento: $propertyName',
+                  style: _regularStyle(fontSize: 9),
+                ),
+              pw.Text(
+                'Generado el ${_formatDate(DateTime.now())}',
+                style: _regularStyle(fontSize: 7, color: _colorTextSoft),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _buildPeriodTotals(List<InvoiceEntity> invoices) {
+    final base = invoices.fold<double>(0, (sum, i) => sum + i.taxBase);
+    final tax = invoices.fold<double>(0, (sum, i) => sum + i.taxAmount);
+    final total = invoices.fold<double>(0, (sum, i) => sum + i.totalIncludingTax);
+
+    pw.Widget cell(String label, String value) {
+      return pw.Expanded(
+        child: pw.Container(
+          padding: const pw.EdgeInsets.all(8),
+          decoration: pw.BoxDecoration(
+            color: _colorGoldBg,
+            border: pw.Border.all(color: _colorGoldSoft),
+            borderRadius: pw.BorderRadius.circular(4),
+          ),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(label, style: _regularStyle(fontSize: 7, color: _colorTextSoft)),
+              pw.SizedBox(height: 2),
+              pw.Text(value, style: _boldStyle(fontSize: 11)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return pw.Row(
+      children: [
+        cell('Nº facturas', '${invoices.length}'),
+        pw.SizedBox(width: 8),
+        cell('Base imponible', _formatCurrency(base)),
+        pw.SizedBox(width: 8),
+        cell('IVA', _formatCurrency(tax)),
+        pw.SizedBox(width: 8),
+        cell('Total', _formatCurrency(total)),
+      ],
+    );
+  }
+
+  pw.Widget _buildPeriodTable(List<InvoiceEntity> invoices) {
+    return pw.TableHelper.fromTextArray(
+      headers: ['Nº factura', 'Fecha', 'Cliente', 'NIF', 'Estado', 'Base', 'IVA', 'Total'],
+      data: invoices
+          .map((i) => [
+                i.invoiceNumber,
+                _formatDate(i.issueDate),
+                i.clientName.toUpperCase(),
+                i.clientNif ?? '-',
+                i.status.label,
+                _formatCurrency(i.taxBase),
+                _formatCurrency(i.taxAmount),
+                _formatCurrency(i.totalIncludingTax),
+              ])
+          .toList(),
+      headerStyle: _boldStyle(fontSize: 7, color: PdfColors.white),
+      headerDecoration: const pw.BoxDecoration(color: _colorDark),
+      cellStyle: _regularStyle(fontSize: 7),
+      rowDecoration: const pw.BoxDecoration(
+        border: pw.Border(bottom: pw.BorderSide(color: _colorRowDivider)),
+      ),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(1.4),
+        1: const pw.FlexColumnWidth(1.1),
+        2: const pw.FlexColumnWidth(2.6),
+        3: const pw.FlexColumnWidth(1.3),
+        4: const pw.FlexColumnWidth(1),
+        5: const pw.FlexColumnWidth(1.3),
+        6: const pw.FlexColumnWidth(1.1),
+        7: const pw.FlexColumnWidth(1.3),
+      },
+      cellAlignments: {
+        5: pw.Alignment.centerRight,
+        6: pw.Alignment.centerRight,
+        7: pw.Alignment.centerRight,
+      },
+    );
   }
 
   pw.Widget _buildPageContent(InvoiceEntity invoice) {
@@ -869,5 +1167,44 @@ class InvoicePdfService {
   /// Obtiene los bytes del PDF para previsualización
   Future<Uint8List> getPdfBytes(InvoiceEntity invoice) async {
     return generateInvoicePdf(invoice);
+  }
+
+  // ==================== SALIDA GENÉRICA DE BYTES ====================
+
+  /// Abre el diálogo de impresión del sistema con un PDF ya generado
+  Future<void> printPdfBytes(Uint8List bytes, {required String name}) async {
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => bytes,
+      name: name,
+    );
+  }
+
+  /// Comparte cualquier archivo (PDF, CSV...) con la hoja nativa.
+  /// En web el navegador lo descarga. En móvil permite "Guardar en Archivos",
+  /// Drive, email, WhatsApp, etc.
+  /// [shareRect] es necesario en iPad.
+  Future<void> shareFileBytes(
+    Uint8List bytes, {
+    required String fileName,
+    required String mimeType,
+    String? subject,
+    Rect? shareRect,
+  }) async {
+    if (kIsWeb) {
+      await Share.shareXFiles(
+        [XFile.fromData(bytes, name: fileName, mimeType: mimeType)],
+        subject: subject,
+      );
+      return;
+    }
+
+    final directory = await getTemporaryDirectory();
+    final file = File('${directory.path}/$fileName');
+    await file.writeAsBytes(bytes);
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: mimeType)],
+      subject: subject,
+      sharePositionOrigin: shareRect,
+    );
   }
 }

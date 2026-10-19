@@ -908,6 +908,7 @@
   "admin_checkin_cancelled_success": "Reserva cancelada correctamente",
 
   "admin_invoice_generate_pdf": "Generar PDF",
+  "admin_invoice_print": "Imprimir",
   "admin_invoice_share": "Compartir",
   "admin_invoice_download": "Descargar",
   "admin_invoice_share_title": "Compartir Factura",
@@ -916,7 +917,6 @@
   "@admin_invoice_pdf_saved": {
     "placeholders": { "path": { "type": "String" } }
   },
-  "admin_invoice_generate_pdf": "Generar PDF",
   "admin_invoice_issue": "Emitir",
   "admin_invoice_mark_paid": "Marcar como pagada",
   "admin_invoice_paid_on": "Pagada el {date}",

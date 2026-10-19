@@ -112,6 +112,7 @@
   "admin_checkin_cancel_reason_hint": "Descreva o motivo do cancelamento...",
   "admin_checkin_cancelled_success": "Reserva cancelada com sucesso",
   "admin_invoice_generate_pdf": "Gerar PDF",
+  "admin_invoice_print": "Imprimir",
   "admin_invoice_share": "Compartilhar",
   "admin_invoice_download": "Baixar",
   "admin_invoice_issue": "Emitir",

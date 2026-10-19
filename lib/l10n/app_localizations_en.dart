@@ -2417,6 +2417,9 @@ class SEn extends S {
   String get admin_invoice_generate_pdf => 'Generate PDF';
 
   @override
+  String get admin_invoice_print => 'Print';
+
+  @override
   String get admin_invoice_share => 'Share';
 
   @override

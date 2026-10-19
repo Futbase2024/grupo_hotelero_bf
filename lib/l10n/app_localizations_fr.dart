@@ -2450,6 +2450,9 @@ class SFr extends S {
   String get admin_invoice_generate_pdf => 'Générer le PDF';
 
   @override
+  String get admin_invoice_print => 'Imprimer';
+
+  @override
   String get admin_invoice_share => 'Partager';
 
   @override

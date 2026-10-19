@@ -10,6 +10,7 @@ import '../bloc/invoices_event.dart';
 import '../bloc/invoices_state.dart';
 import '../widgets/invoices_tab.dart';
 import '../../data/services/invoice_pdf_service.dart';
+import '../../../shared/widgets/info_dialog.dart';
 
 /// Pantalla de detalle de factura con previsualización
 class InvoiceDetailScreen extends StatelessWidget {
@@ -60,12 +61,7 @@ class InvoiceDetailScreen extends StatelessWidget {
         listenWhen: (previous, current) => previous.error != current.error,
         listener: (context, state) {
           if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error!),
-                backgroundColor: AppColors.error,
-              ),
-            );
+            InfoDialog.error(context, title: S.of(context).common_error, message: state.error!);
           }
         },
         builder: (context, state) {
@@ -133,9 +129,9 @@ class InvoiceDetailScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: _SecondaryActionButton(
-                    icon: Icons.picture_as_pdf_outlined,
-                    label: S.of(context).admin_invoice_generate_pdf,
-                    onPressed: () => _generatePdf(context, currentInvoice),
+                    icon: Icons.print_outlined,
+                    label: S.of(context).admin_invoice_print,
+                    onPressed: () => _printPdf(context, currentInvoice),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -437,31 +433,35 @@ class InvoiceDetailScreen extends StatelessWidget {
     }
   }
 
-  void _generatePdf(BuildContext context, InvoiceEntity currentInvoice) async {
+  void _printPdf(BuildContext context, InvoiceEntity currentInvoice) async {
     try {
       await _pdfService.printInvoice(currentInvoice);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.of(context).admin_invoice_error_generate_pdf(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        await _showPdfError(context, S.of(context).admin_invoice_error_generate_pdf(e.toString()));
       }
     }
   }
 
+  /// En móvil abre directamente la hoja nativa de compartir (email, WhatsApp,
+  /// Archivos…). En web no se pueden adjuntar archivos, así que se ofrecen
+  /// email y WhatsApp descargando antes el PDF.
   void _showShareOptions(BuildContext context, InvoiceEntity currentInvoice) {
+    if (!kIsWeb) {
+      _shareNative(context, currentInvoice);
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.darkSurface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: SafeArea(
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.darkSurface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -484,26 +484,17 @@ class InvoiceDetailScreen extends StatelessWidget {
                       label: S.of(context).common_email_type,
                       color: AppColors.gold,
                       onPressed: () {
-                        Navigator.pop(context);
-                        _shareViaEmail(context, currentInvoice);
+                        Navigator.pop(sheetContext);
+                        _runShare(context, () => _pdfService.shareViaEmailWeb(currentInvoice));
                       },
                     ),
                     _ShareOption(
                       icon: Icons.message_outlined,
                       label: 'WhatsApp',
-                      color: const Color(0xFF25D366),
+                      color: AppColors.success,
                       onPressed: () {
-                        Navigator.pop(context);
-                        _shareViaWhatsApp(context, currentInvoice);
-                      },
-                    ),
-                    _ShareOption(
-                      icon: Icons.copy_outlined,
-                      label: S.of(context).admin_invoice_copy_link,
-                      color: AppColors.info,
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _copyLink(context, currentInvoice);
+                        Navigator.pop(sheetContext);
+                        _runShare(context, () => _pdfService.shareViaWhatsAppWeb(currentInvoice));
                       },
                     ),
                   ],
@@ -516,65 +507,17 @@ class InvoiceDetailScreen extends StatelessWidget {
     );
   }
 
-  void _shareViaEmail(BuildContext context, InvoiceEntity currentInvoice) async {
-    try {
-      if (kIsWeb) {
-        await _pdfService.shareViaEmailWeb(currentInvoice);
-        return;
-      }
-      final box = context.findRenderObject() as RenderBox?;
-      final rect = _getShareRect(box);
-      await _pdfService.shareInvoice(currentInvoice, rect);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.of(context).admin_invoice_error_share(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+  void _shareNative(BuildContext context, InvoiceEntity currentInvoice) {
+    final rect = _getShareRect(context.findRenderObject() as RenderBox?);
+    _runShare(context, () => _pdfService.shareInvoice(currentInvoice, rect));
   }
 
-  void _shareViaWhatsApp(BuildContext context, InvoiceEntity currentInvoice) async {
+  Future<void> _runShare(BuildContext context, Future<void> Function() share) async {
     try {
-      if (kIsWeb) {
-        await _pdfService.shareViaWhatsAppWeb(currentInvoice);
-        return;
-      }
-      final box = context.findRenderObject() as RenderBox?;
-      final rect = _getShareRect(box);
-      await _pdfService.shareInvoice(currentInvoice, rect);
+      await share();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.of(context).admin_invoice_error_share(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  void _copyLink(BuildContext context, InvoiceEntity currentInvoice) async {
-    try {
-      if (kIsWeb) {
-        await _pdfService.downloadInvoiceWeb(currentInvoice);
-        return;
-      }
-      final box = context.findRenderObject() as RenderBox?;
-      final rect = _getShareRect(box);
-      await _pdfService.shareInvoice(currentInvoice, rect);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.of(context).admin_invoice_error_share(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        await _showPdfError(context, S.of(context).admin_invoice_error_share(e.toString()));
       }
     }
   }
@@ -587,32 +530,31 @@ class InvoiceDetailScreen extends StatelessWidget {
     return position & const Size(100, 100);
   }
 
+  /// En web el navegador descarga el archivo. En móvil se abre la hoja nativa
+  /// para "Guardar en Archivos"/Drive: la carpeta interna de la app no es
+  /// visible para el usuario.
   void _downloadPdf(BuildContext context, InvoiceEntity currentInvoice) async {
     try {
-      if (kIsWeb) {
-        await _pdfService.shareInvoice(currentInvoice, Rect.zero);
-        return;
-      }
-      final file = await _pdfService.saveInvoiceToFile(currentInvoice);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.of(context).admin_invoice_pdf_saved(file.path)),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+      final bytes = await _pdfService.generateInvoicePdf(currentInvoice);
+      final sanitizedNumber = currentInvoice.invoiceNumber.replaceAll('/', '-');
+      if (!context.mounted) return;
+      await _pdfService.shareFileBytes(
+        bytes,
+        fileName: 'Factura_$sanitizedNumber.pdf',
+        mimeType: 'application/pdf',
+        shareRect: _getShareRect(context.findRenderObject() as RenderBox?),
+      );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.of(context).admin_invoice_error_download(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        await _showPdfError(context, S.of(context).admin_invoice_error_download(e.toString()));
       }
     }
   }
+
+  Future<void> _showPdfError(BuildContext context, String message) {
+    return InfoDialog.error(context, title: S.of(context).common_error, message: message);
+  }
+
 
   String _formatDate(DateTime? date) {
     if (date == null) return '';

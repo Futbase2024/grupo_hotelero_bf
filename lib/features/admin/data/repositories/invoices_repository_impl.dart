@@ -78,6 +78,56 @@ class InvoicesRepositoryImpl implements InvoicesRepository {
   }
 
   @override
+  Future<List<InvoiceEntity>> getByIssueDateRange({
+    required DateTime start,
+    required DateTime end,
+    Set<InvoiceStatus>? statuses,
+    String? propertyId,
+  }) async {
+    final from = _toDateString(start);
+    final to = _toDateString(end);
+    debugPrint('🔵 [InvoicesRepository] getByIssueDateRange - $from → $to');
+
+    var query = _client
+        .from(_tableName)
+        .select('''
+          *,
+          bookings(
+            booking_code,
+            unit_id,
+            units(name)
+          )
+        ''')
+        .gte('issue_date', from)
+        .lte('issue_date', to);
+
+    if (statuses != null && statuses.isNotEmpty) {
+      query = query.inFilter(
+        'status',
+        statuses.map((s) => s.toDbString()).toList(),
+      );
+    }
+    if (propertyId != null) {
+      query = query.eq('property_id', propertyId);
+    }
+
+    final response = await query.order('invoice_number', ascending: true);
+
+    final invoices = (response as List)
+        .map((json) => _mapToEntity(json))
+        .toList();
+    debugPrint('🔵 [InvoicesRepository] getByIssueDateRange - Found ${invoices.length} invoices');
+    return invoices;
+  }
+
+  /// `issue_date` es de tipo DATE: se compara con 'yyyy-MM-dd' sin zona horaria
+  String _toDateString(DateTime date) {
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$m-$d';
+  }
+
+  @override
   Future<InvoiceEntity?> getById(String id) async {
     debugPrint('🔵 [InvoicesRepository] getById - Fetching invoice: $id');
     final response = await _client

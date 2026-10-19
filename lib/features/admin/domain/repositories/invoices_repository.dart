@@ -11,6 +11,16 @@ abstract class InvoicesRepository {
   /// Obtiene facturas filtradas por propiedad
   Future<List<InvoiceEntity>> getByPropertyId(String propertyId);
 
+  /// Obtiene las facturas emitidas entre [start] y [end] (ambos inclusive,
+  /// por `issue_date`), ordenadas por número de factura ascendente.
+  /// [statuses] vacío o null = todos los estados.
+  Future<List<InvoiceEntity>> getByIssueDateRange({
+    required DateTime start,
+    required DateTime end,
+    Set<InvoiceStatus>? statuses,
+    String? propertyId,
+  });
+
   /// Obtiene una factura por ID
   Future<InvoiceEntity?> getById(String id);
 

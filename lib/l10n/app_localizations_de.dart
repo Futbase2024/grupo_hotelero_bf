@@ -2454,6 +2454,9 @@ class SDe extends S {
   String get admin_invoice_generate_pdf => 'PDF erstellen';
 
   @override
+  String get admin_invoice_print => 'Drucken';
+
+  @override
   String get admin_invoice_share => 'Teilen';
 
   @override
