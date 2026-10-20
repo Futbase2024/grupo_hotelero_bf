@@ -6,33 +6,29 @@ import 'package:bf_stay/l10n/app_localizations.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
-import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/property_entity.dart';
+import 'package:bf_stay/features/guest/guest_access/domain/entities/guest_access_entity.dart';
 
 /// Pantalla de Instrucciones de Acceso completas para el huesped
 class AccessInstructionsScreen extends StatelessWidget {
   const AccessInstructionsScreen({
     super.key,
-    required this.booking,
+    required this.access,
     required this.unit,
     required this.property,
-    this.serverTime,
   });
 
-  final AdminBookingEntity booking;
+  /// Códigos de acceso entregados por el servidor (get_guest_access): los
+  /// secretos solo vienen rellenos con el check-in validado.
+  final GuestAccessEntity access;
+
+  /// Datos públicos de la unidad principal (dirección, coordenadas).
   final UnitEntity unit;
   final PropertyEntity property;
 
-  /// Hora actual del servidor (para evitar manipulacion del reloj del dispositivo)
-  /// Si es null, se usa DateTime.now() como fallback
-  final DateTime? serverTime;
-
   /// Hora de check-in (misma para todos)
   static const String _checkinTime = '14:00';
-
-  /// Hora a partir de la cual estan disponibles las llaves/codigos por defecto (14:00)
-  static const int _defaultKeysAvailableHour = 14;
 
   /// Determina si es un hotel basado en el nombre de la propiedad
   bool get _isHotel {
@@ -43,80 +39,17 @@ class AccessInstructionsScreen extends StatelessWidget {
   /// Hora limite de check-out segun tipo de propiedad
   String get _checkoutTime => _isHotel ? '12:00' : '11:30';
 
-  /// Verifica si las llaves y codigos estan disponibles
-  /// Por defecto: 14:00 del dia de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
-  /// IMPORTANTE: Usa la hora del servidor para evitar manipulacion del reloj del dispositivo
-  bool get _areKeysAvailable {
-    // Usar hora del servidor si esta disponible, si no, usar hora local como fallback
-    final now = serverTime ?? DateTime.now();
-    final checkInDate = booking.checkInDate;
+  /// Si ya se pueden mostrar los codigos (servidor + 14:00 / early check-in)
+  bool get _areKeysAvailable => access.areKeysAvailable();
 
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
-    if (booking.earlyCheckinAvailableAt != null) {
-      final earlyTime = booking.earlyCheckinAvailableAt!;
+  /// Cuando estaran disponibles las llaves
+  DateTime get _keysAvailableTime => access.keysAvailableAt;
 
-      // Verificar que el early check-in fue marcado el mismo dia de la reserva
-      final isSameDay =
-          earlyTime.year == checkInDate.year &&
-          earlyTime.month == checkInDate.month &&
-          earlyTime.day == checkInDate.day;
-
-      // Solo tiene efecto si es el mismo dia Y ya paso la hora marcada
-      if (isSameDay) {
-        return now.isAfter(earlyTime) || now.isAtSameMomentAs(earlyTime);
-      }
-      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
-    }
-
-    // Comportamiento por defecto: 14:00 del dia de check-in
-    final keysAvailableTime = DateTime(
-      checkInDate.year,
-      checkInDate.month,
-      checkInDate.day,
-      _defaultKeysAvailableHour,
-      0,
-      0,
-    );
-
-    return now.isAfter(keysAvailableTime) ||
-        now.isAtSameMomentAs(keysAvailableTime);
-  }
-
-  /// Calcula cuando estaran disponibles las llaves
-  /// Por defecto: 14:00 del dia de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
-  /// NOTA: El calculo de disponibilidad real usa _areKeysAvailable con hora del servidor
-  DateTime get _keysAvailableTime {
-    final checkInDate = booking.checkInDate;
-
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
-    if (booking.earlyCheckinAvailableAt != null) {
-      final earlyTime = booking.earlyCheckinAvailableAt!;
-
-      // Verificar que el early check-in fue marcado el mismo dia de la reserva
-      final isSameDay =
-          earlyTime.year == checkInDate.year &&
-          earlyTime.month == checkInDate.month &&
-          earlyTime.day == checkInDate.day;
-
-      // Solo tiene efecto si es el mismo dia
-      if (isSameDay) {
-        return earlyTime;
-      }
-      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
-    }
-
-    // Comportamiento por defecto: 14:00 del dia de check-in
-    return DateTime(
-      checkInDate.year,
-      checkInDate.month,
-      checkInDate.day,
-      _defaultKeysAvailableHour,
-      0,
-      0,
-    );
-  }
+  String? get _wifiNetwork => access.mainUnit?.wifiNetwork ?? unit.wifiNetwork;
+  String? get _wifiPassword => access.mainUnit?.wifiPassword;
+  String? get _welcomeInstructions => access.mainUnit?.welcomeInstructions;
+  String? get _mainDoorKeycode => access.mainDoorKeycode;
+  String? get _keyboxCode => access.keyboxCode;
 
   /// Obtiene la direccion completa formateada
   String get _fullAddress {
@@ -182,8 +115,8 @@ class AccessInstructionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Si hay instrucciones de bienvenida personalizadas, mostrarlas directamente
-    if (unit.welcomeInstructions != null &&
-        unit.welcomeInstructions!.isNotEmpty) {
+    if (_welcomeInstructions != null &&
+        _welcomeInstructions!.isNotEmpty) {
       return _buildWelcomeInstructionsView(context);
     }
 
@@ -226,8 +159,8 @@ class AccessInstructionsScreen extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing20),
 
                 // Tarjeta WiFi destacada (si hay datos en la base de datos)
-                if (unit.wifiNetwork != null &&
-                    unit.wifiNetwork!.isNotEmpty) ...[
+                if (_wifiNetwork != null &&
+                    _wifiNetwork!.isNotEmpty) ...[
                   _buildWifiHighlightCard(context),
                   const SizedBox(height: AppTheme.spacing20),
                 ],
@@ -235,7 +168,7 @@ class AccessInstructionsScreen extends StatelessWidget {
                 // Instrucciones completas formateadas (sin seccion WiFi)
                 _buildFormattedInstructions(
                   context,
-                  _removeWifiSection(unit.welcomeInstructions!),
+                  _removeWifiSection(_welcomeInstructions!),
                 ),
               ],
             ),
@@ -258,8 +191,8 @@ class AccessInstructionsScreen extends StatelessWidget {
   /// Tarjeta destacada con los datos de WiFi
   Widget _buildWifiHighlightCard(BuildContext context) {
     final s = S.of(context);
-    final wifiNetwork = unit.wifiNetwork ?? '';
-    final wifiPassword = unit.wifiPassword ?? '';
+    final wifiNetwork = _wifiNetwork ?? '';
+    final wifiPassword = _wifiPassword ?? '';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
@@ -374,8 +307,8 @@ class AccessInstructionsScreen extends StatelessWidget {
   /// Tarjeta destacada con los codigos de acceso
   Widget _buildKeyCodeHighlightCard(BuildContext context) {
     final s = S.of(context);
-    final mainDoorCode = property.mainDoorKeycode;
-    final boxCode = booking.keyboxCode;
+    final mainDoorCode = _mainDoorKeycode;
+    final boxCode = _keyboxCode;
 
     // Si las llaves no estan disponibles, mostrar mensaje informativo
     if (!_areKeysAvailable) {
@@ -819,8 +752,8 @@ class AccessInstructionsScreen extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing24),
 
                 // WiFi
-                if (unit.wifiNetwork != null &&
-                    unit.wifiNetwork!.isNotEmpty) ...[
+                if (_wifiNetwork != null &&
+                    _wifiNetwork!.isNotEmpty) ...[
                   _buildSectionTitle(context, 'WiFi', Icons.wifi_outlined),
                   const SizedBox(height: AppTheme.spacing12),
                   _buildWifiCard(context),
@@ -865,7 +798,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   Widget _buildWelcomeCard(BuildContext context) {
     final s = S.of(context);
-    final guestName = booking.guestFirstName ?? s.guest_access_guest;
+    final guestName = access.guestFirstName ?? s.guest_access_guest;
     final unitName = unit.name.isNotEmpty
         ? unit.name
         : s.guest_access_your_accommodation;
@@ -982,7 +915,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   Widget _buildBuildingAccessCard(BuildContext context) {
     final s = S.of(context);
-    final mainDoorCode = property.mainDoorKeycode;
+    final mainDoorCode = _mainDoorKeycode;
     final keysAvailableTime = _keysAvailableTime;
     final formattedDate =
         '${keysAvailableTime.day}/${keysAvailableTime.month}/${keysAvailableTime.year}';
@@ -1079,7 +1012,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   Widget _buildApartmentAccessCard(BuildContext context) {
     final s = S.of(context);
-    final boxCode = booking.keyboxCode;
+    final boxCode = _keyboxCode;
     final keysAvailableTime = _keysAvailableTime;
     final formattedTime =
         '${keysAvailableTime.hour.toString().padLeft(2, '0')}:${keysAvailableTime.minute.toString().padLeft(2, '0')}';
@@ -1172,8 +1105,8 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   Widget _buildWifiCard(BuildContext context) {
     final s = S.of(context);
-    final wifiNetwork = unit.wifiNetwork ?? '';
-    final wifiPassword = unit.wifiPassword ?? '';
+    final wifiNetwork = _wifiNetwork ?? '';
+    final wifiPassword = _wifiPassword ?? '';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),

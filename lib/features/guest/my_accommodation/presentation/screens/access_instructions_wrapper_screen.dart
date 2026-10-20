@@ -6,11 +6,11 @@ import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
-import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
-import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/property_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/repositories/properties_repository.dart';
+import 'package:bf_stay/features/guest/guest_access/domain/entities/guest_access_entity.dart';
+import 'package:bf_stay/features/guest/guest_access/domain/repositories/guest_access_repository.dart';
 import 'package:bf_stay/features/guest/my_accommodation/presentation/screens/access_instructions_screen.dart';
 
 /// Wrapper screen que carga los datos necesarios y muestra las instrucciones de acceso
@@ -22,10 +22,9 @@ class AccessInstructionsWrapperScreen extends StatefulWidget {
 }
 
 class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrapperScreen> {
-  AdminBookingEntity? _booking;
+  GuestAccessEntity? _access;
   UnitEntity? _unit;
   PropertyEntity? _property;
-  DateTime? _serverTime;
   bool _isLoading = true;
   String? _error;
 
@@ -60,17 +59,11 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
     }
 
     try {
-      // Cargar la reserva y la hora del servidor en paralelo
-      final repository = getIt<AdminPanelRepository>();
-      final results = await Future.wait([
-        repository.getBooking(bookingId),
-        repository.getServerTime(),
-      ]);
+      // Códigos de acceso (el servidor decide si se pueden ver) y hora del servidor
+      final access = await getIt<GuestAccessRepository>().getAccess(bookingId);
+      final mainUnitId = access.mainUnit?.unitId;
 
-      final booking = results[0] as AdminBookingEntity?;
-      final serverTime = results[1] as DateTime;
-
-      if (booking == null) {
+      if (mainUnitId == null) {
         if (!mounted) return;
         setState(() {
           _error = s.guest_accommodation_booking_not_found;
@@ -79,11 +72,11 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
         return;
       }
 
-      // Cargar la unidad
+      // Datos públicos de la unidad (dirección, coordenadas...)
       final propertiesRepository = getIt<PropertiesRepository>();
-      final unit = await propertiesRepository.getUnitById(booking.unitId);
+      final unit = await propertiesRepository.getUnitById(mainUnitId);
 
-      // Cargar la propiedad para obtener el keycode de la puerta principal
+      // Cargar la propiedad (nombre; el código del portal llega en access)
       PropertyEntity? property;
       if (unit != null) {
         property = await propertiesRepository.getById(unit.propertyId);
@@ -91,10 +84,9 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
 
       if (mounted) {
         setState(() {
-          _booking = booking;
+          _access = access;
           _unit = unit;
           _property = property;
-          _serverTime = serverTime;
           _isLoading = false;
         });
       }
@@ -138,7 +130,7 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
     }
 
     // Error state
-    if (_error != null || _booking == null || _unit == null || _property == null) {
+    if (_error != null || _access == null || _unit == null || _property == null) {
       return Scaffold(
         backgroundColor: AppColors.getSurfaceColor(context),
         appBar: AppBar(
@@ -212,10 +204,9 @@ class _AccessInstructionsWrapperScreenState extends State<AccessInstructionsWrap
 
     // Success: mostrar la pantalla de instrucciones
     return AccessInstructionsScreen(
-      booking: _booking!,
+      access: _access!,
       unit: _unit!,
       property: _property!,
-      serverTime: _serverTime,
     );
   }
 }

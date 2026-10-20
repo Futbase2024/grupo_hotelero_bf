@@ -11,11 +11,11 @@ import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
 import 'package:bf_stay/core/theme/responsive.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
-import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
-import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/property_entity.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/repositories/properties_repository.dart';
+import 'package:bf_stay/features/guest/guest_access/domain/entities/guest_access_entity.dart';
+import 'package:bf_stay/features/guest/guest_access/domain/repositories/guest_access_repository.dart';
 import 'package:bf_stay/shared/utils/unit_image_helper.dart';
 import 'package:bf_stay/features/guest/my_accommodation/presentation/screens/access_instructions_screen.dart';
 
@@ -28,101 +28,30 @@ class MyAccommodationScreen extends StatefulWidget {
 }
 
 class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
-  AdminBookingEntity? _booking;
+  /// Códigos de acceso entregados por el servidor (get_guest_access)
+  GuestAccessEntity? _access;
+  /// Datos públicos de la unidad principal (dirección, tipo, coordenadas)
   UnitEntity? _unit;
   PropertyEntity? _property;
   bool _isLoading = true;
   String? _error;
-  /// Lista de todas las unidades de la reserva (para multi-unidad)
-  List<UnitEntity> _units = [];
-  /// Hora actual del servidor (para evitar manipulacion del reloj del dispositivo)
-  DateTime? _serverTime;
 
-  /// Hora a partir de la cual estan disponibles las llaves/codigos por defecto (14:00)
-  static const int _defaultKeysAvailableHour = 14;
+  /// Si ya se pueden mostrar los codigos: el servidor los ha entregado (check-in
+  /// validado) y ha llegado la hora (14:00 o early check-in), con hora del servidor
+  bool get _areKeysAvailable => _access?.areKeysAvailable() ?? false;
 
-  /// Verifica si las llaves y codigos estan disponibles
-  /// Por defecto: 14:00 del dia de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
-  /// IMPORTANTE: Usa la hora del servidor para evitar manipulacion del reloj del dispositivo
-  bool get _areKeysAvailable {
-    if (_booking == null) return false;
+  /// Cuando estaran disponibles las llaves
+  DateTime get _keysAvailableTime => _access?.keysAvailableAt ?? DateTime.now();
 
-    // Usar hora del servidor si esta disponible, si no, usar hora local como fallback
-    final now = _serverTime ?? DateTime.now();
-    final checkInDate = _booking!.checkInDate;
-
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
-    if (_booking!.earlyCheckinAvailableAt != null) {
-      final earlyTime = _booking!.earlyCheckinAvailableAt!;
-
-      // Verificar que el early check-in fue marcado el mismo dia de la reserva
-      final isSameDay = earlyTime.year == checkInDate.year &&
-          earlyTime.month == checkInDate.month &&
-          earlyTime.day == checkInDate.day;
-
-      // Solo tiene efecto si es el mismo dia Y ya paso la hora marcada
-      if (isSameDay) {
-        return now.isAfter(earlyTime) || now.isAtSameMomentAs(earlyTime);
-      }
-      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
-    }
-
-    // Comportamiento por defecto: 14:00 del dia de check-in
-    final keysAvailableTime = DateTime(
-      checkInDate.year,
-      checkInDate.month,
-      checkInDate.day,
-      _defaultKeysAvailableHour,
-      0,
-      0,
-    );
-
-    return now.isAfter(keysAvailableTime) || now.isAtSameMomentAs(keysAvailableTime);
-  }
-
-  /// Calcula cuando estaran disponibles las llaves
-  /// Por defecto: 14:00 del dia de check-in
-  /// Early check-in: Solo tiene efecto si el admin lo marca el MISMO DIA de check-in
-  /// NOTA: El calculo de disponibilidad real usa _areKeysAvailable con hora del servidor
-  DateTime get _keysAvailableTime {
-    if (_booking == null) return DateTime.now();
-
-    final checkInDate = _booking!.checkInDate;
-
-    // Si el admin ha marcado early check-in, verificar que sea del MISMO DIA de check-in
-    if (_booking!.earlyCheckinAvailableAt != null) {
-      final earlyTime = _booking!.earlyCheckinAvailableAt!;
-
-      // Verificar que el early check-in fue marcado el mismo dia de la reserva
-      final isSameDay = earlyTime.year == checkInDate.year &&
-          earlyTime.month == checkInDate.month &&
-          earlyTime.day == checkInDate.day;
-
-      // Solo tiene efecto si es el mismo dia
-      if (isSameDay) {
-        return earlyTime;
-      }
-      // Si NO es el mismo dia, ignorar y usar comportamiento por defecto
-    }
-
-    // Comportamiento por defecto: 14:00 del dia de check-in
-    return DateTime(
-      checkInDate.year,
-      checkInDate.month,
-      checkInDate.day,
-      _defaultKeysAvailableHour,
-      0,
-      0,
-    );
-  }
+  /// Codigo de la reserva; si no hay, el de la caja de la unidad
+  String get _boxCode =>
+      _access?.keyboxCode ?? _access?.mainUnit?.boxCode ?? '';
 
   /// Obtiene la ruta de la imagen local para una unidad
   String? get _localImagePath {
     // Priorizar el nombre del booking (que es lo que funciona en Tu Estancia)
-    final unitName = _booking?.unitName ?? _unit?.name;
+    final unitName = _access?.mainUnit?.name ?? _unit?.name;
     debugPrint('Mi Alojamiento - unitName: "$unitName"');
-    debugPrint('Mi Alojamiento - _booking?.unitName: "${_booking?.unitName}"');
     debugPrint('Mi Alojamiento - _unit?.name: "${_unit?.name}"');
     final path = UnitImageHelper.getLocalImagePath(unitName);
     debugPrint('Mi Alojamiento - path: "$path"');
@@ -160,17 +89,11 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     }
 
     try {
-      // Cargar la reserva y la hora del servidor en paralelo
-      final repository = getIt<AdminPanelRepository>();
-      final results = await Future.wait([
-        repository.getBooking(bookingId),
-        repository.getServerTime(),
-      ]);
+      // Códigos de acceso (el servidor decide si se pueden ver) y hora del servidor
+      final access = await getIt<GuestAccessRepository>().getAccess(bookingId);
+      final mainUnitId = access.mainUnit?.unitId;
 
-      final booking = results[0] as AdminBookingEntity?;
-      final serverTime = results[1] as DateTime;
-
-      if (booking == null) {
+      if (mainUnitId == null) {
         if (!mounted) return;
         setState(() {
           _error = s.guest_accommodation_booking_not_found;
@@ -179,26 +102,10 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
         return;
       }
 
-      // Cargar la unidad principal
+      // Datos públicos de la unidad principal y de la propiedad
       final propertiesRepository = getIt<PropertiesRepository>();
-      final unit = await propertiesRepository.getUnitById(booking.unitId);
+      final unit = await propertiesRepository.getUnitById(mainUnitId);
 
-      // Cargar TODAS las unidades de la reserva
-      List<UnitEntity> allUnits = [];
-      if (booking.hasMultipleUnits && booking.units.isNotEmpty) {
-        // Cargar cada unidad desde la BD
-        for (final bookingUnit in booking.units) {
-          final u = await propertiesRepository.getUnitById(bookingUnit.unitId);
-          if (u != null) {
-            allUnits.add(u);
-          }
-        }
-      } else if (unit != null) {
-        // Reserva de una sola unidad
-        allUnits.add(unit);
-      }
-
-      // Cargar la propiedad para obtener el keycode de la puerta principal
       PropertyEntity? property;
       if (unit != null) {
         property = await propertiesRepository.getById(unit.propertyId);
@@ -206,11 +113,9 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
 
       if (mounted) {
         setState(() {
-          _booking = booking;
+          _access = access;
           _unit = unit;
-          _units = allUnits;
           _property = property;
-          _serverTime = serverTime;
           _isLoading = false;
         });
       }
@@ -282,34 +187,34 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
         // Seccion de llaves y codigos - condicionada a las 14:00 del dia de check-in
         if (_areKeysAvailable) ...[
           // Codigo de la puerta principal de la propiedad (comun para todas las unidades)
-          if (_property?.mainDoorKeycode != null &&
-              _property!.mainDoorKeycode!.isNotEmpty) ...[
+          if (_access?.mainDoorKeycode != null &&
+              _access!.mainDoorKeycode!.isNotEmpty) ...[
             _buildMainDoorKeycodeCard(),
             const SizedBox(height: AppTheme.spacing16),
           ],
 
           // Si hay multiples unidades, mostrar cada una con sus codigos
-          if (_booking?.hasMultipleUnits == true && _units.isNotEmpty) ...[
+          if (_access?.hasMultipleUnits == true) ...[
             _buildMultipleUnitsCards(),
           ] else ...[
             // Reserva de una sola unidad - mostrar como antes
-            if ((_booking?.keyboxCode != null && _booking!.keyboxCode!.isNotEmpty) ||
-                (_unit?.boxCode != null && _unit!.boxCode!.isNotEmpty)) ...[
+            if (_boxCode.isNotEmpty) ...[
               _buildBoxCodeCard(),
               const SizedBox(height: AppTheme.spacing16),
             ],
-            if (_unit?.boxLocationText != null && _unit!.boxLocationText!.isNotEmpty) ...[
+            if (_access?.mainUnit?.boxLocationText != null &&
+                _access!.mainUnit!.boxLocationText!.isNotEmpty) ...[
               _buildInfoCard(
                 icon: Icons.place_outlined,
                 title: S.of(context).guest_accommodation_box_location,
-                content: _unit!.boxLocationText!,
+                content: _access!.mainUnit!.boxLocationText!,
               ),
               const SizedBox(height: AppTheme.spacing16),
             ],
           ],
 
           // Instrucciones de acceso - Boton para ver instrucciones completas
-          if (_areKeysAvailable && _booking != null && _unit != null && _property != null) ...[
+          if (_areKeysAvailable && _access != null && _unit != null && _property != null) ...[
             _buildAccessInstructionsButton(),
             const SizedBox(height: AppTheme.spacing16),
           ],
@@ -332,12 +237,13 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   /// Construye las tarjetas de cada unidad cuando hay multiples
   Widget _buildMultipleUnitsCards() {
     final s = S.of(context);
+    final units = _access!.units;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Titulo de seccion
         Text(
-          s.guest_accommodation_rooms_count(_units.length),
+          s.guest_accommodation_rooms_count(units.length),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -348,8 +254,8 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
         const SizedBox(height: AppTheme.spacing12),
 
         // Tarjeta por cada unidad
-        ...List.generate(_units.length, (index) {
-          final unit = _units[index];
+        ...List.generate(units.length, (index) {
+          final unit = units[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
             child: _buildUnitCard(unit),
@@ -360,7 +266,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }
 
   /// Tarjeta individual para cada unidad con sus codigos
-  Widget _buildUnitCard(UnitEntity unit) {
+  Widget _buildUnitCard(GuestAccessUnit unit) {
     final s = S.of(context);
     final hasBoxCode = unit.boxCode != null && unit.boxCode!.isNotEmpty;
     final hasBoxLocation = unit.boxLocationText != null && unit.boxLocationText!.isNotEmpty;
@@ -560,11 +466,11 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
 
     // Construir el titulo segun si hay multiples unidades
     String titleText;
-    if (_booking?.hasMultipleUnits == true && _booking!.units.isNotEmpty) {
+    if (_access?.hasMultipleUnits == true) {
       // Mostrar nombres de todas las unidades
-      titleText = _booking!.units.map((u) => u.name).join(' · ');
+      titleText = _access!.units.map((u) => u.name).join(' · ');
     } else {
-      titleText = _unit?.name ?? _booking?.unitName ?? s.guest_accommodation_title;
+      titleText = _unit?.name ?? _access?.mainUnit?.name ?? s.guest_accommodation_title;
     }
 
     return Container(
@@ -634,7 +540,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                       ),
                     ),
                     // Badge con numero de unidades si hay multiples
-                    if (_booking?.hasMultipleUnits == true) ...[
+                    if (_access?.hasMultipleUnits == true) ...[
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -643,7 +549,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'x${_booking!.totalUnits}',
+                          'x${_access!.units.length}',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -656,7 +562,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _booking?.propertyName ?? 'BF Stay',
+                  _property?.name ?? 'BF Stay',
                   style: TextStyle(
                     fontSize: ResponsiveFontSize.bodyMedium(context),
                     color: AppColors.getTextSecondaryColor(context),
@@ -767,7 +673,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   /// Tarjeta para el codigo de la puerta principal del edificio
   Widget _buildMainDoorKeycodeCard() {
     final s = S.of(context);
-    final keycode = _property?.mainDoorKeycode;
+    final keycode = _access?.mainDoorKeycode;
     if (keycode == null || keycode.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -875,7 +781,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   Widget _buildBoxCodeCard() {
     final s = S.of(context);
     // Priorizar el codigo especifico de la reserva (keyboxCode) sobre el codigo generico de la unidad
-    final boxCode = _booking?.keyboxCode ?? _unit?.boxCode ?? '';
+    final boxCode = _boxCode;
     if (boxCode.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -971,14 +877,13 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
     final s = S.of(context);
     return GestureDetector(
       onTap: () {
-        if (_booking != null && _unit != null && _property != null) {
+        if (_access != null && _unit != null && _property != null) {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => AccessInstructionsScreen(
-                booking: _booking!,
+                access: _access!,
                 unit: _unit!,
                 property: _property!,
-                serverTime: _serverTime,
               ),
             ),
           );

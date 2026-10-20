@@ -7,11 +7,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bf_stay/core/di/injection.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/theme/app_theme.dart';
-import 'package:bf_stay/core/utils/keys_availability.dart';
 import 'package:bf_stay/features/auth/domain/bloc/auth_bloc.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/guest/alojamientos/domain/entities/unit_entity.dart';
+import 'package:bf_stay/features/guest/guest_access/domain/entities/guest_access_entity.dart';
+import 'package:bf_stay/features/guest/guest_access/domain/repositories/guest_access_repository.dart';
 import 'package:bf_stay/l10n/app_localizations.dart';
 
 /// Pantalla de Información para el huésped
@@ -26,27 +27,15 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
   Map<String, dynamic>? _bookingData;
   bool _isLoading = true;
 
-  /// Hora del servidor, para que cambiar el reloj del móvil no adelante la
-  /// disponibilidad de la contraseña del WiFi
-  DateTime? _serverTime;
+  /// Códigos de acceso entregados por el servidor (get_guest_access): la
+  /// contraseña del WiFi solo viene con el check-in validado
+  GuestAccessEntity? _access;
 
   /// Momento en que el huésped puede ver los códigos (y la contraseña WiFi)
-  DateTime get _keysAvailableTime => KeysAvailability.availableAt(
-        checkInDate: _bookingData?['checkIn'] as DateTime? ?? DateTime.now(),
-        earlyCheckinAvailableAt: _bookingData?['earlyCheckinAvailableAt'] as DateTime?,
-      );
+  DateTime get _keysAvailableTime => _access?.keysAvailableAt ?? DateTime.now();
 
-  /// Si el huésped ya puede ver los códigos (usa la hora del servidor)
-  bool get _areKeysAvailable {
-    final checkInDate = _bookingData?['checkIn'] as DateTime?;
-    if (checkInDate == null) return false;
-
-    return KeysAvailability.isAvailable(
-      checkInDate: checkInDate,
-      earlyCheckinAvailableAt: _bookingData?['earlyCheckinAvailableAt'] as DateTime?,
-      now: _serverTime ?? DateTime.now(),
-    );
-  }
+  /// Si el huésped ya puede ver los códigos (servidor + hora del servidor)
+  bool get _areKeysAvailable => _access?.areKeysAvailable() ?? false;
 
   String _formatDate(DateTime date) =>
       '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -73,27 +62,25 @@ class _StayGuideScreenState extends State<StayGuideScreen> {
     }
 
     try {
-      final repository = getIt<AdminPanelRepository>();
-      final results = await Future.wait([
-        repository.getBooking(bookingId),
-        repository.getServerTime(),
+      final results = await Future.wait<Object?>([
+        getIt<AdminPanelRepository>().getBooking(bookingId),
+        getIt<GuestAccessRepository>().getAccess(bookingId),
       ]);
       final booking = results[0] as AdminBookingEntity?;
-      final serverTime = results[1] as DateTime;
+      final access = results[1] as GuestAccessEntity;
 
       if (mounted) {
         setState(() {
-          _serverTime = serverTime;
+          _access = access;
           _bookingData = {
-            'earlyCheckinAvailableAt': booking?.earlyCheckinAvailableAt,
             'unitName': booking?.unitName ?? '',
             'propertyName': booking?.propertyName ?? '',
             'checkIn': booking?.checkInDate,
             'checkOut': booking?.checkOutDate,
             'guests': booking?.numGuests ?? 1,
             'unitType': booking?.unitType,
-            'wifiNetwork': booking?.wifiNetwork,
-            'wifiPassword': booking?.wifiPassword,
+            'wifiNetwork': access.mainUnit?.wifiNetwork ?? booking?.wifiNetwork,
+            'wifiPassword': access.mainUnit?.wifiPassword,
           };
           _isLoading = false;
         });

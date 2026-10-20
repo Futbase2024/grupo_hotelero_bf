@@ -93,7 +93,7 @@ class SupabaseTables {
 class SupabaseFunctions {
   SupabaseFunctions._();
 
-  static const String getAccessForBooking = 'get_access_for_booking';
+  static const String getGuestAccess = 'get_guest_access';
   static const String currentRole = 'current_role';
   static const String currentPropertyId = 'current_property_id';
   static const String isAdmin = 'is_admin';

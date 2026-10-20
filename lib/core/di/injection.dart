@@ -23,6 +23,8 @@ import '../../features/guest/checkin/data/repositories/checkin_repository_impl.d
 import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
 import '../../features/guest/access_box/data/repositories/access_box_repository_impl.dart';
 import '../../features/guest/access_box/domain/repositories/access_box_repository.dart';
+import '../../features/guest/guest_access/data/repositories/guest_access_repository_impl.dart';
+import '../../features/guest/guest_access/domain/repositories/guest_access_repository.dart';
 import '../../features/guest/checkout/data/repositories/checkout_repository_impl.dart';
 import '../../features/guest/checkout/domain/repositories/checkout_repository.dart';
 import '../../features/admin/domain/repositories/invoices_repository.dart';
@@ -85,6 +87,11 @@ Future<void> configureDependencies() async {
   // Access Box repository
   getIt.registerLazySingleton<AccessBoxRepository>(
     () => AccessBoxRepositoryImpl(supabase: getIt<SupabaseClient>()),
+  );
+
+  // Códigos de acceso del huésped (RPC get_guest_access)
+  getIt.registerLazySingleton<GuestAccessRepository>(
+    () => GuestAccessRepositoryImpl(supabase: getIt<SupabaseClient>()),
   );
 
   // Checkout repository
