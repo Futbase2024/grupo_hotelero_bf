@@ -1,22 +1,47 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+// ── Autorización (2026-10-19) ─────────────────────────────────────────────────
+// Antes cualquiera con la URL podía enviar este email a cualquier destinatario.
+// Ahora solo: staff (JWT de un usuario admin/staff, p. ej. el panel de la app)
+// o llamadas internas con la service role (p. ej. la Edge Function admin-panel).
+async function requireStaff(req: Request): Promise<Response | null> {
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  if (!token) return denyRequest(401, 'unauthorized');
+  if (serviceKey && token === serviceKey) return null;
+
+  const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+  if (!user) return denyRequest(401, 'unauthorized');
+
+  const { data: roleData } = await supabaseAdmin
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (!roleData || !['admin', 'staff'].includes(roleData.role)) {
+    return denyRequest(403, 'forbidden');
+  }
+  return null;
+}
+
+function denyRequest(status: number, error: string): Response {
+  return new Response(JSON.stringify({ success: false, error }), {
+    status,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+  });
+}
+
 const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY')!;
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 // Remitente sobre dominio autenticado en Brevo (grupohotelerobf.com)
 const VERIFIED_SENDER_EMAIL = 'info@grupohotelerobf.com';
-// Buzón del gestor: recibe respuestas (Reply-To) y copia oculta (BCC) de cada envío
+// Buzon del gestor: recibe respuestas y copia oculta de cada envio
 const MANAGER_EMAIL = 'ghotelerobf@gmail.com';
-
-// Defaults para el template de check-in (mismos que reserva)
-const DEFAULTS = {
-  hero_image_url: 'https://qwepisgdqlmqfxwqkztz.supabase.co/storage/v1/object/public/email-assets/heroimagen.png',
-  link_ios: 'https://apps.apple.com/es/app/bf-stay/id6759832221',
-  link_android: 'https://bf-stay.pages.dev/',
-  telefono_1: '+34 656 61 80 65',
-  telefono_2: '+34 674 27 70 16',
-};
 
 interface EmailRequest {
   to_email: string;
@@ -50,11 +75,13 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  const denied = await requireStaff(req);
+  if (denied) return denied;
+
   try {
     const body: EmailRequest = await req.json();
     console.log('[send-checkin-email] Received request:', JSON.stringify(body, null, 2));
 
-    // Validar campos requeridos
     if (!body.to_email) {
       throw new Error('to_email is required');
     }
@@ -62,27 +89,21 @@ Deno.serve(async (req: Request) => {
     // Template ID 3 = Check-in Validado
     const templateId = 3;
 
-    // Preparar parámetros con defaults
     const params = {
-      nombre_huesped: body.params?.nombre_huesped || 'Huésped',
+      nombre_huesped: body.params?.nombre_huesped || 'Huesped',
       nombre_propiedad: body.params?.nombre_propiedad || 'Propiedad',
       fecha_entrada: body.params?.fecha_entrada || '',
       fecha_salida: body.params?.fecha_salida || '',
-      // Imagen hero - misma que email de reserva
-      hero_image_url: body.params?.hero_image_url || DEFAULTS.hero_image_url,
-      // Links de la app
-      link_abrir_app: body.params?.link_abrir_app || 'https://bf-stay.pages.dev/',
-      link_ios: body.params?.link_ios || DEFAULTS.link_ios,
-      link_android: body.params?.link_android || DEFAULTS.link_android,
-      // Teléfonos de soporte
-      telefono_1: body.params?.telefono_1 || DEFAULTS.telefono_1,
-      telefono_2: body.params?.telefono_2 || DEFAULTS.telefono_2,
+      hero_image_url: "https://qwepisgdqlmqfxwqkztz.supabase.co/storage/v1/object/public/email-assets/heroimagen.png",
+      link_ios: "https://apps.apple.com/es/app/bf-stay/id6759832221",
+      link_android: body.params?.link_android || 'https://play.google.com/store/apps/details?id=com.bfstay.app&pli=1',
+      telefono_1: "+34 656 61 80 65",
+      telefono_2: "+34 674 27 70 16",
     };
 
     console.log('[send-checkin-email] Using template ID:', templateId);
-    console.log('[send-checkin-email] Params:', JSON.stringify(params, null, 2));
+    console.log('[send-checkin-email] Sender:', VERIFIED_SENDER_EMAIL);
 
-    // Construir payload para Brevo
     const brevoPayload = {
       sender: {
         name: 'BF Stay',
@@ -91,7 +112,7 @@ Deno.serve(async (req: Request) => {
       to: [
         {
           email: body.to_email,
-          name: body.to_name || body.params?.nombre_huesped || 'Huésped',
+          name: body.to_name || body.params?.nombre_huesped || 'Huesped',
         },
       ],
       replyTo: {
@@ -133,6 +154,7 @@ Deno.serve(async (req: Request) => {
         success: true,
         message: 'Email sent successfully',
         templateId: templateId,
+        sender: VERIFIED_SENDER_EMAIL,
         messageId: JSON.parse(responseText).messageId,
       }),
       {
