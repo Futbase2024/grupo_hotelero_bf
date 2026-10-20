@@ -26,10 +26,10 @@ Ya existe en el servidor: `trg_checkin_status_notify` (validado/rechazado → hu
 - ✅ **Cerrado** `user_roles_insert_own`: cualquier sesión (también anónima) podía insertarse como `admin` global
   (`20261020165000_lock_user_roles`).
 - ✅ **Cerrado** `clients` abierto a cualquier sesión (`20261020166000_restrict_clients_to_staff`).
-- ⏳ **Chat**: `participants_insert_temp` / `conversations_insert_any_user` (`auth.uid() IS NOT NULL`): con el UUID
+- ✅ **Cerrado (20261020167000)** **Chat**: `participants_insert_temp` / `conversations_insert_any_user` (`auth.uid() IS NOT NULL`): con el UUID
   de una conversación ajena cualquiera se añade como participante (incluso `role='admin'`) y lee sus mensajes.
   Revisar cómo crea la app las conversaciones antes de restringir (añadir a esta migración o a una propia).
-- ⏳ **`reviews`** INSERT abierto a cualquier sesión: restringir a reseñas de la propia reserva.
+- ✅ **Cerrado (20261020167000)** **`reviews`** (además UPDATE/DELETE permitían editar/borrar reseñas ajenas) INSERT abierto a cualquier sesión: restringir a reseñas de la propia reserva.
 
 ## Avisos que hoy genera el cliente
 
@@ -41,7 +41,14 @@ Ya existe en el servidor: `trg_checkin_status_notify` (validado/rechazado → hu
 | Check-in cancelado | staff → huésped | `checkin_detail_screen.dart` → `notifyGuestCheckinStatus('cancelled')` | se mantiene (staff) o trigger |
 | Email check-in completado | huésped → Edge Function | `sendCheckinCompletedEmail` | fuera de alcance (EF ya exige staff/servicio: revisar) |
 
-## Fase 1 — Solo servidor (sin release, sin duplicados)
+## Fase 1 — ✅ APLICADA 2026-10-20 (`20261020170000_server_side_notifications`)
+
+Probada en transacción: envío normal → 1 aviso "pendiente" + 1 push; auto-validado → 1 aviso "validado
+automáticamente"; extra → 1 aviso + push; anónimo no inserta en ninguna tabla ni ve tokens/admins; staff
+sigue creando la notificación de cancelación y leyendo tokens por RPC. También se cerró `email_logs`.
+Nota: reenviar un check-in que ya estaba `submitted` no vuelve a avisar (antes la app avisaba en cada envío).
+
+### Diseño aplicado
 
 Una única migración que hace a la vez (para que no haya ventana con avisos dobles):
 
