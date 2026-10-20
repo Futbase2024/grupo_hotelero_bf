@@ -58,9 +58,13 @@ Lo único protegido de verdad es la vista `units_with_full_address` (enmascara c
 ## Fase 2 — App (nueva versión)
 
 1. `PropertiesRepository.getAll/getById`: seleccionar columnas explícitas, sin `main_door_keycode`.
-2. Nueva RPC `get_guest_access(p_booking_id)` (SECURITY DEFINER): devuelve `keybox_code`, `main_door_keycode`,
-   datos de unidad(es) y WiFi **solo** si `can_view_unit_secrets` se cumple; si no, `null` en los secretos y
-   las fechas para que la UI muestre "disponible a las…". Reutiliza las reglas de `can_view_unit_secrets`.
+2. ✅ APLICADA 2026-10-20 (`20261020130000_get_guest_access`). RPC `get_guest_access(p_booking_id)` → jsonb:
+   `{booking_id, can_view, reason: ok|checkin_not_validated|before_checkin|outside_window, checkin_date,
+   checkout_date, early_checkin_available_at, timezone, server_time, keybox_code, main_door_keycode,
+   units: [{unit_id, name, wifi_network, wifi_password, box_code, box_location_text, locker_number,
+   access_instructions, welcome_instructions}]}` (unidad principal primero). Secretos a null si
+   `can_view_booking_secrets` no lo permite; reserva ajena → `not_allowed`; anon sin EXECUTE.
+   Probada: no validado, validado, reserva ajena, admin, anon y reserva multiunidad.
    `get_access_for_booking` no sirve (devuelve `units.box_code`, no `keybox_code`, ni WiFi ni multiunidad).
 3. `my_accommodation_screen`, `access_instructions_wrapper_screen`, `stay_guide_screen`: obtener los secretos de
    la RPC; dejar de usar `AdminPanelRepository.getBooking` en el lado huésped (también en `guest_home_bloc`,
