@@ -57,3 +57,6 @@ android/keystore/
 
 # Firebase credentials
 supabase/functions/*firebase*.json
+
+# Caché local del CLI de Cloudflare (incluye datos de la cuenta)
+.wrangler/
