@@ -109,9 +109,10 @@ class GuestSessionService {
           .eq('id', bookingId)
           .maybeSingle();
 
-      if (booking == null) return;
-
-      final primaryGuestUserId = booking['primary_guest_user_id'] as String?;
+      // `null` también cuando la reserva está sin reclamar: el huésped solo puede
+      // leer las reservas vinculadas a su usuario. En ese caso se intenta el
+      // reclamo igualmente; la RPC lo rechaza si ya es de otra cuenta.
+      final primaryGuestUserId = booking?['primary_guest_user_id'] as String?;
 
       // Ya está vinculada a esta sesión
       if (primaryGuestUserId == userId) return;
