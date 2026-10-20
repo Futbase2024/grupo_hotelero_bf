@@ -75,7 +75,25 @@ Lo único protegido de verdad es la vista `units_with_full_address` (enmascara c
 6. Tests de BLoC/repositorio para la RPC (85 %+) · `dart fix --apply && dart analyze`.
 7. Publicar y subir `app_config.minimum_version` en Android e iOS.
 
-## Fase 3 — Servidor, cuando todos estén en la versión nueva
+## Fase 3 — ✅ APLICADA 2026-10-20 SIN esperar release (cambio de enfoque)
+
+Quitar la política de `units` a huéspedes habría roto `getBooking` (home, notificaciones, normas, pack
+romántico, Guía y guard la usan para datos no secretos). Se aplicó el mismo patrón que `properties`:
+- `20261020150000_protect_units_secrets`: tabla en `private.units`, vista `public.units` (DEFINER) que replica la
+  RLS con `can_read_unit()` y enmascara con `can_view_unit_secrets()` (ahora acepta service_role y conexión
+  directa); `units_view_update` para escrituras de staff; funciones DEFINER (`get_all_units_availability`,
+  `get_checkin_details`, `set_keybox_code_on_insert`, `get_guest_access`) leen `private.units`;
+  `admin_bookings_dashboard` (unidades materializadas) y `booking_checkin_status` redefinidas contra la vista.
+  Probada en transacción (24 casos) y por REST. Dashboard por reserva: admin 191→~251 ms, huésped ~32 ms.
+  ⚠️ Crear unidades ya no es posible por la API (la app no lo hace): insertar en `private.units`.
+- `20261020160000_protect_bookings_keybox`: `anon`/`authenticated` con SELECT por columna en `bookings` salvo
+  `keybox_code`; el dashboard la obtiene con `booking_keybox_code()` (DEFINER). Probada (13 casos) y por REST.
+  ⚠️ Columnas nuevas en `bookings` necesitan `GRANT SELECT (col)` para ser legibles por la API.
+
+Pendiente opcional: eliminar `AccessBoxScreen` (ruta sin enlaces; su consulta a `keybox_code` ya falla) y
+migrar home/normas/pack a un repositorio de huésped (limpieza, ya no es de seguridad).
+
+## Fase 3 (plan original, descartado)
 
 - Eliminar la política `units_guest_select_active_stay` (el huésped solo lee unidades por la vista).
 - `bookings.keybox_code`: inventario de lecturas de staff de `bookings` con `select('*')`; dar al staff acceso
