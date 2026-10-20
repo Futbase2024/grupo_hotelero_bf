@@ -475,33 +475,10 @@ class CheckinBloc extends Bloc<CheckinEvent, CheckinState> {
           signatureSvg: currentState.signatureSvg!,
         );
 
-        // En las reservas con auto-validación el check-in ya sale validado del
-        // envío, así que al admin se le avisa sin pedirle una revisión.
-        final statusAfterSubmit = await _repository.getCheckinStatus(
-          currentState.bookingData.bookingId,
-        );
-        final autoValidated = statusAfterSubmit == CheckinStatus.validated;
-
-        // Notificar al admin del nuevo check-in
+        // El aviso al admin (in-app + push, "pendiente" o "validado
+        // automáticamente") lo genera el servidor con el trigger
+        // trg_checkin_submitted_notify_admins.
         if (currentState.bookingData.propertyId.isNotEmpty) {
-          debugPrint('📬 [CheckinBloc] Notificando al admin (auto-validado: $autoValidated)...');
-          if (autoValidated) {
-            await NotificationService().notifyAdminCheckinAutoValidated(
-              bookingId: currentState.bookingData.bookingId,
-              propertyId: currentState.bookingData.propertyId,
-              guestName: currentState.bookingData.guestFullName,
-              unitName: currentState.bookingData.unitName,
-            );
-          } else {
-            await NotificationService().notifyAdminCheckinSubmitted(
-              bookingId: currentState.bookingData.bookingId,
-              propertyId: currentState.bookingData.propertyId,
-              guestName: currentState.bookingData.guestFullName,
-              unitName: currentState.bookingData.unitName,
-            );
-          }
-          debugPrint('✅ [CheckinBloc] Admin notificado');
-
           // Enviar email de notificación de check-in completado
           debugPrint('📧 [CheckinBloc] Enviando email de notificación...');
           await NotificationService().sendCheckinCompletedEmail(

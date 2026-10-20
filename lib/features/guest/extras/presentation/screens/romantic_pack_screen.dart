@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bf_stay/core/di/injection.dart';
-import 'package:bf_stay/core/services/notification_service.dart';
 import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/utils/image_decode_size.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_booking_entity.dart';
@@ -585,18 +584,9 @@ class _RomanticPackScreenState extends State<RomanticPackScreen> {
         createdAt: DateTime.now(),
       );
 
+      // El aviso al admin (in-app + push) lo genera el servidor con el trigger
+      // trg_extra_request_notify_admins.
       await getIt<ExtraRequestRepository>().create(request);
-
-      // Avisar al admin (in-app + push). Best-effort: no bloquea el flujo.
-      if (propertyId != null && propertyId.isNotEmpty) {
-        await NotificationService().notifyAdminExtraRequested(
-          bookingId: bookingId,
-          propertyId: propertyId,
-          guestName: user.displayName,
-          extraName: extraName,
-          unitName: unitName,
-        );
-      }
 
       if (mounted) {
         setState(() {

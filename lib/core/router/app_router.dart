@@ -21,7 +21,6 @@ import '../../features/guest/checkin/presentation/bloc/checkin_bloc.dart';
 import '../../features/guest/checkin/domain/repositories/checkin_repository.dart';
 import '../../features/guest/checkout/presentation/bloc/checkout_bloc.dart';
 import '../../features/guest/checkout/domain/repositories/checkout_repository.dart';
-import '../../features/guest/access_box/presentation/screens/access_box_screen.dart';
 import '../../features/guest/stay_guide/presentation/screens/stay_guide_screen.dart';
 import '../../features/guest/chat/presentation/screens/chat_screen.dart';
 import '../../features/guest/alojamientos/presentation/screens/alojamientos_screen.dart';
@@ -82,7 +81,6 @@ class AppRoutes {
   static const String guestNotifications = '/guest/notifications';
   static const String checkin = '/guest/checkin/:bookingId';
   static const String checkout = '/guest/checkout/:bookingId';
-  static const String accessBox = '/guest/access-box';
   static const String myAccommodation = '/guest/my-accommodation';
   static const String accessInstructions = '/guest/access-instructions';
   static const String stayGuide = '/guest/guide';
@@ -253,11 +251,6 @@ class AppRouter {
               child: CheckoutScreen(bookingId: bookingId),
             );
           },
-        ),
-        GoRoute(
-          path: AppRoutes.accessBox,
-          name: 'access-box',
-          builder: (context, state) => const AccessBoxScreen(),
         ),
         GoRoute(
           path: AppRoutes.myAccommodation,
@@ -570,7 +563,6 @@ class AppRouter {
       AppRoutes.guestNotifications,
       AppRoutes.checkin,
       AppRoutes.checkout,
-      AppRoutes.accessBox,
       AppRoutes.myAccommodation,
       AppRoutes.accessInstructions,
       AppRoutes.stayGuide,

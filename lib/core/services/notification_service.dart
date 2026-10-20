@@ -2,6 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Servicio centralizado para gestionar notificaciones push e in-app
+///
+/// Los avisos del huésped al staff (check-in enviado o auto-validado, solicitud
+/// de extra) los genera el servidor con triggers; aquí solo quedan los que
+/// manda el staff al huésped y el email de check-in completado.
 class NotificationService {
   NotificationService._();
   static final NotificationService _instance = NotificationService._();
@@ -33,34 +37,6 @@ class NotificationService {
     } catch (e) {
       debugPrint('⚠️ [NotificationService] Error obteniendo tokens FCM: $e');
       return [];
-    }
-  }
-
-  /// Obtiene los tokens FCM de múltiples usuarios usando la función RPC segura
-  /// Retorna un mapa de user_id -> lista de tokens (soporta múltiples dispositivos por usuario)
-  Future<Map<String, List<String>>> _getFcmTokensSecure(List<String> userIds) async {
-    try {
-      final response = await _client.rpc(
-        'get_fcm_tokens_for_users',
-        params: {'target_user_ids': userIds},
-      );
-
-      final tokensMap = <String, List<String>>{};
-      if (response is List) {
-        for (final row in response) {
-          if (row is Map) {
-            final userId = row['user_id'] as String?;
-            final token = row['token'] as String?;
-            if (userId != null && token != null && token.isNotEmpty) {
-              tokensMap.putIfAbsent(userId, () => []).add(token);
-            }
-          }
-        }
-      }
-      return tokensMap;
-    } catch (e) {
-      debugPrint('⚠️ [NotificationService] Error obteniendo tokens FCM seguros: $e');
-      return {};
     }
   }
 
@@ -121,153 +97,6 @@ class NotificationService {
     } catch (e, s) {
       debugPrint('❌ [NotificationService] Error encolando push: $e');
       debugPrint('❌ [NotificationService] StackTrace: $s');
-      return false;
-    }
-  }
-
-  /// Crea una notificación in-app para staff/admin
-  /// Estas notificaciones se muestran en el panel de administración
-  Future<bool> createStaffNotification({
-    required String type,
-    required String title,
-    required String body,
-    String? bookingId,
-    String? propertyId,
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      debugPrint('📬 [NotificationService] Creando notificación staff: $type');
-
-      await _client.from('staff_notifications').insert({
-        'type': type,
-        'title': title,
-        'body': body,
-        'booking_id': bookingId,
-        'property_id': propertyId,
-        'data': data ?? {},
-        'is_read': false,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-
-      debugPrint('✅ [NotificationService] Notificación staff creada');
-      return true;
-    } catch (e, s) {
-      debugPrint('❌ [NotificationService] Error creando notificación staff: $e');
-      debugPrint('❌ [NotificationService] StackTrace: $s');
-      return false;
-    }
-  }
-
-  /// Notifica a todos los administradores de una propiedad
-  /// Envía tanto notificación push como in-app a TODOS sus dispositivos
-  Future<void> notifyAdmins({
-    required String propertyId,
-    required String type,
-    required String title,
-    required String body,
-    String? bookingId,
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      // 1. Obtener todos los admins y filtrar en Dart
-      final allAdmins = await _client
-          .from('user_roles')
-          .select('user_id, property_id')
-          .eq('role', 'admin');
-
-      // 2. Filtrar: admins de la propiedad O admins globales (property_id null)
-      final adminsList = allAdmins.where((admin) {
-        final adminPropertyId = admin['property_id'] as String?;
-        return adminPropertyId == null || adminPropertyId == propertyId;
-      }).toList();
-
-      debugPrint('📬 [NotificationService] Total admins encontrados: ${allAdmins.length}');
-      debugPrint('📬 [NotificationService] Admins filtrados para propiedad: ${adminsList.length}');
-
-      if (adminsList.isEmpty) {
-        debugPrint('⚠️ [NotificationService] No hay admins para la propiedad');
-        return;
-      }
-
-      // 3. Obtener TODOS los tokens FCM de los admins (soporta múltiples dispositivos por usuario)
-      final adminUserIds = adminsList.map((a) => a['user_id'] as String).toList();
-      final userTokensMap = await _getFcmTokensSecure(adminUserIds);
-
-      // Contar total de tokens
-      int totalTokens = userTokensMap.values.fold(0, (sum, list) => sum + list.length);
-      debugPrint('📬 [NotificationService] Total tokens FCM encontrados: $totalTokens');
-
-      // 4. Crear notificación in-app (una sola vez, visible para todos los admins)
-      await createStaffNotification(
-        type: type,
-        title: title,
-        body: body,
-        bookingId: bookingId,
-        propertyId: propertyId,
-        data: data,
-      );
-
-      // 5. Encolar push notification para CADA token de CADA admin
-      int successCount = 0;
-      for (final admin in adminsList) {
-        final userId = admin['user_id'] as String;
-        final userTokens = userTokensMap[userId] ?? [];
-
-        if (userTokens.isEmpty) {
-          debugPrint('⚠️ [NotificationService] Admin $userId sin tokens FCM, saltando push');
-          continue;
-        }
-
-        // Enviar a TODOS los dispositivos del admin
-        for (final token in userTokens) {
-          final success = await _enqueueSinglePush(
-            userId: userId,
-            token: token,
-            title: title,
-            body: body,
-            data: {
-              ...?data,
-              'type': type,
-              'booking_id': bookingId,
-              'property_id': propertyId,
-            },
-          );
-          if (success) successCount++;
-        }
-      }
-
-      // 6. Disparar procesamiento de la cola
-      if (successCount > 0) {
-        await _triggerNotificationProcessing();
-      }
-
-      debugPrint('✅ [NotificationService] $successCount push encolados para ${adminsList.length} admins');
-    } catch (e, s) {
-      debugPrint('❌ [NotificationService] Error notificando admins: $e');
-      debugPrint('❌ [NotificationService] StackTrace: $s');
-    }
-  }
-
-  /// Encola una notificación push individual
-  Future<bool> _enqueueSinglePush({
-    required String userId,
-    required String token,
-    required String title,
-    required String body,
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      await _client.from('notification_queue').insert({
-        'user_id': userId,
-        'token': token,
-        'title': title,
-        'body': body,
-        'data': data ?? {},
-        'processed': false,
-      });
-      return true;
-    } catch (e) {
-      debugPrint('⚠️ [NotificationService] Error encolando push: $e');
       return false;
     }
   }
@@ -391,73 +220,6 @@ class NotificationService {
     } catch (e) {
       debugPrint('❌ [NotificationService] Error creando notificación in-app: $e');
     }
-  }
-
-  /// Notifica al admin cuando un huésped hace check-in
-  Future<void> notifyAdminCheckinSubmitted({
-    required String bookingId,
-    required String propertyId,
-    required String guestName,
-    required String unitName,
-  }) async {
-    await notifyAdmins(
-      propertyId: propertyId,
-      type: 'checkin_submitted',
-      title: '📝 Nuevo Check-in Pendiente',
-      body: '$guestName ha enviado su check-in para $unitName. Pendiente de revisión.',
-      bookingId: bookingId,
-      data: {
-        'action': 'review_checkin',
-      },
-    );
-  }
-
-  /// Notifica al admin de un check-in que se ha validado automáticamente
-  ///
-  /// Se usa en las reservas con auto-validación activada: el admin se entera del
-  /// check-in, pero sin pedirle una revisión que ya no hace falta.
-  Future<void> notifyAdminCheckinAutoValidated({
-    required String bookingId,
-    required String propertyId,
-    required String guestName,
-    required String unitName,
-  }) async {
-    await notifyAdmins(
-      propertyId: propertyId,
-      type: 'checkin_submitted',
-      title: '✅ Check-in validado automáticamente',
-      body: '$guestName ha enviado su check-in para $unitName y se ha validado solo.',
-      bookingId: bookingId,
-      data: {
-        'action': 'review_checkin',
-      },
-    );
-  }
-
-  /// Notifica al admin cuando un huésped solicita un extra (p. ej. Pack Romántico).
-  ///
-  /// Es un aviso de SOLICITUD (no una reserva/pago confirmado): el pago se hace
-  /// en una web externa. El admin debe hacer seguimiento manual.
-  Future<void> notifyAdminExtraRequested({
-    required String bookingId,
-    required String propertyId,
-    required String guestName,
-    required String extraName,
-    String? unitName,
-  }) async {
-    final location = (unitName != null && unitName.isNotEmpty)
-        ? ' en $unitName'
-        : '';
-    await notifyAdmins(
-      propertyId: propertyId,
-      type: 'extra_request',
-      title: '💝 Nueva solicitud: $extraName',
-      body: '$guestName ha solicitado "$extraName"$location. Pendiente de gestionar.',
-      bookingId: bookingId,
-      data: {
-        'action': 'review_extra_request',
-      },
-    );
   }
 
   /// Envía email de notificación al admin cuando un huésped completa el check-in
