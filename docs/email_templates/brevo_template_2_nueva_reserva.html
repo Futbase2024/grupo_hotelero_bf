@@ -1,0 +1,181 @@
+<!--
+  Plantilla Brevo: Template ID 2 - "Nueva Reserva"
+  Enviada por la Edge Function `send-new-booking-email`.
+
+  Este archivo es una COPIA DE REFERENCIA versionada. La plantilla real vive en
+  el panel de Brevo: al modificar aqui, hay que pegar el HTML tambien en Brevo.
+
+  Aviso de hora limite de check-in: mantener sincronizado con
+  lib/core/constants/checkin_policy.dart (WhatsApp y PDF).
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tu reserva y código de acceso</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#f3f3f3; font-family: Arial, Helvetica, sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f3f3; padding:30px 0;">
+<tr>
+<td align="center">
+
+<table width="640" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden;">
+
+<!-- HERO IMAGE -->
+<tr>
+<td align="center">
+<img src="{{ params.hero_image_url }}"
+     width="640"
+     alt="BF Stay"
+     style="display:block; width:100%; max-width:640px; height:auto; border:0;">
+</td>
+</tr>
+
+<!-- CONTENT -->
+<tr>
+<td style="padding:40px 35px; color:#333333; font-size:15px; line-height:1.6;">
+
+<p style="font-size:20px; margin-top:0;">
+Hola <strong>{{ params.nombre_huesped }}</strong>,
+</p>
+
+<p>
+Tu <strong>reserva en {{ params.nombre_propiedad }}</strong> ha sido registrada correctamente.
+</p>
+
+<p>
+Para preparar tu llegada, es necesario completar el <strong>check-in digital</strong>.
+Puedes hacerlo fácilmente desde la aplicación <strong>BF Stay</strong>.
+</p>
+
+<p>
+A continuación encontrarás los datos de tu estancia:
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:25px 0; font-size:14px;">
+<tr>
+<td style="padding:6px 0;"><strong>Entrada:</strong></td>
+<td style="padding:6px 0;">{{ params.fecha_entrada }}</td>
+</tr>
+<tr>
+<td style="padding:6px 0;"><strong>Salida:</strong></td>
+<td style="padding:6px 0;">{{ params.fecha_salida }}</td>
+</tr>
+</table>
+
+<!-- ================================================================= -->
+<!-- AVISO: HORA LIMITE DE CHECK-IN                                    -->
+<!-- La barra dorada es una celda de 6px (compatible con Outlook),     -->
+<!-- no un border-left, que Outlook renderiza de forma inconsistente.  -->
+<!-- ================================================================= -->
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+       style="margin:28px 0; border-collapse:collapse; border-radius:6px; overflow:hidden;">
+<tr>
+  <td width="6" bgcolor="#d4af37" style="background-color:#d4af37; width:6px; font-size:0; line-height:0;">&nbsp;</td>
+  <td bgcolor="#fdf6e3" style="background-color:#fdf6e3; padding:18px 22px;">
+
+    <p style="margin:0; font-size:16px; line-height:1.45; color:#8a6d1f; font-weight:bold;">
+      <span style="font-size:20px;">&#9200;</span>&nbsp;
+      IMPORTANTE: la hora máxima para realizar el check-in son las
+      <span style="color:#000000; font-size:19px; letter-spacing:0.5px;">23:00 h</span>
+    </p>
+
+  </td>
+</tr>
+</table>
+<!-- ================= FIN AVISO HORA LIMITE ========================= -->
+
+<p>
+Para acceder a la aplicación y validar tus datos de check-in, utiliza el siguiente código:
+</p>
+
+<!-- ACCESS CODE BLOCK -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:35px 0;">
+<tr>
+<td align="center" style="background-color:#000000; padding:30px; border-radius:6px;">
+
+<p style="color:#ffffff; margin:0; font-size:14px; letter-spacing:1px;">
+TU CÓDIGO DE ACCESO
+</p>
+
+<p style="color:#d4af37; margin:15px 0 0 0; font-size:32px; font-weight:bold; letter-spacing:4px;">
+{{ params.codigo_acceso }}
+</p>
+
+<p style="color:#aaaaaa; margin:14px 0 0 0; font-size:12px;">
+Introduce este código en BF Stay para acceder a tu reserva y completar el check-in digital.
+</p>
+
+</td>
+</tr>
+</table>
+
+<p style="text-align:center; margin-bottom:15px;">
+Descarga o abre <strong>BF Stay</strong> e introduce tu código de acceso para comenzar el check-in.
+</p>
+
+<!-- STORE BUTTONS -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0 0 0;">
+  <tr>
+    <td align="center">
+
+      <!-- APPLE -->
+      <a href="{{ params.link_ios }}"
+      style="display:inline-block; margin:8px; padding:12px 20px; background-color:#000000; color:#ffffff; text-decoration:none; border-radius:6px; font-weight:bold; font-size:14px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
+             width="16"
+             style="vertical-align:middle; margin-right:8px; filter: invert(1);">
+        Descargar en App Store
+      </a>
+
+      <!-- ANDROID -->
+      <a href="{{ params.link_android }}"
+      style="display:inline-block; margin:8px; padding:12px 20px; background-color:#000000; color:#ffffff; text-decoration:none; border-radius:6px; font-weight:bold; font-size:14px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/Android_robot.svg"
+             width="18"
+             style="vertical-align:middle; margin-right:8px;">
+        Descargar en Android
+      </a>
+
+    </td>
+  </tr>
+</table>
+
+<p style="font-size:13px; color:#777777; text-align:center;">
+Si necesitas asistencia puedes contactarnos:<br>
+
+📞 <strong>{{ params.telefono_1 }}</strong><br>
+📞 <strong>{{ params.telefono_2 }}</strong>
+</p>
+
+<p style="margin-top:30px;">
+Una vez validado tu check-in, podrás acceder a toda la información de tu estancia directamente desde la app.
+</p>
+
+<p>
+Te deseamos una excelente estancia.<br><br>
+<strong>Grupo Hotelero BF</strong>
+</p>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td style="background-color:#000000; padding:20px; text-align:center; color:#aaaaaa; font-size:12px;">
+© {{ params.nombre_propiedad }} – Grupo Hotelero BF<br>
+Este es un correo automático, por favor no respondas a este mensaje.
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
