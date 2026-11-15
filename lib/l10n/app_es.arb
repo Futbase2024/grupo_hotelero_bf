@@ -447,6 +447,10 @@
   "@admin_booking_auto_validate_night_note": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "admin_booking_auto_validate_deposit_note": "Fianza pendiente: el check-in no se validará solo (ni a las {time} h) hasta marcarla como pagada o eximirla.",
+  "@admin_booking_auto_validate_deposit_note": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "admin_booking_auto_validate_enabled": "Auto-validación de check-in activada",
   "admin_booking_auto_validate_disabled": "Auto-validación de check-in desactivada",
   "admin_booking_auto_validate_applied_now": "Auto-validación activada: el check-in pendiente ha quedado validado",
@@ -1642,5 +1646,51 @@
   "@admin_deposit_send_failed": {"placeholders": {"channel": {"type": "String"}}},
   "admin_deposit_validate_blocked": "Esta reserva tiene una fianza pendiente. Usa «Marcar pagada y validar» cuando compruebes el pago, o exímela.",
 
-  "guest_home_deposit_pending": "Pendiente de recibir el pago de la fianza. Revisa el enlace que te hemos enviado."
+  "guest_home_deposit_pending": "Pendiente de recibir el pago de la fianza. Revisa el enlace que te hemos enviado.",
+
+  "guest_checkin_privacy_title": "Tus documentos están protegidos",
+  "guest_checkin_privacy_purpose": "Solo los usamos para el registro de viajeros obligatorio por ley (RD 933/2021).",
+  "guest_checkin_privacy_watermark": "Se les añade la marca «COPIA» para que no puedan usarse con otro fin.",
+  "guest_checkin_privacy_deletion": "Se borran para siempre 24 horas después de validar tu check-in, o al cancelar la reserva.",
+  "guest_checkin_privacy_photo_tips": "Haz la foto sobre una superficie plana, sin reflejos y con todos los datos legibles.",
+  "admin_docs_privacy_title": "Privacidad de documentos",
+  "admin_docs_privacy_scheduled": "Las imágenes se eliminarán automáticamente el {date}",
+  "@admin_docs_privacy_scheduled": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "admin_docs_privacy_scheduled_now": "Las imágenes se eliminarán en la próxima pasada (máx. 15 min)",
+  "admin_docs_privacy_reason_validated": "24 h después de validar el check-in",
+  "admin_docs_privacy_reason_cancelled": "Reserva cancelada",
+  "admin_docs_privacy_reason_checkout": "Check-in sin validar: se borran tras el check-out",
+  "admin_docs_privacy_reason_manual": "Eliminadas manualmente",
+  "admin_docs_privacy_retained": "Retenidos: no se borrarán hasta que quites la retención",
+  "admin_docs_privacy_retained_by": "{name} · {date}",
+  "@admin_docs_privacy_retained_by": {
+    "placeholders": { "name": { "type": "String" }, "date": { "type": "String" } }
+  },
+  "admin_docs_privacy_deleted": "Imágenes eliminadas el {date} por política de privacidad",
+  "@admin_docs_privacy_deleted": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "admin_docs_privacy_data_kept": "Los datos del huésped (nombre, documento, nacionalidad…) se conservan.",
+  "admin_docs_privacy_retain_button": "Retener",
+  "admin_docs_privacy_release_button": "Quitar retención",
+  "admin_docs_privacy_delete_button": "Eliminar ahora",
+  "admin_docs_privacy_retain_dialog_title": "Retener documentos",
+  "admin_docs_privacy_retain_dialog_body": "El borrado automático quedará pausado hasta que quites la retención. Úsalo solo si hay una incidencia (daños, reclamación, requerimiento policial).",
+  "admin_docs_privacy_retain_reason_hint": "Motivo (obligatorio, mínimo 5 caracteres)",
+  "admin_docs_privacy_delete_dialog_title": "¿Eliminar las imágenes ahora?",
+  "admin_docs_privacy_delete_dialog_body": "Se borrarán para siempre las {count} imágenes de documentos de esta reserva. Esta acción no se puede deshacer.",
+  "@admin_docs_privacy_delete_dialog_body": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "admin_docs_privacy_delete_confirm": "Eliminar para siempre",
+  "admin_docs_privacy_retained_success": "Documentos retenidos",
+  "admin_docs_privacy_released_success": "Retención quitada",
+  "admin_docs_privacy_deleted_success": "Imágenes eliminadas",
+  "admin_docs_privacy_error_title": "No se pudo completar la acción",
+  "admin_docs_image_deleted": "Imagen eliminada el {date}",
+  "@admin_docs_image_deleted": {
+    "placeholders": { "date": { "type": "String" } }
+  }
 }

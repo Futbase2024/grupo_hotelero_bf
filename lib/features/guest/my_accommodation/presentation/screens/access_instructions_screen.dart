@@ -49,7 +49,22 @@ class AccessInstructionsScreen extends StatelessWidget {
   String? get _wifiPassword => access.mainUnit?.wifiPassword;
   String? get _welcomeInstructions => access.mainUnit?.welcomeInstructions;
   String? get _mainDoorKeycode => access.mainDoorKeycode;
-  String? get _keyboxCode => access.keyboxCode;
+
+  /// Codigos de casillero a mostrar: uno por unidad si la reserva tiene
+  /// varias (con el nombre de la unidad), o el codigo de la reserva si solo
+  /// hay una.
+  List<({String? unitName, String code})> get _lockerCodes {
+    if (access.hasMultipleUnits) {
+      return [
+        for (final u in access.units)
+          if (u.boxCode != null && u.boxCode!.isNotEmpty)
+            (unitName: u.name, code: u.boxCode!),
+      ];
+    }
+    final code = access.keyboxCode ?? access.mainUnit?.boxCode;
+    if (code == null || code.isEmpty) return const [];
+    return [(unitName: null, code: code)];
+  }
 
   /// Obtiene la direccion completa formateada
   String get _fullAddress {
@@ -115,8 +130,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Si hay instrucciones de bienvenida personalizadas, mostrarlas directamente
-    if (_welcomeInstructions != null &&
-        _welcomeInstructions!.isNotEmpty) {
+    if (_welcomeInstructions != null && _welcomeInstructions!.isNotEmpty) {
       return _buildWelcomeInstructionsView(context);
     }
 
@@ -159,8 +173,7 @@ class AccessInstructionsScreen extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing20),
 
                 // Tarjeta WiFi destacada (si hay datos en la base de datos)
-                if (_wifiNetwork != null &&
-                    _wifiNetwork!.isNotEmpty) ...[
+                if (_wifiNetwork != null && _wifiNetwork!.isNotEmpty) ...[
                   _buildWifiHighlightCard(context),
                   const SizedBox(height: AppTheme.spacing20),
                 ],
@@ -308,7 +321,7 @@ class AccessInstructionsScreen extends StatelessWidget {
   Widget _buildKeyCodeHighlightCard(BuildContext context) {
     final s = S.of(context);
     final mainDoorCode = _mainDoorKeycode;
-    final boxCode = _keyboxCode;
+    final lockerCodes = _lockerCodes;
 
     // Si las llaves no estan disponibles, mostrar mensaje informativo
     if (!_areKeysAvailable) {
@@ -365,14 +378,18 @@ class AccessInstructionsScreen extends StatelessWidget {
             const SizedBox(height: AppTheme.spacing12),
           ],
 
-          // Codigo del casillero/caja
-          if (boxCode != null && boxCode.isNotEmpty)
+          // Codigo del casillero/caja (uno por unidad de la reserva)
+          for (final (index, locker) in lockerCodes.indexed) ...[
+            if (index > 0) const SizedBox(height: AppTheme.spacing12),
             _buildCodeRow(
               context,
-              s.guest_access_key_locker,
-              boxCode,
+              locker.unitName == null
+                  ? s.guest_access_key_locker
+                  : '${s.guest_access_key_locker} · ${locker.unitName}',
+              locker.code,
               Icons.lock_open_outlined,
             ),
+          ],
         ],
       ),
     );
@@ -752,8 +769,7 @@ class AccessInstructionsScreen extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing24),
 
                 // WiFi
-                if (_wifiNetwork != null &&
-                    _wifiNetwork!.isNotEmpty) ...[
+                if (_wifiNetwork != null && _wifiNetwork!.isNotEmpty) ...[
                   _buildSectionTitle(context, 'WiFi', Icons.wifi_outlined),
                   const SizedBox(height: AppTheme.spacing12),
                   _buildWifiCard(context),
@@ -1012,7 +1028,7 @@ class AccessInstructionsScreen extends StatelessWidget {
 
   Widget _buildApartmentAccessCard(BuildContext context) {
     final s = S.of(context);
-    final boxCode = _keyboxCode;
+    final lockerCodes = _lockerCodes;
     final keysAvailableTime = _keysAvailableTime;
     final formattedTime =
         '${keysAvailableTime.hour.toString().padLeft(2, '0')}:${keysAvailableTime.minute.toString().padLeft(2, '0')}';
@@ -1036,50 +1052,65 @@ class AccessInstructionsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          // Solo mostrar el codigo si esta disponible
-          if (_areKeysAvailable && boxCode != null && boxCode.isNotEmpty) ...[
-            Row(
-              children: [
-                Text(
-                  s.guest_access_locker_code_label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.getTextPrimaryColor(context),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+          // Solo mostrar los codigos si estan disponibles (uno por unidad)
+          if (_areKeysAvailable && lockerCodes.isNotEmpty) ...[
+            for (final (index, locker) in lockerCodes.indexed) ...[
+              if (index > 0) const SizedBox(height: AppTheme.spacing12),
+              if (locker.unitName != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
                   child: Text(
-                    boxCode,
+                    locker.unitName!,
                     style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.black,
-                      letterSpacing: 3,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.gold,
                     ),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacing8),
-                IconButton(
-                  onPressed: () => _copyToClipboard(
-                    context,
-                    boxCode,
-                    s.guest_access_locker_code,
+              Row(
+                children: [
+                  Text(
+                    s.guest_access_locker_code_label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.getTextPrimaryColor(context),
+                    ),
                   ),
-                  icon: const Icon(Icons.copy, size: 22),
-                  color: AppColors.getTextSecondaryColor(context),
-                ),
-              ],
-            ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      locker.code,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.black,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  IconButton(
+                    onPressed: () => _copyToClipboard(
+                      context,
+                      locker.code,
+                      s.guest_access_locker_code,
+                    ),
+                    icon: const Icon(Icons.copy, size: 22),
+                    color: AppColors.getTextSecondaryColor(context),
+                  ),
+                ],
+              ),
+            ],
           ] else if (!_areKeysAvailable)
             Text(
               s.guest_access_locker_available_at(formattedTime),

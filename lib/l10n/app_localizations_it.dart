@@ -1161,6 +1161,11 @@ class SIt extends S {
   }
 
   @override
+  String admin_booking_auto_validate_deposit_note(String time) {
+    return 'Cauzione in sospeso: il check-in non verrà convalidato automaticamente (nemmeno alle $time) finché non sarà segnata come pagata o esentata.';
+  }
+
+  @override
   String get admin_booking_auto_validate_enabled =>
       'Convalida automatica del check-in attivata';
 
@@ -3720,4 +3725,117 @@ class SIt extends S {
   @override
   String get guest_home_deposit_pending =>
       'In attesa del pagamento della cauzione. Controlla il link che ti abbiamo inviato.';
+
+  @override
+  String get guest_checkin_privacy_title => 'I tuoi documenti sono protetti';
+
+  @override
+  String get guest_checkin_privacy_purpose =>
+      'Li usiamo solo per la registrazione dei viaggiatori obbligatoria per legge in Spagna (RD 933/2021).';
+
+  @override
+  String get guest_checkin_privacy_watermark =>
+      'Viene aggiunta la filigrana «COPIA» perché non possano essere usati per altri scopi.';
+
+  @override
+  String get guest_checkin_privacy_deletion =>
+      'Vengono eliminati definitivamente 24 ore dopo la convalida del check-in o se la prenotazione viene annullata.';
+
+  @override
+  String get guest_checkin_privacy_photo_tips =>
+      'Scatta la foto su una superficie piana, senza riflessi e con tutti i dati leggibili.';
+
+  @override
+  String get admin_docs_privacy_title => 'Privacy dei documenti';
+
+  @override
+  String admin_docs_privacy_scheduled(String date) {
+    return 'Le immagini verranno eliminate automaticamente il $date';
+  }
+
+  @override
+  String get admin_docs_privacy_scheduled_now =>
+      'Le immagini verranno eliminate al prossimo passaggio (max 15 min)';
+
+  @override
+  String get admin_docs_privacy_reason_validated =>
+      '24 h dopo la convalida del check-in';
+
+  @override
+  String get admin_docs_privacy_reason_cancelled => 'Prenotazione annullata';
+
+  @override
+  String get admin_docs_privacy_reason_checkout =>
+      'Check-in non convalidato: eliminazione dopo il check-out';
+
+  @override
+  String get admin_docs_privacy_reason_manual => 'Eliminate manualmente';
+
+  @override
+  String get admin_docs_privacy_retained =>
+      'Trattenuti: non verranno eliminati finché non rimuovi il blocco';
+
+  @override
+  String admin_docs_privacy_retained_by(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String admin_docs_privacy_deleted(String date) {
+    return 'Immagini eliminate il $date per la politica sulla privacy';
+  }
+
+  @override
+  String get admin_docs_privacy_data_kept =>
+      'I dati dell\'ospite (nome, documento, nazionalità…) vengono conservati.';
+
+  @override
+  String get admin_docs_privacy_retain_button => 'Trattieni';
+
+  @override
+  String get admin_docs_privacy_release_button => 'Rimuovi blocco';
+
+  @override
+  String get admin_docs_privacy_delete_button => 'Elimina ora';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_title => 'Trattieni documenti';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_body =>
+      'L\'eliminazione automatica verrà sospesa finché non rimuovi il blocco. Usalo solo in caso di incidente (danni, reclamo, richiesta della polizia).';
+
+  @override
+  String get admin_docs_privacy_retain_reason_hint =>
+      'Motivo (obbligatorio, minimo 5 caratteri)';
+
+  @override
+  String get admin_docs_privacy_delete_dialog_title =>
+      'Eliminare le immagini ora?';
+
+  @override
+  String admin_docs_privacy_delete_dialog_body(int count) {
+    return 'Le $count immagini dei documenti di questa prenotazione verranno eliminate definitivamente. L\'azione non può essere annullata.';
+  }
+
+  @override
+  String get admin_docs_privacy_delete_confirm => 'Elimina definitivamente';
+
+  @override
+  String get admin_docs_privacy_retained_success => 'Documenti trattenuti';
+
+  @override
+  String get admin_docs_privacy_released_success => 'Blocco rimosso';
+
+  @override
+  String get admin_docs_privacy_deleted_success => 'Immagini eliminate';
+
+  @override
+  String get admin_docs_privacy_error_title =>
+      'Impossibile completare l\'azione';
+
+  @override
+  String admin_docs_image_deleted(String date) {
+    return 'Immagine eliminata il $date';
+  }
 }

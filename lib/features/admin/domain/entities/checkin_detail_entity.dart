@@ -87,6 +87,8 @@ class CheckinDocumentEntity extends Equatable {
     required this.storagePath,
     this.mimeType,
     this.createdAt,
+    this.deletedAt,
+    this.deletedReason,
   });
 
   final String id;
@@ -95,6 +97,15 @@ class CheckinDocumentEntity extends Equatable {
   final String storagePath;
   final String? mimeType;
   final DateTime? createdAt;
+
+  /// Momento en que se borró la imagen del bucket (la fila se conserva)
+  final DateTime? deletedAt;
+
+  /// `validated_24h`, `booking_cancelled`, `checkout_not_validated` o `manual`
+  final String? deletedReason;
+
+  /// La imagen ya no existe: no se puede previsualizar
+  bool get isDeleted => deletedAt != null;
 
   factory CheckinDocumentEntity.fromJson(Map<String, dynamic> json) {
     return CheckinDocumentEntity(
@@ -106,6 +117,10 @@ class CheckinDocumentEntity extends Equatable {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.parse(json['deleted_at'] as String).toLocal()
+          : null,
+      deletedReason: json['deleted_reason'] as String?,
     );
   }
 
@@ -117,6 +132,8 @@ class CheckinDocumentEntity extends Equatable {
       'storage_path': storagePath,
       'mime_type': mimeType,
       'created_at': createdAt?.toIso8601String(),
+      'deleted_at': deletedAt?.toUtc().toIso8601String(),
+      'deleted_reason': deletedReason,
     };
   }
 
@@ -144,6 +161,8 @@ class CheckinDocumentEntity extends Equatable {
         storagePath,
         mimeType,
         createdAt,
+        deletedAt,
+        deletedReason,
       ];
 }
 

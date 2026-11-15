@@ -4,4 +4,5 @@ export 'admin_unit_entity.dart';
 export 'staff_notification_entity.dart';
 export 'dashboard_summary_entity.dart';
 export 'checkin_detail_entity.dart';
+export 'booking_documents_status_entity.dart';
 export 'invoice_entity.dart';

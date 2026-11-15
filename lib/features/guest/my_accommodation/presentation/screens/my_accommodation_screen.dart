@@ -30,6 +30,7 @@ class MyAccommodationScreen extends StatefulWidget {
 class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   /// Códigos de acceso entregados por el servidor (get_guest_access)
   GuestAccessEntity? _access;
+
   /// Datos públicos de la unidad principal (dirección, tipo, coordenadas)
   UnitEntity? _unit;
   PropertyEntity? _property;
@@ -214,7 +215,10 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           ],
 
           // Instrucciones de acceso - Boton para ver instrucciones completas
-          if (_areKeysAvailable && _access != null && _unit != null && _property != null) ...[
+          if (_areKeysAvailable &&
+              _access != null &&
+              _unit != null &&
+              _property != null) ...[
             _buildAccessInstructionsButton(),
             const SizedBox(height: AppTheme.spacing16),
           ],
@@ -269,10 +273,13 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   Widget _buildUnitCard(GuestAccessUnit unit) {
     final s = S.of(context);
     final hasBoxCode = unit.boxCode != null && unit.boxCode!.isNotEmpty;
-    final hasBoxLocation = unit.boxLocationText != null && unit.boxLocationText!.isNotEmpty;
+    final hasBoxLocation =
+        unit.boxLocationText != null && unit.boxLocationText!.isNotEmpty;
     final hasWifi = unit.wifiNetwork != null && unit.wifiNetwork!.isNotEmpty;
-    final hasWifiPassword = unit.wifiPassword != null && unit.wifiPassword!.isNotEmpty;
-    final hasAccessInstructions = unit.accessInstructions != null && unit.accessInstructions!.isNotEmpty;
+    final hasWifiPassword =
+        unit.wifiPassword != null && unit.wifiPassword!.isNotEmpty;
+    final hasAccessInstructions =
+        unit.accessInstructions != null && unit.accessInstructions!.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -374,7 +381,8 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
 
           // Instrucciones de acceso
           if (hasAccessInstructions) ...[
-            if (hasBoxCode || hasBoxLocation || hasWifi) const SizedBox(height: 12),
+            if (hasBoxCode || hasBoxLocation || hasWifi)
+              const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -384,11 +392,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: AppColors.gold,
-                  ),
+                  Icon(Icons.info_outline, size: 18, color: AppColors.gold),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -418,11 +422,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
   }) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: AppColors.getTextSecondaryColor(context),
-        ),
+        Icon(icon, size: 18, color: AppColors.getTextSecondaryColor(context)),
         const SizedBox(width: 8),
         Text(
           '$label:',
@@ -448,11 +448,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: Icon(
-                Icons.copy,
-                size: 16,
-                color: AppColors.gold,
-              ),
+              child: Icon(Icons.copy, size: 16, color: AppColors.gold),
             ),
           ),
       ],
@@ -470,7 +466,8 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       // Mostrar nombres de todas las unidades
       titleText = _access!.units.map((u) => u.name).join(' · ');
     } else {
-      titleText = _unit?.name ?? _access?.mainUnit?.name ?? s.guest_accommodation_title;
+      titleText =
+          _unit?.name ?? _access?.mainUnit?.name ?? s.guest_accommodation_title;
     }
 
     return Container(
@@ -543,7 +540,10 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                     if (_access?.hasMultipleUnits == true) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.gold,
                           borderRadius: BorderRadius.circular(12),
@@ -646,15 +646,14 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.event_outlined,
-                  size: 18,
-                  color: AppColors.black,
-                ),
+                Icon(Icons.event_outlined, size: 18, color: AppColors.black),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    s.guest_accommodation_codes_available_datetime(formattedDate, formattedTime),
+                    s.guest_accommodation_codes_available_datetime(
+                      formattedDate,
+                      formattedTime,
+                    ),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -685,26 +684,20 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
       ),
       child: Row(
         children: [
-          // Icono flex 1
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.gold,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.door_front_door_outlined,
-                color: AppColors.black,
-                size: 18,
-              ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.gold,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.door_front_door_outlined,
+              color: AppColors.black,
+              size: 18,
             ),
           ),
           const SizedBox(width: 12),
-          // Texto flex 5
           Expanded(
-            flex: 5,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -726,38 +719,39 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
               ],
             ),
           ),
-          // Codigo flex 3
-          Expanded(
-            flex: 3,
+          const SizedBox(width: 8),
+          // Codigo: ancho segun el texto, siempre en una linea
+          Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: AppColors.gold,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                keycode,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.black,
-                  letterSpacing: 2,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  keycode,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.black,
+                    letterSpacing: 2,
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          // Icono copiar flex 1
-          Expanded(
-            flex: 1,
-            child: IconButton(
-              onPressed: () => _copyToClipboard(keycode, s.guest_accommodation_door_code),
-              icon: const Icon(Icons.copy, size: 20),
-              color: AppColors.getTextSecondaryColor(context),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: () =>
+                _copyToClipboard(keycode, s.guest_accommodation_door_code),
+            icon: const Icon(Icons.copy, size: 20),
+            color: AppColors.getTextSecondaryColor(context),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
         ],
       ),
@@ -860,7 +854,8 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
           Expanded(
             flex: 1,
             child: IconButton(
-              onPressed: () => _copyToClipboard(boxCode, s.guest_accommodation_key_box_code),
+              onPressed: () =>
+                  _copyToClipboard(boxCode, s.guest_accommodation_key_box_code),
               icon: const Icon(Icons.copy, size: 20),
               color: AppColors.getTextSecondaryColor(context),
               padding: EdgeInsets.zero,
@@ -934,11 +929,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.gold,
-              size: 20,
-            ),
+            Icon(Icons.arrow_forward_ios, color: AppColors.gold, size: 20),
           ],
         ),
       ),
@@ -968,11 +959,7 @@ class _MyAccommodationScreenState extends State<MyAccommodationScreen> {
                   color: AppColors.gold,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.black,
-                  size: 20,
-                ),
+                child: Icon(icon, color: AppColors.black, size: 20),
               ),
               const SizedBox(width: AppTheme.spacing12),
               Text(

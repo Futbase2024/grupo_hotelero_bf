@@ -8,6 +8,7 @@ import 'package:bf_stay/core/theme/app_colors.dart';
 import 'package:bf_stay/core/services/notification_service.dart';
 import 'package:bf_stay/features/admin/bookings/presentation/widgets/deposit/booking_deposit_card.dart';
 import 'package:bf_stay/features/admin/checkins/presentation/widgets/checkin_danger_actions_sheet.dart';
+import 'package:bf_stay/features/admin/checkins/presentation/widgets/checkin_documents_privacy_card.dart';
 import 'package:bf_stay/features/admin/domain/entities/admin_entities.dart';
 import 'package:bf_stay/features/admin/domain/repositories/admin_panel_repository.dart';
 import 'package:bf_stay/features/admin/domain/services/email_service.dart';
@@ -35,6 +36,9 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
 
   /// Fianza opcional de la reserva (`null` si no se pudo cargar)
   BookingDepositEntity? _deposit;
+
+  /// Borrado programado / retención de las imágenes (`null` si no se pudo cargar)
+  BookingDocumentsStatusEntity? _documentsStatus;
   bool _isLoading = true;
   String? _error;
   final Map<String, String> _documentUrls = {};
@@ -65,8 +69,9 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
       debugPrint('   - Property: ${detail.propertyName}');
       debugPrint('   - Unit: ${detail.unitName}');
 
-      // Cargar URLs de documentos
-      for (final doc in detail.documents) {
+      // Cargar URLs de documentos (las imágenes ya borradas no tienen)
+      _documentUrls.clear();
+      for (final doc in detail.documents.where((d) => !d.isDeleted)) {
         try {
           debugPrint('🔍 [CheckinDetail] Cargando URL documento: ${doc.id}');
           final url = await repository.getDocumentUrl(doc.storagePath);
@@ -88,11 +93,21 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
         debugPrint('⚠️ [CheckinDetail] No se pudo cargar la fianza: $e');
       }
 
+      BookingDocumentsStatusEntity? documentsStatus;
+      if (detail.documents.isNotEmpty) {
+        try {
+          documentsStatus = await repository.getBookingDocumentsStatus(detail.bookingId);
+        } catch (e) {
+          debugPrint('⚠️ [CheckinDetail] No se pudo cargar el estado de los documentos: $e');
+        }
+      }
+
       if (mounted) {
         debugPrint('✅ [CheckinDetail] Actualizando estado - _isLoading = false');
         setState(() {
           _checkinDetail = detail;
           _deposit = deposit;
+          _documentsStatus = documentsStatus;
           _isLoading = false;
         });
       }
@@ -255,6 +270,15 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
             const SizedBox(height: 16),
             _buildGuestsSection(),
             if (_checkinDetail!.documents.isNotEmpty) ...[
+              if (_documentsStatus != null) ...[
+                const SizedBox(height: 16),
+                CheckinDocumentsPrivacyCard(
+                  status: _documentsStatus!,
+                  documents: _checkinDetail!.documents,
+                  repository: getIt<AdminPanelRepository>(),
+                  onChanged: _loadCheckinDetail,
+                ),
+              ],
               const SizedBox(height: 16),
               _buildDocumentsSection(),
             ],
@@ -606,7 +630,7 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
   }
 
   Widget _buildDocumentItem(CheckinDocumentEntity doc) {
-    final url = _documentUrls[doc.id];
+    final url = doc.isDeleted ? null : _documentUrls[doc.id];
     final guestName = _checkinDetail!.guests
         .where((g) => g.id == doc.guestId)
         .firstOrNull?.fullName ?? S.of(context).admin_checkin_unknown_guest;
@@ -627,7 +651,11 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
               color: AppColors.goldWithAlpha20,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.image, color: AppColors.gold, size: 24),
+            child: Icon(
+              doc.isDeleted ? Icons.hide_image_outlined : Icons.image,
+              color: doc.isDeleted ? AppColors.gray500 : AppColors.gold,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -646,6 +674,13 @@ class _CheckinDetailScreenState extends State<CheckinDetailScreen> {
                   guestName,
                   style: TextStyle(color: AppColors.gray400, fontSize: 12),
                 ),
+                if (doc.isDeleted)
+                  Text(
+                    S.of(context).admin_docs_image_deleted(
+                      DateFormat('dd/MM/yyyy HH:mm').format(doc.deletedAt!),
+                    ),
+                    style: const TextStyle(color: AppColors.success, fontSize: 12),
+                  ),
               ],
             ),
           ),

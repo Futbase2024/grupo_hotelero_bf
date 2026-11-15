@@ -3038,6 +3038,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   /// Interruptor de auto-validación del check-in dentro de la tarjeta de check-in
   Widget _buildAutoValidateRow() {
     final isEnabled = _booking!.autoValidateCheckin;
+    // Con fianza pendiente el servidor no auto-valida nunca: el interruptor
+    // se muestra deshabilitado porque encenderlo no tendría efecto.
+    final isDepositPending = _deposit?.status.isPending ?? false;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -3097,27 +3100,37 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   activeTrackColor: AppColors.gold,
                   inactiveThumbColor: AppColors.gray400,
                   inactiveTrackColor: AppColors.darkSurface,
-                  onChanged: _toggleAutoValidateCheckin,
+                  onChanged: isDepositPending ? null : _toggleAutoValidateCheckin,
                 ),
             ],
           ),
-          // Recordatorio de la regla nocturna: aplica esté el interruptor
-          // encendido o apagado, así que se muestra siempre.
+          // Recordatorio de la regla nocturna. Con fianza pendiente el
+          // servidor bloquea toda auto-validación (también la de las 23:00),
+          // así que se avisa de eso en su lugar.
           const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.nightlight_round, size: 14, color: AppColors.gray500),
+              Icon(
+                isDepositPending ? Icons.lock_outline : Icons.nightlight_round,
+                size: 14,
+                color: isDepositPending ? AppColors.warning : AppColors.gray500,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  S.of(context).admin_booking_auto_validate_night_note(
-                        CheckinPolicy.autoValidateAfterHour,
-                      ),
-                  style: const TextStyle(
-                    color: AppColors.gray500,
+                  isDepositPending
+                      ? S.of(context).admin_booking_auto_validate_deposit_note(
+                            CheckinPolicy.autoValidateAfterHour,
+                          )
+                      : S.of(context).admin_booking_auto_validate_night_note(
+                            CheckinPolicy.autoValidateAfterHour,
+                          ),
+                  style: TextStyle(
+                    color: isDepositPending ? AppColors.warning : AppColors.gray500,
                     fontSize: 11,
                     height: 1.3,
+                    fontWeight: isDepositPending ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
               ),

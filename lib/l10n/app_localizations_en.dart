@@ -1146,6 +1146,11 @@ class SEn extends S {
   }
 
   @override
+  String admin_booking_auto_validate_deposit_note(String time) {
+    return 'Deposit pending: the check-in will not be auto-validated (not even at $time) until it is marked as paid or waived.';
+  }
+
+  @override
   String get admin_booking_auto_validate_enabled =>
       'Check-in auto-validation enabled';
 
@@ -3675,4 +3680,116 @@ class SEn extends S {
   @override
   String get guest_home_deposit_pending =>
       'Waiting for the deposit payment. Please check the link we sent you.';
+
+  @override
+  String get guest_checkin_privacy_title => 'Your documents are protected';
+
+  @override
+  String get guest_checkin_privacy_purpose =>
+      'We only use them for the traveller registration required by Spanish law (RD 933/2021).';
+
+  @override
+  String get guest_checkin_privacy_watermark =>
+      'A «COPIA» (copy) watermark is added so they cannot be used for anything else.';
+
+  @override
+  String get guest_checkin_privacy_deletion =>
+      'They are permanently deleted 24 hours after your check-in is validated, or if the booking is cancelled.';
+
+  @override
+  String get guest_checkin_privacy_photo_tips =>
+      'Take the photo on a flat surface, without glare and with all the details legible.';
+
+  @override
+  String get admin_docs_privacy_title => 'Document privacy';
+
+  @override
+  String admin_docs_privacy_scheduled(String date) {
+    return 'Images will be deleted automatically on $date';
+  }
+
+  @override
+  String get admin_docs_privacy_scheduled_now =>
+      'Images will be deleted in the next run (max. 15 min)';
+
+  @override
+  String get admin_docs_privacy_reason_validated =>
+      '24 h after the check-in was validated';
+
+  @override
+  String get admin_docs_privacy_reason_cancelled => 'Booking cancelled';
+
+  @override
+  String get admin_docs_privacy_reason_checkout =>
+      'Check-in not validated: deleted after check-out';
+
+  @override
+  String get admin_docs_privacy_reason_manual => 'Deleted manually';
+
+  @override
+  String get admin_docs_privacy_retained =>
+      'Retained: they will not be deleted until you release them';
+
+  @override
+  String admin_docs_privacy_retained_by(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String admin_docs_privacy_deleted(String date) {
+    return 'Images deleted on $date under the privacy policy';
+  }
+
+  @override
+  String get admin_docs_privacy_data_kept =>
+      'Guest details (name, document, nationality…) are kept.';
+
+  @override
+  String get admin_docs_privacy_retain_button => 'Retain';
+
+  @override
+  String get admin_docs_privacy_release_button => 'Release';
+
+  @override
+  String get admin_docs_privacy_delete_button => 'Delete now';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_title => 'Retain documents';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_body =>
+      'Automatic deletion will be paused until you release them. Use it only if there is an incident (damage, complaint, police request).';
+
+  @override
+  String get admin_docs_privacy_retain_reason_hint =>
+      'Reason (required, at least 5 characters)';
+
+  @override
+  String get admin_docs_privacy_delete_dialog_title => 'Delete the images now?';
+
+  @override
+  String admin_docs_privacy_delete_dialog_body(int count) {
+    return 'The $count document images of this booking will be permanently deleted. This cannot be undone.';
+  }
+
+  @override
+  String get admin_docs_privacy_delete_confirm => 'Delete permanently';
+
+  @override
+  String get admin_docs_privacy_retained_success => 'Documents retained';
+
+  @override
+  String get admin_docs_privacy_released_success => 'Retention released';
+
+  @override
+  String get admin_docs_privacy_deleted_success => 'Images deleted';
+
+  @override
+  String get admin_docs_privacy_error_title =>
+      'The action could not be completed';
+
+  @override
+  String admin_docs_image_deleted(String date) {
+    return 'Image deleted on $date';
+  }
 }

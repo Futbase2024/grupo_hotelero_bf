@@ -167,6 +167,26 @@ abstract class AdminPanelRepository {
   /// Obtiene la URL firmada para ver un documento
   Future<String> getDocumentUrl(String storagePath);
 
+  // ==================== PRIVACIDAD DE DOCUMENTOS ====================
+
+  /// Cuántos documentos quedan, cuándo se borrarán y si están retenidos
+  Future<BookingDocumentsStatusEntity> getBookingDocumentsStatus(String bookingId);
+
+  /// Activa o quita la retención (pausa el borrado automático).
+  /// [reason] es obligatorio al activarla.
+  Future<void> setBookingDocumentsRetention({
+    required String bookingId,
+    required bool retain,
+    String? reason,
+  });
+
+  /// Borra ya las imágenes indicadas del bucket y las marca como borradas.
+  /// Devuelve cuántos documentos se han marcado.
+  Future<int> deleteBookingDocumentsNow({
+    required String bookingId,
+    required List<CheckinDocumentEntity> documents,
+  });
+
   // ==================== MÉTODOS DE CHECK-OUT ====================
 
   /// Valida el check-out de una reserva
@@ -303,14 +323,7 @@ abstract class AdminPanelRepository {
     String? propertyId,
   });
 
-  // ==================== MÉTODOS DE DOCUMENTOS ====================
-
-  /// Limpia documentos expirados (más de 1 año)
-  /// Retorna el número de documentos eliminados
-  Future<CleanupResult> cleanupExpiredDocuments();
-
-  /// Obtiene documentos próximos a expirar
-  Future<List<ExpiringDocument>> getDocumentsExpiringSoon({int daysBefore = 7});
+  // ==================== HORA DEL SERVIDOR ====================
 
   /// Obtiene la hora actual del servidor (para evitar manipulación del reloj del dispositivo)
   /// Retorna la fecha/hora UTC del servidor de Supabase
@@ -425,83 +438,5 @@ class UnitWithAvailability {
       'conflicting_booking_id': conflictingBookingId,
       'conflicting_guest_name': conflictingGuestName,
     };
-  }
-}
-
-/// Resultado de limpiar documentos expirados
-class CleanupResult {
-  const CleanupResult({
-    required this.deletedCount,
-    required this.errorCount,
-    this.details = const [],
-  });
-
-  final int deletedCount;
-  final int errorCount;
-  final List<CleanupDetail> details;
-
-  factory CleanupResult.fromJson(Map<String, dynamic> json) {
-    final detailsList = (json['details'] as List<dynamic>?) ?? [];
-    return CleanupResult(
-      deletedCount: json['deleted_count'] as int? ?? 0,
-      errorCount: json['error_count'] as int? ?? 0,
-      details: detailsList
-          .map((e) => CleanupDetail.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-  }
-}
-
-/// Detalle de un documento eliminado
-class CleanupDetail {
-  const CleanupDetail({
-    required this.id,
-    required this.path,
-    required this.status,
-    this.error,
-  });
-
-  final String id;
-  final String path;
-  final String status;
-  final String? error;
-
-  factory CleanupDetail.fromJson(Map<String, dynamic> json) {
-    return CleanupDetail(
-      id: json['id'] as String? ?? '',
-      path: json['path'] as String? ?? '',
-      status: json['status'] as String? ?? '',
-      error: json['error'] as String?,
-    );
-  }
-}
-
-/// Documento próximo a expirar
-class ExpiringDocument {
-  const ExpiringDocument({
-    required this.id,
-    required this.storagePath,
-    required this.expiresAt,
-    this.guestId,
-    required this.bookingId,
-    required this.daysRemaining,
-  });
-
-  final String id;
-  final String storagePath;
-  final DateTime expiresAt;
-  final String? guestId;
-  final String bookingId;
-  final int daysRemaining;
-
-  factory ExpiringDocument.fromJson(Map<String, dynamic> json) {
-    return ExpiringDocument(
-      id: json['id'] as String,
-      storagePath: json['storage_path'] as String,
-      expiresAt: DateTime.parse(json['expires_at'] as String),
-      guestId: json['guest_id'] as String?,
-      bookingId: json['booking_id'] as String,
-      daysRemaining: json['days_remaining'] as int? ?? 0,
-    );
   }
 }

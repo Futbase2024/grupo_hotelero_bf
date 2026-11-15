@@ -1165,6 +1165,11 @@ class SFr extends S {
   }
 
   @override
+  String admin_booking_auto_validate_deposit_note(String time) {
+    return 'Caution en attente : l\'enregistrement ne sera pas validé automatiquement (pas même à $time) tant qu\'elle n\'est pas marquée comme payée ou exemptée.';
+  }
+
+  @override
   String get admin_booking_auto_validate_enabled =>
       'Validation automatique du check-in activée';
 
@@ -3729,4 +3734,118 @@ class SFr extends S {
   @override
   String get guest_home_deposit_pending =>
       'En attente du paiement de la caution. Consultez le lien que nous vous avons envoyé.';
+
+  @override
+  String get guest_checkin_privacy_title => 'Vos documents sont protégés';
+
+  @override
+  String get guest_checkin_privacy_purpose =>
+      'Nous les utilisons uniquement pour l\'enregistrement des voyageurs exigé par la loi espagnole (RD 933/2021).';
+
+  @override
+  String get guest_checkin_privacy_watermark =>
+      'Un filigrane « COPIA » (copie) y est ajouté pour qu\'ils ne puissent pas servir à autre chose.';
+
+  @override
+  String get guest_checkin_privacy_deletion =>
+      'Ils sont supprimés définitivement 24 heures après la validation de votre check-in, ou en cas d\'annulation de la réservation.';
+
+  @override
+  String get guest_checkin_privacy_photo_tips =>
+      'Prenez la photo sur une surface plane, sans reflets et avec toutes les informations lisibles.';
+
+  @override
+  String get admin_docs_privacy_title => 'Confidentialité des documents';
+
+  @override
+  String admin_docs_privacy_scheduled(String date) {
+    return 'Les images seront supprimées automatiquement le $date';
+  }
+
+  @override
+  String get admin_docs_privacy_scheduled_now =>
+      'Les images seront supprimées au prochain passage (15 min max.)';
+
+  @override
+  String get admin_docs_privacy_reason_validated =>
+      '24 h après la validation du check-in';
+
+  @override
+  String get admin_docs_privacy_reason_cancelled => 'Réservation annulée';
+
+  @override
+  String get admin_docs_privacy_reason_checkout =>
+      'Check-in non validé : suppression après le check-out';
+
+  @override
+  String get admin_docs_privacy_reason_manual => 'Supprimées manuellement';
+
+  @override
+  String get admin_docs_privacy_retained =>
+      'Conservés : ils ne seront pas supprimés tant que vous ne levez pas la conservation';
+
+  @override
+  String admin_docs_privacy_retained_by(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String admin_docs_privacy_deleted(String date) {
+    return 'Images supprimées le $date conformément à la politique de confidentialité';
+  }
+
+  @override
+  String get admin_docs_privacy_data_kept =>
+      'Les données du client (nom, document, nationalité…) sont conservées.';
+
+  @override
+  String get admin_docs_privacy_retain_button => 'Conserver';
+
+  @override
+  String get admin_docs_privacy_release_button => 'Lever la conservation';
+
+  @override
+  String get admin_docs_privacy_delete_button => 'Supprimer maintenant';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_title =>
+      'Conserver les documents';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_body =>
+      'La suppression automatique sera suspendue jusqu\'à ce que vous leviez la conservation. À utiliser uniquement en cas d\'incident (dégâts, réclamation, réquisition de police).';
+
+  @override
+  String get admin_docs_privacy_retain_reason_hint =>
+      'Motif (obligatoire, 5 caractères minimum)';
+
+  @override
+  String get admin_docs_privacy_delete_dialog_title =>
+      'Supprimer les images maintenant ?';
+
+  @override
+  String admin_docs_privacy_delete_dialog_body(int count) {
+    return 'Les $count images de documents de cette réservation seront supprimées définitivement. Cette action est irréversible.';
+  }
+
+  @override
+  String get admin_docs_privacy_delete_confirm => 'Supprimer définitivement';
+
+  @override
+  String get admin_docs_privacy_retained_success => 'Documents conservés';
+
+  @override
+  String get admin_docs_privacy_released_success => 'Conservation levée';
+
+  @override
+  String get admin_docs_privacy_deleted_success => 'Images supprimées';
+
+  @override
+  String get admin_docs_privacy_error_title =>
+      'L\'action n\'a pas pu être effectuée';
+
+  @override
+  String admin_docs_image_deleted(String date) {
+    return 'Image supprimée le $date';
+  }
 }

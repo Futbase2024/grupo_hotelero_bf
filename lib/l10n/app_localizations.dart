@@ -2124,6 +2124,12 @@ abstract class S {
   /// **'A partir de las {time} h del día de entrada el check-in se autovalida siempre, aunque este interruptor esté apagado.'**
   String admin_booking_auto_validate_night_note(String time);
 
+  /// No description provided for @admin_booking_auto_validate_deposit_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Fianza pendiente: el check-in no se validará solo (ni a las {time} h) hasta marcarla como pagada o eximirla.'**
+  String admin_booking_auto_validate_deposit_note(String time);
+
   /// No description provided for @admin_booking_auto_validate_enabled.
   ///
   /// In es, this message translates to:
@@ -6626,6 +6632,186 @@ abstract class S {
   /// In es, this message translates to:
   /// **'Pendiente de recibir el pago de la fianza. Revisa el enlace que te hemos enviado.'**
   String get guest_home_deposit_pending;
+
+  /// No description provided for @guest_checkin_privacy_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus documentos están protegidos'**
+  String get guest_checkin_privacy_title;
+
+  /// No description provided for @guest_checkin_privacy_purpose.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo los usamos para el registro de viajeros obligatorio por ley (RD 933/2021).'**
+  String get guest_checkin_privacy_purpose;
+
+  /// No description provided for @guest_checkin_privacy_watermark.
+  ///
+  /// In es, this message translates to:
+  /// **'Se les añade la marca «COPIA» para que no puedan usarse con otro fin.'**
+  String get guest_checkin_privacy_watermark;
+
+  /// No description provided for @guest_checkin_privacy_deletion.
+  ///
+  /// In es, this message translates to:
+  /// **'Se borran para siempre 24 horas después de validar tu check-in, o al cancelar la reserva.'**
+  String get guest_checkin_privacy_deletion;
+
+  /// No description provided for @guest_checkin_privacy_photo_tips.
+  ///
+  /// In es, this message translates to:
+  /// **'Haz la foto sobre una superficie plana, sin reflejos y con todos los datos legibles.'**
+  String get guest_checkin_privacy_photo_tips;
+
+  /// No description provided for @admin_docs_privacy_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Privacidad de documentos'**
+  String get admin_docs_privacy_title;
+
+  /// No description provided for @admin_docs_privacy_scheduled.
+  ///
+  /// In es, this message translates to:
+  /// **'Las imágenes se eliminarán automáticamente el {date}'**
+  String admin_docs_privacy_scheduled(String date);
+
+  /// No description provided for @admin_docs_privacy_scheduled_now.
+  ///
+  /// In es, this message translates to:
+  /// **'Las imágenes se eliminarán en la próxima pasada (máx. 15 min)'**
+  String get admin_docs_privacy_scheduled_now;
+
+  /// No description provided for @admin_docs_privacy_reason_validated.
+  ///
+  /// In es, this message translates to:
+  /// **'24 h después de validar el check-in'**
+  String get admin_docs_privacy_reason_validated;
+
+  /// No description provided for @admin_docs_privacy_reason_cancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Reserva cancelada'**
+  String get admin_docs_privacy_reason_cancelled;
+
+  /// No description provided for @admin_docs_privacy_reason_checkout.
+  ///
+  /// In es, this message translates to:
+  /// **'Check-in sin validar: se borran tras el check-out'**
+  String get admin_docs_privacy_reason_checkout;
+
+  /// No description provided for @admin_docs_privacy_reason_manual.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminadas manualmente'**
+  String get admin_docs_privacy_reason_manual;
+
+  /// No description provided for @admin_docs_privacy_retained.
+  ///
+  /// In es, this message translates to:
+  /// **'Retenidos: no se borrarán hasta que quites la retención'**
+  String get admin_docs_privacy_retained;
+
+  /// No description provided for @admin_docs_privacy_retained_by.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} · {date}'**
+  String admin_docs_privacy_retained_by(String name, String date);
+
+  /// No description provided for @admin_docs_privacy_deleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Imágenes eliminadas el {date} por política de privacidad'**
+  String admin_docs_privacy_deleted(String date);
+
+  /// No description provided for @admin_docs_privacy_data_kept.
+  ///
+  /// In es, this message translates to:
+  /// **'Los datos del huésped (nombre, documento, nacionalidad…) se conservan.'**
+  String get admin_docs_privacy_data_kept;
+
+  /// No description provided for @admin_docs_privacy_retain_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Retener'**
+  String get admin_docs_privacy_retain_button;
+
+  /// No description provided for @admin_docs_privacy_release_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar retención'**
+  String get admin_docs_privacy_release_button;
+
+  /// No description provided for @admin_docs_privacy_delete_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar ahora'**
+  String get admin_docs_privacy_delete_button;
+
+  /// No description provided for @admin_docs_privacy_retain_dialog_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Retener documentos'**
+  String get admin_docs_privacy_retain_dialog_title;
+
+  /// No description provided for @admin_docs_privacy_retain_dialog_body.
+  ///
+  /// In es, this message translates to:
+  /// **'El borrado automático quedará pausado hasta que quites la retención. Úsalo solo si hay una incidencia (daños, reclamación, requerimiento policial).'**
+  String get admin_docs_privacy_retain_dialog_body;
+
+  /// No description provided for @admin_docs_privacy_retain_reason_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Motivo (obligatorio, mínimo 5 caracteres)'**
+  String get admin_docs_privacy_retain_reason_hint;
+
+  /// No description provided for @admin_docs_privacy_delete_dialog_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar las imágenes ahora?'**
+  String get admin_docs_privacy_delete_dialog_title;
+
+  /// No description provided for @admin_docs_privacy_delete_dialog_body.
+  ///
+  /// In es, this message translates to:
+  /// **'Se borrarán para siempre las {count} imágenes de documentos de esta reserva. Esta acción no se puede deshacer.'**
+  String admin_docs_privacy_delete_dialog_body(int count);
+
+  /// No description provided for @admin_docs_privacy_delete_confirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar para siempre'**
+  String get admin_docs_privacy_delete_confirm;
+
+  /// No description provided for @admin_docs_privacy_retained_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos retenidos'**
+  String get admin_docs_privacy_retained_success;
+
+  /// No description provided for @admin_docs_privacy_released_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Retención quitada'**
+  String get admin_docs_privacy_released_success;
+
+  /// No description provided for @admin_docs_privacy_deleted_success.
+  ///
+  /// In es, this message translates to:
+  /// **'Imágenes eliminadas'**
+  String get admin_docs_privacy_deleted_success;
+
+  /// No description provided for @admin_docs_privacy_error_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar la acción'**
+  String get admin_docs_privacy_error_title;
+
+  /// No description provided for @admin_docs_image_deleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen eliminada el {date}'**
+  String admin_docs_image_deleted(String date);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

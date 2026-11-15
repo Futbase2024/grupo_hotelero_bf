@@ -1,19 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../data/services/document_watermark_service.dart';
 import '../../domain/entities/guest_entity.dart';
 import 'document_camera_screen.dart';
 
-/// Tamaño máximo de archivo (500KB)
-const int _maxFileSizeBytes = 500 * 1024;
-
-/// Dimensiones máximas para compresión
-const int _maxDimension = 1200;
+/// Dimensión máxima al elegir de la galería (luego se marca y comprime)
+const int _maxDimension = DocumentWatermarkService.maxDimension;
 
 /// Cara del documento que se está capturando
 enum _DocumentSide { front, back }
@@ -160,7 +157,11 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: AppTheme.spacing24),
+              const SizedBox(height: AppTheme.spacing20),
+
+              // Aviso de privacidad: finalidad, marca «COPIA» y borrado
+              const _DocumentPrivacyNotice(),
+              const SizedBox(height: AppTheme.spacing20),
 
               // Document type selector
               _DocumentTypeSelector(
@@ -371,13 +372,8 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
       if (bytes != null) {
         debugPrint('📷 [DocumentUpload] Imagen capturada: ${bytes.length} bytes');
 
-        // Comprimir si excede el tamaño máximo
-        var processedBytes = bytes;
-        if (bytes.length > _maxFileSizeBytes) {
-          processedBytes = await _compressImage(bytes);
-          debugPrint('📷 [DocumentUpload] Imagen comprimida: ${processedBytes.length} bytes');
-        }
-
+        // Marca «COPIA» + compresión: solo se sube la versión marcada
+        final processedBytes = await DocumentWatermarkService.prepare(bytes);
         _setSideBytes(side, processedBytes);
       }
     } catch (e) {
@@ -406,16 +402,12 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
       );
 
       if (image != null) {
-        var bytes = await image.readAsBytes();
+        final bytes = await image.readAsBytes();
         debugPrint('📷 [DocumentUpload] Imagen capturada: ${bytes.length} bytes');
 
-        // Comprimir si excede el tamaño máximo
-        if (bytes.length > _maxFileSizeBytes) {
-          bytes = await _compressImage(bytes);
-          debugPrint('📷 [DocumentUpload] Imagen comprimida: ${bytes.length} bytes');
-        }
-
-        _setSideBytes(side, bytes);
+        // Marca «COPIA» + compresión: solo se sube la versión marcada
+        final processedBytes = await DocumentWatermarkService.prepare(bytes);
+        _setSideBytes(side, processedBytes);
       }
     } catch (e) {
       if (mounted) {
@@ -428,39 +420,6 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
       }
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  /// Comprime una imagen si excede el tamaño máximo
-  ///
-  /// Re-codifica a JPEG bajando la calidad por pasos. Se usa JPEG (y no PNG)
-  /// porque para una foto de documento el PNG resultante suele pesar MÁS que
-  /// el original, que era justo lo que hacía fallar subidas en móviles con
-  /// cámaras de muchos megapíxeles.
-  Future<Uint8List> _compressImage(Uint8List imageBytes) async {
-    try {
-      var result = imageBytes;
-
-      for (final quality in const [80, 60, 40]) {
-        result = await FlutterImageCompress.compressWithList(
-          imageBytes,
-          minWidth: _maxDimension,
-          minHeight: _maxDimension,
-          quality: quality,
-          format: CompressFormat.jpeg,
-        );
-
-        debugPrint('📷 [DocumentUpload] Calidad $quality → ${result.length} bytes');
-
-        if (result.length <= _maxFileSizeBytes) break;
-      }
-
-      // Si aun así no baja del límite, se queda la versión más comprimida
-      // siempre que sea menor que la original.
-      return result.length < imageBytes.length ? result : imageBytes;
-    } catch (e) {
-      debugPrint('❌ [DocumentUpload] Error al comprimir: $e');
-      return imageBytes; // Devolver original si falla
     }
   }
 
@@ -821,6 +780,83 @@ class _SourceButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Aviso que ve el huésped antes de hacer las fotos del documento
+class _DocumentPrivacyNotice extends StatelessWidget {
+  const _DocumentPrivacyNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.lock_outline, color: AppColors.success, size: 20),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Text(
+                  l10n.guest_checkin_privacy_title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          _PrivacyPoint(icon: Icons.gavel_outlined, text: l10n.guest_checkin_privacy_purpose),
+          _PrivacyPoint(icon: Icons.branding_watermark_outlined, text: l10n.guest_checkin_privacy_watermark),
+          _PrivacyPoint(icon: Icons.auto_delete_outlined, text: l10n.guest_checkin_privacy_deletion),
+          _PrivacyPoint(icon: Icons.photo_camera_outlined, text: l10n.guest_checkin_privacy_photo_tips),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrivacyPoint extends StatelessWidget {
+  const _PrivacyPoint({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppColors.success, size: 16),
+          const SizedBox(width: AppTheme.spacing8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: AppColors.gray300,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

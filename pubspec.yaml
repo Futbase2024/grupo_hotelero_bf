@@ -1,7 +1,7 @@
 name: bf_stay
 description: BF Stay - Guest & Staff Management App
 publish_to: 'none'
-version: 1.0.52+52
+version: 1.0.53+53
 
 environment:
   sdk: ^3.9.2

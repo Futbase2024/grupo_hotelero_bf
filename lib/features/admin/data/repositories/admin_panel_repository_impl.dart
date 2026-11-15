@@ -853,6 +853,86 @@ $listColumns,
     }
   }
 
+  // ==================== PRIVACIDAD DE DOCUMENTOS ====================
+
+  @override
+  Future<BookingDocumentsStatusEntity> getBookingDocumentsStatus(String bookingId) async {
+    try {
+      final response = await _client.rpc(
+        'get_booking_documents_status',
+        params: {'p_booking_id': bookingId},
+      );
+      return BookingDocumentsStatusEntity.fromJson(response as Map<String, dynamic>);
+    } catch (e, s) {
+      debugPrint('❌ [getBookingDocumentsStatus] Error: $e');
+      debugPrint('❌ [getBookingDocumentsStatus] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> setBookingDocumentsRetention({
+    required String bookingId,
+    required bool retain,
+    String? reason,
+  }) async {
+    try {
+      debugPrint('🛡️ [setBookingDocumentsRetention] $bookingId → retain=$retain');
+      await _client.rpc(
+        'set_booking_documents_retention',
+        params: {
+          'p_booking_id': bookingId,
+          'p_retain': retain,
+          'p_reason': reason,
+        },
+      );
+    } catch (e, s) {
+      debugPrint('❌ [setBookingDocumentsRetention] Error: $e');
+      debugPrint('❌ [setBookingDocumentsRetention] StackTrace: $s');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<int> deleteBookingDocumentsNow({
+    required String bookingId,
+    required List<CheckinDocumentEntity> documents,
+  }) async {
+    final pending = documents.where((d) => !d.isDeleted).toList();
+    if (pending.isEmpty) return 0;
+
+    try {
+      debugPrint('🗑️ [deleteBookingDocumentsNow] ${pending.length} imágenes de $bookingId');
+
+      // La retención se comprueba ANTES de tocar el bucket: el RPC también la
+      // rechaza, pero para entonces los archivos ya estarían borrados.
+      final status = await getBookingDocumentsStatus(bookingId);
+      if (status.isRetained) {
+        throw StateError('retained: los documentos de esta reserva están retenidos');
+      }
+
+      // Primero los archivos; si después falla el marcado, el cron lo
+      // reintenta (borrar un archivo que ya no existe no da error).
+      await _client.storage
+          .from('guest-documents')
+          .remove(pending.map((d) => d.storagePath).toList());
+
+      final marked = await _client.rpc(
+        'mark_booking_documents_deleted',
+        params: {
+          'p_booking_id': bookingId,
+          'p_document_ids': pending.map((d) => d.id).toList(),
+        },
+      );
+
+      return (marked as num?)?.toInt() ?? 0;
+    } catch (e, s) {
+      debugPrint('❌ [deleteBookingDocumentsNow] Error: $e');
+      debugPrint('❌ [deleteBookingDocumentsNow] StackTrace: $s');
+      rethrow;
+    }
+  }
+
   // ==================== MÉTODOS DE CHECK-OUT ====================
 
   /// Valida el check-out de una reserva usando RPC
@@ -1507,50 +1587,7 @@ $listColumns,
         });
   }
 
-  // ==================== MÉTODOS DE DOCUMENTOS ====================
-
-  /// Limpia documentos expirados (más de 1 año)
-  @override
-  Future<CleanupResult> cleanupExpiredDocuments() async {
-    try {
-      debugPrint('🧹 [cleanupExpiredDocuments] Iniciando limpieza...');
-
-      final response = await _client.rpc('cleanup_expired_documents');
-
-      final result = CleanupResult.fromJson(response as Map<String, dynamic>);
-      debugPrint('✅ [cleanupExpiredDocuments] Eliminados: ${result.deletedCount}, Errores: ${result.errorCount}');
-
-      return result;
-    } catch (e, s) {
-      debugPrint('❌ [cleanupExpiredDocuments] Error: $e');
-      debugPrint('❌ [cleanupExpiredDocuments] StackTrace: $s');
-      rethrow;
-    }
-  }
-
-  /// Obtiene documentos próximos a expirar
-  @override
-  Future<List<ExpiringDocument>> getDocumentsExpiringSoon({int daysBefore = 7}) async {
-    try {
-      debugPrint('📅 [getDocumentsExpiringSoon] Buscando documentos que expiran en $daysBefore días...');
-
-      final response = await _client.rpc(
-        'get_documents_expiring_soon',
-        params: {'days_before': daysBefore},
-      );
-
-      final documents = (response as List)
-          .map((e) => ExpiringDocument.fromJson(e as Map<String, dynamic>))
-          .toList();
-
-      debugPrint('📅 [getDocumentsExpiringSoon] Encontrados: ${documents.length}');
-      return documents;
-    } catch (e, s) {
-      debugPrint('❌ [getDocumentsExpiringSoon] Error: $e');
-      debugPrint('❌ [getDocumentsExpiringSoon] StackTrace: $s');
-      rethrow;
-    }
-  }
+  // ==================== HORA DEL SERVIDOR ====================
 
   /// Obtiene la hora actual del servidor (para evitar manipulación del reloj del dispositivo)
   /// Usa la función now() de PostgreSQL que retorna la hora UTC del servidor

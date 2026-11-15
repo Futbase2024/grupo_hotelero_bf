@@ -1160,6 +1160,11 @@ class SPt extends S {
   }
 
   @override
+  String admin_booking_auto_validate_deposit_note(String time) {
+    return 'Caução pendente: o check-in não será validado automaticamente (nem às $time) até ser marcada como paga ou isenta.';
+  }
+
+  @override
   String get admin_booking_auto_validate_enabled =>
       'Validação automática do check-in ativada';
 
@@ -3705,4 +3710,118 @@ class SPt extends S {
   @override
   String get guest_home_deposit_pending =>
       'A aguardar o pagamento da caução. Consulta o link que te enviámos.';
+
+  @override
+  String get guest_checkin_privacy_title =>
+      'Os seus documentos estão protegidos';
+
+  @override
+  String get guest_checkin_privacy_purpose =>
+      'Só os usamos para o registo de viajantes obrigatório por lei em Espanha (RD 933/2021).';
+
+  @override
+  String get guest_checkin_privacy_watermark =>
+      'É adicionada a marca «COPIA» (cópia) para que não possam ser usados para outro fim.';
+
+  @override
+  String get guest_checkin_privacy_deletion =>
+      'São apagados definitivamente 24 horas depois de validado o seu check-in, ou se a reserva for cancelada.';
+
+  @override
+  String get guest_checkin_privacy_photo_tips =>
+      'Tire a foto numa superfície plana, sem reflexos e com todos os dados legíveis.';
+
+  @override
+  String get admin_docs_privacy_title => 'Privacidade dos documentos';
+
+  @override
+  String admin_docs_privacy_scheduled(String date) {
+    return 'As imagens serão apagadas automaticamente em $date';
+  }
+
+  @override
+  String get admin_docs_privacy_scheduled_now =>
+      'As imagens serão apagadas na próxima execução (máx. 15 min)';
+
+  @override
+  String get admin_docs_privacy_reason_validated =>
+      '24 h depois de validar o check-in';
+
+  @override
+  String get admin_docs_privacy_reason_cancelled => 'Reserva cancelada';
+
+  @override
+  String get admin_docs_privacy_reason_checkout =>
+      'Check-in não validado: apagadas após o check-out';
+
+  @override
+  String get admin_docs_privacy_reason_manual => 'Apagadas manualmente';
+
+  @override
+  String get admin_docs_privacy_retained =>
+      'Retidos: não serão apagados até retirar a retenção';
+
+  @override
+  String admin_docs_privacy_retained_by(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String admin_docs_privacy_deleted(String date) {
+    return 'Imagens apagadas em $date pela política de privacidade';
+  }
+
+  @override
+  String get admin_docs_privacy_data_kept =>
+      'Os dados do hóspede (nome, documento, nacionalidade…) são mantidos.';
+
+  @override
+  String get admin_docs_privacy_retain_button => 'Reter';
+
+  @override
+  String get admin_docs_privacy_release_button => 'Retirar retenção';
+
+  @override
+  String get admin_docs_privacy_delete_button => 'Apagar agora';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_title => 'Reter documentos';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_body =>
+      'A eliminação automática fica em pausa até retirar a retenção. Use apenas se houver um incidente (danos, reclamação, pedido policial).';
+
+  @override
+  String get admin_docs_privacy_retain_reason_hint =>
+      'Motivo (obrigatório, mínimo 5 caracteres)';
+
+  @override
+  String get admin_docs_privacy_delete_dialog_title =>
+      'Apagar as imagens agora?';
+
+  @override
+  String admin_docs_privacy_delete_dialog_body(int count) {
+    return 'As $count imagens de documentos desta reserva serão apagadas definitivamente. Esta ação não pode ser desfeita.';
+  }
+
+  @override
+  String get admin_docs_privacy_delete_confirm => 'Apagar definitivamente';
+
+  @override
+  String get admin_docs_privacy_retained_success => 'Documentos retidos';
+
+  @override
+  String get admin_docs_privacy_released_success => 'Retenção retirada';
+
+  @override
+  String get admin_docs_privacy_deleted_success => 'Imagens apagadas';
+
+  @override
+  String get admin_docs_privacy_error_title =>
+      'Não foi possível concluir a ação';
+
+  @override
+  String admin_docs_image_deleted(String date) {
+    return 'Imagem apagada em $date';
+  }
 }

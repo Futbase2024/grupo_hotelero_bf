@@ -1171,6 +1171,11 @@ class SDe extends S {
   }
 
   @override
+  String admin_booking_auto_validate_deposit_note(String time) {
+    return 'Kaution ausstehend: Der Check-in wird nicht automatisch validiert (auch nicht um $time Uhr), bis sie als bezahlt markiert oder erlassen wird.';
+  }
+
+  @override
   String get admin_booking_auto_validate_enabled =>
       'Automatische Check-in-Validierung aktiviert';
 
@@ -3734,4 +3739,117 @@ class SDe extends S {
   @override
   String get guest_home_deposit_pending =>
       'Wir warten auf die Zahlung der Kaution. Bitte prüfe den Link, den wir dir gesendet haben.';
+
+  @override
+  String get guest_checkin_privacy_title => 'Ihre Dokumente sind geschützt';
+
+  @override
+  String get guest_checkin_privacy_purpose =>
+      'Wir verwenden sie ausschließlich für die gesetzlich vorgeschriebene Reisendenregistrierung (RD 933/2021).';
+
+  @override
+  String get guest_checkin_privacy_watermark =>
+      'Sie erhalten das Wasserzeichen «COPIA» (Kopie), damit sie für nichts anderes verwendet werden können.';
+
+  @override
+  String get guest_checkin_privacy_deletion =>
+      'Sie werden 24 Stunden nach der Bestätigung Ihres Check-ins oder bei Stornierung der Buchung endgültig gelöscht.';
+
+  @override
+  String get guest_checkin_privacy_photo_tips =>
+      'Fotografieren Sie auf einer flachen Unterlage, ohne Spiegelungen und mit gut lesbaren Daten.';
+
+  @override
+  String get admin_docs_privacy_title => 'Datenschutz der Dokumente';
+
+  @override
+  String admin_docs_privacy_scheduled(String date) {
+    return 'Die Bilder werden am $date automatisch gelöscht';
+  }
+
+  @override
+  String get admin_docs_privacy_scheduled_now =>
+      'Die Bilder werden beim nächsten Durchlauf gelöscht (max. 15 Min.)';
+
+  @override
+  String get admin_docs_privacy_reason_validated =>
+      '24 Std. nach Bestätigung des Check-ins';
+
+  @override
+  String get admin_docs_privacy_reason_cancelled => 'Buchung storniert';
+
+  @override
+  String get admin_docs_privacy_reason_checkout =>
+      'Check-in nicht bestätigt: Löschung nach dem Check-out';
+
+  @override
+  String get admin_docs_privacy_reason_manual => 'Manuell gelöscht';
+
+  @override
+  String get admin_docs_privacy_retained =>
+      'Zurückbehalten: keine Löschung, bis Sie die Sperre aufheben';
+
+  @override
+  String admin_docs_privacy_retained_by(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String admin_docs_privacy_deleted(String date) {
+    return 'Bilder am $date gemäß Datenschutzrichtlinie gelöscht';
+  }
+
+  @override
+  String get admin_docs_privacy_data_kept =>
+      'Die Gästedaten (Name, Dokument, Nationalität…) bleiben erhalten.';
+
+  @override
+  String get admin_docs_privacy_retain_button => 'Zurückbehalten';
+
+  @override
+  String get admin_docs_privacy_release_button => 'Sperre aufheben';
+
+  @override
+  String get admin_docs_privacy_delete_button => 'Jetzt löschen';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_title =>
+      'Dokumente zurückbehalten';
+
+  @override
+  String get admin_docs_privacy_retain_dialog_body =>
+      'Die automatische Löschung wird pausiert, bis Sie die Sperre aufheben. Nur bei einem Vorfall verwenden (Schäden, Reklamation, polizeiliche Anfrage).';
+
+  @override
+  String get admin_docs_privacy_retain_reason_hint =>
+      'Grund (Pflichtfeld, mind. 5 Zeichen)';
+
+  @override
+  String get admin_docs_privacy_delete_dialog_title => 'Bilder jetzt löschen?';
+
+  @override
+  String admin_docs_privacy_delete_dialog_body(int count) {
+    return 'Die $count Dokumentbilder dieser Buchung werden endgültig gelöscht. Dies kann nicht rückgängig gemacht werden.';
+  }
+
+  @override
+  String get admin_docs_privacy_delete_confirm => 'Endgültig löschen';
+
+  @override
+  String get admin_docs_privacy_retained_success => 'Dokumente zurückbehalten';
+
+  @override
+  String get admin_docs_privacy_released_success => 'Sperre aufgehoben';
+
+  @override
+  String get admin_docs_privacy_deleted_success => 'Bilder gelöscht';
+
+  @override
+  String get admin_docs_privacy_error_title =>
+      'Die Aktion konnte nicht abgeschlossen werden';
+
+  @override
+  String admin_docs_image_deleted(String date) {
+    return 'Bild gelöscht am $date';
+  }
 }

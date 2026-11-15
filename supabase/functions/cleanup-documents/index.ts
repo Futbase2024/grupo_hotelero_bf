@@ -1,151 +1,168 @@
 // Supabase Edge Function: cleanup-documents
-// Elimina documentos expirados del bucket y la base de datos
-// Se ejecuta automáticamente cada día a las 3:00 AM (configurar en Supabase Dashboard)
+//
+// Borra del bucket `guest-documents` las imágenes de DNI / NIE / pasaporte cuyo
+// plazo ya ha vencido y marca su fila como borrada (`deleted_at`). La fila se
+// conserva como constancia; los datos del huésped siguen en `guests`.
+//
+// Las reglas (24 h tras validar, al cancelar, tras el check-out si nunca se
+// validó, salvo retención) viven en SQL: guest_documents_due_for_deletion().
+//
+// La llama pg_cron cada 15 min (job `cleanup-guest-documents`) con la cabecera
+// `x-internal-secret`. Desplegar con verify_jwt = false.
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const BUCKET = "guest-documents";
+const BATCH_LIMIT = 1000;
+const REMOVE_CHUNK = 100;
+const ORPHAN_LIMIT = 500;
 
-interface CleanupResult {
-  deleted_count: number
-  error_count: number
-  details: Array<{
-    id: string
-    path: string
-    status: 'deleted' | 'error'
-    error?: string
-  }>
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+const admin = createClient(supabaseUrl, serviceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
+
+interface DueDocument {
+  id: string;
+  booking_id: string;
+  storage_path: string;
+  reason: string;
+}
+
+// ── Solo llamadas internas ──────────────────────────────────────────────────
+// Antes bastaba con un User-Agent que contuviera "Supabase", cosa que puede
+// poner cualquiera. Ahora: secreto interno de Vault o la service role.
+let cachedInternalSecret: string | null = null;
+
+async function isInternalCall(req: Request): Promise<boolean> {
+  const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (serviceKey && bearer === serviceKey) return true;
+
+  const provided = req.headers.get("x-internal-secret");
+  if (!provided) return false;
+
+  if (!cachedInternalSecret) {
+    const { data, error } = await admin.rpc("internal_functions_secret");
+    if (error || !data) {
+      console.error("[cleanup-documents] No se pudo leer el secreto interno:", error?.message);
+      return false;
+    }
+    cachedInternalSecret = data as string;
+  }
+  return provided === cachedInternalSecret;
+}
+
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+// Archivos del bucket sin fila en guest_documents (más de 24 h). Ninguna regla
+// por reserva los alcanza, así que se limpian aparte en cada pasada.
+async function removeOrphanFiles(): Promise<number> {
+  const { data, error } = await admin.rpc("guest_documents_orphan_files", {
+    p_limit: ORPHAN_LIMIT,
+  });
+  if (error) {
+    console.error("❌ [cleanup-documents] Error buscando huérfanos:", error.message);
+    return 0;
+  }
+
+  const names = ((data ?? []) as { name: string }[]).map((r) => r.name);
+  let removed = 0;
+  for (let i = 0; i < names.length; i += REMOVE_CHUNK) {
+    const chunk = names.slice(i, i + REMOVE_CHUNK);
+    const { error: storageError } = await admin.storage.from(BUCKET).remove(chunk);
+    if (storageError) {
+      console.error("❌ [cleanup-documents] Error borrando huérfanos:", storageError.message);
+      continue;
+    }
+    removed += chunk.length;
+  }
+  if (removed > 0) console.log(`🧹 [cleanup-documents] ${removed} archivos huérfanos borrados`);
+  return removed;
 }
 
 Deno.serve(async (req: Request) => {
-  // Verificar autorización (opcional: proteger con secret)
-  const authHeader = req.headers.get('Authorization')
-  const expectedAuth = Deno.env.get('CLEANUP_SECRET')
-
-  // Si hay secret configurado, verificarlo
-  if (expectedAuth && authHeader !== `Bearer ${expectedAuth}`) {
-    // También permitir llamadas internas de Supabase (sin auth)
-    const userAgent = req.headers.get('User-Agent') || ''
-    if (!userAgent.includes('Supabase')) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
   }
 
-  console.log('🧹 [cleanup-documents] Iniciando limpieza de documentos expirados...')
-  console.log(`📅 [cleanup-documents] Fecha: ${new Date().toISOString()}`)
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
-
-  const result: CleanupResult = {
-    deleted_count: 0,
-    error_count: 0,
-    details: [],
+  if (!(await isInternalCall(req))) {
+    return json({ error: "unauthorized" }, 401);
   }
+
+  const startedAt = new Date().toISOString();
+  let deleted = 0;
+  let failed = 0;
+  const byReason: Record<string, number> = {};
 
   try {
-    // 1. Buscar documentos expirados
-    const { data: expiredDocs, error: fetchError } = await supabase
-      .from('guest_documents')
-      .select('id, storage_path, guest_id, doc_kind, expires_at')
-      .lt('expires_at', new Date().toISOString())
+    const { data, error } = await admin.rpc("guest_documents_due_for_deletion", {
+      p_limit: BATCH_LIMIT,
+    });
+    if (error) throw error;
 
-    if (fetchError) {
-      console.error('❌ [cleanup-documents] Error al buscar documentos:', fetchError)
-      throw fetchError
+    const due = (data ?? []) as DueDocument[];
+    if (due.length === 0) {
+      const orphans = await removeOrphanFiles();
+      return json({ success: true, startedAt, deleted: 0, failed: 0, orphans });
     }
 
-    if (!expiredDocs || expiredDocs.length === 0) {
-      console.log('✅ [cleanup-documents] No hay documentos expirados')
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'No hay documentos expirados',
-          ...result,
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
+    console.log(`🧹 [cleanup-documents] ${due.length} documentos a borrar`);
 
-    console.log(`📋 [cleanup-documents] Encontrados ${expiredDocs.length} documentos expirados`)
+    for (let i = 0; i < due.length; i += REMOVE_CHUNK) {
+      const chunk = due.slice(i, i + REMOVE_CHUNK);
 
-    // 2. Eliminar cada documento
-    for (const doc of expiredDocs) {
-      try {
-        console.log(`🗑️ [cleanup-documents] Eliminando: ${doc.storage_path}`)
+      // 1. Archivos. Un archivo que ya no existe no da error: se marca igual.
+      const { error: storageError } = await admin.storage
+        .from(BUCKET)
+        .remove(chunk.map((d) => d.storage_path));
 
-        // Eliminar archivo del bucket
-        const { error: storageError } = await supabase.storage
-          .from('guest-documents')
-          .remove([doc.storage_path])
+      if (storageError) {
+        // No se marca nada: el siguiente pase lo reintentará.
+        console.error("❌ [cleanup-documents] Error de Storage:", storageError.message);
+        failed += chunk.length;
+        continue;
+      }
 
-        if (storageError) {
-          console.warn(`⚠️ [cleanup-documents] Error al eliminar archivo: ${storageError.message}`)
-          // Continuar aunque falle la eliminación del archivo
+      // 2. Filas, agrupadas por motivo
+      const reasons = new Map<string, string[]>();
+      for (const d of chunk) {
+        reasons.set(d.reason, [...(reasons.get(d.reason) ?? []), d.id]);
+      }
+
+      for (const [reason, ids] of reasons) {
+        const { error: updateError } = await admin
+          .from("guest_documents")
+          .update({ deleted_at: new Date().toISOString(), deleted_reason: reason })
+          .in("id", ids)
+          .is("deleted_at", null);
+
+        if (updateError) {
+          // Los archivos ya no están; el siguiente pase volverá a marcarlos.
+          console.error("❌ [cleanup-documents] Error marcando filas:", updateError.message);
+          failed += ids.length;
+          continue;
         }
 
-        // Eliminar registro de la base de datos
-        const { error: dbError } = await supabase
-          .from('guest_documents')
-          .delete()
-          .eq('id', doc.id)
-
-        if (dbError) {
-          throw dbError
-        }
-
-        result.deleted_count++
-        result.details.push({
-          id: doc.id,
-          path: doc.storage_path,
-          status: 'deleted',
-        })
-
-        console.log(`✅ [cleanup-documents] Documento eliminado: ${doc.id}`)
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
-        console.error(`❌ [cleanup-documents] Error al eliminar documento ${doc.id}:`, errorMessage)
-
-        result.error_count++
-        result.details.push({
-          id: doc.id,
-          path: doc.storage_path,
-          status: 'error',
-          error: errorMessage,
-        })
+        deleted += ids.length;
+        byReason[reason] = (byReason[reason] ?? 0) + ids.length;
       }
     }
 
-    console.log(`🎉 [cleanup-documents] Limpieza completada: ${result.deleted_count} eliminados, ${result.error_count} errores`)
+    const orphans = await removeOrphanFiles();
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        timestamp: new Date().toISOString(),
-        ...result,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    )
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('❌ [cleanup-documents] Error general:', errorMessage)
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: errorMessage,
-        timestamp: new Date().toISOString(),
-        ...result,
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    console.log(`✅ [cleanup-documents] Borrados ${deleted}, fallidos ${failed}`, byReason);
+    return json({ success: failed === 0, startedAt, deleted, failed, byReason, orphans });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("❌ [cleanup-documents] Error general:", message);
+    return json({ success: false, startedAt, deleted, failed, error: message }, 500);
   }
-})
+});
