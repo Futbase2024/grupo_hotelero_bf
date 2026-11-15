@@ -94,6 +94,7 @@ class CheckinBookingData {
     this.guestPhone,
     this.checkinId,
     this.checkinStatus,
+    this.travellerFormEnabled = false,
   });
 
   final String bookingId;
@@ -112,6 +113,10 @@ class CheckinBookingData {
   final String? guestPhone;
   final String? checkinId;
   final String? checkinStatus;
+
+  /// El staff ha activado para esta reserva el formulario de registro de
+  /// viajeros (RD 933). Si es false, check-in por fotos del documento.
+  final bool travellerFormEnabled;
 
   /// Nombre completo del titular
   String get guestFullName => '$guestFirstName $guestLastName'.trim();
@@ -158,6 +163,7 @@ class CheckinBookingData {
       guestPhone: json['guest_phone'] as String?,
       checkinId: json['checkin_id'] as String?,
       checkinStatus: json['checkin_status'] as String?,
+      travellerFormEnabled: json['traveller_form_enabled'] as bool? ?? false,
     );
   }
 }

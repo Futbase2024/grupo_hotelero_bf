@@ -2154,6 +2154,606 @@ abstract class S {
   /// **'Error al cambiar la auto-validación: {error}'**
   String admin_booking_auto_validate_error(String error);
 
+  /// No description provided for @admin_traveller_form_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Formulario de registro de viajeros'**
+  String get admin_traveller_form_title;
+
+  /// No description provided for @admin_traveller_form_subtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'El huésped rellenará el formulario oficial (RD 933/2021) en lugar de solo subir las fotos del documento'**
+  String get admin_traveller_form_subtitle;
+
+  /// No description provided for @admin_traveller_form_locked_note.
+  ///
+  /// In es, this message translates to:
+  /// **'El check-in ya se ha enviado: no se puede cambiar el método de check-in.'**
+  String get admin_traveller_form_locked_note;
+
+  /// No description provided for @admin_traveller_form_load_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar el estado del formulario.'**
+  String get admin_traveller_form_load_error;
+
+  /// No description provided for @admin_traveller_form_enable_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Activar el formulario de registro?'**
+  String get admin_traveller_form_enable_title;
+
+  /// No description provided for @admin_traveller_form_enable_body.
+  ///
+  /// In es, this message translates to:
+  /// **'El huésped verá en su check-in el formulario de registro de viajeros: datos personales, domicilio, contacto y la firma de cada huésped mayor de 14 años.'**
+  String get admin_traveller_form_enable_body;
+
+  /// No description provided for @admin_traveller_form_enable_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar'**
+  String get admin_traveller_form_enable_button;
+
+  /// No description provided for @admin_traveller_form_disable_title.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Desactivar el formulario de registro?'**
+  String get admin_traveller_form_disable_title;
+
+  /// No description provided for @admin_traveller_form_disable_body.
+  ///
+  /// In es, this message translates to:
+  /// **'El huésped volverá al check-in con fotos del documento. Los datos que ya haya rellenado se conservan.'**
+  String get admin_traveller_form_disable_body;
+
+  /// No description provided for @admin_traveller_form_disable_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactivar'**
+  String get admin_traveller_form_disable_button;
+
+  /// No description provided for @admin_traveller_form_enabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Formulario de registro activado'**
+  String get admin_traveller_form_enabled;
+
+  /// No description provided for @admin_traveller_form_disabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Formulario de registro desactivado'**
+  String get admin_traveller_form_disabled;
+
+  /// No description provided for @admin_traveller_form_error_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar'**
+  String get admin_traveller_form_error_title;
+
+  /// No description provided for @admin_traveller_form_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar el formulario de registro: {error}'**
+  String admin_traveller_form_error(String error);
+
+  /// No description provided for @guest_traveller_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Registro de viajeros'**
+  String get guest_traveller_title;
+
+  /// No description provided for @guest_traveller_step_identification.
+  ///
+  /// In es, this message translates to:
+  /// **'Identificación'**
+  String get guest_traveller_step_identification;
+
+  /// No description provided for @guest_traveller_step_residence.
+  ///
+  /// In es, this message translates to:
+  /// **'Residencia y contacto'**
+  String get guest_traveller_step_residence;
+
+  /// No description provided for @guest_traveller_step_review.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisión y firma'**
+  String get guest_traveller_step_review;
+
+  /// No description provided for @guest_traveller_step_counter.
+  ///
+  /// In es, this message translates to:
+  /// **'Paso {current} de {total}'**
+  String guest_traveller_step_counter(int current, int total);
+
+  /// No description provided for @guest_traveller_intro.
+  ///
+  /// In es, this message translates to:
+  /// **'La normativa española (Real Decreto 933/2021) obliga a registrar los datos de todos los huéspedes. Rellena los datos de cada persona.'**
+  String get guest_traveller_intro;
+
+  /// No description provided for @guest_traveller_guest_n.
+  ///
+  /// In es, this message translates to:
+  /// **'Huésped {number}'**
+  String guest_traveller_guest_n(int number);
+
+  /// No description provided for @guest_traveller_primary_badge.
+  ///
+  /// In es, this message translates to:
+  /// **'Titular'**
+  String get guest_traveller_primary_badge;
+
+  /// No description provided for @guest_traveller_add_guest.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir huésped'**
+  String get guest_traveller_add_guest;
+
+  /// No description provided for @guest_traveller_remove_guest.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar'**
+  String get guest_traveller_remove_guest;
+
+  /// No description provided for @guest_traveller_document_type.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo de documento'**
+  String get guest_traveller_document_type;
+
+  /// No description provided for @guest_traveller_doc_dni.
+  ///
+  /// In es, this message translates to:
+  /// **'DNI'**
+  String get guest_traveller_doc_dni;
+
+  /// No description provided for @guest_traveller_doc_nie.
+  ///
+  /// In es, this message translates to:
+  /// **'NIE / TIE'**
+  String get guest_traveller_doc_nie;
+
+  /// No description provided for @guest_traveller_doc_passport.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasaporte'**
+  String get guest_traveller_doc_passport;
+
+  /// No description provided for @guest_traveller_doc_other.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get guest_traveller_doc_other;
+
+  /// No description provided for @guest_traveller_first_name.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get guest_traveller_first_name;
+
+  /// No description provided for @guest_traveller_last_name_1.
+  ///
+  /// In es, this message translates to:
+  /// **'Primer apellido'**
+  String get guest_traveller_last_name_1;
+
+  /// No description provided for @guest_traveller_last_name_2.
+  ///
+  /// In es, this message translates to:
+  /// **'Segundo apellido'**
+  String get guest_traveller_last_name_2;
+
+  /// No description provided for @guest_traveller_sex.
+  ///
+  /// In es, this message translates to:
+  /// **'Sexo'**
+  String get guest_traveller_sex;
+
+  /// No description provided for @guest_traveller_sex_male.
+  ///
+  /// In es, this message translates to:
+  /// **'Hombre'**
+  String get guest_traveller_sex_male;
+
+  /// No description provided for @guest_traveller_sex_female.
+  ///
+  /// In es, this message translates to:
+  /// **'Mujer'**
+  String get guest_traveller_sex_female;
+
+  /// No description provided for @guest_traveller_sex_other.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get guest_traveller_sex_other;
+
+  /// No description provided for @guest_traveller_birth_date.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de nacimiento'**
+  String get guest_traveller_birth_date;
+
+  /// No description provided for @guest_traveller_age_on_checkin.
+  ///
+  /// In es, this message translates to:
+  /// **'{age} años el día de entrada'**
+  String guest_traveller_age_on_checkin(int age);
+
+  /// No description provided for @guest_traveller_nationality.
+  ///
+  /// In es, this message translates to:
+  /// **'Nacionalidad'**
+  String get guest_traveller_nationality;
+
+  /// No description provided for @guest_traveller_document_number.
+  ///
+  /// In es, this message translates to:
+  /// **'Número de documento'**
+  String get guest_traveller_document_number;
+
+  /// No description provided for @guest_traveller_support_number.
+  ///
+  /// In es, this message translates to:
+  /// **'Número de soporte'**
+  String get guest_traveller_support_number;
+
+  /// No description provided for @guest_traveller_support_help_dni.
+  ///
+  /// In es, this message translates to:
+  /// **'En el DNI: el código de 9 caracteres junto a «IDESP»'**
+  String get guest_traveller_support_help_dni;
+
+  /// No description provided for @guest_traveller_support_help_nie.
+  ///
+  /// In es, this message translates to:
+  /// **'En la TIE: el código de 9 caracteres junto a «IXESP»'**
+  String get guest_traveller_support_help_nie;
+
+  /// No description provided for @guest_traveller_document_optional_minor.
+  ///
+  /// In es, this message translates to:
+  /// **'Para menores de edad el documento es opcional'**
+  String get guest_traveller_document_optional_minor;
+
+  /// No description provided for @guest_traveller_legacy_notice.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu nombre: escribe por separado el nombre y cada apellido.'**
+  String get guest_traveller_legacy_notice;
+
+  /// No description provided for @guest_traveller_photo_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir foto del documento (opcional)'**
+  String get guest_traveller_photo_button;
+
+  /// No description provided for @guest_traveller_photo_added.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto del documento añadida'**
+  String get guest_traveller_photo_added;
+
+  /// No description provided for @guest_traveller_photo_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Las fotos llevan la marca «COPIA» y se borran automáticamente.'**
+  String get guest_traveller_photo_note;
+
+  /// No description provided for @guest_traveller_minor_section.
+  ///
+  /// In es, this message translates to:
+  /// **'Menor de edad'**
+  String get guest_traveller_minor_section;
+
+  /// No description provided for @guest_traveller_responsible.
+  ///
+  /// In es, this message translates to:
+  /// **'Adulto responsable'**
+  String get guest_traveller_responsible;
+
+  /// No description provided for @guest_traveller_no_adults.
+  ///
+  /// In es, this message translates to:
+  /// **'Primero rellena los datos de un adulto y pulsa «Siguiente».'**
+  String get guest_traveller_no_adults;
+
+  /// No description provided for @guest_traveller_relationship.
+  ///
+  /// In es, this message translates to:
+  /// **'Parentesco'**
+  String get guest_traveller_relationship;
+
+  /// No description provided for @guest_traveller_rel_parent.
+  ///
+  /// In es, this message translates to:
+  /// **'Padre / madre'**
+  String get guest_traveller_rel_parent;
+
+  /// No description provided for @guest_traveller_rel_grandparent.
+  ///
+  /// In es, this message translates to:
+  /// **'Abuelo / abuela'**
+  String get guest_traveller_rel_grandparent;
+
+  /// No description provided for @guest_traveller_rel_sibling.
+  ///
+  /// In es, this message translates to:
+  /// **'Hermano / hermana'**
+  String get guest_traveller_rel_sibling;
+
+  /// No description provided for @guest_traveller_rel_uncle_aunt.
+  ///
+  /// In es, this message translates to:
+  /// **'Tío / tía'**
+  String get guest_traveller_rel_uncle_aunt;
+
+  /// No description provided for @guest_traveller_rel_cousin.
+  ///
+  /// In es, this message translates to:
+  /// **'Primo / prima'**
+  String get guest_traveller_rel_cousin;
+
+  /// No description provided for @guest_traveller_rel_legal_guardian.
+  ///
+  /// In es, this message translates to:
+  /// **'Tutor legal'**
+  String get guest_traveller_rel_legal_guardian;
+
+  /// No description provided for @guest_traveller_rel_other.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get guest_traveller_rel_other;
+
+  /// No description provided for @guest_traveller_residence_inherited_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Si no indicas domicilio, se usará el del adulto responsable.'**
+  String get guest_traveller_residence_inherited_note;
+
+  /// No description provided for @guest_traveller_residence_section.
+  ///
+  /// In es, this message translates to:
+  /// **'Domicilio habitual'**
+  String get guest_traveller_residence_section;
+
+  /// No description provided for @guest_traveller_address.
+  ///
+  /// In es, this message translates to:
+  /// **'Dirección'**
+  String get guest_traveller_address;
+
+  /// No description provided for @guest_traveller_city.
+  ///
+  /// In es, this message translates to:
+  /// **'Localidad'**
+  String get guest_traveller_city;
+
+  /// No description provided for @guest_traveller_postal_code.
+  ///
+  /// In es, this message translates to:
+  /// **'Código postal'**
+  String get guest_traveller_postal_code;
+
+  /// No description provided for @guest_traveller_country.
+  ///
+  /// In es, this message translates to:
+  /// **'País de residencia'**
+  String get guest_traveller_country;
+
+  /// No description provided for @guest_traveller_contact_section.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacto'**
+  String get guest_traveller_contact_section;
+
+  /// No description provided for @guest_traveller_contact_note.
+  ///
+  /// In es, this message translates to:
+  /// **'Indica al menos un teléfono o un correo electrónico.'**
+  String get guest_traveller_contact_note;
+
+  /// No description provided for @guest_traveller_mobile.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono móvil'**
+  String get guest_traveller_mobile;
+
+  /// No description provided for @guest_traveller_landline.
+  ///
+  /// In es, this message translates to:
+  /// **'Teléfono fijo'**
+  String get guest_traveller_landline;
+
+  /// No description provided for @guest_traveller_email.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo electrónico'**
+  String get guest_traveller_email;
+
+  /// No description provided for @guest_traveller_error_required.
+  ///
+  /// In es, this message translates to:
+  /// **'Obligatorio'**
+  String get guest_traveller_error_required;
+
+  /// No description provided for @guest_traveller_error_invalid.
+  ///
+  /// In es, this message translates to:
+  /// **'No es válido'**
+  String get guest_traveller_error_invalid;
+
+  /// No description provided for @guest_traveller_error_responsible_not_adult.
+  ///
+  /// In es, this message translates to:
+  /// **'El responsable debe ser mayor de edad'**
+  String get guest_traveller_error_responsible_not_adult;
+
+  /// No description provided for @guest_traveller_country_search.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar país'**
+  String get guest_traveller_country_search;
+
+  /// No description provided for @guest_traveller_review_intro.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa los datos. Cada huésped de 14 años o más firma su parte de entrada; los menores de 14 van en el parte de su adulto responsable.'**
+  String get guest_traveller_review_intro;
+
+  /// No description provided for @guest_traveller_privacy_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Protección de datos'**
+  String get guest_traveller_privacy_title;
+
+  /// No description provided for @guest_traveller_privacy_body.
+  ///
+  /// In es, this message translates to:
+  /// **'Grupo Hotelero BF, como responsable del tratamiento, recoge estos datos para cumplir la obligación legal de registro de viajeros (Real Decreto 933/2021). Se conservan durante tres años desde el fin de la estancia y solo se comunican a las autoridades cuando la ley lo exige. Puedes ejercer tus derechos de acceso, rectificación y los demás previstos en el RGPD dirigiéndote al establecimiento.'**
+  String get guest_traveller_privacy_body;
+
+  /// No description provided for @guest_traveller_signature_meaning.
+  ///
+  /// In es, this message translates to:
+  /// **'Al firmar confirmas que los datos de tu parte son correctos. La firma no es un consentimiento para otros usos.'**
+  String get guest_traveller_signature_meaning;
+
+  /// No description provided for @guest_traveller_edit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar'**
+  String get guest_traveller_edit;
+
+  /// No description provided for @guest_traveller_signed.
+  ///
+  /// In es, this message translates to:
+  /// **'Parte firmado'**
+  String get guest_traveller_signed;
+
+  /// No description provided for @guest_traveller_sign_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Firma del parte de entrada'**
+  String get guest_traveller_sign_title;
+
+  /// No description provided for @guest_traveller_sign_hint.
+  ///
+  /// In es, this message translates to:
+  /// **'Firma con el dedo dentro del recuadro'**
+  String get guest_traveller_sign_hint;
+
+  /// No description provided for @guest_traveller_sign_button.
+  ///
+  /// In es, this message translates to:
+  /// **'Firmar parte'**
+  String get guest_traveller_sign_button;
+
+  /// No description provided for @guest_traveller_clear.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar'**
+  String get guest_traveller_clear;
+
+  /// No description provided for @guest_traveller_covered_by.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluido en el parte de {name}'**
+  String guest_traveller_covered_by(String name);
+
+  /// No description provided for @guest_traveller_pending_responsible_signature.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo firmará su adulto responsable'**
+  String get guest_traveller_pending_responsible_signature;
+
+  /// No description provided for @guest_traveller_issues_title.
+  ///
+  /// In es, this message translates to:
+  /// **'Falta completar:'**
+  String get guest_traveller_issues_title;
+
+  /// No description provided for @guest_traveller_minors_in_form.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluye a: {names}'**
+  String guest_traveller_minors_in_form(String names);
+
+  /// No description provided for @guest_traveller_back.
+  ///
+  /// In es, this message translates to:
+  /// **'Atrás'**
+  String get guest_traveller_back;
+
+  /// No description provided for @guest_traveller_next.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiente'**
+  String get guest_traveller_next;
+
+  /// No description provided for @guest_traveller_submit.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar check-in'**
+  String get guest_traveller_submit;
+
+  /// No description provided for @guest_traveller_submit_pending.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan datos o firmas para poder enviar'**
+  String get guest_traveller_submit_pending;
+
+  /// No description provided for @guest_traveller_error_title.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar'**
+  String get guest_traveller_error_title;
+
+  /// No description provided for @guest_traveller_error_generic.
+  ///
+  /// In es, this message translates to:
+  /// **'Ha ocurrido un error. Revisa tu conexión e inténtalo de nuevo.'**
+  String get guest_traveller_error_generic;
+
+  /// No description provided for @guest_traveller_error_locked.
+  ///
+  /// In es, this message translates to:
+  /// **'El check-in ya se ha enviado y no se puede modificar.'**
+  String get guest_traveller_error_locked;
+
+  /// No description provided for @guest_traveller_error_incomplete.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan datos o firmas en el registro.'**
+  String get guest_traveller_error_incomplete;
+
+  /// No description provided for @guest_traveller_error_not_allowed.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta reserva no tiene activado el formulario de registro. Contacta con el alojamiento.'**
+  String get guest_traveller_error_not_allowed;
+
+  /// No description provided for @guest_traveller_error_invalid_data.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay datos con un formato no válido. Revísalos.'**
+  String get guest_traveller_error_invalid_data;
+
+  /// No description provided for @guest_traveller_load_error.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar los datos del registro.'**
+  String get guest_traveller_load_error;
+
+  /// No description provided for @guest_traveller_retry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get guest_traveller_retry;
+
   /// No description provided for @admin_booking_validate_button.
   ///
   /// In es, this message translates to:

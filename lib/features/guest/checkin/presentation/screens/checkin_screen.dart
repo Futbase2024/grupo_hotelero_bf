@@ -13,6 +13,7 @@ import 'package:bf_stay/features/guest/checkin/presentation/bloc/checkin_state.d
 import 'package:bf_stay/features/guest/checkin/presentation/widgets/guest_form_card.dart';
 import 'package:bf_stay/features/guest/checkin/presentation/widgets/document_upload_sheet.dart';
 import 'package:bf_stay/features/guest/checkin/domain/entities/guest_entity.dart';
+import 'package:bf_stay/features/guest/traveller_register/presentation/screens/traveller_wizard_view.dart';
 
 /// Pantalla de Check-in para huespedes con gestion de multiples huespedes
 class CheckinScreen extends StatefulWidget {
@@ -110,6 +111,15 @@ class _CheckinScreenState extends State<CheckinScreen> {
   }
 
   Widget _buildLoadedView(BuildContext context, CheckinLoaded state) {
+    // El staff ha activado el formulario de registro de viajeros (RD 933)
+    // para esta reserva: sustituye a los pasos del check-in por fotos.
+    if (state.bookingData.travellerFormEnabled) {
+      return TravellerWizardView(
+        booking: state.bookingData,
+        onSubmitted: () => _handleStateChange(context, const CheckinSuccess()),
+      );
+    }
+
     return ResponsiveLayout(
       mobile: (context) => _MobileLayout(state: state),
       tablet: (context) => _TabletLayout(state: state),

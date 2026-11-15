@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/config/supabase_config.dart';
 import '../../../../../core/constants/checkin_policy.dart';
+import '../../../../../core/di/injection.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/enums/enums.dart';
 import '../../../../../core/utils/guest_documents_cleaner.dart';
@@ -22,6 +23,8 @@ import '../../../domain/repositories/admin_panel_repository.dart';
 import '../../../domain/services/email_service.dart';
 import '../../../domain/entities/booking_deposit_entity.dart';
 import '../widgets/deposit/booking_deposit_card.dart';
+import '../../../traveller_register/domain/repositories/traveller_form_admin_repository.dart';
+import '../../../traveller_register/presentation/widgets/traveller_form_toggle_card.dart';
 import '../widgets/edit_guest_contact_dialog.dart';
 
 class BookingDetailScreen extends StatefulWidget {
@@ -3004,6 +3007,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           if (!_booking!.isReadOnly && !_booking!.isCancelled && !isValidated) ...[
             const SizedBox(height: 16),
             _buildAutoValidateRow(),
+            const SizedBox(height: 12),
+            TravellerFormToggleCard(
+              bookingId: _booking!.id,
+              repository: getIt<TravellerFormAdminRepository>(),
+              isLocked: isSubmitted,
+            ),
           ],
           if (isSubmitted) ...[
             const SizedBox(height: 16),
@@ -3391,8 +3400,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11),
+              // El check-in por fotos guarda solo el <path>; el formulario de
+              // registro de viajeros guarda un <svg> completo (viewBox 400×150)
               child: SvgPicture.string(
-                '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150">
+                _booking!.signatureSvg!.trimLeft().startsWith('<svg')
+                    ? _booking!.signatureSvg!
+                    : '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150">
                   ${_booking!.signatureSvg!}
                 </svg>''',
                 fit: BoxFit.contain,

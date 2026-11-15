@@ -29,6 +29,10 @@ import '../../features/admin/domain/repositories/invoices_repository.dart';
 import '../../features/admin/data/repositories/invoices_repository_impl.dart';
 import '../../features/guest/extras/data/repositories/extra_request_repository_impl.dart';
 import '../../features/guest/extras/domain/repositories/extra_request_repository.dart';
+import '../../features/admin/traveller_register/data/repositories/traveller_form_admin_repository_impl.dart';
+import '../../features/admin/traveller_register/domain/repositories/traveller_form_admin_repository.dart';
+import '../../features/guest/traveller_register/data/repositories/traveller_register_repository_impl.dart';
+import '../../features/guest/traveller_register/domain/repositories/traveller_register_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -100,6 +104,16 @@ Future<void> configureDependencies() async {
   // Extra requests repository (Pack Romántico y futuros extras)
   getIt.registerLazySingleton<ExtraRequestRepository>(
     () => ExtraRequestRepositoryImpl(),
+  );
+
+  // Interruptor del formulario de registro de viajeros (RD 933) por reserva
+  getIt.registerLazySingleton<TravellerFormAdminRepository>(
+    () => TravellerFormAdminRepositoryImpl(client: getIt<SupabaseClient>()),
+  );
+
+  // Registro de viajeros del huésped (formulario RD 933)
+  getIt.registerLazySingleton<TravellerRegisterRepository>(
+    () => TravellerRegisterRepositoryImpl(client: getIt<SupabaseClient>()),
   );
 
   // BLoCs/Cubits se crean con BlocProvider en la UI

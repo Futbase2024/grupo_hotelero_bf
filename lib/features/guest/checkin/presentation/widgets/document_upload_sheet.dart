@@ -112,6 +112,10 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
     return SafeArea(
       top: false,
       child: Container(
+        // Deja ver el fondo arriba para poder cerrar tocando fuera
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
         decoration: const BoxDecoration(
           color: AppColors.darkSurface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -140,14 +144,26 @@ class _DocumentUploadSheetState extends State<DocumentUploadSheet> {
               ),
               const SizedBox(height: AppTheme.spacing24),
 
-              // Title
-              Text(
-                S.of(context).guest_checkin_upload_document_title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.white,
-                ),
+              // Título + botón de cerrar (la hoja ocupa casi toda la
+              // pantalla y el scroll interno absorbe el gesto de bajar)
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      S.of(context).guest_checkin_upload_document_title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: S.of(context).common_close,
+                    icon: const Icon(Icons.close, color: AppColors.white),
+                  ),
+                ],
               ),
               const SizedBox(height: AppTheme.spacing8),
               Text(

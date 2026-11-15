@@ -228,6 +228,7 @@ class CheckinRepositoryImpl implements CheckinRepository {
             last_name,
             guest_email,
             guest_phone,
+            traveller_form_enabled,
             checkins (
               id,
               status

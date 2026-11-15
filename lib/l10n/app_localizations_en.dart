@@ -1168,6 +1168,348 @@ class SEn extends S {
   }
 
   @override
+  String get admin_traveller_form_title => 'Traveller registration form';
+
+  @override
+  String get admin_traveller_form_subtitle =>
+      'The guest will fill in the official form (RD 933/2021) instead of only uploading photos of their ID';
+
+  @override
+  String get admin_traveller_form_locked_note =>
+      'The check-in has already been submitted: the check-in method can no longer be changed.';
+
+  @override
+  String get admin_traveller_form_load_error =>
+      'Could not load the form status.';
+
+  @override
+  String get admin_traveller_form_enable_title =>
+      'Enable the registration form?';
+
+  @override
+  String get admin_traveller_form_enable_body =>
+      'The guest will see the traveller registration form in their check-in: personal details, address, contact and the signature of every guest aged 14 or over.';
+
+  @override
+  String get admin_traveller_form_enable_button => 'Enable';
+
+  @override
+  String get admin_traveller_form_disable_title =>
+      'Disable the registration form?';
+
+  @override
+  String get admin_traveller_form_disable_body =>
+      'The guest will go back to the check-in with ID photos. Any data already entered is kept.';
+
+  @override
+  String get admin_traveller_form_disable_button => 'Disable';
+
+  @override
+  String get admin_traveller_form_enabled => 'Registration form enabled';
+
+  @override
+  String get admin_traveller_form_disabled => 'Registration form disabled';
+
+  @override
+  String get admin_traveller_form_error_title => 'Could not change it';
+
+  @override
+  String admin_traveller_form_error(String error) {
+    return 'Could not change the registration form: $error';
+  }
+
+  @override
+  String get guest_traveller_title => 'Traveller registration';
+
+  @override
+  String get guest_traveller_step_identification => 'Identification';
+
+  @override
+  String get guest_traveller_step_residence => 'Residence and contact';
+
+  @override
+  String get guest_traveller_step_review => 'Review and signature';
+
+  @override
+  String guest_traveller_step_counter(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get guest_traveller_intro =>
+      'Spanish law (Royal Decree 933/2021) requires the details of every guest to be registered. Please fill in the details of each person.';
+
+  @override
+  String guest_traveller_guest_n(int number) {
+    return 'Guest $number';
+  }
+
+  @override
+  String get guest_traveller_primary_badge => 'Main guest';
+
+  @override
+  String get guest_traveller_add_guest => 'Add guest';
+
+  @override
+  String get guest_traveller_remove_guest => 'Remove';
+
+  @override
+  String get guest_traveller_document_type => 'Document type';
+
+  @override
+  String get guest_traveller_doc_dni => 'Spanish ID (DNI)';
+
+  @override
+  String get guest_traveller_doc_nie => 'NIE / TIE';
+
+  @override
+  String get guest_traveller_doc_passport => 'Passport';
+
+  @override
+  String get guest_traveller_doc_other => 'Other';
+
+  @override
+  String get guest_traveller_first_name => 'First name';
+
+  @override
+  String get guest_traveller_last_name_1 => 'First surname';
+
+  @override
+  String get guest_traveller_last_name_2 => 'Second surname';
+
+  @override
+  String get guest_traveller_sex => 'Sex';
+
+  @override
+  String get guest_traveller_sex_male => 'Male';
+
+  @override
+  String get guest_traveller_sex_female => 'Female';
+
+  @override
+  String get guest_traveller_sex_other => 'Other';
+
+  @override
+  String get guest_traveller_birth_date => 'Date of birth';
+
+  @override
+  String guest_traveller_age_on_checkin(int age) {
+    return '$age years old on arrival day';
+  }
+
+  @override
+  String get guest_traveller_nationality => 'Nationality';
+
+  @override
+  String get guest_traveller_document_number => 'Document number';
+
+  @override
+  String get guest_traveller_support_number => 'Support number';
+
+  @override
+  String get guest_traveller_support_help_dni =>
+      'On the DNI: the 9-character code next to “IDESP”';
+
+  @override
+  String get guest_traveller_support_help_nie =>
+      'On the TIE: the 9-character code next to “IXESP”';
+
+  @override
+  String get guest_traveller_document_optional_minor =>
+      'The document is optional for minors';
+
+  @override
+  String get guest_traveller_legacy_notice =>
+      'Check your name: enter your first name and each surname separately.';
+
+  @override
+  String get guest_traveller_photo_button =>
+      'Add a photo of the document (optional)';
+
+  @override
+  String get guest_traveller_photo_added => 'Document photo added';
+
+  @override
+  String get guest_traveller_photo_note =>
+      'Photos are marked “COPIA” (copy) and deleted automatically.';
+
+  @override
+  String get guest_traveller_minor_section => 'Minor';
+
+  @override
+  String get guest_traveller_responsible => 'Responsible adult';
+
+  @override
+  String get guest_traveller_no_adults =>
+      'First fill in the details of an adult and tap “Next”.';
+
+  @override
+  String get guest_traveller_relationship => 'Relationship';
+
+  @override
+  String get guest_traveller_rel_parent => 'Father / mother';
+
+  @override
+  String get guest_traveller_rel_grandparent => 'Grandfather / grandmother';
+
+  @override
+  String get guest_traveller_rel_sibling => 'Brother / sister';
+
+  @override
+  String get guest_traveller_rel_uncle_aunt => 'Uncle / aunt';
+
+  @override
+  String get guest_traveller_rel_cousin => 'Cousin';
+
+  @override
+  String get guest_traveller_rel_legal_guardian => 'Legal guardian';
+
+  @override
+  String get guest_traveller_rel_other => 'Other';
+
+  @override
+  String get guest_traveller_residence_inherited_note =>
+      'If you leave the address empty, the responsible adult’s address will be used.';
+
+  @override
+  String get guest_traveller_residence_section => 'Usual address';
+
+  @override
+  String get guest_traveller_address => 'Address';
+
+  @override
+  String get guest_traveller_city => 'Town / city';
+
+  @override
+  String get guest_traveller_postal_code => 'Postcode';
+
+  @override
+  String get guest_traveller_country => 'Country of residence';
+
+  @override
+  String get guest_traveller_contact_section => 'Contact';
+
+  @override
+  String get guest_traveller_contact_note =>
+      'Enter at least one phone number or an email address.';
+
+  @override
+  String get guest_traveller_mobile => 'Mobile phone';
+
+  @override
+  String get guest_traveller_landline => 'Landline';
+
+  @override
+  String get guest_traveller_email => 'Email';
+
+  @override
+  String get guest_traveller_error_required => 'Required';
+
+  @override
+  String get guest_traveller_error_invalid => 'Not valid';
+
+  @override
+  String get guest_traveller_error_responsible_not_adult =>
+      'The responsible person must be an adult';
+
+  @override
+  String get guest_traveller_country_search => 'Search country';
+
+  @override
+  String get guest_traveller_review_intro =>
+      'Check the details. Every guest aged 14 or over signs their own registration form; children under 14 are included in their responsible adult’s form.';
+
+  @override
+  String get guest_traveller_privacy_title => 'Data protection';
+
+  @override
+  String get guest_traveller_privacy_body =>
+      'Grupo Hotelero BF, as data controller, collects these details to comply with the legal obligation to register travellers (Royal Decree 933/2021). They are kept for three years from the end of the stay and are only disclosed to the authorities when required by law. You can exercise your rights of access, rectification and the other GDPR rights by contacting the establishment.';
+
+  @override
+  String get guest_traveller_signature_meaning =>
+      'By signing you confirm that the details in your form are correct. Your signature is not consent for any other use.';
+
+  @override
+  String get guest_traveller_edit => 'Edit';
+
+  @override
+  String get guest_traveller_signed => 'Form signed';
+
+  @override
+  String get guest_traveller_sign_title => 'Registration form signature';
+
+  @override
+  String get guest_traveller_sign_hint =>
+      'Sign with your finger inside the box';
+
+  @override
+  String get guest_traveller_sign_button => 'Sign form';
+
+  @override
+  String get guest_traveller_clear => 'Clear';
+
+  @override
+  String guest_traveller_covered_by(String name) {
+    return 'Included in $name’s form';
+  }
+
+  @override
+  String get guest_traveller_pending_responsible_signature =>
+      'Their responsible adult will sign';
+
+  @override
+  String get guest_traveller_issues_title => 'Still missing:';
+
+  @override
+  String guest_traveller_minors_in_form(String names) {
+    return 'Includes: $names';
+  }
+
+  @override
+  String get guest_traveller_back => 'Back';
+
+  @override
+  String get guest_traveller_next => 'Next';
+
+  @override
+  String get guest_traveller_submit => 'Submit check-in';
+
+  @override
+  String get guest_traveller_submit_pending =>
+      'Some details or signatures are missing';
+
+  @override
+  String get guest_traveller_error_title => 'Could not complete';
+
+  @override
+  String get guest_traveller_error_generic =>
+      'Something went wrong. Check your connection and try again.';
+
+  @override
+  String get guest_traveller_error_locked =>
+      'The check-in has already been submitted and cannot be changed.';
+
+  @override
+  String get guest_traveller_error_incomplete =>
+      'Some details or signatures are missing from the registration.';
+
+  @override
+  String get guest_traveller_error_not_allowed =>
+      'This booking does not have the registration form enabled. Please contact the accommodation.';
+
+  @override
+  String get guest_traveller_error_invalid_data =>
+      'Some details have an invalid format. Please check them.';
+
+  @override
+  String get guest_traveller_load_error =>
+      'Could not load the registration details.';
+
+  @override
+  String get guest_traveller_retry => 'Retry';
+
+  @override
   String get admin_booking_validate_button => 'Validate';
 
   @override
